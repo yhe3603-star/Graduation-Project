@@ -1,0 +1,237 @@
+<template>
+  <div
+    class="dong-app"
+    :class="{ 'admin-layout': isAdminPage }"
+  >
+    <AppHeader
+      v-if="!isAdminPage"
+      :is-logged-in="isLoggedIn"
+      :user-name="userName"
+      :is-admin="isAdmin"
+      @logout="logout"
+      @show-login="showLoginDialog = true"
+      @show-register="showRegisterDialog = true"
+    />
+
+    <main class="dong-main">
+      <router-view v-slot="{ Component }">
+        <transition
+          name="page-fade"
+          mode="out-in"
+        >
+          <ErrorBoundary>
+            <component :is="Component" />
+          </ErrorBoundary>
+        </transition>
+      </router-view>
+    </main>
+
+    <AppFooter v-if="!isAdminPage" />
+
+    <el-dialog
+      v-model="showLoginDialog"
+      title="登录"
+      width="400px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="loginFormRef"
+        :model="loginForm"
+        :rules="loginRules"
+        label-width="0"
+      >
+        <el-form-item prop="username">
+          <el-input
+            v-model="loginForm.username"
+            prefix-icon="User"
+            placeholder="用户名"
+          />
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input
+            v-model="loginForm.password"
+            type="password"
+            prefix-icon="Lock"
+            placeholder="密码"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showLoginDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="loginLoading"
+          @click="handleLogin"
+        >
+          登录
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="showRegisterDialog"
+      title="注册"
+      width="400px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="registerFormRef"
+        :model="registerForm"
+        :rules="registerRules"
+        label-width="0"
+      >
+        <el-form-item prop="username">
+          <el-input
+            v-model="registerForm.username"
+            prefix-icon="User"
+            placeholder="用户名"
+          />
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input
+            v-model="registerForm.password"
+            type="password"
+            prefix-icon="Lock"
+            placeholder="密码"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item prop="confirmPassword">
+          <el-input
+            v-model="registerForm.confirmPassword"
+            type="password"
+            prefix-icon="Lock"
+            placeholder="确认密码"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showRegisterDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="registerLoading"
+          @click="handleRegister"
+        >
+          注册
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, provide, onMounted, computed } from "vue"
+import { useRouter, useRoute } from "vue-router"
+import { ElMessage } from "element-plus"
+import AppHeader from "@/components/business/layout/AppHeader.vue"
+import AppFooter from "@/components/business/layout/AppFooter.vue"
+import ErrorBoundary from "@/components/base/ErrorBoundary.vue"
+import request from "@/utils/request"
+
+const router = useRouter()
+const route = useRoute()
+const isLoggedIn = ref(false)
+const userName = ref("")
+const isAdmin = ref(false)
+const isAdminPage = computed(() => route.path === "/admin")
+
+const updateUserState = () => {
+  isLoggedIn.value = !!localStorage.getItem("token")
+  userName.value = localStorage.getItem("userName") || ""
+  isAdmin.value = ["ADMIN", "admin"].includes(localStorage.getItem("role") || "")
+}
+onMounted(updateUserState)
+
+provide("request", request)
+provide("isLoggedIn", isLoggedIn)
+provide("userName", userName)
+provide("updateUserState", updateUserState)
+
+const showLoginDialog = ref(false)
+const showRegisterDialog = ref(false)
+const loginLoading = ref(false)
+const registerLoading = ref(false)
+const loginFormRef = ref(null)
+const registerFormRef = ref(null)
+const loginForm = ref({ username: "", password: "" })
+const registerForm = ref({ username: "", password: "", confirmPassword: "" })
+
+const loginRules = {
+  username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+  password: [{ required: true, message: "请输入密码", trigger: "blur" }]
+}
+const registerRules = {
+  username: [{ required: true, message: "请输入用户名", trigger: "blur" }, { min: 3, max: 20, message: "用户名长度3-20个字符", trigger: "blur" }],
+  password: [{ required: true, message: "请输入密码", trigger: "blur" }, { min: 6, message: "密码至少6个字符", trigger: "blur" }],
+  confirmPassword: [{ required: true, message: "请确认密码", trigger: "blur" }, {
+    validator: (_, v, cb) => v !== registerForm.value.password ? cb(new Error("两次密码不一致")) : cb(),
+    trigger: "blur"
+  }]
+}
+
+const handleLogin = async () => {
+  if (!await loginFormRef.value?.validate()) return
+  loginLoading.value = true
+  try {
+    const res = await request.post("/user/login", loginForm.value)
+    const data = res.data || res
+    if (data.token) {
+      localStorage.setItem("token", data.token)
+      localStorage.setItem("userName", data.username || loginForm.value.username)
+      localStorage.setItem("role", data.role || "user")
+      localStorage.setItem("userId", data.id || "")
+      updateUserState()
+      ElMessage.success("登录成功")
+      showLoginDialog.value = false
+      loginForm.value = { username: "", password: "" }
+    } else {
+      ElMessage.error(res.msg || "登录失败")
+    }
+  } catch {
+    ElMessage.error("登录失败，请重试")
+  } finally {
+    loginLoading.value = false
+  }
+}
+
+const handleRegister = async () => {
+  if (!await registerFormRef.value?.validate()) return
+  registerLoading.value = true
+  try {
+    await request.post("/user/register", { username: registerForm.value.username, password: registerForm.value.password })
+    ElMessage.success("注册成功，请登录")
+    showRegisterDialog.value = false
+    showLoginDialog.value = true
+    loginForm.value.username = registerForm.value.username
+    registerForm.value = { username: "", password: "", confirmPassword: "" }
+  } catch {
+    ElMessage.error("注册失败，请重试")
+  } finally {
+    registerLoading.value = false
+  }
+}
+
+const logout = () => {
+  localStorage.clear()
+  updateUserState()
+  ElMessage.success("已退出登录")
+  router.push("/")
+}
+</script>
+
+<style>
+:root { --dong-blue: #1A5276; --dong-green: #28B463; --dong-light: var(--bg-rice); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: var(--dong-light); }
+.dong-app { min-height: 100vh; display: flex; flex-direction: column; }
+.dong-app.admin-layout { background: #f5f7fa; }
+.dong-main { flex: 1; }
+.page-fade-enter-active, .page-fade-leave-active { transition: opacity 0.2s ease; }
+.page-fade-enter-from, .page-fade-leave-to { opacity: 0; }
+</style>

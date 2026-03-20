@@ -1,0 +1,280 @@
+package com.dongmedicine.controller;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dongmedicine.common.R;
+import com.dongmedicine.dto.CommentDTO;
+import com.dongmedicine.entity.*;
+import com.dongmedicine.service.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/admin")
+@Validated
+@PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
+public class AdminController {
+
+    private final UserService userService;
+    private final InheritorService inheritorService;
+    private final KnowledgeService knowledgeService;
+    private final PlantService plantService;
+    private final QaService qaService;
+    private final ResourceService resourceService;
+    private final FeedbackService feedbackService;
+    private final CommentService commentService;
+
+    @GetMapping("/users")
+    public R<Map<String, Object>> listUsers(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<User> pageResult = userService.page(new Page<>(Math.max(page, 1), Math.min(Math.max(size, 1), 100)));
+        Map<String, Object> data = new HashMap<>();
+        data.put("records", pageResult.getRecords());
+        data.put("total", pageResult.getTotal());
+        data.put("page", pageResult.getCurrent());
+        data.put("size", pageResult.getSize());
+        return R.ok(data);
+    }
+
+    @DeleteMapping("/users/{id}")
+    public R<String> deleteUser(@PathVariable @NotNull Integer id) {
+        userService.deleteUser(id);
+        return R.ok("删除用户成功");
+    }
+
+    @PutMapping("/users/{id}/role")
+    public R<String> updateUserRole(@PathVariable @NotNull Integer id,
+                                    @RequestParam @NotBlank(message = "角色不能为空") String role) {
+        User user = userService.getById(id);
+        if (user == null) {
+            return R.error("用户不存在");
+        }
+        if (!role.equals("user") && !role.equals("admin")) {
+            return R.error("角色值无效，只能是 user 或 admin");
+        }
+        user.setRole(role);
+        userService.updateById(user);
+        return R.ok("角色更新成功");
+    }
+
+    @GetMapping("/inheritors")
+    public R<List<Inheritor>> listInheritors() {
+        return R.ok(inheritorService.list());
+    }
+
+    @PostMapping("/inheritors")
+    public R<String> createInheritor(@Valid @RequestBody Inheritor inheritor) {
+        if (inheritor.getName() == null || inheritor.getName().isBlank()) {
+            return R.error("传承人姓名不能为空");
+        }
+        inheritorService.save(inheritor);
+        inheritorService.clearCache();
+        return R.ok("新增传承人成功");
+    }
+
+    @PutMapping("/inheritors/{id}")
+    public R<String> updateInheritor(@PathVariable @NotNull Integer id, @Valid @RequestBody Inheritor inheritor) {
+        inheritor.setId(id);
+        inheritorService.updateById(inheritor);
+        inheritorService.clearCache();
+        return R.ok("更新传承人成功");
+    }
+
+    @DeleteMapping("/inheritors/{id}")
+    public R<String> deleteInheritor(@PathVariable @NotNull Integer id) {
+        inheritorService.deleteWithFiles(id);
+        return R.ok("删除传承人成功");
+    }
+
+    @GetMapping("/knowledge")
+    public R<List<Knowledge>> listKnowledge() {
+        return R.ok(knowledgeService.list());
+    }
+
+    @PostMapping("/knowledge")
+    public R<String> createKnowledge(@Valid @RequestBody Knowledge knowledge) {
+        if (knowledge.getTitle() == null || knowledge.getTitle().isBlank()) {
+            return R.error("标题不能为空");
+        }
+        if (knowledge.getContent() == null || knowledge.getContent().isBlank()) {
+            return R.error("内容不能为空");
+        }
+        knowledgeService.save(knowledge);
+        knowledgeService.clearCache();
+        return R.ok("新增知识条目成功");
+    }
+
+    @PutMapping("/knowledge/{id}")
+    public R<String> updateKnowledge(@PathVariable @NotNull Integer id, @Valid @RequestBody Knowledge knowledge) {
+        knowledge.setId(id);
+        knowledgeService.updateById(knowledge);
+        knowledgeService.clearCache();
+        return R.ok("更新知识条目成功");
+    }
+
+    @DeleteMapping("/knowledge/{id}")
+    public R<String> deleteKnowledge(@PathVariable @NotNull Integer id) {
+        knowledgeService.deleteWithFiles(id);
+        return R.ok("删除知识条目成功");
+    }
+
+    @GetMapping("/plants")
+    public R<List<Plant>> listPlants() {
+        return R.ok(plantService.list());
+    }
+
+    @PostMapping("/plants")
+    public R<String> createPlant(@Valid @RequestBody Plant plant) {
+        if (plant.getNameCn() == null || plant.getNameCn().isBlank()) {
+            return R.error("中文名称不能为空");
+        }
+        plantService.save(plant);
+        plantService.clearCache();
+        return R.ok("新增药用植物成功");
+    }
+
+    @PutMapping("/plants/{id}")
+    public R<String> updatePlant(@PathVariable @NotNull Integer id, @Valid @RequestBody Plant plant) {
+        plant.setId(id);
+        plantService.updateById(plant);
+        plantService.clearCache();
+        return R.ok("更新药用植物成功");
+    }
+
+    @DeleteMapping("/plants/{id}")
+    public R<String> deletePlant(@PathVariable @NotNull Integer id) {
+        plantService.deleteWithFiles(id);
+        return R.ok("删除药用植物成功");
+    }
+
+    @GetMapping("/qa")
+    public R<List<Qa>> listQa() {
+        return R.ok(qaService.list());
+    }
+
+    @PostMapping("/qa")
+    public R<String> createQa(@Valid @RequestBody Qa qa) {
+        if (qa.getQuestion() == null || qa.getQuestion().isBlank()) {
+            return R.error("问题不能为空");
+        }
+        qaService.save(qa);
+        return R.ok("新增问答成功");
+    }
+
+    @PutMapping("/qa/{id}")
+    public R<String> updateQa(@PathVariable @NotNull Integer id, @Valid @RequestBody Qa qa) {
+        qa.setId(id);
+        qaService.updateById(qa);
+        return R.ok("更新问答成功");
+    }
+
+    @DeleteMapping("/qa/{id}")
+    public R<String> deleteQa(@PathVariable @NotNull Integer id) {
+        qaService.removeById(id);
+        return R.ok("删除问答成功");
+    }
+
+    @GetMapping("/resources")
+    public R<List<Resource>> listResources() {
+        return R.ok(resourceService.list());
+    }
+
+    @PostMapping("/resources")
+    public R<String> createResource(@Valid @RequestBody Resource resource) {
+        if (resource.getTitle() == null || resource.getTitle().isBlank()) {
+            return R.error("资源标题不能为空");
+        }
+        if (resource.getDownloadCount() == null) resource.setDownloadCount(0);
+        if (resource.getViewCount() == null) resource.setViewCount(0);
+        if (resource.getFavoriteCount() == null) resource.setFavoriteCount(0);
+        resourceService.save(resource);
+        resourceService.clearCache();
+        return R.ok("新增学习资源成功");
+    }
+
+    @PutMapping("/resources/{id}")
+    public R<String> updateResource(@PathVariable @NotNull Integer id, @Valid @RequestBody Resource resource) {
+        resource.setId(id);
+        resourceService.updateById(resource);
+        resourceService.clearCache();
+        return R.ok("更新学习资源成功");
+    }
+
+    @DeleteMapping("/resources/{id}")
+    public R<String> deleteResource(@PathVariable @NotNull Integer id) {
+        resourceService.deleteWithFiles(id);
+        return R.ok("删除学习资源成功");
+    }
+
+    @GetMapping("/feedback")
+    public R<Map<String, Object>> listFeedback(
+            @RequestParam(defaultValue = "all") String status,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        LambdaQueryWrapper<Feedback> wrapper = new LambdaQueryWrapper<Feedback>()
+                .orderByDesc(Feedback::getCreateTime);
+        if (!"all".equalsIgnoreCase(status)) {
+            wrapper.eq(Feedback::getStatus, status);
+        }
+        Page<Feedback> pageResult = feedbackService.page(new Page<>(Math.max(page, 1), Math.min(Math.max(size, 1), 100)), wrapper);
+        Map<String, Object> data = new HashMap<>();
+        data.put("records", pageResult.getRecords());
+        data.put("total", pageResult.getTotal());
+        data.put("page", pageResult.getCurrent());
+        data.put("size", pageResult.getSize());
+        return R.ok(data);
+    }
+
+    @PutMapping("/feedback/{id}/reply")
+    public R<String> replyFeedback(@PathVariable @NotNull Integer id, @RequestBody Map<String, String> body) {
+        String reply = body.get("reply");
+        if (reply == null || reply.trim().isEmpty()) {
+            return R.error("回复内容不能为空");
+        }
+        feedbackService.replyFeedback(id, reply);
+        return R.ok("回复成功");
+    }
+
+    @DeleteMapping("/feedback/{id}")
+    public R<String> deleteFeedback(@PathVariable @NotNull Integer id) {
+        feedbackService.removeById(id);
+        return R.ok("删除反馈成功");
+    }
+
+    @GetMapping("/comments")
+    public R<List<CommentDTO>> listComments(
+            @RequestParam(defaultValue = "all") String status,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        return R.ok(commentService.listAllDTO(status, page, size));
+    }
+
+    @PutMapping("/comments/{id}/approve")
+    public R<String> approveComment(@PathVariable @NotNull Integer id) {
+        commentService.approveComment(id);
+        return R.ok("审核通过");
+    }
+
+    @PutMapping("/comments/{id}/reject")
+    public R<String> rejectComment(@PathVariable @NotNull Integer id) {
+        commentService.rejectComment(id);
+        return R.ok("已拒绝");
+    }
+
+    @DeleteMapping("/comments/{id}")
+    public R<String> deleteComment(@PathVariable @NotNull Integer id) {
+        commentService.removeById(id);
+        return R.ok("删除评论成功");
+    }
+}

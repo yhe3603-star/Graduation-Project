@@ -1,0 +1,83 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dong-medicine-backend
+    admin:
+      enabled: true
+  jmx:
+    enabled: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/dong_medicine?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      file-size-threshold: 2KB
+
+jwt:
+  secret: ${JWT_SECRET:default-dev-secret-key-for-jwt-token-generation-must-be-at-least-64-chars-long}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:default-dev-secret-key-for-jwt-token-generation-must-be-at-least-64-chars-long}
+    jwt-expiration: ${JWT_EXPIRATION:86400000}
+    cors-allowed-origins:
+      - http://localhost:*
+      - http://127.0.0.1:*
+  cache:
+    enabled: true
+    default-expire-time: 3600000
+  logging:
+    performance-monitoring: true
+    request-logging: true
+    database-monitoring: true
+
+logging:
+  level:
+    com.dongmedicine: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,beans,mappings,env,conditions
+    jmx:
+      exposure:
+        include: '*'
+  endpoint:
+    beans:
+      enabled: true
+    mappings:
+      enabled: true
+    health:
+      show-details: always
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+file:
+  upload:
+    base-path: ${user.dir}/public
+    image-max-size: 10485760
+    video-max-size: 104857600
+    document-max-size: 52428800
+    allowed-image-extensions: jpg,jpeg,png,gif,bmp,webp
+    allowed-video-extensions: mp4,avi,mov,wmv,flv,mkv
+    allowed-document-extensions: pdf,docx,doc,xlsx,xls,pptx,ppt,txt
+
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: https://api.deepseek.com
+  model: deepseek-chat

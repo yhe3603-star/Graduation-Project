@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect fill="#f5f7fa" width="400" height="300"/>
+  <rect x="100" y="50" width="200" height="180" rx="4" fill="#fff" stroke="#ddd" stroke-width="2"/>
+  <line x1="120" y1="80" x2="280" y2="80" stroke="#ddd" stroke-width="2"/>
+  <line x1="120" y1="110" x2="260" y2="110" stroke="#eee" stroke-width="1"/>
+  <line x1="120" y1="130" x2="240" y2="130" stroke="#eee" stroke-width="1"/>
+  <line x1="120" y1="150" x2="270" y2="150" stroke="#eee" stroke-width="1"/>
+  <text x="50%" y="85%" fill="#666" text-anchor="middle" dy=".3em" font-size="16" font-family="Arial, sans-serif">文档预览</text>
+</svg>

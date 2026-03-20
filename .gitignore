@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+target/
+build/
+*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Large files - videos and documents
+**/public/videos/
+**/public/documents/pdf/
+**/public/documents/docx/
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.pdf
+*.docx
+*.xlsx
+*.xls
+
+# Temp
+*.tmp
+*.temp
+.cache/

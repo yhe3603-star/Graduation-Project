@@ -1,0 +1,20 @@
+[Unit]
+Description=Dong Medicine Backend Service
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dong-medicine/backend
+Environment="SPRING_PROFILES_ACTIVE=prod"
+EnvironmentFile=/opt/dong-medicine/backend/.env
+ExecStart=/usr/bin/java -Xms512m -Xmx1024m -jar /opt/dong-medicine/backend/dong-medicine-backend.jar
+ExecStop=/bin/kill -15 $MAINPID
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dong-medicine-backend
+
+[Install]
+WantedBy=multi-user.target
