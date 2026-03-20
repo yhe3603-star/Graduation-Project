@@ -8,6 +8,7 @@ dist-ssr/
 target/
 build/
 *.jar
+*.class
 
 # IDE
 .idea/
@@ -36,20 +37,14 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
-# Large files - videos and documents
-**/public/videos/
-**/public/documents/pdf/
-**/public/documents/docx/
-*.mp4
-*.mkv
-*.avi
-*.mov
-*.pdf
-*.docx
-*.xlsx
-*.xls
-
 # Temp
 *.tmp
 *.temp
 .cache/
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Test coverage
+coverage/
+.nyc_output/
