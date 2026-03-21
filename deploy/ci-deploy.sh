@@ -73,7 +73,8 @@ print_success "Nginx配置完成"
 
 print_step "启动后端服务..."
 systemctl start dong-medicine-backend
-sleep 10
+print_info "等待后端服务启动..."
+sleep 20
 systemctl is-active --quiet dong-medicine-backend && print_success "后端服务启动成功" || { print_error "后端服务启动失败"; journalctl -u dong-medicine-backend --no-pager -n 50; exit 1; }
 
 print_step "重启Nginx..."
@@ -86,9 +87,21 @@ cd "$BACKUP_DIR" && ls -t frontend-*.tar.gz 2>/dev/null | tail -n +6 | xargs -r 
 print_success "旧备份清理完成"
 
 print_step "健康检查..."
-sleep 5
-HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000")
-[ "$HEALTH_STATUS" = "200" ] && print_success "健康检查通过" || print_error "健康检查失败 (HTTP $HEALTH_STATUS)"
+print_info "等待应用完全启动..."
+sleep 10
+for i in 1 2 3 4 5; do
+    HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000")
+    if [ "$HEALTH_STATUS" = "200" ]; then
+        print_success "健康检查通过"
+        break
+    fi
+    if [ $i -lt 5 ]; then
+        print_info "健康检查返回 $HEALTH_STATUS，等待重试 ($i/5)..."
+        sleep 5
+    else
+        print_error "健康检查失败 (HTTP $HEALTH_STATUS)"
+    fi
+done
 
 echo ""
 echo "=========================================="
