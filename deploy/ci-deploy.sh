@@ -87,7 +87,7 @@ print_success "旧备份清理完成"
 
 print_step "健康检查..."
 sleep 5
-HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/health 2>/dev/null || echo "000")
+HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000")
 [ "$HEALTH_STATUS" = "200" ] && print_success "健康检查通过" || print_error "健康检查失败 (HTTP $HEALTH_STATUS)"
 
 echo ""
