@@ -37,6 +37,16 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
+# SSH Keys
+github-actions-key
+github-actions-key.pub
+
+# CI/CD build artifacts
+deploy/frontend-dist/
+deploy/public/
+deploy/*.jar
+deploy/*.sql
+
 # Temp
 *.tmp
 *.temp
