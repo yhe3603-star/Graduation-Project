@@ -109,7 +109,9 @@ jobs:
           echo "JWT_EXPIRATION=86400000" >> deploy-package/.env
           echo "CORS_ALLOWED_ORIGINS=http://${{ secrets.SERVER_HOST }},http://${{ secrets.SERVER_HOST }}:80" >> deploy-package/.env
           echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> deploy-package/.env
+          echo "DEEPSEEK_BASE_URL=https://api.deepseek.com" >> deploy-package/.env
           echo "ADMIN_INIT_PASSWORD=${{ secrets.ADMIN_INIT_PASSWORD }}" >> deploy-package/.env
+          echo "FILE_UPLOAD_BASE_PATH=/opt/dong-medicine/backend/public" >> deploy-package/.env
           echo "=== .env file created ==="
           ls -la deploy-package/
 
