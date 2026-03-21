@@ -125,8 +125,8 @@ jobs:
       - name: Deploy to server
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /tmp/deploy"
-          scp -r deploy-package/* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/deploy/
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd /tmp/deploy && chmod +x ci-deploy.sh && ./ci-deploy.sh"
+          scp -r deploy-package/. ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/deploy/
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "ls -la /tmp/deploy/ && cd /tmp/deploy && chmod +x ci-deploy.sh && ./ci-deploy.sh"
 
       - name: Health check
         run: |
