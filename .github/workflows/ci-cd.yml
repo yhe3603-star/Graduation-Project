@@ -102,16 +102,16 @@ jobs:
 
       - name: Create environment file
         run: |
-          cat > deploy-package/.env << EOF
-          SPRING_PROFILES_ACTIVE=prod
-          DB_USERNAME=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION=86400000
-          CORS_ALLOWED_ORIGINS=http://${{ secrets.SERVER_HOST }},http://${{ secrets.SERVER_HOST }}:80
-          DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
-          ADMIN_INIT_PASSWORD=${{ secrets.ADMIN_INIT_PASSWORD }}
-          EOF
+          echo "SPRING_PROFILES_ACTIVE=prod" > deploy-package/.env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> deploy-package/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> deploy-package/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> deploy-package/.env
+          echo "JWT_EXPIRATION=86400000" >> deploy-package/.env
+          echo "CORS_ALLOWED_ORIGINS=http://${{ secrets.SERVER_HOST }},http://${{ secrets.SERVER_HOST }}:80" >> deploy-package/.env
+          echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> deploy-package/.env
+          echo "ADMIN_INIT_PASSWORD=${{ secrets.ADMIN_INIT_PASSWORD }}" >> deploy-package/.env
+          echo "=== .env file created ==="
+          ls -la deploy-package/
 
       - name: Setup SSH key
         run: |
