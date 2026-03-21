@@ -131,7 +131,7 @@ jobs:
       - name: Health check
         run: |
           sleep 30
-          curl -f http://${{ secrets.SERVER_HOST }}/api/health || exit 1
+          curl -f http://${{ secrets.SERVER_HOST }}/actuator/health || exit 1
 
       - name: Cleanup SSH
         if: always()
