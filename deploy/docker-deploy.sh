@@ -23,6 +23,17 @@ APP_DIR="/opt/dong-medicine"
 BACKUP_DIR="/opt/dong-medicine/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
+if docker compose version &> /dev/null; then
+    COMPOSE_CMD="docker compose"
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+else
+    print_error "Docker Compose 未安装"
+    exit 1
+fi
+
+print_info "使用 Docker Compose: $COMPOSE_CMD"
+
 print_step "检查部署文件..."
 [ ! -f "$SCRIPT_DIR/docker-compose.yml" ] && print_error "未找到 docker-compose.yml" && exit 1
 [ ! -f "$SCRIPT_DIR/.env" ] && print_error "未找到 .env 配置文件" && exit 1
@@ -33,10 +44,6 @@ print_success "部署文件检查通过"
 print_step "检查 Docker 环境..."
 if ! command -v docker &> /dev/null; then
     print_error "Docker 未安装，请先运行 init-server.sh 安装 Docker"
-    exit 1
-fi
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-    print_error "Docker Compose 未安装，请先运行 init-server.sh"
     exit 1
 fi
 print_success "Docker 环境检查通过"
@@ -61,15 +68,15 @@ print_success "应用文件部署完成"
 
 print_step "停止旧容器..."
 cd "$APP_DIR"
-docker-compose down --remove-orphans 2>/dev/null || true
+$COMPOSE_CMD down --remove-orphans 2>/dev/null || true
 print_success "旧容器已停止"
 
 print_step "拉取最新镜像..."
-docker-compose pull 2>/dev/null || true
+$COMPOSE_CMD pull 2>/dev/null || true
 print_info "镜像拉取完成"
 
 print_step "构建并启动容器..."
-docker-compose up -d --build
+$COMPOSE_CMD up -d --build
 print_success "容器启动完成"
 
 print_step "等待服务启动..."
@@ -87,7 +94,7 @@ for i in 1 2 3 4 5 6; do
         sleep 10
     else
         print_error "后端健康检查失败 (HTTP $HEALTH_STATUS)"
-        docker-compose logs --tail=50 backend
+        $COMPOSE_CMD logs --tail=50 backend
     fi
 done
 
@@ -115,7 +122,7 @@ echo "部署时间: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "版本标识: $TIMESTAMP"
 echo ""
 echo "服务状态:"
-docker-compose ps
+$COMPOSE_CMD ps
 echo ""
 echo "访问地址:"
 echo "  前端: http://$(hostname -I | awk '{print $1}')"
