@@ -1,20 +1,21 @@
 package com.dongmedicine.config;
 
+import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Aspect
@@ -22,53 +23,31 @@ import java.util.concurrent.TimeUnit;
 public class RateLimitAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimitAspect.class);
-    private static final long CLEANUP_INTERVAL_MS = 60_000;
-    private static final long KEY_EXPIRE_MS = 120_000;
+    private static final String RATE_LIMIT_PREFIX = "rate_limit:";
 
-    private final ConcurrentHashMap<String, RequestInfo> rateLimitMap = new ConcurrentHashMap<>();
-    private volatile long lastCleanupTime = System.currentTimeMillis();
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Around("@annotation(rateLimit)")
     public Object rateLimit(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
         String key = generateKey(joinPoint, rateLimit);
-        long currentTime = System.currentTimeMillis();
         int limit = rateLimit.value();
-        long windowMillis = TimeUnit.SECONDS.toMillis(1);
+        long windowSeconds = 1;
 
-        cleanupIfNeeded();
+        String redisKey = RATE_LIMIT_PREFIX + key;
+        
+        Long currentCount = stringRedisTemplate.opsForValue().increment(redisKey);
+        
+        if (currentCount != null && currentCount == 1) {
+            stringRedisTemplate.expire(redisKey, windowSeconds, TimeUnit.SECONDS);
+        }
 
-        RequestInfo requestInfo = rateLimitMap.computeIfAbsent(key, k -> new RequestInfo());
-
-        synchronized (requestInfo) {
-            requestInfo.requests.removeIf(time -> currentTime - time > windowMillis);
-
-            if (requestInfo.requests.size() >= limit) {
-                logger.warn("请求过于频繁: {} (限制: {}/秒)", key, limit);
-                throw new RuntimeException("请求过于频繁，请稍后再试");
-            }
-
-            requestInfo.requests.add(currentTime);
+        if (currentCount != null && currentCount > limit) {
+            logger.warn("请求过于频繁: {} (限制: {}/秒, 当前: {})", key, limit, currentCount);
+            throw new BusinessException(ErrorCode.OPERATION_TOO_FREQUENT);
         }
 
         return joinPoint.proceed();
-    }
-
-    private void cleanupIfNeeded() {
-        long now = System.currentTimeMillis();
-        if (now - lastCleanupTime > CLEANUP_INTERVAL_MS) {
-            synchronized (this) {
-                if (now - lastCleanupTime > CLEANUP_INTERVAL_MS) {
-                    rateLimitMap.entrySet().removeIf(entry -> {
-                        RequestInfo info = entry.getValue();
-                        synchronized (info) {
-                            info.requests.removeIf(time -> now - time > KEY_EXPIRE_MS);
-                            return info.requests.isEmpty();
-                        }
-                    });
-                    lastCleanupTime = now;
-                }
-            }
-        }
     }
 
     private String generateKey(ProceedingJoinPoint joinPoint, RateLimit rateLimit) {
@@ -106,9 +85,5 @@ public class RateLimitAspect {
             logger.debug("获取客户端IP失败", e);
         }
         return "unknown";
-    }
-
-    private static class RequestInfo {
-        final List<Long> requests = new ArrayList<>();
     }
 }

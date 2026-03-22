@@ -2,6 +2,7 @@ package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.FileCleanupHelper;
 import com.dongmedicine.entity.Feedback;
 import com.dongmedicine.entity.Knowledge;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -34,6 +36,46 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     private FeedbackService feedbackService;
     @Autowired
     private FileCleanupHelper fileCleanupHelper;
+
+    @Override
+    public List<Knowledge> getAllTherapies() {
+        return list(new LambdaQueryWrapper<Knowledge>()
+                .eq(Knowledge::getType, "therapy")
+                .orderByDesc(Knowledge::getPopularity));
+    }
+
+    @Override
+    public List<Knowledge> getAllDiseases() {
+        return list(new LambdaQueryWrapper<Knowledge>()
+                .eq(Knowledge::getType, "disease")
+                .orderByDesc(Knowledge::getPopularity));
+    }
+
+    @Override
+    public List<Knowledge> getByType(String type) {
+        if (!StringUtils.hasText(type)) {
+            return list();
+        }
+        return list(new LambdaQueryWrapper<Knowledge>()
+                .eq(Knowledge::getType, type)
+                .orderByDesc(Knowledge::getPopularity));
+    }
+
+    @Override
+    public List<Knowledge> search(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return list();
+        }
+        return list(new LambdaQueryWrapper<Knowledge>()
+                .like(Knowledge::getTitle, keyword)
+                .or().like(Knowledge::getContent, keyword)
+                .orderByDesc(Knowledge::getPopularity));
+    }
+
+    @Override
+    public Knowledge getDetailById(Integer id) {
+        return getById(id);
+    }
 
     @Override
     @Cacheable(value = "knowledges", key = "'search:' + #keyword + ':' + #therapy + ':' + #disease + ':' + #sortBy")
@@ -61,10 +103,19 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     public Knowledge getDetailWithRelated(Integer id) {
         Knowledge knowledge = getById(id);
         if (knowledge != null) {
-            knowledge.setPopularity(knowledge.getPopularity() != null ? knowledge.getPopularity() + 1 : 1);
-            updateById(knowledge);
+            incrementPopularityAsync(id);
         }
         return knowledge;
+    }
+
+    @Async("popularityExecutor")
+    public void incrementPopularityAsync(Integer id) {
+        try {
+            knowledgeMapper.incrementPopularity(id);
+            log.debug("Knowledge popularity incremented async for id: {}", id);
+        } catch (Exception e) {
+            log.error("Failed to increment popularity for knowledge id: {}", id, e);
+        }
     }
 
     @Override
@@ -72,13 +123,13 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     @CacheEvict(value = "knowledges", allEntries = true)
     public void addFavorite(Integer userId, Integer knowledgeId) {
         if (userId == null) {
-            throw new RuntimeException("用户未登录");
+            throw BusinessException.unauthorized("用户未登录");
         }
         if (knowledgeId == null) {
-            throw new RuntimeException("知识ID不能为空");
+            throw BusinessException.badRequest("知识ID不能为空");
         }
         if (getById(knowledgeId) == null) {
-            throw new RuntimeException("知识不存在");
+            throw BusinessException.notFound("知识不存在");
         }
         favoriteService.addFavorite(userId, "knowledge", knowledgeId);
     }
@@ -87,17 +138,17 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     @Transactional(rollbackFor = Exception.class)
     public void submitFeedback(Integer knowledgeId, String feedback) {
         if (!StringUtils.hasText(feedback)) {
-            throw new RuntimeException("反馈内容不能为空");
+            throw BusinessException.badRequest("反馈内容不能为空");
         }
         if (feedback.length() > 1000) {
-            throw new RuntimeException("反馈内容长度不能超过1000个字符");
+            throw BusinessException.badRequest("反馈内容长度不能超过1000个字符");
         }
         if (knowledgeId == null) {
-            throw new RuntimeException("知识ID不能为空");
+            throw BusinessException.badRequest("知识ID不能为空");
         }
         Knowledge knowledge = getById(knowledgeId);
         if (knowledge == null) {
-            throw new RuntimeException("知识不存在");
+            throw BusinessException.notFound("知识不存在");
         }
 
         Feedback feedbackEntity = new Feedback();

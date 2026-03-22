@@ -2,10 +2,21 @@ server:
   port: 8080
 
 spring:
+  application:
+    name: dong-medicine-backend
   datasource:
-    url: jdbc:mysql://localhost:3306/dong_medicine?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:dong_medicine}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1200000
+      connection-test-query: SELECT 1
+      pool-name: DongMedicineHikariPool
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
   servlet:
@@ -14,20 +25,36 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
       file-size-threshold: 2KB
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 2
 
 jwt:
-  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
 
 app:
   security:
     jwt-secret: ${JWT_SECRET}
     jwt-expiration: ${JWT_EXPIRATION:86400000}
-    cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:https://your-domain.com}
-
-file:
-  upload:
-    base-path: /opt/dong-medicine/backend/public
+    cors-allowed-origins:
+      - ${CORS_ALLOWED_ORIGIN:https://your-domain.com}
+  cache:
+    enabled: true
+    default-expire-time: 3600000
+  logging:
+    performance-monitoring: true
+    request-logging: true
+    database-monitoring: true
 
 logging:
   level:
@@ -37,9 +64,34 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+    jmx:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+file:
+  upload:
+    base-path: ${FILE_UPLOAD_PATH:/opt/dong-medicine/backend/public}
+    image-max-size: 10485760
+    video-max-size: 104857600
+    document-max-size: 52428800
+    allowed-image-extensions: jpg,jpeg,png,gif,bmp,webp
+    allowed-video-extensions: mp4,avi,mov,wmv,flv,mkv
+    allowed-document-extensions: pdf,docx,doc,xlsx,xls,pptx,ppt,txt
 
 deepseek:
   api-key: ${DEEPSEEK_API_KEY:}

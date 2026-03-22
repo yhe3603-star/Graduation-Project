@@ -40,9 +40,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/images/**", "/videos/**", "/documents/**", "/public/**").permitAll()
                         .requestMatchers("/api/user/login", "/api/user/register", "/api/user/validate").permitAll()
-                        .requestMatchers("/api/user/change-password", "/api/user/logout", "/api/user/me").authenticated()
+                        .requestMatchers("/api/user/change-password", "/api/user/logout", "/api/user/me", "/api/user/refresh-token").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/plants/**", "/api/knowledge/**", "/api/inheritors/**",
                                 "/api/qa/**", "/api/resources/list", "/api/resources/hot",
@@ -60,11 +61,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/quiz/add", "/api/quiz/update").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/quiz/**").hasRole("ADMIN")
                         .requestMatchers("/api/quiz/questions", "/api/quiz/submit", "/api/quiz/list", "/api/plant-game/submit", "/api/chat").permitAll()
+                        .requestMatchers("/api/chat/stats").hasRole("ADMIN")
                         .requestMatchers("/api/feedback/stats").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/feedback").permitAll()
                         .requestMatchers("/api/feedback/my").authenticated()
                         .requestMatchers("/api/quiz/records", "/api/plant-game/records").authenticated()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 );
 
         return http.build();
@@ -74,15 +76,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         List<String> allowedOrigins = appProperties.getSecurity().getCorsAllowedOrigins();
+        
         if (allowedOrigins == null || allowedOrigins.isEmpty()) {
-            allowedOrigins = List.of("http://localhost:*", "http://127.0.0.1:*");
+            allowedOrigins = List.of("http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173");
         }
+        
         boolean wildcardOrigin = allowedOrigins.stream().anyMatch(origin ->
                 "*".equals(origin) || "http://*".equals(origin) || "https://*".equals(origin));
+        
         config.setAllowedOriginPatterns(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(!wildcardOrigin);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

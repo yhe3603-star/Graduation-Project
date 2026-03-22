@@ -2,15 +2,21 @@
   <div v-loading="pageLoading" class="personal-center module-page">
     <div class="module-header">
       <h1>个人中心</h1>
-      <p class="subtitle">我的信息 · 收藏管理 · 学习记录</p>
+      <p class="subtitle">
+我的信息 · 收藏管理 · 学习记录
+</p>
     </div>
 
     <div v-if="!isLoggedIn" class="not-logged-in">
       <div class="empty-state">
-        <el-icon class="empty-icon"><User /></el-icon>
+        <el-icon class="empty-icon">
+<User />
+</el-icon>
         <h2>您还未登录</h2>
         <p>登录后可查看个人收藏、答题记录、评论历史等内容</p>
-        <el-button type="primary" size="large" @click="$router.push('/')">立即登录</el-button>
+        <el-button type="primary" size="large" @click="$router.push('/')">
+立即登录
+</el-button>
       </div>
     </div>
 
@@ -18,10 +24,16 @@
       <div class="profile-section">
         <div class="profile-card">
           <div class="avatar-section">
-            <el-avatar :size="100" class="user-avatar">{{ userName?.charAt(0) || '用' }}</el-avatar>
+            <el-avatar :size="100" class="user-avatar">
+{{ userName?.charAt(0) || '用' }}
+</el-avatar>
             <div class="user-info">
-              <h2 class="user-name">{{ userName || '侗乡医药用户' }}</h2>
-              <el-tag :type="isAdmin ? 'warning' : 'success'" effect="dark">{{ isAdmin ? '管理员' : '普通用户' }}</el-tag>
+              <h2 class="user-name">
+{{ userName || '侗乡医药用户' }}
+</h2>
+              <el-tag :type="isAdmin ? 'warning' : 'success'" effect="dark">
+{{ isAdmin ? '管理员' : '普通用户' }}
+</el-tag>
             </div>
           </div>
           <el-divider />
@@ -51,12 +63,24 @@
           <el-tab-pane label="我的收藏" name="favorites">
             <div class="tab-header">
               <el-radio-group v-model="favoriteType" size="small">
-                <el-radio-button value="all">全部</el-radio-button>
-                <el-radio-button value="plant">药材</el-radio-button>
-                <el-radio-button value="knowledge">知识</el-radio-button>
-                <el-radio-button value="inheritor">传承人</el-radio-button>
-                <el-radio-button value="resource">学习资源</el-radio-button>
-                <el-radio-button value="qa">问答</el-radio-button>
+                <el-radio-button value="all">
+全部
+</el-radio-button>
+                <el-radio-button value="plant">
+药材
+</el-radio-button>
+                <el-radio-button value="knowledge">
+知识
+</el-radio-button>
+                <el-radio-button value="inheritor">
+传承人
+</el-radio-button>
+                <el-radio-button value="resource">
+学习资源
+</el-radio-button>
+                <el-radio-button value="qa">
+问答
+</el-radio-button>
               </el-radio-group>
             </div>
             <div class="favorites-grid">
@@ -68,7 +92,9 @@
                   <h4>{{ item.title || item.nameCn || item.name || '未命名' }}</h4>
                   <p>{{ (item.description || item.bio || item.efficacy || '').substring(0, 40) }}...</p>
                 </div>
-                <el-tag size="small" :type="getTypeTag(item.type)">{{ getTypeName(item.type) }}</el-tag>
+                <el-tag size="small" :type="getTypeTag(item.type)">
+{{ getTypeName(item.type) }}
+</el-tag>
               </div>
             </div>
             <el-empty v-if="!filteredFavorites.length" description="暂无收藏" />
@@ -78,10 +104,16 @@
           <el-tab-pane label="答题记录" name="quiz">
             <div class="record-list">
               <div v-for="record in paginatedRecords" :key="record.id + record.type" class="record-item">
-                <div class="record-score" :class="getScoreClass(record.score)">{{ record.score }}分</div>
+                <div class="record-score" :class="getScoreClass(record.score)">
+{{ record.score }}分
+</div>
                 <div class="record-info">
-                  <p class="record-title">{{ record.type === 'quiz' ? '趣味答题' : '植物识别 · ' + getDifficultyName(record.difficulty) }}</p>
-                  <p class="record-time">{{ formatTime(record.createTime) }}</p>
+                  <p class="record-title">
+{{ record.type === 'quiz' ? '趣味答题' : '植物识别 · ' + getDifficultyName(record.difficulty) }}
+</p>
+                  <p class="record-time">
+{{ formatTime(record.createTime) }}
+</p>
                 </div>
                 <span class="record-stats">正确 {{ record.correctCount }}/{{ record.totalCount }}</span>
               </div>
@@ -93,7 +125,9 @@
           <el-tab-pane label="我的评论" name="comments">
             <div class="comment-list">
               <div v-for="c in paginatedComments" :key="c.id" class="comment-item">
-                <p class="comment-content">{{ c.content }}</p>
+                <p class="comment-content">
+{{ c.content }}
+</p>
                 <div class="comment-meta">
                   <span class="comment-target">{{ c.targetType }}</span>
                   <span class="comment-time">{{ formatTime(c.createTime) }}</span>
@@ -139,8 +173,12 @@
                     <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password />
                   </el-form-item>
                   <el-form-item>
-                    <el-button type="primary" :loading="passwordLoading" @click="handleChangePassword">确认修改</el-button>
-                    <el-button @click="resetPasswordForm">重置</el-button>
+                    <el-button type="primary" :loading="passwordLoading" @click="handleChangePassword">
+确认修改
+</el-button>
+                    <el-button @click="resetPasswordForm">
+重置
+</el-button>
                   </el-form-item>
                 </el-form>
               </el-card>
@@ -152,7 +190,9 @@
                   </div>
                 </template>
                 <div class="logout-section">
-                  <p class="logout-tip">点击下方按钮将退出当前账号，退出后需要重新登录才能访问个人功能。</p>
+                  <p class="logout-tip">
+点击下方按钮将退出当前账号，退出后需要重新登录才能访问个人功能。
+</p>
                   <el-button type="danger" :loading="logoutLoading" @click="handleLogout">
                     <el-icon><SwitchButton /></el-icon>退出登录
                   </el-button>

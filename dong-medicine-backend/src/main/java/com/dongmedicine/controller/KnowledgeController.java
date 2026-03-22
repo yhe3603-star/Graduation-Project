@@ -1,9 +1,11 @@
 package com.dongmedicine.controller;
 
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.service.KnowledgeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,7 +46,12 @@ public class KnowledgeController {
     }
 
     @PostMapping("/favorite/{id}")
-    public R<String> favorite(@PathVariable Integer id, @RequestParam Integer userId) {
+    @PreAuthorize("isAuthenticated()")
+    public R<String> favorite(@PathVariable Integer id) {
+        Integer userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            return R.error("请先登录");
+        }
         service.addFavorite(userId, id);
         return R.ok("收藏成功");
     }

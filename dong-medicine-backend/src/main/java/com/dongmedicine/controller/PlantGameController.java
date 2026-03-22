@@ -23,12 +23,8 @@ public class PlantGameController {
     @PostMapping("/submit")
     public R<Integer> submit(@Valid @RequestBody PlantGameSubmitDTO dto) {
         Integer userId = SecurityUtils.getCurrentUserId();
-        try {
-            Integer score = (userId == null) ? service.calculateScore(dto) : service.submit(userId, dto);
-            return R.ok(score);
-        } catch (Exception e) {
-            return R.error("提交游戏成绩失败: " + e.getMessage());
-        }
+        Integer score = (userId == null) ? service.calculateScore(dto) : service.submit(userId, dto);
+        return R.ok(score);
     }
 
     @GetMapping("/records")

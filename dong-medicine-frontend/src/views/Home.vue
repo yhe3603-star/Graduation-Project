@@ -15,8 +15,12 @@
           <span class="title-highlight">侗乡医药</span>
           <span class="title-main">数字展示平台</span>
         </h1>
-        <p class="hero-subtitle">保护 · 传承 · 活态传播</p>
-        <p class="hero-desc">三江侗族自治县传统医药文化数字化保护与传播平台</p>
+        <p class="hero-subtitle">
+保护 · 传承 · 活态传播
+</p>
+        <p class="hero-desc">
+三江侗族自治县传统医药文化数字化保护与传播平台
+</p>
         <div class="hero-actions">
           <el-button type="primary" size="large" class="action-btn primary" @click="$router.push('/knowledge')">
             <el-icon><Compass /></el-icon>
@@ -44,7 +48,9 @@
     <section class="quick-nav">
       <div v-for="(item, i) in quickEntries" :key="i" class="nav-card" :style="{ '--delay': i * 0.1 + 's' }" @click="$router.push(item.path)">
         <div class="nav-icon" :style="{ background: item.color }">
-          <el-icon :size="32"><component :is="item.icon" /></el-icon>
+          <el-icon :size="32">
+<component :is="item.icon" />
+</el-icon>
         </div>
         <div class="nav-content">
           <h3>{{ item.title }}</h3>
@@ -59,17 +65,25 @@
     <section class="features-section">
       <div class="section-header">
         <div class="header-left">
-          <h2 class="section-title">核心功能</h2>
-          <p class="section-desc">全方位展示侗乡医药文化精髓</p>
+          <h2 class="section-title">
+核心功能
+</h2>
+          <p class="section-desc">
+全方位展示侗乡医药文化精髓
+</p>
         </div>
       </div>
       <div class="features-grid">
         <div v-for="(mod, i) in coreModules" :key="i" class="feature-card" :style="{ '--delay': i * 0.1 + 's' }" @click="$router.push(mod.path)">
           <div class="feature-header">
             <div class="feature-icon" :style="{ background: mod.bgColor }">
-              <el-icon :size="36"><component :is="mod.icon" /></el-icon>
+              <el-icon :size="36">
+<component :is="mod.icon" />
+</el-icon>
             </div>
-            <div class="feature-badge">{{ mod.count }}</div>
+            <div class="feature-badge">
+{{ mod.count }}
+</div>
           </div>
           <h3>{{ mod.title }}</h3>
           <p>{{ mod.desc }}</p>
@@ -84,8 +98,12 @@
     <section v-if="featuredInheritors.length" class="inheritors-section">
       <div class="section-header">
         <div class="header-left">
-          <h2 class="section-title">传承人风采</h2>
-          <p class="section-desc">守护侗医药文化的使者</p>
+          <h2 class="section-title">
+传承人风采
+</h2>
+          <p class="section-desc">
+守护侗医药文化的使者
+</p>
         </div>
         <el-button type="primary" text class="view-all-btn" @click="$router.push('/inheritors')">
           查看全部
@@ -99,8 +117,12 @@
           </div>
           <div class="inheritor-content">
             <h4>{{ item.name }}</h4>
-            <div class="inheritor-level" :class="getLevelClass(item.level)">{{ item.level }}</div>
-            <p class="inheritor-specialty">{{ item.specialties || '侗医药传承' }}</p>
+            <div class="inheritor-level" :class="getLevelClass(item.level)">
+{{ item.level }}
+</div>
+            <p class="inheritor-specialty">
+{{ item.specialties || '侗医药传承' }}
+</p>
           </div>
           <div v-if="item.level === '省级' || item.level === '自治区级'" class="inheritor-badge">
             <el-icon><Medal /></el-icon>
@@ -112,14 +134,20 @@
     <section class="extend-section">
       <div class="section-header">
         <div class="header-left">
-          <h2 class="section-title">拓展功能</h2>
-          <p class="section-desc">更多精彩内容等你探索</p>
+          <h2 class="section-title">
+拓展功能
+</h2>
+          <p class="section-desc">
+更多精彩内容等你探索
+</p>
         </div>
       </div>
       <div class="extend-grid">
         <div v-for="(mod, i) in extendModules" :key="i" class="extend-card" :style="{ '--delay': i * 0.1 + 's' }" @click="$router.push(mod.path)">
           <div class="extend-icon">
-            <el-icon :size="40"><component :is="mod.icon" /></el-icon>
+            <el-icon :size="40">
+<component :is="mod.icon" />
+</el-icon>
           </div>
           <div class="extend-content">
             <h4>{{ mod.title }}</h4>

@@ -2,15 +2,88 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import request from '@/utils/request'
 
+const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000
+
+function decodeJwtPayload(token) {
+  try {
+    const base64Url = token.split('.')[1]
+    if (!base64Url) return null
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch {
+    return null
+  }
+}
+
+function isTokenExpired(token) {
+  if (!token) return true
+  const payload = decodeJwtPayload(token)
+  if (!payload || !payload.exp) return true
+  const expiryTime = payload.exp * 1000
+  return Date.now() >= expiryTime - TOKEN_EXPIRY_BUFFER_MS
+}
+
+function getTokenRemainingTime(token) {
+  if (!token) return 0
+  const payload = decodeJwtPayload(token)
+  if (!payload || !payload.exp) return 0
+  return Math.max(0, payload.exp * 1000 - Date.now())
+}
+
+function safeSetItem(key, value) {
+  try {
+    sessionStorage.setItem(key, value)
+  } catch {
+    console.warn('sessionStorage not available, falling back to memory')
+  }
+}
+
+function safeGetItem(key) {
+  try {
+    return sessionStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function safeRemoveItem(key) {
+  try {
+    sessionStorage.removeItem(key)
+  } catch {
+    // ignore
+  }
+}
+
 export const useUserStore = defineStore('user', () => {
-  const token = ref(localStorage.getItem('token') || '')
-  const userId = ref(localStorage.getItem('userId') || '')
-  const username = ref(localStorage.getItem('userName') || '')
-  const role = ref(localStorage.getItem('role') || '')
+  const token = ref(safeGetItem('token') || '')
+  const userId = ref(safeGetItem('userId') || '')
+  const username = ref(safeGetItem('userName') || '')
+  const role = ref(safeGetItem('role') || '')
   const userInfo = ref(null)
   
-  const isLoggedIn = computed(() => !!token.value)
+  const isLoggedIn = computed(() => {
+    if (!token.value) return false
+    return !isTokenExpired(token.value)
+  })
+  const userName = computed(() => username.value)
   const isAdmin = computed(() => role.value && role.value.toUpperCase() === 'ADMIN')
+  
+  function initialize() {
+    initializeFromStorage()
+    checkTokenExpiry()
+  }
+  
+  function checkTokenExpiry() {
+    if (token.value && isTokenExpired(token.value)) {
+      clearAuth()
+    }
+  }
   
   function setAuth(data) {
     token.value = data.token || ''
@@ -18,10 +91,10 @@ export const useUserStore = defineStore('user', () => {
     username.value = data.username || ''
     role.value = data.role || 'user'
     
-    localStorage.setItem('token', token.value)
-    localStorage.setItem('userId', userId.value)
-    localStorage.setItem('userName', username.value)
-    localStorage.setItem('role', role.value)
+    safeSetItem('token', token.value)
+    safeSetItem('userId', userId.value)
+    safeSetItem('userName', username.value)
+    safeSetItem('role', role.value)
   }
   
   function clearAuth() {
@@ -31,14 +104,17 @@ export const useUserStore = defineStore('user', () => {
     role.value = ''
     userInfo.value = null
     
-    localStorage.removeItem('token')
-    localStorage.removeItem('userId')
-    localStorage.removeItem('userName')
-    localStorage.removeItem('role')
+    safeRemoveItem('token')
+    safeRemoveItem('userId')
+    safeRemoveItem('userName')
+    safeRemoveItem('role')
   }
   
   async function fetchUserInfo() {
-    if (!token.value) return null
+    if (!token.value || isTokenExpired(token.value)) {
+      clearAuth()
+      return null
+    }
     
     try {
       const res = await request.get('/user/me')
@@ -59,6 +135,11 @@ export const useUserStore = defineStore('user', () => {
       return false
     }
     
+    if (isTokenExpired(token.value)) {
+      clearAuth()
+      return false
+    }
+    
     try {
       const res = await request.get('/user/validate')
       if (res.code === 200 && res.data) {
@@ -66,9 +147,9 @@ export const useUserStore = defineStore('user', () => {
         username.value = res.data.username
         role.value = res.data.role || 'user'
         
-        localStorage.setItem('userId', userId.value)
-        localStorage.setItem('userName', username.value)
-        localStorage.setItem('role', role.value)
+        safeSetItem('userId', userId.value)
+        safeSetItem('userName', username.value)
+        safeSetItem('role', role.value)
         return true
       }
       clearAuth()
@@ -116,16 +197,18 @@ export const useUserStore = defineStore('user', () => {
   }
   
   function initializeFromStorage() {
-    const storedToken = localStorage.getItem('token')
-    const storedUserId = localStorage.getItem('userId')
-    const storedUsername = localStorage.getItem('userName')
-    const storedRole = localStorage.getItem('role')
+    const storedToken = safeGetItem('token')
+    const storedUserId = safeGetItem('userId')
+    const storedUsername = safeGetItem('userName')
+    const storedRole = safeGetItem('role')
     
-    if (storedToken) {
+    if (storedToken && !isTokenExpired(storedToken)) {
       token.value = storedToken
       userId.value = storedUserId || ''
       username.value = storedUsername || ''
       role.value = storedRole || ''
+    } else if (storedToken) {
+      clearAuth()
     }
   }
   
@@ -133,6 +216,7 @@ export const useUserStore = defineStore('user', () => {
     token,
     userId,
     username,
+    userName,
     role,
     userInfo,
     isLoggedIn,
@@ -144,6 +228,8 @@ export const useUserStore = defineStore('user', () => {
     login,
     logout,
     changePassword,
-    initializeFromStorage
+    initialize,
+    initializeFromStorage,
+    getTokenRemainingTime
   }
 })

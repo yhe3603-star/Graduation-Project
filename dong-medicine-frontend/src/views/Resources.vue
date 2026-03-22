@@ -133,7 +133,8 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, inject, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Document, Download, Picture, Star, VideoPlay, View } from "@element-plus/icons-vue";
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
@@ -143,9 +144,21 @@ import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
 import { extractData } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
+import { useDebounceFn } from "@/composables/useDebounce";
+import { useUserStore } from "@/stores/user";
 
+const PAGE_SIZE_OPTIONS = {
+  DEFAULT: 9,
+  LARGE: 18,
+  SMALL: 6
+};
+
+const DEBOUNCE_DELAY = 300;
+
+const route = useRoute();
 const request = inject("request");
-const isLoggedIn = computed(() => !!localStorage.getItem("token"));
+const userStore = useUserStore();
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 const pageLoading = ref(false);
 const keyword = ref("");
@@ -156,7 +169,7 @@ const currentResource = ref(null);
 const favorites = ref([]);
 const typeFilter = ref("");
 const currentPage = ref(1);
-const pageSize = ref(9);
+const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 
 const FILE_TYPE_MAP = {
   video: { extensions: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'], icon: VideoPlay, name: '视频' },
@@ -212,7 +225,13 @@ const allUpdateLogs = computed(() => {
 
 const filteredResources = computed(() => {
   let result = allResources.value;
-  if (keyword.value) result = result.filter(r => r.title?.includes(keyword.value) || r.description?.includes(keyword.value));
+  const kw = keyword.value.toLowerCase();
+  if (kw) {
+    result = result.filter(r => 
+      r.title?.toLowerCase().includes(kw) || 
+      r.description?.toLowerCase().includes(kw)
+    );
+  }
   if (typeFilter.value) result = result.filter(r => r.fileType === typeFilter.value);
   return result;
 });
@@ -266,7 +285,14 @@ const formatSize = (bytes) => {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
-const handleSearch = () => { currentPage.value = 1; };
+const debouncedSearch = useDebounceFn(() => {
+  currentPage.value = 1;
+}, DEBOUNCE_DELAY);
+
+const handleSearch = () => {
+  debouncedSearch();
+};
+
 const handleFilter = (filters) => { typeFilter.value = filters.type || ""; currentPage.value = 1; };
 
 const openResource = async (item) => {
@@ -326,10 +352,10 @@ const downloadResource = async (item) => {
 
 const downloadCurrentResource = () => { if (currentResource.value) downloadResource(currentResource.value); };
 
-onMounted(async () => {
+const loadResourcesData = async () => {
   pageLoading.value = true;
   try {
-    const res = await request.get("/resources/list");
+    const res = await request.get("/resources/list", { params: { _t: Date.now() } });
     allResources.value = extractData(res).map(r => ({ ...r, fileType: detectFileType(getFileInfo(r).url, getFileInfo(r).type) }));
     hotResources.value = allResources.value.slice(0, 5);
     if (isLoggedIn.value) {
@@ -337,6 +363,12 @@ onMounted(async () => {
     }
   } catch { ElMessage.error("加载失败"); }
   finally { pageLoading.value = false; }
+};
+
+onMounted(loadResourcesData);
+
+watch(() => route.path, (newPath) => {
+  if (newPath === '/resources') loadResourcesData();
 });
 </script>
 

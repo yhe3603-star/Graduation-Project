@@ -13,7 +13,9 @@
         <div class="header-left">
           <h2>{{ menuTitles[activeMenu] }}</h2>
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/' }">
+首页
+</el-breadcrumb-item>
             <el-breadcrumb-item>管理后台</el-breadcrumb-item>
             <el-breadcrumb-item>{{ menuTitles[activeMenu] }}</el-breadcrumb-item>
           </el-breadcrumb>
@@ -108,9 +110,13 @@
           @delete="deleteResource"
         >
           <template #fileType="{ row }">
-            <el-tag :type="getResourceFileType(row).tagType">{{ getResourceFileType(row).text }}</el-tag>
+            <el-tag :type="getResourceFileType(row).tagType">
+{{ getResourceFileType(row).text }}
+</el-tag>
           </template>
-          <template #fileSize="{ row }">{{ getResourceFileSize(row) }}</template>
+          <template #fileSize="{ row }">
+{{ getResourceFileSize(row) }}
+</template>
         </AdminDataTable>
 
         <AdminDataTable
@@ -125,7 +131,9 @@
           @delete="deleteQuiz"
         >
           <template #correctAnswer="{ row }">
-            <el-tag type="success">{{ getCorrectAnswerContent(row) }}</el-tag>
+            <el-tag type="success">
+{{ getCorrectAnswerContent(row) }}
+</el-tag>
           </template>
         </AdminDataTable>
 
@@ -142,10 +150,18 @@
           @delete="deleteComment"
         >
           <template #actions="{ row }">
-            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewComment(row)">查看</el-button>
-            <el-button v-if="row.status !== 'approved'" type="success" size="small" style="color: var(--text-inverse);" @click="approveComment(row)">通过</el-button>
-            <el-button v-if="row.status === 'pending'" type="warning" size="small" style="color: var(--text-inverse);" @click="rejectComment(row)">拒绝</el-button>
-            <el-button type="danger" size="small" @click="deleteComment(row.id)">删除</el-button>
+            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewComment(row)">
+查看
+</el-button>
+            <el-button v-if="row.status !== 'approved'" type="success" size="small" style="color: var(--text-inverse);" @click="approveComment(row)">
+通过
+</el-button>
+            <el-button v-if="row.status === 'pending'" type="warning" size="small" style="color: var(--text-inverse);" @click="rejectComment(row)">
+拒绝
+</el-button>
+            <el-button type="danger" size="small" @click="deleteComment(row.id)">
+删除
+</el-button>
           </template>
         </AdminDataTable>
 
@@ -162,9 +178,15 @@
           @delete="deleteFeedback"
         >
           <template #actions="{ row }">
-            <el-button type="primary" size="small" style="color: var(--text-inverse);" @click="viewFeedback(row)">查看</el-button>
-            <el-button v-if="row.status !== 'resolved'" type="success" size="small" style="color: var(--text-inverse);" @click="resolveFeedback(row)">处理</el-button>
-            <el-button type="danger" size="small" @click="deleteFeedback(row.id)">删除</el-button>
+            <el-button type="primary" size="small" style="color: var(--text-inverse);" @click="viewFeedback(row)">
+查看
+</el-button>
+            <el-button v-if="row.status !== 'resolved'" type="success" size="small" style="color: var(--text-inverse);" @click="resolveFeedback(row)">
+处理
+</el-button>
+            <el-button type="danger" size="small" @click="deleteFeedback(row.id)">
+删除
+</el-button>
           </template>
         </AdminDataTable>
 
@@ -193,12 +215,16 @@
               <el-table-column type="selection" width="50" />
               <el-table-column prop="module" label="模块" width="90">
                 <template #default="{ row }">
-                  <el-tag :type="getLogModuleTagType(row.module)" size="small">{{ row.module }}</el-tag>
+                  <el-tag :type="getLogModuleTagType(row.module)" size="small">
+{{ row.module }}
+</el-tag>
                 </template>
               </el-table-column>
               <el-table-column prop="type" label="类型" width="80">
                 <template #default="{ row }">
-                  <el-tag :type="getLogTypeTagType(row.type)" size="small">{{ row.type }}</el-tag>
+                  <el-tag :type="getLogTypeTagType(row.type)" size="small">
+{{ row.type }}
+</el-tag>
                 </template>
               </el-table-column>
               <el-table-column prop="duration" label="耗时" width="80">
@@ -208,16 +234,24 @@
               </el-table-column>
               <el-table-column prop="success" label="状态" width="70">
                 <template #default="{ row }">
-                  <el-tag :type="row.success ? 'success' : 'danger'" size="small">{{ row.success ? '成功' : '失败' }}</el-tag>
+                  <el-tag :type="row.success ? 'success' : 'danger'" size="small">
+{{ row.success ? '成功' : '失败' }}
+</el-tag>
                 </template>
               </el-table-column>
               <el-table-column prop="createdAt" label="时间" width="160">
-                <template #default="{ row }">{{ formatLogTime(row.createdAt) }}</template>
+                <template #default="{ row }">
+{{ formatLogTime(row.createdAt) }}
+</template>
               </el-table-column>
             </template>
             <template #actions="{ row }">
-              <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewLog(row)">查看</el-button>
-              <el-button type="danger" size="small" @click="deleteLog(row.id)">删除</el-button>
+              <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewLog(row)">
+查看
+</el-button>
+              <el-button type="danger" size="small" @click="deleteLog(row.id)">
+删除
+</el-button>
             </template>
           </AdminDataTable>
         </div>

@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline - Docker Deploy
 
 on:
   push:
@@ -11,11 +11,11 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
 
 jobs:
-  build-backend:
-    name: Build Backend
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,23 +28,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Build with Maven
+      - name: Build Backend with Maven
         working-directory: dong-medicine-backend
         run: mvn clean package -DskipTests -B
-
-      - name: Upload backend artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-jar
-          path: dong-medicine-backend/target/dong-medicine-backend-1.0.0.jar
-          retention-days: 1
-
-  build-frontend:
-    name: Build Frontend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -53,67 +39,64 @@ jobs:
           cache: 'npm'
           cache-dependency-path: dong-medicine-frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install Frontend Dependencies
         working-directory: dong-medicine-frontend
         run: npm ci
 
-      - name: Build frontend
+      - name: Build Frontend
         working-directory: dong-medicine-frontend
         run: npm run build
 
-      - name: Upload frontend artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: dong-medicine-frontend/dist
-          retention-days: 1
-
   deploy:
     name: Deploy to Server
-    needs: [build-backend, build-frontend]
+    needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download backend artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-jar
-          path: ./artifacts/backend
-
-      - name: Download frontend artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: ./artifacts/frontend
-
       - name: Prepare deployment package
         run: |
           mkdir -p deploy-package
-          cp ./artifacts/backend/dong-medicine-backend-1.0.0.jar deploy-package/dong-medicine-backend.jar
-          cp -r ./artifacts/frontend deploy-package/frontend-dist
-          cp -r dong-medicine-backend/public deploy-package/public
-          cp deploy/nginx.conf deploy-package/
-          cp deploy/dong-medicine-backend.service deploy-package/
-          cp deploy/ci-deploy.sh deploy-package/
-          chmod +x deploy-package/ci-deploy.sh
+          cp docker-compose.yml deploy-package/
+          cp .env.example deploy-package/.env.example
+          cp -r dong-medicine-backend deploy-package/
+          cp -r dong-medicine-frontend deploy-package/
+          cp deploy/docker-deploy.sh deploy-package/
+          cp deploy/init-server.sh deploy-package/
+          chmod +x deploy-package/docker-deploy.sh
+          chmod +x deploy-package/init-server.sh
 
-      - name: Create environment file
+      - name: Create production .env file
         run: |
-          echo "SPRING_PROFILES_ACTIVE=prod" > deploy-package/.env
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> deploy-package/.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> deploy-package/.env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> deploy-package/.env
-          echo "JWT_EXPIRATION=86400000" >> deploy-package/.env
-          echo "CORS_ALLOWED_ORIGINS=http://${{ secrets.SERVER_HOST }},http://${{ secrets.SERVER_HOST }}:80" >> deploy-package/.env
-          echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> deploy-package/.env
-          echo "DEEPSEEK_BASE_URL=https://api.deepseek.com" >> deploy-package/.env
-          echo "ADMIN_INIT_PASSWORD=${{ secrets.ADMIN_INIT_PASSWORD }}" >> deploy-package/.env
-          echo "FILE_UPLOAD_BASE_PATH=/opt/dong-medicine/backend/public" >> deploy-package/.env
-          echo "=== .env file created ==="
-          ls -la deploy-package/
+          cat > deploy-package/.env << EOF
+          # MySQL配置
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_PORT=3306
+
+          # Redis配置
+          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+          REDIS_PORT=6379
+
+          # JWT配置
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION=86400000
+
+          # 后端配置
+          BACKEND_PORT=8080
+
+          # 前端配置
+          FRONTEND_PORT=80
+
+          # CORS配置
+          CORS_ALLOWED_ORIGIN=http://${{ secrets.SERVER_HOST }}
+
+          # AI配置
+          DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
+          EOF
 
       - name: Setup SSH key
         run: |
@@ -122,17 +105,51 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Check and Initialize Server
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+          if ! command -v docker &> /dev/null; then
+            echo "Docker not installed, running initialization..."
+            if [ -f /tmp/deploy/init-server.sh ]; then
+              chmod +x /tmp/deploy/init-server.sh
+              sudo /tmp/deploy/init-server.sh
+            fi
+          fi
+          ENDSSH
+
       - name: Deploy to server
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /tmp/deploy"
           scp -r deploy-package/. ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/deploy/
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "ls -la /tmp/deploy/ && cd /tmp/deploy && chmod +x ci-deploy.sh && ./ci-deploy.sh"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd /tmp/deploy && chmod +x docker-deploy.sh && sudo ./docker-deploy.sh"
 
       - name: Health check
         run: |
-          sleep 30
-          curl -f http://${{ secrets.SERVER_HOST }}/actuator/health || exit 1
+          echo "Waiting for services to start..."
+          sleep 60
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}:8080/actuator/health 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Health check attempt $i: HTTP $STATUS"
+            sleep 10
+          done
+          echo "Health check failed, checking logs..."
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd /opt/dong-medicine && docker-compose logs --tail=100"
+          exit 1
 
       - name: Cleanup SSH
         if: always()
         run: rm -f ~/.ssh/id_rsa
+
+      - name: Deployment Summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Successfully deployed to ${{ secrets.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend**: http://${{ secrets.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend API**: http://${{ secrets.SERVER_HOST }}:8080/api/" >> $GITHUB_STEP_SUMMARY
+          echo "- **Swagger**: http://${{ secrets.SERVER_HOST }}:8080/swagger-ui/" >> $GITHUB_STEP_SUMMARY

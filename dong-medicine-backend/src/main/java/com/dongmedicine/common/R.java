@@ -1,5 +1,6 @@
 package com.dongmedicine.common;
 
+import com.dongmedicine.common.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,6 +39,14 @@ public class R<T> {
 
     public static <T> R<T> error(int code, String msg) {
         return new R<>(code, msg, null);
+    }
+
+    public static <T> R<T> error(ErrorCode errorCode) {
+        return new R<>(errorCode.getCode(), errorCode.getMessage(), null);
+    }
+
+    public static <T> R<T> error(ErrorCode errorCode, String message) {
+        return new R<>(errorCode.getCode(), message, null);
     }
 
     public static <T> R<T> unauthorized(String msg) {

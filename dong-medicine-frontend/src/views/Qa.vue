@@ -105,7 +105,8 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, inject, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { QuestionFilled, Star, View } from "@element-plus/icons-vue";
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
@@ -114,9 +115,21 @@ import QuizDetailDialog from "@/components/business/dialogs/QuizDetailDialog.vue
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import AiChatCard from "@/components/business/display/AiChatCard.vue";
 import { extractData } from "@/utils";
+import { useDebounceFn } from "@/composables/useDebounce";
+import { useUserStore } from "@/stores/user";
 
+const PAGE_SIZE_OPTIONS = {
+  DEFAULT: 6,
+  LARGE: 12,
+  SMALL: 3
+};
+
+const DEBOUNCE_DELAY = 300;
+
+const route = useRoute();
 const request = inject("request");
-const isLoggedIn = computed(() => !!localStorage.getItem("token"));
+const userStore = useUserStore();
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 const pageLoading = ref(false);
 const keyword = ref("");
@@ -127,7 +140,7 @@ const detailVisible = ref(false);
 const currentQa = ref(null);
 const categoryFilter = ref("");
 const currentPage = ref(1);
-const pageSize = ref(6);
+const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 
 const filterConfig = [
   { key: "category", label: "分类", options: [{ label: "全部", value: "" }, { label: "侗药常识", value: "侗药常识" }, { label: "侗医疗法", value: "侗医疗法" }, { label: "文化背景", value: "文化背景" }] }
@@ -146,7 +159,13 @@ const stats = computed(() => {
 
 const filteredList = computed(() => {
   let result = allQa.value;
-  if (keyword.value) result = result.filter(q => q.question?.includes(keyword.value) || q.answer?.includes(keyword.value));
+  const kw = keyword.value.toLowerCase();
+  if (kw) {
+    result = result.filter(q => 
+      q.question?.toLowerCase().includes(kw) || 
+      q.answer?.toLowerCase().includes(kw)
+    );
+  }
   if (categoryFilter.value) result = result.filter(q => q.category === categoryFilter.value);
   return result;
 });
@@ -156,7 +175,14 @@ const paginatedList = computed(() => {
   return filteredList.value.slice(start, start + pageSize.value);
 });
 
-const handleSearch = () => { currentPage.value = 1; };
+const debouncedSearch = useDebounceFn(() => {
+  currentPage.value = 1;
+}, DEBOUNCE_DELAY);
+
+const handleSearch = () => {
+  debouncedSearch();
+};
+
 const handleFilter = (filters) => { categoryFilter.value = filters.category || ""; currentPage.value = 1; };
 
 const isFavorited = (id) => favorites.value.some(f => f.targetId === id && f.type === "qa");
@@ -192,10 +218,10 @@ const toggleFavorite = async (item) => {
 
 const toggleFavoriteDetail = () => { if (currentQa.value) toggleFavorite(currentQa.value); };
 
-onMounted(async () => {
+const loadQaData = async () => {
   pageLoading.value = true;
   try {
-    const res = await request.get("/qa/list");
+    const res = await request.get("/qa/list", { params: { _t: Date.now() } });
     allQa.value = extractData(res);
     hotQa.value = allQa.value.slice(0, 5);
     if (isLoggedIn.value) {
@@ -203,6 +229,12 @@ onMounted(async () => {
     }
   } catch { ElMessage.error("加载失败"); }
   finally { pageLoading.value = false; }
+};
+
+onMounted(loadQaData);
+
+watch(() => route.path, (newPath) => {
+  if (newPath === '/qa') loadQaData();
 });
 </script>
 

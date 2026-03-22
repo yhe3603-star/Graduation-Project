@@ -7,7 +7,9 @@
           <WarningFilled />
         </el-icon>
         <h2>页面出错了</h2>
-        <p class="error-message">{{ errorMessage }}</p>
+        <p class="error-message">
+{{ errorMessage }}
+</p>
         <div class="error-actions">
           <el-button type="primary" @click="retry">
             <el-icon><Refresh /></el-icon>
@@ -18,12 +20,12 @@
             返回首页
           </el-button>
         </div>
-        <el-collapse class="error-details" v-if="showDetails">
+        <el-collapse v-if="showDetails" class="error-details">
           <el-collapse-item title="错误详情" name="details">
             <pre>{{ errorStack }}</pre>
           </el-collapse-item>
         </el-collapse>
-        <el-button text @click="showDetails = !showDetails" class="toggle-details">
+        <el-button text class="toggle-details" @click="showDetails = !showDetails">
           {{ showDetails ? '隐藏详情' : '显示详情' }}
         </el-button>
       </div>

@@ -4,14 +4,19 @@ server:
 spring:
   application:
     name: dong-medicine-backend
-    admin:
-      enabled: true
-  jmx:
-    enabled: true
   datasource:
     url: jdbc:mysql://localhost:3306/dong_medicine?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:123456}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1200000
+      connection-test-query: SELECT 1
+      pool-name: DongMedicineHikariPool
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
   servlet:
@@ -20,14 +25,26 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
       file-size-threshold: 2KB
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
 
 jwt:
-  secret: ${JWT_SECRET:default-dev-secret-key-for-jwt-token-generation-must-be-at-least-64-chars-long}
   expiration: ${JWT_EXPIRATION:86400000}
 
 app:
   security:
-    jwt-secret: ${JWT_SECRET:default-dev-secret-key-for-jwt-token-generation-must-be-at-least-64-chars-long}
+    jwt-secret: ${JWT_SECRET:dev-secret-key-for-jwt-token-generation-must-be-at-least-64-characters-long-for-hs512}
     jwt-expiration: ${JWT_EXPIRATION:86400000}
     cors-allowed-origins:
       - http://localhost:*
@@ -51,17 +68,17 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,beans,mappings,env,conditions
+        include: health,info,metrics,caches
     jmx:
       exposure:
         include: '*'
   endpoint:
-    beans:
-      enabled: true
-    mappings:
-      enabled: true
     health:
       show-details: always
+    caches:
+      enabled: true
+    metrics:
+      enabled: true
 
 mybatis-plus:
   configuration:

@@ -4,6 +4,30 @@ import { logAuthWarn, logSecurityWarn } from '@/utils/logger'
 import { sanitize, containsXss, containsSqlInjection, sanitizeForLog } from "./xss"
 
 const pendingRequests = new Map()
+let isRefreshing = false
+let refreshSubscribers = []
+
+function subscribeTokenRefresh(callback) {
+  refreshSubscribers.push(callback)
+}
+
+function onRefreshed(token) {
+  refreshSubscribers.forEach(callback => callback(token))
+  refreshSubscribers = []
+}
+
+function onRefreshFailed() {
+  refreshSubscribers.forEach(callback => callback(null))
+  refreshSubscribers = []
+  const keysToRemove = ["token", "userId", "userName", "role"]
+  keysToRemove.forEach(key => {
+    try {
+      sessionStorage.removeItem(key)
+    } catch {
+      // ignore
+    }
+  })
+}
 
 function generateRequestKey(config) {
   const { method, url, params, data } = config
@@ -81,14 +105,63 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+function getToken() {
+  try {
+    return sessionStorage.getItem("token")
+  } catch {
+    return null
+  }
+}
+
+function setToken(token) {
+  try {
+    sessionStorage.setItem("token", token)
+  } catch {
+    // ignore
+  }
+}
+
+function setAuthData(data) {
+  try {
+    sessionStorage.setItem("token", data.token)
+    sessionStorage.setItem("userId", data.id)
+    sessionStorage.setItem("userName", data.username)
+    sessionStorage.setItem("role", data.role)
+  } catch {
+    // ignore
+  }
+}
+
+async function refreshToken() {
+  const token = getToken()
+  if (!token) return null
+  
+  try {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || "/api"
+    const response = await axios.post(
+      baseURL + "/user/refresh-token",
+      {},
+      { headers: { Authorization: "Bearer " + token } }
+    )
+    
+    if (response.data?.code === 200 && response.data?.data?.token) {
+      setAuthData(response.data.data)
+      return response.data.data.token
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   timeout: 60000
 })
 
 request.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token")
-  const userId = localStorage.getItem("userId")
+  const token = getToken()
+  const userId = sessionStorage.getItem("userId")
 
   if (token) config.headers.Authorization = "Bearer " + token
   if (userId) config.headers["userId"] = userId
@@ -148,7 +221,50 @@ request.interceptors.response.use(
     }
 
     if (status === 401) {
-      ["token", "userId", "userName", "role"].forEach(key => localStorage.removeItem(key))
+      const token = getToken()
+      
+      if (token && !config._retry) {
+        config._retry = true
+        
+        if (!isRefreshing) {
+          isRefreshing = true
+          
+          try {
+            const newToken = await refreshToken()
+            
+            if (newToken) {
+              onRefreshed(newToken)
+              config.headers.Authorization = "Bearer " + newToken
+              return request(config)
+            } else {
+              onRefreshFailed()
+              ElMessage.warning("登录已过期，请重新登录")
+              return Promise.reject(err)
+            }
+          } finally {
+            isRefreshing = false
+          }
+        } else {
+          return new Promise((resolve, reject) => {
+            subscribeTokenRefresh((newToken) => {
+              if (newToken) {
+                config.headers.Authorization = "Bearer " + newToken
+                resolve(request(config))
+              } else {
+                reject(err)
+              }
+            })
+          })
+        }
+      }
+      
+      ["token", "userId", "userName", "role"].forEach(key => {
+        try {
+          sessionStorage.removeItem(key)
+        } catch {
+          // ignore
+        }
+      })
       ElMessage.warning("登录已过期，请重新登录")
       return Promise.reject(err)
     }

@@ -1,10 +1,14 @@
 package com.dongmedicine.config;
 
+import com.dongmedicine.entity.User;
 import com.dongmedicine.service.TokenBlacklistService;
+import com.dongmedicine.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -16,12 +20,16 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
+    private final UserService userService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService, UserService userService) {
         this.jwtUtil = jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.userService = userService;
     }
 
     @Override
@@ -39,17 +47,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (tokenBlacklistService.isBlacklisted(token)) {
-                logger.debug("Token is blacklisted");
+                LOGGER.debug("Token is blacklisted");
+                SecurityContextHolder.clearContext();
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            if (jwtUtil.validateToken(token) && !jwtUtil.isTokenExpired(token)) {
-                String username = jwtUtil.getUsernameFromToken(token);
-                Integer userId = jwtUtil.getUserIdFromToken(token);
-                String role = jwtUtil.getRoleFromToken(token);
+            JwtUtil.TokenInfo tokenInfo = jwtUtil.parseToken(token);
+            
+            if (tokenInfo != null && tokenInfo.getClaims() != null && !isTokenExpired(tokenInfo)) {
+                String username = tokenInfo.getUsername();
+                Integer userId = tokenInfo.getUserId();
+                String role = tokenInfo.getRole();
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    User user = userService.getById(userId);
+                    
+                    if (user == null) {
+                        LOGGER.debug("User not found: {}", userId);
+                        SecurityContextHolder.clearContext();
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    
+                    String currentRole = user.getRole();
+                    if (currentRole != null && !currentRole.equals(role)) {
+                        LOGGER.debug("User role changed, token invalid: {}", userId);
+                        SecurityContextHolder.clearContext();
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
                     CustomUserDetails userDetails = new CustomUserDetails(username, userId, role);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
@@ -58,9 +86,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            logger.debug("JWT认证失败: " + e.getMessage());
+            LOGGER.debug("JWT认证失败: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isTokenExpired(JwtUtil.TokenInfo tokenInfo) {
+        return tokenInfo.getExpiration() != null && tokenInfo.getExpiration().before(new java.util.Date());
     }
 }

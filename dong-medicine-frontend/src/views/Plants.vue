@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="plants-page module-page"
-  >
+  <div class="plants-page module-page">
     <div class="module-header">
       <h1>药用资源图鉴</h1>
       <p class="subtitle">
@@ -20,7 +17,13 @@
           @filter="handleFilter"
         />
 
+        <SkeletonGrid
+          v-if="pageLoading"
+          :count="12"
+        />
+
         <CardGrid
+          v-else
           :items="paginatedList"
           title-field="nameCn"
           desc-length="40"
@@ -100,12 +103,24 @@ import Pagination from "@/components/business/display/Pagination.vue";
 import PlantDetailDialog from "@/components/business/dialogs/PlantDetailDialog.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
+import SkeletonGrid from "@/components/common/SkeletonGrid.vue";
 import { extractData } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
+import { useDebounceFn } from "@/composables/useDebounce";
+import { useUserStore } from "@/stores/user";
+
+const PAGE_SIZE_OPTIONS = {
+  DEFAULT: 12,
+  LARGE: 24,
+  SMALL: 8
+};
+
+const DEBOUNCE_DELAY = 300;
 
 const route = useRoute();
 const request = inject("request");
-const isLoggedIn = computed(() => !!localStorage.getItem("token"));
+const userStore = useUserStore();
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 const pageLoading = ref(false);
 const keyword = ref("");
@@ -117,7 +132,7 @@ const favorites = ref([]);
 const catFilter = ref("");
 const useFilter = ref("");
 const currentPage = ref(1);
-const pageSize = ref(12);
+const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 
 const filterConfig = [
   { key: "category", label: "类型", options: [{ label: "全部", value: "" }, { label: "根茎类", value: "根茎类" }, { label: "全草类", value: "全草类" }, { label: "花叶类", value: "花叶类" }] },
@@ -150,7 +165,14 @@ const allUpdateLogs = computed(() => {
 
 const filteredList = computed(() => {
   let result = allPlants.value;
-  if (keyword.value) result = result.filter(p => p.nameCn?.includes(keyword.value) || p.efficacy?.includes(keyword.value));
+  const kw = keyword.value.toLowerCase();
+  if (kw) {
+    result = result.filter(p => 
+      p.nameCn?.toLowerCase().includes(kw) || 
+      p.efficacy?.toLowerCase().includes(kw) ||
+      p.nameDong?.toLowerCase().includes(kw)
+    );
+  }
   if (catFilter.value) result = result.filter(p => p.category === catFilter.value);
   if (useFilter.value) result = result.filter(p => p.usageWay?.includes(useFilter.value));
   return result;
@@ -161,8 +183,19 @@ const paginatedList = computed(() => {
   return filteredList.value.slice(start, start + pageSize.value);
 });
 
-const handleSearch = () => { currentPage.value = 1; };
-const handleFilter = (filters) => { catFilter.value = filters.category || ""; useFilter.value = filters.usage || ""; currentPage.value = 1; };
+const debouncedSearch = useDebounceFn(() => {
+  currentPage.value = 1;
+}, DEBOUNCE_DELAY);
+
+const handleSearch = () => {
+  debouncedSearch();
+};
+
+const handleFilter = (filters) => { 
+  catFilter.value = filters.category || ""; 
+  useFilter.value = filters.usage || ""; 
+  currentPage.value = 1; 
+};
 
 const isFavorited = computed(() => currentPlant.value && favorites.value.some(f => f.targetId === currentPlant.value.id && f.type === "plant"));
 const isFavoritedCard = (id) => favorites.value.some(f => f.targetId === id && f.type === "plant");

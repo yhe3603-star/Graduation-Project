@@ -107,7 +107,8 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, inject, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Bell, Document, Star, StarFilled, View } from "@element-plus/icons-vue";
 import KnowledgeDetailDialog from "@/components/business/dialogs/KnowledgeDetailDialog.vue";
@@ -117,9 +118,21 @@ import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
 import { extractData } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
+import { useDebounceFn } from "@/composables/useDebounce";
+import { useUserStore } from "@/stores/user";
 
+const PAGE_SIZE_OPTIONS = {
+  DEFAULT: 12,
+  LARGE: 24,
+  SMALL: 6
+};
+
+const DEBOUNCE_DELAY = 300;
+
+const route = useRoute();
 const request = inject("request");
-const isLoggedIn = computed(() => !!localStorage.getItem("token"));
+const userStore = useUserStore();
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 const pageLoading = ref(false);
 const keyword = ref("");
@@ -133,7 +146,7 @@ const therapyFilter = ref("");
 const diseaseFilter = ref("");
 
 const currentPage = ref(1);
-const pageSize = ref(12);
+const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 
 const filterConfig = [
   { key: "therapy", label: "疗法", options: [{ label: "全部", value: "" }, { label: "药浴疗法", value: "药浴疗法" }, { label: "艾灸疗法", value: "艾灸疗法" }, { label: "推拿疗法", value: "推拿疗法" }] },
@@ -172,7 +185,13 @@ const stats = computed(() => {
 
 const filteredList = computed(() => {
   let result = allKnowledge.value;
-  if (keyword.value) result = result.filter(k => k.title?.includes(keyword.value) || k.content?.includes(keyword.value));
+  const kw = keyword.value.toLowerCase();
+  if (kw) {
+    result = result.filter(k => 
+      k.title?.toLowerCase().includes(kw) || 
+      k.content?.toLowerCase().includes(kw)
+    );
+  }
   if (therapyFilter.value) result = result.filter(k => k.therapyCategory === therapyFilter.value);
   if (diseaseFilter.value) result = result.filter(k => k.diseaseCategory === diseaseFilter.value);
   return result;
@@ -183,7 +202,14 @@ const paginatedList = computed(() => {
   return filteredList.value.slice(start, start + pageSize.value);
 });
 
-const handleSearch = () => { currentPage.value = 1; };
+const debouncedSearch = useDebounceFn(() => {
+  currentPage.value = 1;
+}, DEBOUNCE_DELAY);
+
+const handleSearch = () => {
+  debouncedSearch();
+};
+
 const handleFilter = (filters) => { therapyFilter.value = filters.therapy || ""; diseaseFilter.value = filters.disease || ""; currentPage.value = 1; };
 
 const isFavorited = computed(() => currentItem.value && favorites.value.includes(currentItem.value.id));
@@ -219,10 +245,10 @@ const toggleFavorite = async (item) => {
 
 const toggleFavoriteDetail = () => { if (currentItem.value) toggleFavorite(currentItem.value); };
 
-onMounted(async () => {
+const loadKnowledgeData = async () => {
   pageLoading.value = true;
   try {
-    const res = await request.get("/knowledge/list");
+    const res = await request.get("/knowledge/list", { params: { _t: Date.now() } });
     allKnowledge.value = extractData(res);
     hotKnowledge.value = allKnowledge.value.slice(0, 5);
     if (isLoggedIn.value) {
@@ -233,6 +259,12 @@ onMounted(async () => {
     }
   } catch { ElMessage.error("加载失败"); }
   finally { pageLoading.value = false; }
+};
+
+onMounted(loadKnowledgeData);
+
+watch(() => route.path, (newPath) => {
+  if (newPath === '/knowledge') loadKnowledgeData();
 });
 </script>
 

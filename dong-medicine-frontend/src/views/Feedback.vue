@@ -198,9 +198,11 @@ import { computed, inject, onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { Check, Clock, DataLine, EditPen, InfoFilled } from "@element-plus/icons-vue";
 import { extractData } from "@/utils";
+import { useUserStore } from "@/stores/user";
 
 const request = inject("request");
-const isLoggedIn = computed(() => !!localStorage.getItem("token"));
+const userStore = useUserStore();
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 const pageLoading = ref(false);
 const submitting = ref(false);

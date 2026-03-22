@@ -16,14 +16,13 @@ public class AppProperties {
 
     public static class Security {
         private String jwtSecret;
-        private long jwtExpiration = 86400000L; // 24小时
+        private Long jwtExpiration = 86400000L;
         private List<String> corsAllowedOrigins = new ArrayList<>();
 
-        // getters and setters
         public String getJwtSecret() { return jwtSecret; }
         public void setJwtSecret(String jwtSecret) { this.jwtSecret = jwtSecret; }
-        public long getJwtExpiration() { return jwtExpiration; }
-        public void setJwtExpiration(long jwtExpiration) { this.jwtExpiration = jwtExpiration; }
+        public Long getJwtExpiration() { return jwtExpiration; }
+        public void setJwtExpiration(Long jwtExpiration) { this.jwtExpiration = jwtExpiration == null ? 86400000L : jwtExpiration; }
         public List<String> getCorsAllowedOrigins() { return corsAllowedOrigins; }
         public void setCorsAllowedOrigins(List<String> corsAllowedOrigins) {
             this.corsAllowedOrigins = corsAllowedOrigins == null ? new ArrayList<>() : corsAllowedOrigins;
@@ -32,13 +31,12 @@ public class AppProperties {
 
     public static class Cache {
         private boolean enabled = true;
-        private long defaultExpireTime = 3600000L; // 1小时
+        private Long defaultExpireTime = 3600000L;
 
-        // getters and setters
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
-        public long getDefaultExpireTime() { return defaultExpireTime; }
-        public void setDefaultExpireTime(long defaultExpireTime) { this.defaultExpireTime = defaultExpireTime; }
+        public Long getDefaultExpireTime() { return defaultExpireTime; }
+        public void setDefaultExpireTime(Long defaultExpireTime) { this.defaultExpireTime = defaultExpireTime == null ? 3600000L : defaultExpireTime; }
     }
 
     public static class Logging {

@@ -5,21 +5,22 @@ import com.dongmedicine.service.TokenBlacklistService;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
 
+    private static final String BLACKLIST_PREFIX = "token:blacklist:";
+
     @Autowired
     private JwtUtil jwtUtil;
 
-    private final Map<String, Long> blacklist = new ConcurrentHashMap<>();
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public void addToBlacklist(String token) {
@@ -27,11 +28,15 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
             return;
         }
         String cleanToken = token.replace("Bearer ", "");
-        Claims claims = jwtUtil.getAllClaimsFromToken(cleanToken);
-        if (claims != null) {
-            Date expiration = claims.getExpiration();
-            blacklist.put(cleanToken, expiration.getTime());
-            log.info("Token added to blacklist, expires at: {}", expiration);
+        JwtUtil.TokenInfo tokenInfo = jwtUtil.parseToken(cleanToken);
+        if (tokenInfo != null && tokenInfo.getClaims() != null && tokenInfo.getExpiration() != null) {
+            Long expirationTime = tokenInfo.getExpiration().getTime();
+            long ttl = expirationTime - System.currentTimeMillis();
+            if (ttl > 0) {
+                String key = BLACKLIST_PREFIX + cleanToken;
+                stringRedisTemplate.opsForValue().set(key, "1", ttl, TimeUnit.MILLISECONDS);
+                log.info("Token added to blacklist, expires in {} ms", ttl);
+            }
         }
     }
 
@@ -41,34 +46,17 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
             return false;
         }
         String cleanToken = token.replace("Bearer ", "");
-        Long expirationTime = blacklist.get(cleanToken);
-        if (expirationTime == null) {
-            return false;
-        }
-        if (System.currentTimeMillis() > expirationTime) {
-            blacklist.remove(cleanToken);
-            return false;
-        }
-        return true;
+        String key = BLACKLIST_PREFIX + cleanToken;
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
     }
 
     @Override
-    @Scheduled(fixedRate = 300000)
     public void cleanExpiredTokens() {
-        long now = System.currentTimeMillis();
-        int removedCount = 0;
-        for (Map.Entry<String, Long> entry : blacklist.entrySet()) {
-            if (now > entry.getValue()) {
-                blacklist.remove(entry.getKey());
-                removedCount++;
-            }
-        }
-        if (removedCount > 0) {
-            log.info("Cleaned {} expired tokens from blacklist", removedCount);
-        }
+        log.debug("Redis automatically handles expired tokens");
     }
 
-    public int getBlacklistSize() {
-        return blacklist.size();
+    public long getBlacklistSize() {
+        var keys = stringRedisTemplate.keys(BLACKLIST_PREFIX + "*");
+        return keys != null ? keys.size() : 0;
     }
 }

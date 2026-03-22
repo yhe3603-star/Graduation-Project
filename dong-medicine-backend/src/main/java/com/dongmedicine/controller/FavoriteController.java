@@ -22,12 +22,8 @@ public class FavoriteController {
     public R<String> add(@PathVariable String targetType, @PathVariable Integer targetId) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) return R.error("请先登录");
-        try {
-            service.addFavorite(userId, targetType, targetId);
-            return R.ok("收藏成功");
-        } catch (Exception e) {
-            return R.error("收藏失败: " + e.getMessage());
-        }
+        service.addFavorite(userId, targetType, targetId);
+        return R.ok("收藏成功");
     }
 
     @DeleteMapping("/{targetType}/{targetId}")
@@ -35,12 +31,8 @@ public class FavoriteController {
     public R<String> remove(@PathVariable String targetType, @PathVariable Integer targetId) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) return R.error("请先登录");
-        try {
-            service.removeFavorite(userId, targetType, targetId);
-            return R.ok("取消收藏成功");
-        } catch (Exception e) {
-            return R.error("取消收藏失败: " + e.getMessage());
-        }
+        service.removeFavorite(userId, targetType, targetId);
+        return R.ok("取消收藏成功");
     }
 
     @GetMapping("/my")

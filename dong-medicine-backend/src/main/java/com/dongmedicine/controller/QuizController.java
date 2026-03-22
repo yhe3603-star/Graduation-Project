@@ -28,14 +28,10 @@ public class QuizController {
     @PostMapping("/submit")
     public R<Map<String, Object>> submit(@RequestBody QuizSubmitDTO dto) {
         Integer userId = SecurityUtils.getCurrentUserId();
-        try {
-            int score = (userId == null) ? service.calculateScore(dto.getAnswers()) : service.submit(userId, dto.getAnswers());
-            int correctAnswers = score / 10;
-            int totalQuestions = dto.getAnswers() != null ? dto.getAnswers().size() : 0;
-            return R.ok(Map.of("score", score, "correct", correctAnswers, "total", totalQuestions));
-        } catch (Exception e) {
-            return R.error("提交失败: " + e.getMessage());
-        }
+        int score = (userId == null) ? service.calculateScore(dto.getAnswers()) : service.submit(userId, dto.getAnswers());
+        int correctAnswers = score / 10;
+        int totalQuestions = dto.getAnswers() != null ? dto.getAnswers().size() : 0;
+        return R.ok(Map.of("score", score, "correct", correctAnswers, "total", totalQuestions));
     }
 
     @GetMapping("/records")

@@ -6,6 +6,10 @@ import com.dongmedicine.entity.User;
 import com.dongmedicine.mapper.UserMapper;
 import com.dongmedicine.service.UserService;
 import com.dongmedicine.config.JwtUtil;
+import com.dongmedicine.common.constant.RoleConstants;
+import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.exception.ErrorCode;
+import com.dongmedicine.common.util.PasswordValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,14 +31,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public String login(String username, String password) {
         if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
-            throw new RuntimeException("用户名和密码不能为空");
+            throw BusinessException.badRequest("用户名和密码不能为空");
         }
         User user = getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw BusinessException.userNotFound();
         }
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new RuntimeException("密码错误");
+            throw BusinessException.passwordWrong();
         }
         return jwtUtil.generateToken(username, user.getId(), user.getRole());
     }
@@ -43,62 +47,65 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Transactional(rollbackFor = Exception.class)
     public void register(String username, String password) {
         if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
-            throw new RuntimeException("用户名和密码不能为空");
+            throw BusinessException.badRequest("用户名和密码不能为空");
         }
         if (username.length() < 3 || username.length() > 20) {
-            throw new RuntimeException("用户名长度必须在3-20个字符之间");
+            throw new BusinessException(ErrorCode.USERNAME_TOO_SHORT);
         }
-        if (password.length() < 6) {
-            throw new RuntimeException("密码长度不能少于6位");
+        
+        PasswordValidator.ValidationResult validationResult = PasswordValidator.validate(password);
+        if (!validationResult.isValid()) {
+            throw BusinessException.passwordTooWeak();
         }
+        
         if (getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username)) != null) {
-            throw new RuntimeException("用户名已存在");
+            throw BusinessException.userAlreadyExists();
         }
 
         User user = new User();
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
-        user.setRole("user");
+        user.setRole(RoleConstants.ROLE_USER);
         user.setCreatedAt(LocalDateTime.now());
         save(user);
     }
 
     @Override
-    @Cacheable(value = "users", key = "#userId")
+    @Cacheable(value = "users", key = "'id:' + #userId")
     public User getUserInfo(Integer userId) {
         if (userId == null) {
-            throw new RuntimeException("用户ID不能为空");
+            throw BusinessException.badRequest("用户ID不能为空");
         }
         User user = getById(userId);
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw BusinessException.userNotFound();
         }
         user.setPasswordHash(null);
         return user;
     }
 
     @Override
-    @Cacheable(value = "users", key = "#username")
+    @Cacheable(value = "users", key = "'username:' + #username")
     public User getUserByUsername(String username) {
         if (!StringUtils.hasText(username)) {
-            throw new RuntimeException("用户名不能为空");
+            throw BusinessException.badRequest("用户名不能为空");
         }
         User user = getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw BusinessException.userNotFound();
         }
         user.setPasswordHash(null);
         return user;
     }
 
     @Override
-    @CacheEvict(value = "users", key = "#userId")
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteUser(Integer userId) {
         if (userId == null) {
-            throw new RuntimeException("用户ID不能为空");
+            throw BusinessException.badRequest("用户ID不能为空");
         }
         if (!removeById(userId)) {
-            throw new RuntimeException("删除用户失败");
+            throw BusinessException.notFound("删除用户失败");
         }
     }
 
@@ -111,25 +118,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = "users", key = "#userId")
+    @CacheEvict(value = "users", allEntries = true)
     public void changePassword(Integer userId, String currentPassword, String newPassword) {
         if (userId == null) {
-            throw new RuntimeException("用户ID不能为空");
+            throw BusinessException.badRequest("用户ID不能为空");
         }
         if (!StringUtils.hasText(currentPassword) || !StringUtils.hasText(newPassword)) {
-            throw new RuntimeException("密码不能为空");
+            throw BusinessException.badRequest("密码不能为空");
         }
-        if (newPassword.length() < 6 || newPassword.length() > 20) {
-            throw new RuntimeException("新密码长度必须在6-20个字符之间");
+        
+        PasswordValidator.ValidationResult validationResult = PasswordValidator.validate(newPassword);
+        if (!validationResult.isValid()) {
+            throw BusinessException.passwordTooWeak();
+        }
+        
+        User user = getById(userId);
+        if (user == null) {
+            throw BusinessException.userNotFound();
+        }
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw BusinessException.passwordWrong();
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        updateById(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "users", allEntries = true)
+    public void updateUserRole(Integer userId, String role) {
+        if (userId == null) {
+            throw BusinessException.badRequest("用户ID不能为空");
+        }
+        if (!RoleConstants.isValid(role)) {
+            throw BusinessException.badRequest("角色值无效，只能是 user 或 admin");
         }
         User user = getById(userId);
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw BusinessException.userNotFound();
         }
-        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new RuntimeException("当前密码错误");
-        }
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setRole(role);
         updateById(user);
     }
 }

@@ -126,32 +126,38 @@
 </template>
 
 <script setup>
-import { ref, provide, onMounted, computed } from "vue"
+import { ref, provide, onMounted, computed, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from "element-plus"
 import AppHeader from "@/components/business/layout/AppHeader.vue"
 import AppFooter from "@/components/business/layout/AppFooter.vue"
 import ErrorBoundary from "@/components/base/ErrorBoundary.vue"
 import request from "@/utils/request"
+import { useUserStore } from "@/stores/user"
 
 const router = useRouter()
 const route = useRoute()
-const isLoggedIn = ref(false)
-const userName = ref("")
-const isAdmin = ref(false)
+const userStore = useUserStore()
+
+const isLoggedIn = computed(() => userStore.isLoggedIn)
+const userName = computed(() => userStore.userName)
+const isAdmin = computed(() => userStore.isAdmin)
 const isAdminPage = computed(() => route.path === "/admin")
 
-const updateUserState = () => {
-  isLoggedIn.value = !!localStorage.getItem("token")
-  userName.value = localStorage.getItem("userName") || ""
-  isAdmin.value = ["ADMIN", "admin"].includes(localStorage.getItem("role") || "")
-}
-onMounted(updateUserState)
+onMounted(() => {
+  userStore.initialize()
+})
+
+watch(() => userStore.isLoggedIn, (newVal) => {
+  if (!newVal && route.meta.requiresAuth) {
+    router.push("/")
+  }
+})
 
 provide("request", request)
 provide("isLoggedIn", isLoggedIn)
 provide("userName", userName)
-provide("updateUserState", updateUserState)
+provide("updateUserState", () => userStore.initialize())
 
 const showLoginDialog = ref(false)
 const showRegisterDialog = ref(false)
@@ -182,11 +188,7 @@ const handleLogin = async () => {
     const res = await request.post("/user/login", loginForm.value)
     const data = res.data || res
     if (data.token) {
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("userName", data.username || loginForm.value.username)
-      localStorage.setItem("role", data.role || "user")
-      localStorage.setItem("userId", data.id || "")
-      updateUserState()
+      userStore.login(data)
       ElMessage.success("登录成功")
       showLoginDialog.value = false
       loginForm.value = { username: "", password: "" }
@@ -217,9 +219,11 @@ const handleRegister = async () => {
   }
 }
 
-const logout = () => {
-  localStorage.clear()
-  updateUserState()
+const logout = async () => {
+  try {
+    await request.post("/user/logout")
+  } catch {}
+  userStore.logout()
   ElMessage.success("已退出登录")
   router.push("/")
 }

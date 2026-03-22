@@ -2,6 +2,8 @@ package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.exception.ErrorCode;
 import com.dongmedicine.common.util.FileCleanupHelper;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.mapper.PlantMapper;
@@ -9,6 +11,7 @@ import com.dongmedicine.service.PlantService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -21,10 +24,17 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
 
     private static final Logger log = LoggerFactory.getLogger(PlantServiceImpl.class);
 
+    private static final int MIN_PAGE_SIZE = 1;
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_SEARCH_LIMIT = 50;
+
     @Autowired
     private PlantMapper plantMapper;
     @Autowired
     private FileCleanupHelper fileCleanupHelper;
+
+    @Value("${app.search.use-fulltext:true}")
+    private boolean useFullTextSearch;
 
     @Override
     @Cacheable(value = "plants", key = "'list:' + (#category ?: 'all') + ':' + (#usageWay ?: 'all')")
@@ -43,14 +53,48 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     @Override
     public List<Plant> search(String keyword) {
         if (!StringUtils.hasText(keyword)) {
-            throw new RuntimeException("搜索关键词不能为空");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "搜索关键词不能为空");
         }
-        return list(new LambdaQueryWrapper<Plant>()
-                .like(Plant::getNameCn, keyword)
-                .or().like(Plant::getNameDong, keyword)
-                .or().like(Plant::getEfficacy, keyword)
-                .or().like(Plant::getStory, keyword)
-                .orderByDesc(Plant::getId));
+        return search(keyword, DEFAULT_SEARCH_LIMIT);
+    }
+
+    @Override
+    public List<Plant> search(String keyword, int limit) {
+        if (!StringUtils.hasText(keyword)) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "搜索关键词不能为空");
+        }
+        if (limit < MIN_PAGE_SIZE || limit > MAX_PAGE_SIZE) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, 
+                    String.format("限制数量必须在%d-%d之间", MIN_PAGE_SIZE, MAX_PAGE_SIZE));
+        }
+
+        String escapedKeyword = escapeLikeSpecialChars(keyword);
+
+        try {
+            if (useFullTextSearch) {
+                List<Plant> results = plantMapper.searchByFullText(keyword, limit);
+                if (!results.isEmpty()) {
+                    log.debug("全文搜索找到 {} 条结果: {}", results.size(), keyword);
+                    return results;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("全文搜索失败，回退到LIKE搜索: {}", e.getMessage());
+        }
+
+        List<Plant> results = plantMapper.searchByLike(escapedKeyword, limit);
+        log.debug("LIKE搜索找到 {} 条结果: {}", results.size(), keyword);
+        return results;
+    }
+
+    private String escapeLikeSpecialChars(String keyword) {
+        if (keyword == null) {
+            return null;
+        }
+        return keyword
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     @Override
@@ -72,10 +116,11 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     @Override
     public List<Plant> getRandomByDifficulty(String difficulty, int limit) {
         if (!StringUtils.hasText(difficulty)) {
-            throw new RuntimeException("难度不能为空");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "难度不能为空");
         }
-        if (limit <= 0 || limit > 100) {
-            throw new RuntimeException("限制数量必须在1-100之间");
+        if (limit < MIN_PAGE_SIZE || limit > MAX_PAGE_SIZE) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, 
+                    String.format("限制数量必须在%d-%d之间", MIN_PAGE_SIZE, MAX_PAGE_SIZE));
         }
         return plantMapper.selectRandomByDifficulty(difficulty, limit);
     }

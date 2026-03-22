@@ -3,6 +3,7 @@ package com.dongmedicine.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.dto.CommentDTO;
 import com.dongmedicine.entity.*;
 import com.dongmedicine.service.*;
@@ -56,15 +57,7 @@ public class AdminController {
     @PutMapping("/users/{id}/role")
     public R<String> updateUserRole(@PathVariable @NotNull Integer id,
                                     @RequestParam @NotBlank(message = "角色不能为空") String role) {
-        User user = userService.getById(id);
-        if (user == null) {
-            return R.error("用户不存在");
-        }
-        if (!role.equals("user") && !role.equals("admin")) {
-            return R.error("角色值无效，只能是 user 或 admin");
-        }
-        user.setRole(role);
-        userService.updateById(user);
+        userService.updateUserRole(id, role);
         return R.ok("角色更新成功");
     }
 
@@ -242,7 +235,10 @@ public class AdminController {
         if (reply == null || reply.trim().isEmpty()) {
             return R.error("回复内容不能为空");
         }
-        feedbackService.replyFeedback(id, reply);
+        if (reply.length() > 1000) {
+            return R.error("回复内容长度不能超过1000字符");
+        }
+        feedbackService.replyFeedback(id, reply.trim());
         return R.ok("回复成功");
     }
 

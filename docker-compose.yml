@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: dong-medicine-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
+      MYSQL_DATABASE: dong_medicine
+      MYSQL_USER: ${MYSQL_USER:-dongmedicine}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dongmedicine123}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./dong-medicine-backend/sql/dong_medicine.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./dong-medicine-backend/sql/optimize_indexes.sql:/docker-entrypoint-initdb.d/02-indexes.sql:ro
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --max_connections=500
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root123456}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - dong-medicine-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: dong-medicine-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123456}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123456}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - dong-medicine-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ./dong-medicine-backend
+      dockerfile: Dockerfile
+    container_name: dong-medicine-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: dong_medicine
+      DB_USERNAME: ${MYSQL_USER:-dongmedicine}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-dongmedicine123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123456}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-must-be-at-least-64-characters-long-for-hs512-algorithm-security}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - backend_public:/app/public
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - dong-medicine-network
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./dong-medicine-frontend
+      dockerfile: Dockerfile
+    container_name: dong-medicine-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dong-medicine-network
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_public:
+    driver: local
+
+networks:
+  dong-medicine-network:
+    driver: bridge

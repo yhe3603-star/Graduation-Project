@@ -54,10 +54,9 @@
           {{ msg.role === 'user' ? '👤' : '🤖' }}
         </div>
         <div class="message-content">
-          <div
-            class="message-text"
-            v-html="formatMessage(msg.content)"
-          />
+          <div class="message-text">
+            {{ msg.content }}
+          </div>
         </div>
       </div>
       
@@ -122,10 +121,6 @@ const scrollToBottom = () => {
       chatContainer.value.scrollTop = chatContainer.value.scrollHeight
     }
   })
-}
-
-const formatMessage = (content) => {
-  return content.replace(/\n/g, '<br>')
 }
 
 const sendMessage = async () => {
@@ -279,6 +274,8 @@ const sendQuickQuestion = (question) => {
   border-radius: 12px;
   line-height: 1.6;
   font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .message.user .message-text {

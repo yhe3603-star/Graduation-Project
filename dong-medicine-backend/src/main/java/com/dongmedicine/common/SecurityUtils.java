@@ -1,5 +1,6 @@
 package com.dongmedicine.common;
 
+import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.config.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,7 +36,7 @@ public final class SecurityUtils {
         return user.getAuthorities().stream()
                 .findFirst()
                 .map(auth -> auth.getAuthority().replace("ROLE_", ""))
-                .orElse("user");
+                .orElse(RoleConstants.ROLE_USER);
     }
 
     public static boolean isAuthenticated() {
@@ -44,6 +45,6 @@ public final class SecurityUtils {
 
     public static boolean isAdmin() {
         String role = getCurrentUserRole();
-        return "ADMIN".equalsIgnoreCase(role) || "admin".equals(role);
+        return RoleConstants.ROLE_ADMIN.equals(role) || RoleConstants.ROLE_ADMIN.equalsIgnoreCase(role);
     }
 }

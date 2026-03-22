@@ -2,6 +2,7 @@ package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.FileCleanupHelper;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.mapper.InheritorMapper;
@@ -27,6 +28,28 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
     private FileCleanupHelper fileCleanupHelper;
 
     @Override
+    public List<Inheritor> getAllInheritors() {
+        return list(new LambdaQueryWrapper<Inheritor>()
+                .orderByDesc(Inheritor::getExperienceYears)
+                .orderByAsc(Inheritor::getName));
+    }
+
+    @Override
+    public Inheritor getDetailById(Integer id) {
+        return getById(id);
+    }
+
+    @Override
+    public List<Inheritor> getByLevel(String level) {
+        if (!StringUtils.hasText(level)) {
+            return getAllInheritors();
+        }
+        return list(new LambdaQueryWrapper<Inheritor>()
+                .eq(Inheritor::getLevel, level)
+                .orderByDesc(Inheritor::getExperienceYears));
+    }
+
+    @Override
     @Cacheable(value = "inheritors", key = "'list:' + #level + ':' + #sortBy")
     public List<Inheritor> listByLevel(String level, String sortBy) {
         LambdaQueryWrapper<Inheritor> qw = new LambdaQueryWrapper<>();
@@ -47,7 +70,7 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
     @Override
     public List<Inheritor> search(String keyword) {
         if (!StringUtils.hasText(keyword)) {
-            throw new RuntimeException("搜索关键词不能为空");
+            throw BusinessException.badRequest("搜索关键词不能为空");
         }
         return list(new LambdaQueryWrapper<Inheritor>()
                 .like(Inheritor::getName, keyword)

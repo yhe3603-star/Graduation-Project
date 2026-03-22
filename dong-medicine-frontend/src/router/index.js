@@ -21,7 +21,7 @@ const router = createRouter({ history: createWebHistory(), routes })
 
 let tokenValidationPromise = null
 let lastValidationTime = 0
-const VALIDATION_INTERVAL = 5 * 60 * 1000
+const VALIDATION_INTERVAL = 60 * 1000
 
 async function validateToken() {
   const userStore = useUserStore()

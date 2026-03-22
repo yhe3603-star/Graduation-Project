@@ -6,6 +6,7 @@ import com.dongmedicine.entity.Resource;
 import com.dongmedicine.service.ResourceService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -34,6 +37,8 @@ public class ResourceController {
 
     @Value("${app.upload.path:./uploads}")
     private String uploadPath;
+
+    private static final int STREAM_BUFFER_SIZE = 8192;
 
     @GetMapping("/list")
     public R<List<Resource>> list(
@@ -61,49 +66,72 @@ public class ResourceController {
     }
 
     @GetMapping("/download/{id}")
-    public ResponseEntity<byte[]> download(@PathVariable Integer id) {
+    public void download(@PathVariable Integer id, HttpServletResponse response) throws IOException {
         Resource resource = service.getById(id);
         if (resource == null || resource.getFiles() == null || resource.getFiles().isEmpty()) {
-            return ResponseEntity.notFound().build();
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "资源不存在");
+            return;
         }
 
-        try {
-            // 解析files字段获取第一个文件的path
-            JsonNode filesArray = objectMapper.readTree(resource.getFiles());
-            if (!filesArray.isArray() || filesArray.size() == 0) {
-                return ResponseEntity.notFound().build();
-            }
-            JsonNode firstFile = filesArray.get(0);
-            if (!firstFile.has("path")) {
-                return ResponseEntity.notFound().build();
-            }
-            String fileUrl = firstFile.get("path").asText();
+        JsonNode filesArray = objectMapper.readTree(resource.getFiles());
+        if (!filesArray.isArray() || filesArray.size() == 0) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "文件不存在");
+            return;
+        }
 
-            if (fileUrl.startsWith("http")) {
-                service.incrementDownload(id);
-                return ResponseEntity.status(302).header(HttpHeaders.LOCATION, fileUrl).build();
-            }
+        JsonNode firstFile = filesArray.get(0);
+        if (!firstFile.has("path")) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "文件路径不存在");
+            return;
+        }
 
-            Path filePath = fileUrl.startsWith("/") ? Paths.get(uploadPath, fileUrl.substring(1)) : Paths.get(uploadPath, fileUrl);
-            File file = filePath.toFile();
-            if (!file.exists()) {
-                log.warn("File not found: {}", filePath);
-                return ResponseEntity.notFound().build();
-            }
+        String fileUrl = firstFile.get("path").asText();
 
+        if (fileUrl.startsWith("http")) {
             service.incrementDownload(id);
-            String mimeType = FileTypeUtils.getMimeType(file.getName());
-            String displayName = FileTypeUtils.getDisplayName(file.getName(), resource.getTitle());
-            byte[] content = Files.readAllBytes(filePath);
+            response.sendRedirect(fileUrl);
+            return;
+        }
 
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(mimeType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + URLEncoder.encode(displayName, StandardCharsets.UTF_8))
-                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(content.length))
-                    .body(content);
+        Path filePath = fileUrl.startsWith("/") 
+                ? Paths.get(uploadPath, fileUrl.substring(1)) 
+                : Paths.get(uploadPath, fileUrl);
+
+        File file = filePath.toFile();
+        if (!file.exists() || !file.isFile()) {
+            log.warn("文件不存在: {}", filePath);
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "文件不存在");
+            return;
+        }
+
+        service.incrementDownload(id);
+
+        String mimeType = FileTypeUtils.getMimeType(file.getName());
+        String displayName = FileTypeUtils.getDisplayName(file.getName(), resource.getTitle());
+        long fileSize = file.length();
+
+        response.setContentType(mimeType);
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, 
+                "attachment; filename*=UTF-8''" + URLEncoder.encode(displayName, StandardCharsets.UTF_8));
+        response.setContentLengthLong(fileSize);
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "no-cache");
+
+        try (InputStream is = Files.newInputStream(filePath);
+             OutputStream os = response.getOutputStream()) {
+            
+            byte[] buffer = new byte[STREAM_BUFFER_SIZE];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+            os.flush();
+            
+            log.info("文件下载成功: {} ({} 字节)", displayName, fileSize);
         } catch (IOException e) {
-            log.error("Failed to download file: {}", resource.getFiles(), e);
-            return ResponseEntity.internalServerError().build();
+            log.error("文件下载失败: {}", filePath, e);
+            if (!response.isCommitted()) {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "文件下载失败");
+            }
         }
     }
 

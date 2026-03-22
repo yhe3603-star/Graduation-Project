@@ -34,16 +34,17 @@ public class AiChatServiceImpl implements AiChatService {
 
     @Override
     public ChatResponse chat(ChatRequest request) {
+        long startTime = System.currentTimeMillis();
+        String requestId = java.util.UUID.randomUUID().toString().substring(0, 8);
+        
         try {
-            // 检查API密钥是否配置
             if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().isEmpty()) {
-                log.warn("DeepSeek API密钥未配置");
-                return ChatResponse.error("AI服务未配置: 请在环境变量中设置DEEPSEEK_API_KEY");
+                log.warn("[{}] AI服务未配置", requestId);
+                return ChatResponse.error("AI服务未配置，请联系管理员");
             }
             
             String url = deepSeekConfig.getBaseUrl() + "/chat/completions";
-            log.info("调用DeepSeek API: {}", url);
-            log.info("API Key: {}...", deepSeekConfig.getApiKey().substring(0, Math.min(10, deepSeekConfig.getApiKey().length())));
+            log.debug("[{}] 调用AI服务开始", requestId);
             
             List<Map<String, String>> messages = new ArrayList<>();
             messages.add(Map.of("role", "system", "content", SYSTEM_PROMPT));
@@ -68,28 +69,28 @@ public class AiChatServiceImpl implements AiChatService {
             
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
             
-            log.info("发送请求体: {}", objectMapper.writeValueAsString(requestBody));
-            
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
             
-            log.info("API响应状态: {}", response.getStatusCode());
-            log.info("API响应体: {}", response.getBody());
+            long elapsed = System.currentTimeMillis() - startTime;
             
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 JsonNode root = objectMapper.readTree(response.getBody());
                 if (root.has("error")) {
                     String errorMsg = root.path("error").path("message").asText();
-                    log.error("DeepSeek API错误: {}", errorMsg);
-                    return ChatResponse.error("AI服务错误: " + errorMsg);
+                    log.error("[{}] AI服务返回错误, 耗时={}ms", requestId, elapsed);
+                    return ChatResponse.error("AI服务暂时不可用");
                 }
                 String reply = root.path("choices").get(0).path("message").path("content").asText();
+                log.debug("[{}] AI服务调用成功, 耗时={}ms, 回复长度={}", requestId, elapsed, reply.length());
                 return ChatResponse.success(reply);
             } else {
-                return ChatResponse.error("AI服务响应异常: " + response.getStatusCode());
+                log.error("[{}] AI服务响应异常, 状态={}, 耗时={}ms", requestId, response.getStatusCode(), elapsed);
+                return ChatResponse.error("AI服务响应异常");
             }
         } catch (Exception e) {
-            log.error("AI聊天服务异常", e);
-            return ChatResponse.error("AI服务暂时不可用: " + e.getMessage());
+            long elapsed = System.currentTimeMillis() - startTime;
+            log.error("[{}] AI服务调用异常, 耗时={}ms, 错误类型={}", requestId, elapsed, e.getClass().getSimpleName());
+            return ChatResponse.error("AI服务暂时不可用，请稍后重试");
         }
     }
 }

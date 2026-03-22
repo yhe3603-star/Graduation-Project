@@ -1,6 +1,7 @@
 package com.dongmedicine.service.impl;
 
 import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.exception.ErrorCode;
 import com.dongmedicine.common.util.FileTypeUtils;
 import com.dongmedicine.config.FileUploadProperties;
 import com.dongmedicine.dto.FileUploadResult;
@@ -175,7 +176,7 @@ public class FileUploadServiceImpl implements FileUploadService {
     private void validateFile(MultipartFile file, String extension, String fileType) {
         if (FileTypeUtils.isDangerousExtension(extension)) {
             log.warn("检测到危险文件扩展名: {}", extension);
-            throw new BusinessException("不允许上传此类型的文件: " + extension);
+            throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "不允许上传此类型的文件: " + extension);
         }
         
         long fileSize = file.getSize();
@@ -183,30 +184,30 @@ public class FileUploadServiceImpl implements FileUploadService {
         switch (fileType) {
             case "image":
                 if (!properties.getAllowedImageExtensionsList().contains(extension)) {
-                    throw new BusinessException("不支持的图片格式: " + extension + "，支持的格式: " + properties.getAllowedImageExtensions());
+                    throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "不支持的图片格式: " + extension + "，支持的格式: " + properties.getAllowedImageExtensions());
                 }
                 if (fileSize > properties.getImageMaxSize()) {
-                    throw new BusinessException("图片大小超出限制，最大允许: " + formatFileSize(properties.getImageMaxSize()));
+                    throw new BusinessException(ErrorCode.FILE_SIZE_EXCEEDED, "图片大小超出限制，最大允许: " + formatFileSize(properties.getImageMaxSize()));
                 }
                 break;
             case "video":
                 if (!properties.getAllowedVideoExtensionsList().contains(extension)) {
-                    throw new BusinessException("不支持的视频格式: " + extension + "，支持的格式: " + properties.getAllowedVideoExtensions());
+                    throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "不支持的视频格式: " + extension + "，支持的格式: " + properties.getAllowedVideoExtensions());
                 }
                 if (fileSize > properties.getVideoMaxSize()) {
-                    throw new BusinessException("视频大小超出限制，最大允许: " + formatFileSize(properties.getVideoMaxSize()));
+                    throw new BusinessException(ErrorCode.FILE_SIZE_EXCEEDED, "视频大小超出限制，最大允许: " + formatFileSize(properties.getVideoMaxSize()));
                 }
                 break;
             case "document":
                 if (!properties.getAllowedDocumentExtensionsList().contains(extension)) {
-                    throw new BusinessException("不支持的文档格式: " + extension + "，支持的格式: " + properties.getAllowedDocumentExtensions());
+                    throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "不支持的文档格式: " + extension + "，支持的格式: " + properties.getAllowedDocumentExtensions());
                 }
                 if (fileSize > properties.getDocumentMaxSize()) {
-                    throw new BusinessException("文档大小超出限制，最大允许: " + formatFileSize(properties.getDocumentMaxSize()));
+                    throw new BusinessException(ErrorCode.FILE_SIZE_EXCEEDED, "文档大小超出限制，最大允许: " + formatFileSize(properties.getDocumentMaxSize()));
                 }
                 break;
             default:
-                throw new BusinessException("不支持的文件类型: " + fileType);
+                throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "不支持的文件类型: " + fileType);
         }
     }
     
@@ -218,17 +219,19 @@ public class FileUploadServiceImpl implements FileUploadService {
         try {
             if (FileTypeUtils.containsDangerousContent(inputStream)) {
                 log.warn("检测到文件包含危险内容: {}", extension);
-                throw new BusinessException("文件内容包含不安全的内容，禁止上传");
+                throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "文件内容包含不安全的内容，禁止上传");
             }
             
             boolean isValid = FileTypeUtils.validateFileContent(inputStream, extension);
             if (!isValid) {
-                log.warn("文件内容校验警告: 扩展名 {} 与内容不完全匹配，但仍允许上传", extension);
+                log.warn("文件内容校验失败: 扩展名 {} 与内容不匹配", extension);
+                throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "文件内容与扩展名不匹配，禁止上传");
             }
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            log.warn("文件内容校验异常: {}，允许上传", e.getMessage());
+            log.error("文件内容校验异常: {}", e.getMessage());
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR, "文件内容校验失败，禁止上传");
         }
     }
     
