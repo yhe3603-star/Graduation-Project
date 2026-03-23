@@ -47,6 +47,20 @@ jobs:
         working-directory: dong-medicine-frontend
         run: npm run build
 
+      - name: Verify Frontend Build Output
+        working-directory: dong-medicine-frontend
+        run: |
+          echo "Checking if dist directory exists..."
+          if [ -d "dist" ]; then
+            echo "dist directory exists, contents:"
+            ls -la dist/
+            echo "Total files in dist:"
+            find dist -type f | wc -l
+          else
+            echo "ERROR: dist directory does not exist after build!"
+            exit 1
+          fi
+
       - name: Upload Frontend Build Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -66,7 +80,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: dong-medicine-frontend
+          path: dong-medicine-frontend/dist
 
       - name: Verify Frontend Build
         run: |
