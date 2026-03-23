@@ -18,7 +18,7 @@ print_error() { echo -e "${COLOR_RED}[✗] $1${COLOR_RESET}"; }
 print_info() { echo -e "${COLOR_YELLOW}[i] $1${COLOR_RESET}"; }
 print_step() { echo -e "${COLOR_BLUE}==> $1${COLOR_RESET}"; }
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_DIR="/opt/dong-medicine"
 BACKUP_DIR="/opt/dong-medicine/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
