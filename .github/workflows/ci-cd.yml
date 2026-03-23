@@ -67,6 +67,19 @@ jobs:
         with:
           name: frontend-build
           path: dong-medicine-frontend/dist
+          merge-multiple: true
+
+      - name: Verify Frontend Build
+        run: |
+          echo "Checking dist directory..."
+          ls -la dong-medicine-frontend/dist || echo "dist directory not found"
+          if [ -d "dong-medicine-frontend/dist" ]; then
+            echo "dist directory exists, contents:"
+            ls -la dong-medicine-frontend/dist/
+          else
+            echo "ERROR: dist directory does not exist!"
+            exit 1
+          fi
 
       - name: Prepare deployment package
         run: |
