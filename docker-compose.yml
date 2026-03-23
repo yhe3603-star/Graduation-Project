@@ -52,6 +52,8 @@ services:
 
   # 后端服务
   backend:
+    build:
+      context: ./dong-medicine-backend
     image: dong-medicine-backend:latest
     container_name: dong-medicine-backend
     restart: unless-stopped
@@ -89,6 +91,8 @@ services:
 
   # 前端服务
   frontend:
+    build:
+      context: ./dong-medicine-frontend
     image: dong-medicine-frontend:latest
     container_name: dong-medicine-frontend
     restart: unless-stopped
