@@ -189,6 +189,8 @@ const showDetail = async (item) => {
     await request.post(`/qa/${item.id}/view`);
     const qaIdx = allQa.value.findIndex(q => q.id === item.id);
     if (qaIdx > -1) allQa.value[qaIdx].viewCount = (allQa.value[qaIdx].viewCount || 0) + 1;
+    const statsIdx = allQaForStats.value.findIndex(q => q.id === item.id);
+    if (statsIdx > -1) allQaForStats.value[statsIdx].viewCount = (allQaForStats.value[statsIdx].viewCount || 0) + 1;
   } catch {}
 };
 

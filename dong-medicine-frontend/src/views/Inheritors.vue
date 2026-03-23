@@ -215,6 +215,8 @@ const showDetail = async (item) => {
     await request.post(`/inheritors/${item.id}/view`);
     const idx = allInheritors.value.findIndex(i => i.id === item.id);
     if (idx > -1) allInheritors.value[idx].viewCount = (allInheritors.value[idx].viewCount || 0) + 1;
+    const statsIdx = allInheritorsForStats.value.findIndex(i => i.id === item.id);
+    if (statsIdx > -1) allInheritorsForStats.value[statsIdx].viewCount = (allInheritorsForStats.value[statsIdx].viewCount || 0) + 1;
   } catch (e) {
     console.debug('浏览量更新失败:', e)
   }

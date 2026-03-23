@@ -218,6 +218,8 @@ const showDetail = async (item) => {
     await request.post(`/knowledge/${item.id}/view`);
     const idx = allKnowledge.value.findIndex(k => k.id === item.id);
     if (idx > -1) allKnowledge.value[idx].viewCount = (allKnowledge.value[idx].viewCount || 0) + 1;
+    const statsIdx = allKnowledgeForStats.value.findIndex(k => k.id === item.id);
+    if (statsIdx > -1) allKnowledgeForStats.value[statsIdx].viewCount = (allKnowledgeForStats.value[statsIdx].viewCount || 0) + 1;
   } catch (e) {
     console.debug('浏览量更新失败:', e);
   }

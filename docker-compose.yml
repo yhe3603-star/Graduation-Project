@@ -52,9 +52,7 @@ services:
 
   # 后端服务
   backend:
-    build:
-      context: ./dong-medicine-backend
-      dockerfile: Dockerfile
+    image: dong-medicine-backend:latest
     container_name: dong-medicine-backend
     restart: unless-stopped
     environment:
@@ -91,9 +89,7 @@ services:
 
   # 前端服务
   frontend:
-    build:
-      context: ./dong-medicine-frontend
-      dockerfile: Dockerfile
+    image: dong-medicine-frontend:latest
     container_name: dong-medicine-frontend
     restart: unless-stopped
     ports:

@@ -42,7 +42,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw BusinessException.userNotFound();
         }
         if (user.isBanned()) {
-            throw BusinessException.forbidden("账号已被封禁，请联系管理员");
+            throw BusinessException.forbidden("该用户已被封禁");
         }
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw BusinessException.passwordWrong();
@@ -79,7 +79,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    @Cacheable(value = "users", key = "'id:' + #userId")
     public User getUserInfo(Integer userId) {
         if (userId == null) {
             throw BusinessException.badRequest("用户ID不能为空");
@@ -93,7 +92,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    @Cacheable(value = "users", key = "'username:' + #username")
     public User getUserByUsername(String username) {
         if (!StringUtils.hasText(username)) {
             throw BusinessException.badRequest("用户名不能为空");

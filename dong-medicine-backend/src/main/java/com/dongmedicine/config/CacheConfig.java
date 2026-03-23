@@ -22,9 +22,11 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 @Configuration
 @EnableCaching
@@ -77,6 +79,8 @@ public class CacheConfig {
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
         objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
         jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
         
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()

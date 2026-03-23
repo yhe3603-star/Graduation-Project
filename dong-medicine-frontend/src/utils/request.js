@@ -187,8 +187,8 @@ request.interceptors.response.use(
     removePendingRequest(res.config)
     
     if (res.data?.code !== undefined && res.data.code !== 200) {
-      ElMessage.error(res.data.msg || "请求失败")
-      return Promise.reject(res.data.msg)
+      console.log('Response error:', res.data)
+      return Promise.reject(res.data)
     }
     return res.data
   },
@@ -216,9 +216,9 @@ request.interceptors.response.use(
     }
 
     if (status === 403) {
-      logAuthWarn(msg)
-      return Promise.reject(err)
-    }
+            logAuthWarn(msg)
+            return Promise.reject(err.response?.data || err)
+        }
 
     if (status === 401) {
       const token = getToken()
@@ -266,11 +266,11 @@ request.interceptors.response.use(
         }
       })
       ElMessage.warning("登录已过期，请重新登录")
-      return Promise.reject(err)
+      return Promise.reject(err.response?.data || err)
     }
 
     ElMessage.error(msg)
-    return Promise.reject(err)
+    return Promise.reject(err.response?.data || err)
   }
 )
 

@@ -5,9 +5,25 @@ FROM maven:3.9-eclipse-temurin-17-alpine AS builder
 
 WORKDIR /build
 
+# 配置Maven国内镜像源
+RUN mkdir -p /root/.m2 && \
+    echo '<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" \
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 \
+          http://maven.apache.org/xsd/settings-1.0.0.xsd"> \
+          <mirrors> \
+            <mirror> \
+              <id>aliyun</id> \
+              <name>Aliyun Maven</name> \
+              <url>https://maven.aliyun.com/repository/public</url> \
+              <mirrorOf>central</mirrorOf> \
+            </mirror> \
+          </mirrors> \
+        </settings>' > /root/.m2/settings.xml
+
 # 复制pom.xml并下载依赖（利用Docker缓存）
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B -Dmaven.wagon.http.retryHandler.count=3 -Dmaven.wagon.http.retryHandler.retryIntervalSeconds=5
 
 # 复制源代码并构建
 COPY src ./src

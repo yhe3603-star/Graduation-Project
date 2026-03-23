@@ -196,6 +196,8 @@ const showDetail = async (plant) => {
     await request.post(`/plants/${plant.id}/view`);
     const idx = allPlants.value.findIndex(p => p.id === plant.id);
     if (idx > -1) allPlants.value[idx].viewCount = (allPlants.value[idx].viewCount || 0) + 1;
+    const statsIdx = allPlantsForStats.value.findIndex(p => p.id === plant.id);
+    if (statsIdx > -1) allPlantsForStats.value[statsIdx].viewCount = (allPlantsForStats.value[statsIdx].viewCount || 0) + 1;
   } catch (e) {
     console.debug('浏览量更新失败:', e);
   }

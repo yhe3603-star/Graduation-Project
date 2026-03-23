@@ -198,7 +198,8 @@ const handleLogin = async () => {
     }
   } catch (e) {
     logFetchError('登录', e)
-    ElMessage.error("登录失败，请重试")
+    console.log('Login error:', e)
+    ElMessage.error(e.msg || e.message || "登录失败，请重试")
   } finally {
     loginLoading.value = false
   }
@@ -216,7 +217,7 @@ const handleRegister = async () => {
     registerForm.value = { username: "", password: "", confirmPassword: "" }
   } catch (e) {
     logFetchError('注册', e)
-    ElMessage.error("注册失败，请重试")
+    ElMessage.error(e.msg || "注册失败，请重试")
   } finally {
     registerLoading.value = false
   }

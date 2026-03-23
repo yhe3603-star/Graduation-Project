@@ -308,6 +308,8 @@ const openResource = async (item) => {
     await request.post(`/resources/${item.id}/view`);
     const idx = allResources.value.findIndex(r => r.id === item.id);
     if (idx > -1) allResources.value[idx].viewCount = (allResources.value[idx].viewCount || 0) + 1;
+    const statsIdx = allResourcesForStats.value.findIndex(r => r.id === item.id);
+    if (statsIdx > -1) allResourcesForStats.value[statsIdx].viewCount = (allResourcesForStats.value[statsIdx].viewCount || 0) + 1;
   } catch {}
 };
 
