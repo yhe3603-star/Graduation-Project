@@ -47,6 +47,12 @@ jobs:
         working-directory: dong-medicine-frontend
         run: npm run build
 
+      - name: Upload Frontend Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: dong-medicine-frontend/dist
+
   deploy:
     name: Deploy to Server
     needs: build-and-test
@@ -55,6 +61,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download Frontend Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: dong-medicine-frontend/dist
 
       - name: Prepare deployment package
         run: |
