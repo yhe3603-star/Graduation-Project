@@ -66,18 +66,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: dong-medicine-frontend/dist
-          merge-multiple: true
+          path: dong-medicine-frontend
 
       - name: Verify Frontend Build
         run: |
-          echo "Checking dist directory..."
-          ls -la dong-medicine-frontend/dist || echo "dist directory not found"
+          echo "Checking frontend directory structure..."
+          ls -la dong-medicine-frontend/ || echo "frontend directory not found"
           if [ -d "dong-medicine-frontend/dist" ]; then
             echo "dist directory exists, contents:"
             ls -la dong-medicine-frontend/dist/
           else
             echo "ERROR: dist directory does not exist!"
+            echo "Contents of dong-medicine-frontend:"
+            ls -la dong-medicine-frontend/
             exit 1
           fi
 
