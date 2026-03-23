@@ -33,10 +33,6 @@ public class StartupInfoPrinter implements ApplicationListener<ApplicationReadyE
             System.out.println("\u001B[32m╠══════════════════════════════════════════════════════════════════════╣\u001B[0m");
             System.out.println("\u001B[32m║  API:      \u001B[36m" + padRight(baseUrl + "/api/", 49) + "\u001B[32m║\u001B[0m");
             System.out.println("\u001B[32m║  Swagger:  \u001B[36m" + padRight(baseUrl + "/swagger-ui/index.html", 49) + "\u001B[32m║\u001B[0m");
-            System.out.println("\u001B[32m╠══════════════════════════════════════════════════════════════════════╣\u001B[0m");
-            System.out.println("\u001B[32m║  Beans:    \u001B[33m" + padRight(baseUrl + "/actuator/beans", 49) + "\u001B[32m║\u001B[0m");
-            System.out.println("\u001B[32m║  Mappings: \u001B[33m" + padRight(baseUrl + "/actuator/mappings", 49) + "\u001B[32m║\u001B[0m");
-            System.out.println("\u001B[32m║  Health:   \u001B[33m" + padRight(baseUrl + "/actuator/health", 49) + "\u001B[32m║\u001B[0m");
             System.out.println("\u001B[32m╚══════════════════════════════════════════════════════════════════════╝\u001B[0m");
             System.out.println();
         }, 500, TimeUnit.MILLISECONDS);
