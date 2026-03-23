@@ -1,9 +1,11 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.FileCleanupHelper;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Feedback;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.mapper.KnowledgeMapper;
@@ -78,8 +80,8 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     }
 
     @Override
-    @Cacheable(value = "knowledges", key = "'search:' + #keyword + ':' + #therapy + ':' + #disease + ':' + #sortBy")
-    public List<Knowledge> advancedSearch(String keyword, String therapy, String disease, String sortBy) {
+    @Cacheable(value = "knowledges", key = "'search:' + #keyword + ':' + #therapy + ':' + #disease + ':' + #herb + ':' + #sortBy")
+    public List<Knowledge> advancedSearch(String keyword, String therapy, String disease, String herb, String sortBy) {
         LambdaQueryWrapper<Knowledge> qw = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             qw.and(wrapper -> wrapper.like(Knowledge::getTitle, keyword).or().like(Knowledge::getContent, keyword));
@@ -90,12 +92,51 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         if (StringUtils.hasText(disease)) {
             qw.eq(Knowledge::getDiseaseCategory, disease);
         }
+        if (StringUtils.hasText(herb)) {
+            qw.eq(Knowledge::getHerbCategory, herb);
+        }
         if ("popularity".equals(sortBy)) {
             qw.orderByDesc(Knowledge::getPopularity);
         } else {
             qw.orderByDesc(Knowledge::getCreatedAt);
         }
         return list(qw);
+    }
+
+    @Override
+    public Page<Knowledge> pageAll(Integer page, Integer size, String sortBy) {
+        Page<Knowledge> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Knowledge> qw = new LambdaQueryWrapper<>();
+        if ("popularity".equals(sortBy)) {
+            qw.orderByDesc(Knowledge::getPopularity);
+        } else {
+            qw.orderByDesc(Knowledge::getCreatedAt);
+        }
+        return page(pageParam, qw);
+    }
+
+    @Override
+    public Page<Knowledge> advancedSearchPaged(String keyword, String therapy, String disease, String herb, String sortBy, Integer page, Integer size) {
+        Page<Knowledge> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Knowledge> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            qw.and(wrapper -> wrapper.like(Knowledge::getTitle, keyword).or().like(Knowledge::getContent, keyword));
+        }
+        if (StringUtils.hasText(therapy)) {
+            qw.eq(Knowledge::getTherapyCategory, therapy);
+        }
+        if (StringUtils.hasText(disease)) {
+            qw.eq(Knowledge::getDiseaseCategory, disease);
+        }
+        if (StringUtils.hasText(herb)) {
+            qw.eq(Knowledge::getHerbCategory, herb);
+        }
+        if ("popularity".equals(sortBy)) {
+            qw.orderByDesc(Knowledge::getPopularity);
+        } else {
+            qw.orderByDesc(Knowledge::getCreatedAt);
+        }
+        return page(pageParam, qw);
     }
 
     @Override

@@ -14,13 +14,16 @@ const routes = [
   { path: "/admin", name: "Admin", component: () => import("@/views/Admin.vue"), meta: { requiresAuth: true, requiresAdmin: true } },
   { path: "/about", name: "About", component: () => import("@/views/About.vue") },
   { path: "/feedback", name: "Feedback", component: () => import("@/views/Feedback.vue") },
-  { path: "/search", name: "Search", component: () => import("@/views/GlobalSearch.vue") }
+  { path: "/search", name: "Search", component: () => import("@/views/GlobalSearch.vue") },
+  { path: "/:pathMatch(.*)*", name: "NotFound", component: () => import("@/views/NotFound.vue") }
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
 
 let tokenValidationPromise = null
 let lastValidationTime = 0
+/** 必须与当前 token 一致才复用校验结果，避免登录换 token 后仍沿用旧 Promise 导致误判 */
+let lastValidatedTokenSnapshot = ''
 const VALIDATION_INTERVAL = 60 * 1000
 
 async function validateToken() {
@@ -28,13 +31,21 @@ async function validateToken() {
   if (!userStore.token) return false
 
   const now = Date.now()
-  if (now - lastValidationTime < VALIDATION_INTERVAL && tokenValidationPromise) {
+  const sameToken =
+    lastValidatedTokenSnapshot === userStore.token
+  if (
+    sameToken &&
+    now - lastValidationTime < VALIDATION_INTERVAL &&
+    tokenValidationPromise
+  ) {
     return tokenValidationPromise
   }
 
   lastValidationTime = now
-  tokenValidationPromise = userStore.validateToken()
-    .then(isValid => {
+  lastValidatedTokenSnapshot = userStore.token
+  tokenValidationPromise = userStore
+    .validateToken()
+    .then((isValid) => {
       if (!isValid) {
         userStore.clearAuth()
       }
@@ -47,7 +58,7 @@ async function validateToken() {
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   
-  if (!userStore.token && localStorage.getItem('token')) {
+  if (!userStore.token && sessionStorage.getItem('token')) {
     userStore.initializeFromStorage()
   }
 

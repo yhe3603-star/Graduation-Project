@@ -1,7 +1,9 @@
 package com.dongmedicine.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.util.FileTypeUtils;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Resource;
 import com.dongmedicine.service.ResourceService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -41,11 +44,14 @@ public class ResourceController {
     private static final int STREAM_BUFFER_SIZE = 8192;
 
     @GetMapping("/list")
-    public R<List<Resource>> list(
+    public R<Map<String, Object>> list(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "12") Integer size,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String fileType) {
-        return R.ok(service.listByCategoryAndKeywordAndType(category, keyword, fileType));
+        Page<Resource> pageResult = service.pageByCategoryAndKeywordAndType(category, keyword, fileType, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @GetMapping("/hot")

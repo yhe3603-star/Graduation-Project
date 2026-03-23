@@ -24,20 +24,14 @@
             <el-select
               v-model="form.category"
               style="width: 100%"
-              placeholder="请选择分类"
+              placeholder="请选择资源分类"
+              allow-create
+              filterable
             >
-              <el-option
-                label="入门"
-                value="入门"
-              />
-              <el-option
-                label="进阶"
-                value="进阶"
-              />
-              <el-option
-                label="专业"
-                value="专业"
-              />
+              <el-option label="入门" value="入门" />
+              <el-option label="进阶" value="进阶" />
+              <el-option label="专业" value="专业" />
+              <el-option label="其他" value="其他" />
             </el-select>
           </el-form-item>
         </el-col>

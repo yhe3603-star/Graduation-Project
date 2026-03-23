@@ -7,7 +7,7 @@ public final class PasswordValidator {
     private PasswordValidator() {
     }
 
-    private static final int MIN_LENGTH = 6;
+    private static final int MIN_LENGTH = 8;
     private static final int MAX_LENGTH = 50;
     
     private static final Pattern LETTER_PATTERN = Pattern.compile("[a-zA-Z]");

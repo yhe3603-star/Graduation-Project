@@ -74,6 +74,28 @@ export function extractData(res) {
   return []
 }
 
+export function extractPageData(res) {
+  if (!res) return { records: [], total: 0, page: 1, size: 12 }
+  if (res.data?.records) {
+    return {
+      records: res.data.records,
+      total: res.data.total || res.data.records.length,
+      page: res.data.page || res.data.current || 1,
+      size: res.data.size || 12
+    }
+  }
+  if (res.data?.data?.records) {
+    return {
+      records: res.data.data.records,
+      total: res.data.data.total || res.data.data.records.length,
+      page: res.data.data.page || res.data.data.current || 1,
+      size: res.data.data.size || 12
+    }
+  }
+  const records = extractData(res)
+  return { records, total: records.length, page: 1, size: 12 }
+}
+
 export function getRankClass(index) {
   return ["gold", "silver", "bronze"][index] ?? ""
 }

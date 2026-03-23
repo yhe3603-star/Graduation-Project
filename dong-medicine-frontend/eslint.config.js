@@ -30,9 +30,9 @@ export default [
       'vue/html-indent': 'off',
       'vue/max-attributes-per-line': 'off',
       'vue/require-explicit-emits': 'off',
-      'vue/no-v-html': 'off',
+      'vue/no-v-html': 'warn',
       'vue/multi-word-component-names': 'off',
-      'vue/no-mutating-props': 'off',
+      'vue/no-mutating-props': 'warn',
       'vue/require-default-prop': 'off'
     }
   }

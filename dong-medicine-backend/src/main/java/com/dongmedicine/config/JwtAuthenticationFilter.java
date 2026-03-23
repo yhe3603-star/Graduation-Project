@@ -1,5 +1,6 @@
 package com.dongmedicine.config;
 
+import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.entity.User;
 import com.dongmedicine.service.TokenBlacklistService;
 import com.dongmedicine.service.UserService;
@@ -61,7 +62,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = tokenInfo.getRole();
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    User user = userService.getById(userId);
+                    if (userId == null) {
+                        SecurityContextHolder.clearContext();
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    User user = userService.getUserInfo(userId);
                     
                     if (user == null) {
                         LOGGER.debug("User not found: {}", userId);
@@ -71,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                     
                     String currentRole = user.getRole();
-                    if (currentRole != null && !currentRole.equals(role)) {
+                    if (!RoleConstants.normalize(currentRole).equals(RoleConstants.normalize(role))) {
                         LOGGER.debug("User role changed, token invalid: {}", userId);
                         SecurityContextHolder.clearContext();
                         filterChain.doFilter(request, response);

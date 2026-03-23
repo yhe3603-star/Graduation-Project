@@ -125,7 +125,7 @@ public class FileUploadServiceImpl implements FileUploadService {
             
             file.transferTo(filePath.toFile());
             
-            String storedPath = (relativePath + "/" + fileName).replace("\\", "/");
+            String storedPath = "/" + (relativePath + "/" + fileName).replace("\\", "/");
             log.info("文件上传成功: {} -> {}", originalFileName, storedPath);
             
             return FileUploadResult.success(fileName, originalFileName, storedPath, storedPath, fileType, file.getSize());
@@ -170,7 +170,9 @@ public class FileUploadServiceImpl implements FileUploadService {
     
     @Override
     public String getFileUrl(String filePath) {
-        return StringUtils.hasText(filePath) ? filePath.replace("\\", "/") : "";
+        if (!StringUtils.hasText(filePath)) return "";
+        String normalized = filePath.replace("\\", "/");
+        return normalized.startsWith("/") ? normalized : "/" + normalized;
     }
     
     private void validateFile(MultipartFile file, String extension, String fileType) {

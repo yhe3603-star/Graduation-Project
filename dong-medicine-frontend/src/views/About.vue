@@ -128,7 +128,7 @@
 <script setup>
 import { computed, inject, onMounted, ref } from "vue";
 import { Aim, ArrowRight, ChatDotRound, Collection, DataLine, Document, FirstAidKit, Grid, MagicStick, Picture, Sunny, User, Folder, Opportunity } from "@element-plus/icons-vue";
-import { extractData } from "@/utils";
+import { extractPageData } from "@/utils";
 import { logFetchError } from '@/utils/logger';
 
 const request = inject("request");
@@ -171,15 +171,15 @@ const cultures = [
 const fetchData = async () => {
   try {
     const [pRes, iRes, qRes, rRes] = await Promise.all([
-      request.get("/plants/list").catch(() => ({})),
-      request.get("/inheritors/list").catch(() => ({})),
-      request.get("/qa/list").catch(() => ({})),
-      request.get("/resources/list").catch(() => ({}))
-    ]);
-    stats.value.plants = extractData(pRes).length;
-    stats.value.inheritors = extractData(iRes).length;
-    stats.value.qa = extractData(qRes).length;
-    stats.value.resources = extractData(rRes).length;
+      request.get("/plants/list", { params: { page: 1, size: 1 } }).catch(() => ({})),
+      request.get("/inheritors/list", { params: { page: 1, size: 1 } }).catch(() => ({})),
+      request.get("/qa/list", { params: { page: 1, size: 1 } }).catch(() => ({})),
+      request.get("/resources/list", { params: { page: 1, size: 1 } }).catch(() => ({}))
+    ])
+    stats.value.plants = extractPageData(pRes).total
+    stats.value.inheritors = extractPageData(iRes).total
+    stats.value.qa = extractPageData(qRes).total
+    stats.value.resources = extractPageData(rRes).total
   } catch (e) {
     logFetchError('关于页面', e)
   } finally {}

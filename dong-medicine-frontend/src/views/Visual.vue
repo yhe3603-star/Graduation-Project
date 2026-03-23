@@ -109,6 +109,14 @@
         </ChartCard>
       </div>
 
+      <div class="charts-row full-width">
+        <ChartCard
+          title="药方/疗法使用热度"
+          :option="knowledgePopularityOption"
+          :height="320"
+        />
+      </div>
+
       <div class="charts-row">
         <ChartCard
           title="问答分类热度"
@@ -127,11 +135,10 @@
 
 <script setup>
 import { computed, inject, onMounted, ref } from "vue";
-import { logFetchError } from '@/utils/logger'
 import { ElMessage } from "element-plus";
 import { ChatDotRound, DataAnalysis, Document, Picture, Refresh, User } from "@element-plus/icons-vue";
 import ChartCard from "@/components/business/display/ChartCard.vue";
-import { extractData } from "@/utils";
+import { extractPageData, logFetchError } from "@/utils";
 
 const request = inject("request");
 
@@ -142,7 +149,23 @@ const freqChartType = ref("bar");
 const selectedRegion = ref("");
 const regions = ref(["贵州", "湖南", "广西", "云南"]);
 
-const chartData = ref({ therapyCategories: [], inheritorLevels: [], plantCategories: [], qaCategories: [] });
+const chartData = ref({ therapyCategories: [], inheritorLevels: [], plantCategories: [], qaCategories: [], plantDistribution: [], knowledgePopularity: [] });
+
+const knowledgePopularityOption = computed(() => {
+  const data = chartData.value.knowledgePopularity.length > 0 ? chartData.value.knowledgePopularity : [
+    { name: '鼻炎方', value: 120 },
+    { name: '药浴方', value: 95 },
+    { name: '跌打方', value: 88 },
+    { name: '艾灸疗法', value: 75 },
+    { name: '推拿疗法', value: 62 }
+  ];
+  return {
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'category', data: data.map(d => d.name), axisLabel: { rotate: 30 } },
+    yAxis: { type: 'value' },
+    series: [{ type: 'bar', data: data.map(d => d.value), itemStyle: { color: '#1A5276' } }]
+  };
+});
 
 const statsCards = computed(() => [
   { icon: Picture, label: "药用植物", value: stats.value.plants, color: "linear-gradient(135deg, var(--dong-blue), var(--dong-indigo-dark))" },
@@ -216,20 +239,25 @@ const userChartOption = computed(() => ({
 const fetchData = async () => {
   try {
     const [pRes, kRes, iRes, qRes, rRes] = await Promise.all([
-      request.get("/plants/list").catch(() => ({})),
-      request.get("/knowledge/list").catch(() => ({})),
-      request.get("/inheritors/list").catch(() => ({})),
-      request.get("/qa/list").catch(() => ({})),
-      request.get("/resources/list").catch(() => ({}))
+      request.get("/plants/list", { params: { page: 1, size: 100 } }).catch(() => ({})),
+      request.get("/knowledge/list", { params: { page: 1, size: 100 } }).catch(() => ({})),
+      request.get("/inheritors/list", { params: { page: 1, size: 100 } }).catch(() => ({})),
+      request.get("/qa/list", { params: { page: 1, size: 100 } }).catch(() => ({})),
+      request.get("/resources/list", { params: { page: 1, size: 100 } }).catch(() => ({ }))
     ]);
-    
-    const plants = extractData(pRes);
-    const knowledge = extractData(kRes);
-    const inheritors = extractData(iRes);
-    const qa = extractData(qRes);
-    const resources = extractData(rRes);
-    
-    stats.value = { plants: plants.length, knowledge: knowledge.length, inheritors: inheritors.length, qa: qa.length, resources: resources.length };
+
+    const plantsData = extractPageData(pRes);
+    const knowledgeData = extractPageData(kRes);
+    const inheritorsData = extractPageData(iRes);
+    const qaData = extractPageData(qRes);
+    const resourcesData = extractPageData(rRes);
+
+    const plants = plantsData.records;
+    const knowledge = knowledgeData.records;
+    const inheritors = inheritorsData.records;
+    const qa = qaData.records;
+
+    stats.value = { plants: plantsData.total, knowledge: knowledgeData.total, inheritors: inheritorsData.total, qa: qaData.total, resources: resourcesData.total };
 
     const therapyMap = {};
     knowledge.forEach(k => { const cat = k.therapyCategory || '其他'; therapyMap[cat] = (therapyMap[cat] || 0) + 1; });
@@ -247,8 +275,33 @@ const fetchData = async () => {
     const qaCatMap = {};
     qa.forEach(q => { const cat = q.category || '其他'; qaCatMap[cat] = (qaCatMap[cat] || 0) + 1; });
     chartData.value.qaCategories = Object.values(qaCatMap);
+
+    // 处理植物地域分布数据
+    const distributionMap = {};
+    plants.forEach(p => {
+      const dist = p.distribution || '未知';
+      distributionMap[dist] = (distributionMap[dist] || 0) + 1;
+    });
+    chartData.value.plantDistribution = Object.entries(distributionMap)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+
+    // 处理药方/疗法使用热度数据
+    const popularityMap = {};
+    knowledge.forEach(k => {
+      const name = k.title || '未知';
+      const popularity = k.popularity || 0;
+      if (popularity > 0) {
+        popularityMap[name] = popularity;
+      }
+    });
+    chartData.value.knowledgePopularity = Object.entries(popularityMap)
+      .map(([name, value]) => ({ name: name.substring(0, 15), value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
   } catch (e) {
-    console.error('Failed to fetch data:', e);
+    logFetchError('可视化数据', e);
   }
 };
 
@@ -257,7 +310,8 @@ const refreshData = async () => {
   try {
     await fetchData();
     ElMessage.success("数据已刷新");
-  } catch {
+  } catch (e) {
+    logFetchError('刷新数据', e);
     ElMessage.error("刷新失败");
   } finally {
     refreshing.value = false;

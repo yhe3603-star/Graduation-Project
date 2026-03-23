@@ -134,7 +134,8 @@ const loadLeaderboard = async () => {
   try {
     const urls = { total: "/leaderboard/combined?sortBy=total", quiz: "/leaderboard/quiz", game: "/leaderboard/game" };
     const res = await request.get(urls[key]);
-    rankData.value[key] = res.data || res || [];
+    const payload = res?.data ?? res;
+    rankData.value[key] = Array.isArray(payload) ? payload : [];
   } catch (error) {
     console.error("加载排行榜失败:", error);
   } finally {

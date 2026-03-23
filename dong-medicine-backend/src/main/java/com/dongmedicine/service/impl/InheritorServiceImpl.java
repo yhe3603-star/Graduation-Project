@@ -1,9 +1,11 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.FileCleanupHelper;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.mapper.InheritorMapper;
 import com.dongmedicine.service.InheritorService;
@@ -59,6 +61,31 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
         qw.orderByDesc("experience".equals(sortBy), Inheritor::getExperienceYears)
           .orderByAsc(!"experience".equals(sortBy), Inheritor::getName);
         return list(qw);
+    }
+
+    @Override
+    public Page<Inheritor> pageByLevel(String level, String sortBy, Integer page, Integer size) {
+        Page<Inheritor> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Inheritor> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(level)) {
+            qw.eq(Inheritor::getLevel, level);
+        }
+        qw.orderByDesc("experience".equals(sortBy), Inheritor::getExperienceYears)
+          .orderByAsc(!"experience".equals(sortBy), Inheritor::getName);
+        return page(pageParam, qw);
+    }
+
+    @Override
+    public Page<Inheritor> searchPaged(String keyword, Integer page, Integer size) {
+        if (!StringUtils.hasText(keyword)) {
+            throw BusinessException.badRequest("搜索关键词不能为空");
+        }
+        Page<Inheritor> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Inheritor> qw = new LambdaQueryWrapper<Inheritor>()
+                .like(Inheritor::getName, keyword)
+                .or().like(Inheritor::getSpecialties, keyword)
+                .orderByDesc(Inheritor::getExperienceYears);
+        return page(pageParam, qw);
     }
 
     @Override

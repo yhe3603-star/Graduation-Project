@@ -136,7 +136,7 @@ export const vFocus = {
 export const vPermission = {
   mounted(el, binding) {
     const { value } = binding
-    const role = localStorage.getItem('role') || 'user'
+    const role = sessionStorage.getItem('role') || 'user'
     const requiredRoles = Array.isArray(value) ? value : [value]
     
     if (value && !requiredRoles.includes(role) && role.toUpperCase() !== 'ADMIN') {

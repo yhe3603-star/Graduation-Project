@@ -229,18 +229,19 @@ const formatTime = (time) => {
 };
 
 const submitFeedback = async () => {
-  if (!await formRef.value?.validate()) return;
-  submitting.value = true;
+  if (!await formRef.value?.validate()) return
+  submitting.value = true
   try {
-    await request.post("/feedback", feedbackForm.value);
-    ElMessage.success("感谢您的反馈，我们会尽快处理！");
+    await request.post("/feedback", feedbackForm.value)
+    ElMessage.success("感谢您的反馈，我们会尽快处理！")
     resetForm();
     fetchStats();
     if (isLoggedIn.value) fetchMyFeedbacks();
-  } catch {
-    ElMessage.error("提交失败，请稍后重试");
+  } catch (e) {
+    logFetchError('提交反馈', e)
+    ElMessage.error("提交失败，请稍后重试")
   } finally {
-    submitting.value = false;
+    submitting.value = false
   }
 };
 

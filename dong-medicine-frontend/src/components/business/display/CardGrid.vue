@@ -16,6 +16,7 @@
             fit="cover"
             class="item-img"
             lazy
+            :scroll-container="scrollContainer"
           >
             <template #placeholder>
               <div class="img-placeholder">

@@ -113,12 +113,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
+import * as echarts from "echarts";
 import { logPermissionWarn } from '@/utils/logger'
 import { DataLine, User, Document, Avatar, Picture, ChatDotRound, Folder, EditPen, Tickets, List, Message, Comment } from "@element-plus/icons-vue";
 import request from "@/utils/request";
 
 const props = defineProps({
+  /** 来自 GET /api/admin/stats，用于概览数字（避免全表拉取） */
+  stats: { type: Object, default: null },
   users: { type: Array, default: () => [] },
   knowledge: { type: Array, default: () => [] },
   inheritors: { type: Array, default: () => [] },
@@ -136,6 +139,9 @@ const currentPage = ref(1);
 const pageSize = ref(5);
 const logCount = ref(0);
 
+const plantChartRef = ref(null);
+const knowledgeChartRef = ref(null);
+
 const formatTime = (time) => time ? new Date(time).toLocaleString('zh-CN') : '无';
 
 const loadLogStats = async () => {
@@ -149,21 +155,69 @@ const loadLogStats = async () => {
   }
 };
 
+const loadCharts = async () => {
+  try {
+    const [plantRes, knowRes] = await Promise.all([
+      request.get('/admin/stats/plants-distribution'),
+      request.get('/admin/stats/knowledge-popularity')
+    ]);
+    
+    if (plantChartRef.value) {
+      const plantChart = echarts.init(plantChartRef.value);
+      const data = plantRes.data || plantRes;
+      plantChart.setOption({
+        tooltip: { trigger: 'item' },
+        series: [{
+          name: '植物分布',
+          type: 'pie',
+          radius: '50%',
+          data: data.map(item => ({ name: item.name || '未知', value: item.value })),
+          emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
+        }]
+      });
+    }
+
+    if (knowledgeChartRef.value) {
+      const knowChart = echarts.init(knowledgeChartRef.value);
+      const data = knowRes.data || knowRes;
+      const names = data.map(item => (item.name || '').substring(0, 10));
+      const values = data.map(item => item.value);
+      knowChart.setOption({
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: names, axisLabel: { interval: 0, rotate: 30 } },
+        yAxis: { type: 'value' },
+        series: [{ data: values, type: 'bar', itemStyle: { color: '#3498db' } }]
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load charts:', e);
+  }
+};
+
 onMounted(() => {
   loadLogStats();
+  nextTick(() => {
+    loadCharts();
+  });
 });
 
+const n = (key, fallbackArr) => {
+  const s = props.stats
+  if (s && typeof s[key] === 'number') return s[key]
+  return (fallbackArr || []).length
+}
+
 const stats = computed(() => [
-  { icon: User, label: "用户总数", value: (props.users || []).length, color: "linear-gradient(135deg, #667eea, #764ba2)" },
-  { icon: Document, label: "知识条目", value: (props.knowledge || []).length, color: "linear-gradient(135deg, var(--dong-gold-light), #e8930c)" },
-  { icon: Avatar, label: "传承人", value: (props.inheritors || []).length, color: "linear-gradient(135deg, var(--dong-green), var(--dong-jade-dark))" },
-  { icon: Picture, label: "药用植物", value: (props.plants || []).length, color: "linear-gradient(135deg, var(--dong-blue), var(--dong-indigo-dark))" },
-  { icon: ChatDotRound, label: "问答数据", value: (props.qa || []).length, color: "linear-gradient(135deg, #e74c3c, #c0392b)" },
-  { icon: Folder, label: "资源文件", value: (props.resources || []).length, color: "linear-gradient(135deg, #3498db, #2980b9)" },
-  { icon: DataLine, label: "答题题目", value: (props.quiz || []).length, color: "linear-gradient(135deg, #9b59b6, #8e44ad)" },
-  { icon: Message, label: "评论数量", value: (props.comments || []).length, color: "linear-gradient(135deg, #1abc9c, #16a085)" },
+  { icon: User, label: "用户总数", value: n('users', props.users), color: "linear-gradient(135deg, #667eea, #764ba2)" },
+  { icon: Document, label: "知识条目", value: n('knowledge', props.knowledge), color: "linear-gradient(135deg, var(--dong-gold-light), #e8930c)" },
+  { icon: Avatar, label: "传承人", value: n('inheritors', props.inheritors), color: "linear-gradient(135deg, var(--dong-green), var(--dong-jade-dark))" },
+  { icon: Picture, label: "药用植物", value: n('plants', props.plants), color: "linear-gradient(135deg, var(--dong-blue), var(--dong-indigo-dark))" },
+  { icon: ChatDotRound, label: "问答数据", value: n('qa', props.qa), color: "linear-gradient(135deg, #e74c3c, #c0392b)" },
+  { icon: Folder, label: "资源文件", value: n('resources', props.resources), color: "linear-gradient(135deg, #3498db, #2980b9)" },
+  { icon: DataLine, label: "答题题目", value: n('quiz', props.quiz), color: "linear-gradient(135deg, #9b59b6, #8e44ad)" },
+  { icon: Message, label: "评论数量", value: n('comments', props.comments), color: "linear-gradient(135deg, #1abc9c, #16a085)" },
   { icon: List, label: "系统日志", value: logCount.value, color: "linear-gradient(135deg, #34495e, #2c3e50)" },
-  { icon: EditPen, label: "反馈总数", value: (props.feedback || []).length, color: "linear-gradient(135deg, #f39c12, #e74c3c)" }
+  { icon: EditPen, label: "反馈总数", value: n('feedback', props.feedback), color: "linear-gradient(135deg, #f39c12, #e74c3c)" }
 ]);
 
 const feedbackList = computed(() => {

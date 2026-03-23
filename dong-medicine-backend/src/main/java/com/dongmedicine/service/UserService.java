@@ -21,4 +21,10 @@ public interface UserService extends IService<User> {
     void changePassword(Integer userId, String currentPassword, String newPassword);
 
     void updateUserRole(Integer userId, String role);
+
+    void banUser(Integer userId, String reason);
+
+    void unbanUser(Integer userId);
+
+    String getUserToken(Integer userId);
 }

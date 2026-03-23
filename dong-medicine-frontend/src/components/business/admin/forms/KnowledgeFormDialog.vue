@@ -119,6 +119,26 @@
           </el-form-item>
         </el-col>
       </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="药材分类">
+            <el-select
+              v-model="form.herbCategory"
+              style="width: 100%"
+              placeholder="请选择药材分类"
+              clearable
+            >
+              <el-option label="根茎类" value="根茎类" />
+              <el-option label="全草类" value="全草类" />
+              <el-option label="叶类" value="叶类" />
+              <el-option label="花类" value="花类" />
+              <el-option label="果实种子类" value="果实种子类" />
+              <el-option label="其他" value="其他" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
       
       <el-form-item label="内容">
         <el-input
@@ -236,7 +256,7 @@ const {
 } = useUpdateLog()
 
 const getDefaultForm = () => ({ 
-  id: null, title: "", type: "", therapyCategory: "", diseaseCategory: "", 
+  id: null, title: "", type: "", therapyCategory: "", diseaseCategory: "", herbCategory: "",
   content: "", steps: "", images: [], videoUrl: "", documents: [], 
   relatedPlants: "", updateLog: "" 
 })

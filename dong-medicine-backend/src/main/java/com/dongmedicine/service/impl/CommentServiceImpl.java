@@ -9,6 +9,8 @@ import com.dongmedicine.entity.User;
 import com.dongmedicine.mapper.CommentMapper;
 import com.dongmedicine.mapper.UserMapper;
 import com.dongmedicine.service.CommentService;
+import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.util.PageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,19 +30,19 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     @Transactional(rollbackFor = Exception.class)
     public void addComment(Comment comment) {
         if (comment.getUserId() == null) {
-            throw new RuntimeException("用户ID不能为空");
+            throw BusinessException.badRequest("用户ID不能为空");
         }
         if (!StringUtils.hasText(comment.getUsername())) {
-            throw new RuntimeException("用户名不能为空");
+            throw BusinessException.badRequest("用户名不能为空");
         }
         if (!StringUtils.hasText(comment.getTargetType())) {
-            throw new RuntimeException("目标类型不能为空");
+            throw BusinessException.badRequest("目标类型不能为空");
         }
         if (comment.getTargetId() == null) {
-            throw new RuntimeException("目标ID不能为空");
+            throw BusinessException.badRequest("目标ID不能为空");
         }
         if (!StringUtils.hasText(comment.getContent())) {
-            throw new RuntimeException("评论内容不能为空");
+            throw BusinessException.badRequest("评论内容不能为空");
         }
 
         comment.setStatus("approved");
@@ -82,7 +84,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private void updateCommentStatus(Integer commentId, String status) {
         Comment comment = getById(commentId);
         if (comment == null) {
-            throw new RuntimeException("评论不存在");
+            throw BusinessException.notFound("评论不存在");
         }
         comment.setStatus(status);
         updateById(comment);
@@ -96,16 +98,16 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
-    public List<CommentDTO> listAllDTO(String status, Integer page, Integer size) {
-        int safePage = page == null ? 1 : Math.max(page, 1);
-        int safeSize = size == null ? 20 : Math.min(Math.max(size, 1), 100);
+    public Page<CommentDTO> pageAllDTO(String status, Integer page, Integer size) {
         LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<Comment>()
                 .orderByDesc(Comment::getCreatedAt);
         if (StringUtils.hasText(status) && !"all".equalsIgnoreCase(status)) {
             wrapper.eq(Comment::getStatus, status);
         }
-        Page<Comment> pageResult = page(new Page<>(safePage, safeSize), wrapper);
-        return pageResult.getRecords().stream().map(this::convertToDTO).collect(Collectors.toList());
+        Page<Comment> entityPage = page(PageUtils.getPage(page, size), wrapper);
+        Page<CommentDTO> dtoPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+        dtoPage.setRecords(entityPage.getRecords().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        return dtoPage;
     }
 
     @Override
@@ -114,6 +116,17 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .eq(Comment::getStatus, "approved")
                 .orderByDesc(Comment::getCreatedAt)).stream()
                 .map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<CommentDTO> pageAllApproved(Integer page, Integer size) {
+        Page<Comment> entityPage = page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Comment>()
+                        .eq(Comment::getStatus, "approved")
+                        .orderByDesc(Comment::getCreatedAt));
+        Page<CommentDTO> dtoPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+        dtoPage.setRecords(entityPage.getRecords().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        return dtoPage;
     }
 
     private CommentDTO convertToDTO(Comment comment) {

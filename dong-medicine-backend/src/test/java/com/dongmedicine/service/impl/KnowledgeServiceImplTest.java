@@ -59,7 +59,7 @@ class KnowledgeServiceImplTest {
         when(knowledgeMapper.selectList(any(LambdaQueryWrapper.class)))
                 .thenReturn(Arrays.asList(testKnowledge));
 
-        List<Knowledge> result = knowledgeService.advancedSearch("侗医", "火攻", "风湿", "popularity");
+        List<Knowledge> result = knowledgeService.advancedSearch("侗医", "火攻", "风湿", null, "popularity");
 
         assertNotNull(result);
         verify(knowledgeMapper).selectList(any(LambdaQueryWrapper.class));
@@ -71,7 +71,7 @@ class KnowledgeServiceImplTest {
         when(knowledgeMapper.selectList(any(LambdaQueryWrapper.class)))
                 .thenReturn(Collections.emptyList());
 
-        List<Knowledge> result = knowledgeService.advancedSearch(null, null, null, null);
+        List<Knowledge> result = knowledgeService.advancedSearch(null, null, null, null, null);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());

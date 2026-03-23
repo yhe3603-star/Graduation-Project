@@ -1,5 +1,6 @@
 package com.dongmedicine.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dongmedicine.entity.Knowledge;
 
@@ -50,7 +51,31 @@ public interface KnowledgeService extends IService<Knowledge> {
      * @param sortBy 排序方式（popularity/time）
      * @return 匹配的知识列表
      */
-    List<Knowledge> advancedSearch(String keyword, String therapy, String disease, String sortBy);
+    List<Knowledge> advancedSearch(String keyword, String therapy, String disease, String herb, String sortBy);
+
+    /**
+     * 分页获取所有知识
+     * 
+     * @param page 页码
+     * @param size 每页大小
+     * @param sortBy 排序方式
+     * @return 分页结果
+     */
+    Page<Knowledge> pageAll(Integer page, Integer size, String sortBy);
+
+    /**
+     * 分页高级搜索知识
+     * 
+     * @param keyword 关键词（可选）
+     * @param therapy 疗法分类（可选）
+     * @param disease 疾病分类（可选）
+     * @param herb 药材分类（可选）
+     * @param sortBy 排序方式（popularity/time）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 分页结果
+     */
+    Page<Knowledge> advancedSearchPaged(String keyword, String therapy, String disease, String herb, String sortBy, Integer page, Integer size);
 
     /**
      * 根据ID获取知识详情

@@ -149,18 +149,18 @@
     </div>
 
     <Pagination 
-      v-if="mainComments.length > pageSize" 
+      v-if="props.total > 0" 
       :page="currentPage" 
       :size="pageSize" 
-      :total="mainComments.length" 
-      @update:page="currentPage = $event" 
-      @update:size="pageSize = $event" 
+      :total="props.total" 
+      @update:page="handlePageChange" 
+      @update:size="handleSizeChange" 
     />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { ChatDotRound } from "@element-plus/icons-vue";
 import Pagination from "@/components/business/display/Pagination.vue";
@@ -169,10 +169,13 @@ const props = defineProps({
   comments: { type: Array, default: () => [] },
   isLoggedIn: Boolean,
   userName: String,
-  loading: Boolean
+  loading: Boolean,
+  total: { type: Number, default: 0 },
+  page: { type: Number, default: 1 },
+  size: { type: Number, default: 6 }
 });
 
-const emit = defineEmits(["post", "reply"]);
+const emit = defineEmits(["post", "reply", "page-change", "size-change"]);
 
 const content = ref("");
 const posting = ref(false);
@@ -181,7 +184,9 @@ const pageSize = ref(6);
 const replyTo = ref(null);
 const sortBy = ref("latest");
 
-// 过滤主评论（没有replyToId的评论）
+watch(() => props.page, (val) => { currentPage.value = val; }, { immediate: true });
+watch(() => props.size, (val) => { pageSize.value = val; }, { immediate: true });
+
 const mainComments = computed(() => {
   return props.comments.filter(comment => !comment.replyToId);
 });
@@ -257,6 +262,14 @@ const postComment = async () => {
   }, () => {
     posting.value = false;
   });
+};
+
+const handlePageChange = (page) => {
+  emit("page-change", page);
+};
+
+const handleSizeChange = (size) => {
+  emit("size-change", size);
 };
 </script>
 

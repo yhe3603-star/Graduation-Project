@@ -124,7 +124,7 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}/upload/video`)
-const headers = computed(() => ({ Authorization: localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '' }))
+const headers = computed(() => ({ Authorization: sessionStorage.getItem('token') ? `Bearer ${sessionStorage.getItem('token')}` : '' }))
 const limitReached = computed(() => videoList.value.length >= props.limit)
 const tipText = computed(() => `支持 mp4/avi/mov/wmv/flv/mkv 格式，单个视频不超过 ${props.maxSize}MB，最多 ${props.limit} 个`)
 

@@ -50,7 +50,11 @@ public class LeaderboardController {
         }
 
         String sortKey = sortBy.equals("quiz") ? "quizScore" : (sortBy.equals("game") ? "gameScore" : "totalScore");
-        leaderboard.sort((a, b) -> (Integer) b.get(sortKey) - (Integer) a.get(sortKey));
+        leaderboard.sort((a, b) -> {
+            int vb = scoreAsInt(b.get(sortKey));
+            int va = scoreAsInt(a.get(sortKey));
+            return Integer.compare(vb, va);
+        });
 
         for (int i = 0; i < leaderboard.size(); i++) {
             leaderboard.get(i).put("rank", i + 1);
@@ -98,29 +102,32 @@ public class LeaderboardController {
 
     private Map<Integer, Integer> getHighestQuizScores(int limit) {
         QueryWrapper<QuizRecord> wrapper = new QueryWrapper<QuizRecord>()
-                .select("user_id AS userId", "MAX(score) AS score")
+                .select("user_id", "MAX(score) AS max_score")
                 .groupBy("user_id")
-                .orderByDesc("score")
+                .orderByDesc("max_score")
                 .last("LIMIT " + Math.max(limit, 1));
         List<Map<String, Object>> rows = quizRecordMapper.selectMaps(wrapper);
-        return toScoreMap(rows);
+        return toScoreMap(rows, "user_id", "max_score");
     }
 
     private Map<Integer, Integer> getHighestGameScores(int limit) {
         QueryWrapper<PlantGameRecord> wrapper = new QueryWrapper<PlantGameRecord>()
-                .select("user_id AS userId", "MAX(score) AS score")
+                .select("user_id", "MAX(score) AS max_score")
                 .groupBy("user_id")
-                .orderByDesc("score")
+                .orderByDesc("max_score")
                 .last("LIMIT " + Math.max(limit, 1));
         List<Map<String, Object>> rows = plantGameRecordMapper.selectMaps(wrapper);
-        return toScoreMap(rows);
+        return toScoreMap(rows, "user_id", "max_score");
     }
 
-    private Map<Integer, Integer> toScoreMap(List<Map<String, Object>> rows) {
+    private Map<Integer, Integer> toScoreMap(List<Map<String, Object>> rows, String userIdKey, String scoreKey) {
         Map<Integer, Integer> highest = new HashMap<>();
         for (Map<String, Object> row : rows) {
-            Object userIdValue = row.get("userId");
-            Object scoreValue = row.get("score");
+            Object userIdValue = getRowValueIgnoreCase(row, userIdKey);
+            Object scoreValue = getRowValueIgnoreCase(row, scoreKey);
+            if (userIdValue == null || scoreValue == null) {
+                continue;
+            }
             if (!(userIdValue instanceof Number) || !(scoreValue instanceof Number)) {
                 continue;
             }
@@ -129,6 +136,26 @@ public class LeaderboardController {
             highest.put(userId, score);
         }
         return highest;
+    }
+
+    /** JDBC/MySQL 返回的列名大小写因驱动而异 */
+    private static Object getRowValueIgnoreCase(Map<String, Object> row, String key) {
+        if (row.containsKey(key)) {
+            return row.get(key);
+        }
+        for (Map.Entry<String, Object> e : row.entrySet()) {
+            if (e.getKey() != null && e.getKey().equalsIgnoreCase(key)) {
+                return e.getValue();
+            }
+        }
+        return null;
+    }
+
+    private static int scoreAsInt(Object v) {
+        if (v instanceof Number) {
+            return ((Number) v).intValue();
+        }
+        return 0;
     }
 
     private List<Map<String, Object>> buildRankList(Map<Integer, Integer> scores, Map<Integer, String> userNames, int limit) {

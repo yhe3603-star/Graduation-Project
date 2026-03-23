@@ -1,8 +1,10 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.exception.ErrorCode;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.dto.QuizQuestionDTO;
 import com.dongmedicine.dto.AnswerDTO;
 import com.dongmedicine.entity.QuizQuestion;
@@ -117,6 +119,18 @@ public class QuizServiceImpl implements QuizService {
     @Override
     public List<QuizQuestion> getAllQuestions() {
         return questionMapper.selectList(null);
+    }
+
+    @Override
+    public long countQuestions() {
+        return questionMapper.selectCount(null);
+    }
+
+    @Override
+    public Page<QuizQuestion> pageQuestions(int page, int size) {
+        return questionMapper.selectPage(
+                PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<QuizQuestion>().orderByDesc(QuizQuestion::getId));
     }
 
     @Override

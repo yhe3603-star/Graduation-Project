@@ -1,7 +1,10 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Qa;
 import com.dongmedicine.mapper.QaMapper;
 import com.dongmedicine.service.QaService;
@@ -32,14 +35,38 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
     }
 
     @Override
+    public Page<Qa> pageByCategory(String category, Integer page, Integer size) {
+        Page<Qa> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Qa> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(category)) {
+            qw.eq(Qa::getCategory, category);
+        }
+        qw.orderByDesc(Qa::getPopularity);
+        return page(pageParam, qw);
+    }
+
+    @Override
     public List<Qa> search(String keyword) {
         if (!StringUtils.hasText(keyword)) {
-            throw new RuntimeException("搜索关键词不能为空");
+            throw BusinessException.badRequest("搜索关键词不能为空");
         }
         return list(new LambdaQueryWrapper<Qa>()
                 .like(Qa::getQuestion, keyword)
                 .or().like(Qa::getAnswer, keyword)
                 .orderByDesc(Qa::getPopularity));
+    }
+
+    @Override
+    public Page<Qa> searchPaged(String keyword, Integer page, Integer size) {
+        if (!StringUtils.hasText(keyword)) {
+            throw BusinessException.badRequest("搜索关键词不能为空");
+        }
+        Page<Qa> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Qa> qw = new LambdaQueryWrapper<Qa>()
+                .like(Qa::getQuestion, keyword)
+                .or().like(Qa::getAnswer, keyword)
+                .orderByDesc(Qa::getPopularity);
+        return page(pageParam, qw);
     }
 
     @Override

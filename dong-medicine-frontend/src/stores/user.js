@@ -29,6 +29,14 @@ function isTokenExpired(token) {
   return Date.now() >= expiryTime - TOKEN_EXPIRY_BUFFER_MS
 }
 
+/** 仅按 JWT exp 判断，用于服务端校验前；避免 5 分钟缓冲导致误判为过期 */
+function isJwtExpiredStrict(token) {
+  if (!token) return true
+  const payload = decodeJwtPayload(token)
+  if (!payload || !payload.exp) return true
+  return Date.now() >= payload.exp * 1000
+}
+
 function getTokenRemainingTime(token) {
   if (!token) return 0
   const payload = decodeJwtPayload(token)
@@ -72,7 +80,11 @@ export const useUserStore = defineStore('user', () => {
     return !isTokenExpired(token.value)
   })
   const userName = computed(() => username.value)
-  const isAdmin = computed(() => role.value && role.value.toUpperCase() === 'ADMIN')
+  const isAdmin = computed(() => {
+    if (!token.value || isTokenExpired(token.value)) return false
+    const r = role.value
+    return !!(r && r.toLowerCase() === 'admin')
+  })
   
   function initialize() {
     initializeFromStorage()
@@ -134,12 +146,12 @@ export const useUserStore = defineStore('user', () => {
       clearAuth()
       return false
     }
-    
-    if (isTokenExpired(token.value)) {
+
+    if (isJwtExpiredStrict(token.value)) {
       clearAuth()
       return false
     }
-    
+
     try {
       const res = await request.get('/user/validate')
       if (res.code === 200 && res.data) {
@@ -207,7 +219,7 @@ export const useUserStore = defineStore('user', () => {
       userId.value = storedUserId || ''
       username.value = storedUsername || ''
       role.value = storedRole || ''
-    } else if (storedToken) {
+    } else {
       clearAuth()
     }
   }

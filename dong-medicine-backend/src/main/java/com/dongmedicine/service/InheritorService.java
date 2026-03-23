@@ -1,5 +1,6 @@
 package com.dongmedicine.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dongmedicine.entity.Inheritor;
 
@@ -50,6 +51,27 @@ public interface InheritorService extends IService<Inheritor> {
      * @return 传承人列表
      */
     List<Inheritor> listByLevel(String level, String sortBy);
+
+    /**
+     * 根据级别和排序方式分页获取传承人列表
+     * 
+     * @param level 传承人级别（可选）
+     * @param sortBy 排序方式（name/experience）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 分页结果
+     */
+    Page<Inheritor> pageByLevel(String level, String sortBy, Integer page, Integer size);
+
+    /**
+     * 分页搜索传承人
+     * 
+     * @param keyword 搜索关键词
+     * @param page 页码
+     * @param size 每页大小
+     * @return 分页结果
+     */
+    Page<Inheritor> searchPaged(String keyword, Integer page, Integer size);
 
     /**
      * 根据ID获取传承人详情（包含额外信息）

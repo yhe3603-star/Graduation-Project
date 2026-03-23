@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 /**
  * 应用启动时初始化一个默认管理员账号：
  * 用户名：admin
- * 密码：从环境变量ADMIN_INIT_PASSWORD获取，默认123456
+ * 密码：必须通过环境变量 ADMIN_INIT_PASSWORD 设置
  *
  * 仅在不存在任何 ADMIN 角色用户时创建，方便本地调试与毕业设计演示。
  */
@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 public class AdminDataInitializer implements CommandLineRunner {
 
     private static final String DEFAULT_ADMIN_USERNAME = "admin";
-    private static final String DEFAULT_ADMIN_PASSWORD = "123456";
     
     private final UserService userService;
 
@@ -42,7 +41,8 @@ public class AdminDataInitializer implements CommandLineRunner {
 
         String initPassword = System.getenv("ADMIN_INIT_PASSWORD");
         if (initPassword == null || initPassword.isBlank()) {
-            initPassword = DEFAULT_ADMIN_PASSWORD;
+            System.err.println("警告: 未设置 ADMIN_INIT_PASSWORD 环境变量，跳过默认管理员创建。请设置环境变量后重启应用。");
+            return;
         }
         User admin = new User();
         admin.setUsername(DEFAULT_ADMIN_USERNAME);
@@ -50,5 +50,6 @@ public class AdminDataInitializer implements CommandLineRunner {
         admin.setRole(RoleConstants.ROLE_ADMIN);
         admin.setCreatedAt(LocalDateTime.now());
         userService.save(admin);
+        System.out.println("默认管理员账号创建成功: " + DEFAULT_ADMIN_USERNAME);
     }
 }

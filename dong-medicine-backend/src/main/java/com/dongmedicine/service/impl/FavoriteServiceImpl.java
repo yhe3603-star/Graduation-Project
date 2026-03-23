@@ -71,7 +71,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
             case "inheritor" -> inheritorMapper.incrementFavoriteCount(targetId, delta);
             case "resource" -> resourceMapper.incrementFavoriteCount(targetId, delta);
             case "qa" -> qaMapper.incrementFavoriteCount(targetId, delta);
-            default -> log.warn("Unknown favorite type: {}", targetType);
+            default -> throw BusinessException.badRequest("不支持的收藏类型: " + targetType);
         }
     }
 

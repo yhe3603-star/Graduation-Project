@@ -99,13 +99,13 @@
     </el-table>
 
     <Pagination 
-      v-if="filteredData.length > 0" 
-      :page="currentPage" 
-      :size="pageSize" 
-      :total="filteredData.length" 
-      :page-sizes="[12, 24, 50, 100]"
-      @update:page="currentPage = $event" 
-      @update:size="pageSize = $event" 
+      v-if="paginationTotal > 0" 
+      :page="displayPage" 
+      :size="displayPageSize" 
+      :total="paginationTotal" 
+      :page-sizes="[20, 50, 100, 200]"
+      @update:page="onPageUpdate" 
+      @update:size="onSizeUpdate" 
     />
   </div>
 </template>
@@ -123,14 +123,22 @@ const props = defineProps({
   showAdd: { type: Boolean, default: true },
   showEdit: { type: Boolean, default: true },
   showTitle: { type: Boolean, default: true },
-  actionWidth: { type: String, default: "200" }
+  actionWidth: { type: String, default: "200" },
+  /** 为 true 时由服务端分页，total/page/pageSize 来自父组件 */
+  serverPagination: { type: Boolean, default: false },
+  serverTotal: { type: Number, default: 0 },
+  page: { type: Number, default: 1 },
+  pageSize: { type: Number, default: 12 }
 });
 
-const emit = defineEmits(["add", "edit", "delete", "view", "selection-change"]);
+const emit = defineEmits(["add", "edit", "delete", "view", "selection-change", "page-change", "size-change"]);
 
 const searchKey = ref("");
 const currentPage = ref(1);
-const pageSize = ref(12);
+const internalPageSize = ref(12);
+
+const displayPage = computed(() => (props.serverPagination ? props.page : currentPage.value));
+const displayPageSize = computed(() => (props.serverPagination ? props.pageSize : internalPageSize.value));
 
 const filteredData = computed(() => {
   const data = props.data;
@@ -143,12 +151,29 @@ const filteredData = computed(() => {
   );
 });
 
+const paginationTotal = computed(() =>
+  props.serverPagination ? props.serverTotal : filteredData.value.length
+);
+
 const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return filteredData.value.slice(start, start + pageSize.value);
+  if (props.serverPagination) return filteredData.value;
+  const start = (currentPage.value - 1) * internalPageSize.value;
+  return filteredData.value.slice(start, start + internalPageSize.value);
 });
 
-watch(searchKey, () => { currentPage.value = 1; });
+function onPageUpdate(p) {
+  if (props.serverPagination) emit("page-change", p);
+  else currentPage.value = p;
+}
+
+function onSizeUpdate(s) {
+  if (props.serverPagination) emit("size-change", s);
+  else internalPageSize.value = s;
+}
+
+watch(searchKey, () => {
+  if (!props.serverPagination) currentPage.value = 1;
+});
 
 const handleSelectionChange = (selection) => {
   emit("selection-change", selection);
@@ -158,13 +183,18 @@ const TAG_TYPES = {
   easy: "success", medium: "warning", hard: "danger", 
   "省级": "warning", "自治区级": "success", "州级": "primary", "市级": "primary", 
   approved: "success", pending: "warning", rejected: "danger",
-  video: "primary", document: "success", image: "warning"
+  resolved: "success", processing: "warning",
+  video: "primary", document: "success", image: "warning",
+  active: "success", banned: "danger",
+  user: "info", admin: "warning"
 };
 
 const STATUS_TEXTS = { 
   approved: "已审核", pending: "待审核", rejected: "已拒绝",
   resolved: "已解决", processing: "处理中",
-  video: "视频", document: "文档", image: "图片"
+  video: "视频", document: "文档", image: "图片",
+  active: "正常", banned: "已封禁",
+  user: "普通用户", admin: "管理员"
 };
 
 const getTagType = (val) => TAG_TYPES[val] || "info";

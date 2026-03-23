@@ -9,7 +9,7 @@
 - [技术架构](#技术架构)
 - [项目结构](#项目结构)
 - [快速开始](#快速开始)
-- [环境配置](#环境配置)
+- [Docker 部署](#docker-部署)
 - [CI/CD 自动部署](#ci-cd-自动部署)
 - [API 文档](#api-文档)
 - [数据库设计](#数据库设计)
@@ -70,7 +70,7 @@
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Nginx 反向代理                              │
+│                      Nginx 反向代理 (Docker)                     │
 │   - 静态资源服务 (前端 dist)                                    │
 │   - API 请求转发 (后端 8080)                                    │
 └─────────────────────────────────────────────────────────────────┘
@@ -82,15 +82,15 @@
 │   - Element Plus UI       │   │   - Spring Security       │
 │   - Pinia 状态管理         │   │   - MyBatis Plus          │
 │   - Vue Router 路由        │   │   - JWT 认证              │
-│   - Axios HTTP 请求        │   │   - Caffeine 缓存         │
+│   - Axios HTTP 请求        │   │   - Redis 缓存            │
 └───────────────────────────┘   └───────────────────────────┘
                                             │
-                                            ▼
-                                ┌───────────────────────────┐
-                                │      MySQL 8.0 数据库      │
-                                │   - 13 张业务表            │
-                                │   - 用户、植物、知识等      │
-                                └───────────────────────────┘
+                                ┌───────────┴───────────┐
+                                ▼                       ▼
+                    ┌───────────────────┐   ┌───────────────────┐
+                    │   MySQL 8.0       │   │   Redis 7         │
+                    │   (Docker容器)    │   │   (Docker容器)    │
+                    └───────────────────┘   └───────────────────┘
 ```
 
 ### 前端技术栈
@@ -113,9 +113,18 @@
 | Spring Security | - | 安全框架，处理认证授权 |
 | MyBatis Plus | 3.5.9 | ORM 框架，简化数据库操作 |
 | MySQL | 8.0+ | 关系型数据库 |
+| Redis | 7.0+ | 高性能缓存数据库 |
 | JWT | 0.11.5 | JSON Web Token 认证 |
-| Caffeine | - | 高性能本地缓存 |
 | SpringDoc | 2.2.0 | API 文档生成 (Swagger) |
+
+### DevOps 技术栈
+
+| 技术 | 说明 |
+|------|------|
+| Docker | 容器化部署 |
+| Docker Compose | 多容器编排 |
+| GitHub Actions | CI/CD 自动化 |
+| Nginx | 反向代理、静态资源服务 |
 
 ---
 
@@ -128,184 +137,46 @@ Graduation Project/
 │   ├── src/main/java/com/dongmedicine/
 │   │   ├── common/                     # 公共模块
 │   │   │   ├── exception/              # 自定义异常
-│   │   │   │   ├── BusinessException.java    # 业务异常
-│   │   │   │   └── GlobalExceptionHandler.java # 全局异常处理
 │   │   │   └── util/                   # 工具类
-│   │   │       ├── XssUtils.java       # XSS 防护工具
-│   │   │       └── IpUtils.java        # IP 获取工具
-│   │   │
 │   │   ├── config/                     # 配置模块
-│   │   │   ├── SecurityConfig.java     # Spring Security 配置
-│   │   │   ├── JwtUtil.java            # JWT 工具类
-│   │   │   ├── JwtAuthenticationFilter.java  # JWT 过滤器
-│   │   │   ├── CacheConfig.java        # 缓存配置
-│   │   │   ├── CorsConfig.java         # 跨域配置
-│   │   │   ├── RateLimitAspect.java    # 限流切面
-│   │   │   └── OperationLogAspect.java # 操作日志切面
-│   │   │
-│   │   ├── controller/                 # 控制器层 (16个)
-│   │   │   ├── UserController.java     # 用户接口
-│   │   │   ├── PlantController.java    # 药用植物接口
-│   │   │   ├── KnowledgeController.java # 知识库接口
-│   │   │   ├── InheritorController.java # 传承人接口
-│   │   │   ├── ResourceController.java # 学习资源接口
-│   │   │   ├── CommentController.java  # 评论接口
-│   │   │   ├── FavoriteController.java # 收藏接口
-│   │   │   ├── FeedbackController.java # 反馈接口
-│   │   │   ├── QuizController.java     # 测验接口
-│   │   │   ├── PlantGameController.java # 植物游戏接口
-│   │   │   ├── AiChatController.java   # AI 聊天接口
-│   │   │   ├── LeaderboardController.java # 排行榜接口
-│   │   │   ├── UploadController.java   # 文件上传接口
-│   │   │   └── AdminController.java    # 管理后台接口
-│   │   │
-│   │   ├── service/                    # 服务层接口 (14个)
-│   │   │   └── impl/                   # 服务层实现 (14个)
-│   │   │
-│   │   ├── mapper/                     # 数据访问层 (13个)
-│   │   │
-│   │   ├── entity/                     # 实体类 (13个)
-│   │   │   ├── User.java               # 用户实体
-│   │   │   ├── Plant.java              # 药用植物实体
-│   │   │   ├── Knowledge.java          # 知识库实体
-│   │   │   ├── Inheritor.java          # 传承人实体
-│   │   │   ├── Resource.java           # 学习资源实体
-│   │   │   ├── Comment.java            # 评论实体
-│   │   │   ├── Favorite.java           # 收藏实体
-│   │   │   ├── Feedback.java           # 反馈实体
-│   │   │   ├── Qa.java                 # 问答实体
-│   │   │   ├── QuizQuestion.java       # 测验题目实体
-│   │   │   ├── QuizRecord.java         # 测验记录实体
-│   │   │   ├── PlantGameRecord.java    # 植物游戏记录实体
-│   │   │   └── OperationLog.java       # 操作日志实体
-│   │   │
-│   │   └── dto/                        # 数据传输对象 (11个)
-│   │
+│   │   ├── controller/                 # 控制器层
+│   │   ├── service/                    # 服务层
+│   │   ├── mapper/                     # 数据访问层
+│   │   ├── entity/                     # 实体类
+│   │   └── dto/                        # 数据传输对象
 │   ├── src/main/resources/
 │   │   ├── application.yml             # 主配置文件
 │   │   ├── application-dev.yml         # 开发环境配置
-│   │   ├── application-prod.yml        # 生产环境配置
-│   │   └── logback-spring.xml          # 日志配置
-│   │
+│   │   └── application-prod.yml        # 生产环境配置
 │   ├── sql/                            # 数据库脚本
-│   │   ├── dong_medicine.sql           # 完整数据库脚本
-│   │   └── update_*.sql                # 更新脚本
-│   │
 │   ├── public/                         # 静态资源目录
-│   │   ├── images/                     # 图片资源
-│   │   ├── videos/                     # 视频资源
-│   │   └── documents/                  # 文档资源
-│   │
+│   ├── Dockerfile                      # Docker 构建文件
 │   └── pom.xml                         # Maven 配置
 │
 ├── dong-medicine-frontend/             # 前端项目
 │   ├── src/
-│   │   ├── views/                      # 页面组件 (13个)
-│   │   │   ├── Home.vue                # 首页
-│   │   │   ├── Plants.vue              # 药用植物
-│   │   │   ├── Inheritors.vue          # 传承人
-│   │   │   ├── Knowledge.vue           # 知识库
-│   │   │   ├── Qa.vue                  # 问答社区
-│   │   │   ├── Resources.vue           # 学习资源
-│   │   │   ├── Interact.vue            # 互动专区
-│   │   │   ├── Visual.vue              # 数据可视化
-│   │   │   ├── PersonalCenter.vue      # 个人中心
-│   │   │   ├── Admin.vue               # 管理后台
-│   │   │   ├── About.vue               # 关于页面
-│   │   │   ├── Feedback.vue            # 意见反馈
-│   │   │   └── GlobalSearch.vue        # 全局搜索
-│   │   │
-│   │   ├── components/                 # 组件目录
-│   │   │   ├── base/                   # 基础组件
-│   │   │   │   └── ErrorBoundary.vue   # 错误边界
-│   │   │   │
-│   │   │   └── business/               # 业务组件 (60+)
-│   │   │       ├── layout/             # 布局组件
-│   │   │       │   ├── AppHeader.vue   # 顶部导航
-│   │   │       │   └── AppFooter.vue   # 底部版权
-│   │   │       │
-│   │   │       ├── display/            # 展示组件
-│   │   │       │   ├── CardGrid.vue    # 卡片网格
-│   │   │       │   ├── ChartCard.vue   # 图表卡片
-│   │   │       │   ├── Pagination.vue  # 分页组件
-│   │   │       │   └── SearchFilter.vue # 搜索过滤
-│   │   │       │
-│   │   │       ├── interact/           # 交互组件
-│   │   │       │   ├── CommentSection.vue # 评论区域
-│   │   │       │   ├── PlantGame.vue   # 植物识别游戏
-│   │   │       │   └── QuizSection.vue # 趣味答题
-│   │   │       │
-│   │   │       ├── media/              # 媒体组件
-│   │   │       │   ├── ImageCarousel.vue # 图片轮播
-│   │   │       │   ├── VideoPlayer.vue # 视频播放
-│   │   │       │   └── DocumentPreview.vue # 文档预览
-│   │   │       │
-│   │   │       ├── upload/             # 上传组件
-│   │   │       │   ├── ImageUploader.vue
-│   │   │       │   ├── VideoUploader.vue
-│   │   │       │   └── DocumentUploader.vue
-│   │   │       │
-│   │   │       ├── dialogs/            # 详情对话框
-│   │   │       │   ├── PlantDetailDialog.vue
-│   │   │       │   ├── KnowledgeDetailDialog.vue
-│   │   │       │   └── InheritorDetailDialog.vue
-│   │   │       │
-│   │   │       └── admin/              # 管理后台组件
-│   │   │           ├── AdminDashboard.vue
-│   │   │           ├── AdminSidebar.vue
-│   │   │           ├── AdminDataTable.vue
-│   │   │           ├── dialogs/        # 详情对话框
-│   │   │           └── forms/          # 表单对话框
-│   │   │
+│   │   ├── views/                      # 页面组件
+│   │   ├── components/                 # 业务组件
 │   │   ├── composables/                # 组合式函数
-│   │   │   ├── useAdminData.js         # 管理后台数据
-│   │   │   ├── useQuiz.js              # 答题逻辑
-│   │   │   ├── usePlantGame.js         # 游戏逻辑
-│   │   │   ├── useInteraction.js       # 交互功能
-│   │   │   ├── useFavorite.js          # 收藏功能
-│   │   │   └── useMedia.js             # 媒体处理
-│   │   │
 │   │   ├── router/                     # 路由配置
-│   │   │   └── index.js                # 路由定义 + 守卫
-│   │   │
 │   │   ├── stores/                     # 状态管理
-│   │   │   └── user.js                 # 用户状态
-│   │   │
 │   │   ├── utils/                      # 工具函数
-│   │   │   ├── index.js                # 工具函数导出
-│   │   │   ├── request.js              # Axios 封装
-│   │   │   ├── media.js                # 媒体工具
-│   │   │   ├── xss.js                  # XSS 防护
-│   │   │   └── logger.js               # 日志工具
-│   │   │
-│   │   ├── styles/                     # 样式文件
-│   │   │   ├── index.css               # 样式入口
-│   │   │   ├── variables.css           # CSS 变量
-│   │   │   ├── base.css                # 基础样式
-│   │   │   ├── components.css          # 组件样式
-│   │   │   └── pages.css               # 页面样式
-│   │   │
-│   │   ├── config/                     # 配置文件
-│   │   │   └── index.js                # 应用配置
-│   │   │
-│   │   ├── App.vue                     # 根组件
-│   │   └── main.js                     # 入口文件
-│   │
-│   ├── public/                         # 静态资源
-│   ├── index.html                      # HTML 模板
-│   ├── package.json                    # 项目配置
-│   ├── vite.config.js                  # Vite 配置
-│   └── vitest.config.js                # 测试配置
+│   │   └── styles/                     # 样式文件
+│   ├── Dockerfile                      # Docker 构建文件
+│   ├── nginx.conf                      # Nginx 配置
+│   └── package.json                    # 项目配置
 │
 ├── deploy/                             # 部署配置
-│   ├── ci-deploy.sh                    # CI/CD 部署脚本
+│   ├── docker-deploy.sh                # Docker 部署脚本
+│   ├── init-server.sh                  # 服务器初始化脚本
 │   ├── nginx.conf                      # Nginx 配置
-│   ├── dong-medicine-backend.service   # Systemd 服务
-│   └── *.sql                           # 数据库脚本
+│   └── dong-medicine-backend.service   # Systemd 服务
 │
 ├── .github/workflows/                  # GitHub Actions
 │   └── ci-cd.yml                       # CI/CD 工作流
 │
+├── docker-compose.yml                  # Docker Compose 配置
+├── .env.example                        # 环境变量示例
 └── README.md                           # 项目文档
 ```
 
@@ -320,6 +191,7 @@ Graduation Project/
 | JDK | 17+ | `java -version` |
 | Node.js | 18+ | `node -v` |
 | MySQL | 8.0+ | `mysql --version` |
+| Redis | 7.0+ | `redis-cli --version` |
 | Maven | 3.6+ | `mvn -v` |
 | npm | 9+ | `npm -v` |
 
@@ -377,45 +249,98 @@ npm run dev
 
 ---
 
-## 环境配置
+## Docker 部署
 
-### 后端环境变量
+### 环境要求
 
-创建 `dong-medicine-backend/.env` 文件：
+- Docker 20.10+
+- Docker Compose 2.0+
+
+### 快速部署
+
+#### 1. 配置环境变量
 
 ```bash
-# 运行环境
-SPRING_PROFILES_ACTIVE=prod
+# 复制环境变量模板
+cp .env.example .env
 
-# 数据库配置
-DB_USERNAME=root
-DB_PASSWORD=your_password
-
-# JWT 配置（至少64字符）
-JWT_SECRET=your-very-long-jwt-secret-key-must-be-at-least-64-characters-long
-JWT_EXPIRATION=86400000
-
-# CORS 配置
-CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080
-
-# DeepSeek AI 配置
-DEEPSEEK_API_KEY=sk-your-api-key
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-
-# 管理员初始密码
-ADMIN_INIT_PASSWORD=Admin@123
-
-# 文件上传路径
-FILE_UPLOAD_BASE_PATH=/opt/dong-medicine/backend/public
+# 编辑配置（修改密码等敏感信息）
+vim .env
 ```
 
-### 前端环境变量
-
-创建 `dong-medicine-frontend/.env.local` 文件：
+`.env` 文件配置说明：
 
 ```bash
-# API 基础路径
-VITE_API_BASE_URL=http://localhost:8080/api
+# MySQL配置
+MYSQL_ROOT_PASSWORD=your_root_password    # MySQL root密码
+MYSQL_USER=dongmedicine                   # 应用数据库用户
+MYSQL_PASSWORD=your_password              # 应用数据库密码
+MYSQL_PORT=3306                           # MySQL端口
+
+# Redis配置
+REDIS_PASSWORD=your_redis_password        # Redis密码
+REDIS_PORT=6379                           # Redis端口
+
+# JWT配置（至少64字符，含大小写字母、数字、特殊字符）
+JWT_SECRET=YourStrongJwtSecretKey123!@#MustBe64Chars...
+JWT_EXPIRATION=86400000                   # Token有效期(毫秒)
+
+# 服务端口
+BACKEND_PORT=8080                         # 后端端口
+FRONTEND_PORT=80                          # 前端端口
+
+# CORS配置
+CORS_ALLOWED_ORIGIN=http://your-domain.com
+
+# AI配置（可选）
+DEEPSEEK_API_KEY=sk-xxx
+```
+
+#### 2. 一键启动
+
+```bash
+# 构建并启动所有服务
+docker-compose up -d --build
+
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f
+```
+
+#### 3. 访问服务
+
+- **前端**: http://localhost
+- **后端 API**: http://localhost:8080/api/
+- **Swagger 文档**: http://localhost:8080/swagger-ui/
+- **健康检查**: http://localhost:8080/actuator/health
+
+### Docker 常用命令
+
+```bash
+# 启动服务
+docker-compose up -d
+
+# 停止服务
+docker-compose down
+
+# 重启服务
+docker-compose restart
+
+# 重新构建并启动
+docker-compose up -d --build
+
+# 查看日志
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+# 进入容器
+docker exec -it dong-medicine-backend sh
+docker exec -it dong-medicine-mysql mysql -u root -p
+
+# 清理无用镜像
+docker image prune -f
 ```
 
 ---
@@ -432,7 +357,7 @@ VITE_API_BASE_URL=http://localhost:8080/api
     ┌─────────┴─────────┐
     ▼                   ▼
 构建后端            构建前端
-(Java 17)          (Node 18)
+(Java 17)          (Node 20)
     │                   │
     └─────────┬─────────┘
               ▼
@@ -440,14 +365,47 @@ VITE_API_BASE_URL=http://localhost:8080/api
               │
     ┌─────────┴─────────┐
     ▼                   ▼
-部署后端            部署前端
-(JAR + Systemd)    (dist + Nginx)
+检查/安装Docker     上传部署文件
               │
               ▼
-         健康检查验证
+    ┌─────────────────────┐
+    │   Docker Compose    │
+    │   - 构建镜像        │
+    │   - 启动容器        │
+    │   - 健康检查        │
+    └─────────────────────┘
               │
               ▼
            部署完成
+```
+
+### GitHub Secrets 配置
+
+在 GitHub 仓库 `Settings` → `Secrets and variables` → `Actions` 中配置：
+
+| Secret 名称 | 说明 | 示例 |
+|------------|------|------|
+| `SERVER_HOST` | 服务器 IP 地址 | `192.168.1.100` |
+| `SERVER_USER` | SSH 用户名 | `root` |
+| `SSH_PRIVATE_KEY` | SSH 私钥内容 | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `MYSQL_ROOT_PASSWORD` | MySQL root 密码 | `YourRootPassword123!` |
+| `MYSQL_USER` | MySQL 用户名 | `dongmedicine` |
+| `MYSQL_PASSWORD` | MySQL 用户密码 | `YourPassword123!` |
+| `REDIS_PASSWORD` | Redis 密码 | `YourRedisPassword123!` |
+| `JWT_SECRET` | JWT 密钥（64+字符） | `YourStrongJwtSecretKey...` |
+| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 | `sk-xxx...` |
+
+### 生成 SSH 密钥
+
+```bash
+# 生成密钥对
+ssh-keygen -t ed25519 -C "github-actions" -f github-actions-key
+
+# 将公钥添加到服务器
+ssh-copy-id -i github-actions-key.pub root@你的服务器IP
+
+# 将私钥内容复制到 GitHub Secrets (SSH_PRIVATE_KEY)
+cat github-actions-key
 ```
 
 ### 触发部署
@@ -462,47 +420,30 @@ git push origin main
 git tag v1.0.0
 git push origin v1.0.0
 
-# 方式3：手动触发（空提交）
-git commit --allow-empty -m "chore: 触发部署"
-git push origin main
+# 方式3：手动触发（GitHub Actions 页面点击 "Run workflow"）
 ```
-
-### GitHub Secrets 配置
-
-在 GitHub 仓库 `Settings` → `Secrets and variables` → `Actions` 中配置：
-
-| Secret 名称 | 说明 |
-|------------|------|
-| `SERVER_HOST` | 服务器 IP 地址 |
-| `SERVER_USER` | SSH 用户名 |
-| `SSH_PRIVATE_KEY` | SSH 私钥 |
-| `DB_USERNAME` | 数据库用户名 |
-| `DB_PASSWORD` | 数据库密码 |
-| `JWT_SECRET` | JWT 密钥 |
-| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 |
-| `ADMIN_INIT_PASSWORD` | 管理员密码 |
 
 ### 服务器常用命令
 
 ```bash
-# 查看后端日志
-journalctl -u dong-medicine-backend -f
-
 # 查看服务状态
-systemctl status dong-medicine-backend
+cd /opt/dong-medicine && docker-compose ps
 
-# 重启后端服务
-systemctl restart dong-medicine-backend
+# 查看日志
+docker-compose logs -f backend
+docker-compose logs -f frontend
 
-# 重启 Nginx
-systemctl restart nginx
+# 重启服务
+docker-compose restart
+
+# 停止服务
+docker-compose down
+
+# 手动重新部署
+cd /tmp/deploy && sudo ./docker-deploy.sh
 
 # 查看备份
 ls -la /opt/dong-medicine/backups/
-
-# 回滚版本
-cp /opt/dong-medicine/backups/dong-medicine-backend-YYYYMMDD_HHMMSS.jar /opt/dong-medicine/backend/
-systemctl restart dong-medicine-backend
 ```
 
 ---
@@ -512,7 +453,7 @@ systemctl restart dong-medicine-backend
 启动后端服务后，访问 Swagger UI：
 
 ```
-http://localhost:8080/swagger-ui.html
+http://localhost:8080/swagger-ui/index.html
 ```
 
 ### 主要 API 端点
@@ -568,7 +509,20 @@ http://localhost:8080/swagger-ui.html
 
 ## 常见问题
 
-### 1. 后端启动失败
+### 1. Docker 镜像拉取失败
+
+配置 Docker 镜像加速器（Docker Desktop → Settings → Docker Engine）：
+
+```json
+{
+  "registry-mirrors": [
+    "https://docker.1ms.run",
+    "https://docker.xuanyuan.me"
+  ]
+}
+```
+
+### 2. 后端启动失败
 
 **检查数据库连接**：
 ```bash
@@ -584,7 +538,14 @@ netstat -ano | findstr :8080
 lsof -i :8080
 ```
 
-### 2. 前端启动失败
+### 3. JWT 密钥验证失败
+
+生产环境 JWT 密钥要求：
+- 至少 64 个字符
+- 包含大写字母、小写字母、数字、特殊字符
+- 不能包含 "secret" 等常见单词
+
+### 4. 前端启动失败
 
 **清除依赖重装**：
 ```bash
@@ -592,16 +553,17 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-### 3. 登录 Token 失效
+### 5. 容器健康检查失败
 
-Token 有效期为 24 小时，过期后需要重新登录。
-
-### 4. 文件上传失败
-
-检查后端配置的文件上传路径是否存在且有写入权限：
 ```bash
-mkdir -p /opt/dong-medicine/backend/public
-chmod 755 /opt/dong-medicine/backend/public
+# 查看容器日志
+docker-compose logs backend
+
+# 进入容器排查
+docker exec -it dong-medicine-backend sh
+
+# 手动健康检查
+curl http://localhost:8080/actuator/health
 ```
 
 ---

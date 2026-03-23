@@ -28,6 +28,7 @@
       <div class="admin-content">
         <AdminDashboard
           v-if="activeMenu === 'dashboard'"
+          :stats="adminStats"
           :users="users"
           :knowledge="knowledgeList"
           :inheritors="inheritorsList"
@@ -45,20 +46,63 @@
           v-if="activeMenu === 'users'"
           title="用户"
           :data="sortedUsers"
-          :columns="[{ prop: 'username', label: '用户名', minWidth: 120 }, { prop: 'role', label: '角色', type: 'tag' }, { prop: 'createdAt', label: '创建时间', width: 160 }]"
+          :columns="[{ prop: 'username', label: '用户名', minWidth: 120 }, { prop: 'role', label: '角色', type: 'tag' }, { prop: 'status', label: '状态', slotName: 'status', width: 80 }, { prop: 'createdAt', label: '创建时间', width: 160 }]"
           :show-add="false"
           :show-edit="false"
           :show-title="false"
-          action-width="100"
+          action-width="250"
+          server-pagination
+          :server-total="pagination.users.total"
+          :page="pagination.users.page"
+          :page-size="pagination.users.size"
+          @page-change="(p) => handleAdminPage('users', p)"
+          @size-change="(s) => handleAdminSize('users', s)"
           @view="viewUser"
           @delete="deleteUser"
-        />
+        >
+          <template #status="{ row }">
+            <el-tag :type="row.status === 'banned' ? 'danger' : 'success'">
+              {{ row.status === 'banned' ? '已封禁' : '正常' }}
+            </el-tag>
+          </template>
+          <template #actions="{ row }">
+            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewUser(row)">
+              查看
+            </el-button>
+            <el-button 
+              v-if="row.status !== 'banned' && row.role !== 'admin'" 
+              type="danger" 
+              size="small" 
+              @click="confirmBanUser(row)"
+            >
+              封禁
+            </el-button>
+            <el-button 
+              v-if="row.status === 'banned'" 
+              type="success" 
+              size="small" 
+              style="color: var(--text-inverse);" 
+              @click="confirmUnbanUser(row)"
+            >
+              解封
+            </el-button>
+            <el-button type="danger" size="small" @click="deleteUser(row.id)">
+              删除
+            </el-button>
+          </template>
+        </AdminDataTable>
 
         <AdminDataTable
           v-if="activeMenu === 'knowledge'"
           title="知识"
           :data="knowledgeList"
           :columns="[{ prop: 'type', label: '类型', width: 80 }, { prop: 'therapyCategory', label: '疗法分类', width: 100 }, { prop: 'diseaseCategory', label: '疾病分类', width: 100 }, { prop: 'popularity', label: '热度', width: 70 }]"
+          server-pagination
+          :server-total="pagination.knowledge.total"
+          :page="pagination.knowledge.page"
+          :page-size="pagination.knowledge.size"
+          @page-change="(p) => handleAdminPage('knowledge', p)"
+          @size-change="(s) => handleAdminSize('knowledge', s)"
           @add="openDialog('knowledge')"
           @edit="editKnowledge"
           @view="viewKnowledge"
@@ -70,6 +114,12 @@
           title="传承人"
           :data="inheritorsList"
           :columns="[{ prop: 'level', label: '级别', type: 'tag', width: 80 }, { prop: 'specialties', label: '技艺特色', minWidth: 150 }, { prop: 'experienceYears', label: '经验年限', width: 90 }]"
+          server-pagination
+          :server-total="pagination.inheritors.total"
+          :page="pagination.inheritors.page"
+          :page-size="pagination.inheritors.size"
+          @page-change="(p) => handleAdminPage('inheritors', p)"
+          @size-change="(s) => handleAdminSize('inheritors', s)"
           @add="openDialog('inheritor')"
           @edit="editInheritor"
           @view="viewInheritor"
@@ -81,6 +131,12 @@
           title="植物"
           :data="plantsList"
           :columns="[{ prop: 'scientificName', label: '学名', minWidth: 120 }, { prop: 'category', label: '分类', width: 80 }, { prop: 'usageWay', label: '用法', width: 70 }, { prop: 'difficulty', label: '难度', type: 'tag', width: 70 }]"
+          server-pagination
+          :server-total="pagination.plants.total"
+          :page="pagination.plants.page"
+          :page-size="pagination.plants.size"
+          @page-change="(p) => handleAdminPage('plants', p)"
+          @size-change="(s) => handleAdminSize('plants', s)"
           @add="openDialog('plant')"
           @edit="editPlant"
           @view="viewPlant"
@@ -93,6 +149,12 @@
           title-name="问题"
           :data="qaList"
           :columns="[{ prop: 'category', label: '分类', width: 100 }, { prop: 'popularity', label: '热度', width: 70 }]"
+          server-pagination
+          :server-total="pagination.qa.total"
+          :page="pagination.qa.page"
+          :page-size="pagination.qa.size"
+          @page-change="(p) => handleAdminPage('qa', p)"
+          @size-change="(s) => handleAdminSize('qa', s)"
           @add="openDialog('qa')"
           @edit="editQa"
           @view="viewQa"
@@ -104,6 +166,12 @@
           title="资源"
           :data="resourcesList"
           :columns="[{ prop: 'category', label: '分类', width: 100 }, { slotName: 'fileType', label: '类型', width: 70 }, { slotName: 'fileSize', label: '文件大小', width: 90 }, { prop: 'downloadCount', label: '下载次数', width: 90 }, { prop: 'popularity', label: '热度', width: 70 }]"
+          server-pagination
+          :server-total="pagination.resources.total"
+          :page="pagination.resources.page"
+          :page-size="pagination.resources.size"
+          @page-change="(p) => handleAdminPage('resources', p)"
+          @size-change="(s) => handleAdminSize('resources', s)"
           @add="openDialog('resource')"
           @edit="editResource"
           @view="viewResource"
@@ -125,6 +193,12 @@
           title-name="问题"
           :data="quizList"
           :columns="[{ prop: 'category', label: '分类', width: 100 }, { prop: 'difficulty', label: '难度', type: 'tag', width: 70 }, { slotName: 'correctAnswer', label: '正确答案', width: 150 }]"
+          server-pagination
+          :server-total="pagination.quiz.total"
+          :page="pagination.quiz.page"
+          :page-size="pagination.quiz.size"
+          @page-change="(p) => handleAdminPage('quiz', p)"
+          @size-change="(s) => handleAdminSize('quiz', s)"
           @add="openDialog('quiz')"
           @edit="editQuiz"
           @view="viewQuiz"
@@ -146,6 +220,12 @@
           :show-add="false"
           :show-edit="false"
           action-width="250"
+          server-pagination
+          :server-total="pagination.comments.total"
+          :page="pagination.comments.page"
+          :page-size="pagination.comments.size"
+          @page-change="(p) => handleAdminPage('comments', p)"
+          @size-change="(s) => handleAdminSize('comments', s)"
           @view="viewComment"
           @delete="deleteComment"
         >
@@ -174,6 +254,12 @@
           :show-add="false"
           :show-edit="false"
           action-width="200"
+          server-pagination
+          :server-total="pagination.feedback.total"
+          :page="pagination.feedback.page"
+          :page-size="pagination.feedback.size"
+          @page-change="(p) => handleAdminPage('feedback', p)"
+          @size-change="(s) => handleAdminSize('feedback', s)"
           @view="viewFeedback"
           @delete="deleteFeedback"
         >
@@ -258,7 +344,7 @@
       </div>
     </div>
 
-    <UserDetailDialog v-model:visible="detailVisible.user" :user="currentDetail" />
+    <UserDetailDialog v-model:visible="detailVisible.user" :user="currentDetail" @ban="handleBanUser" @unban="handleUnbanUser" />
     <KnowledgeDetailDialog v-model:visible="detailVisible.knowledge" :knowledge="currentDetail" />
     <InheritorDetailDialog v-model:visible="detailVisible.inheritor" :inheritor="currentDetail" />
     <PlantDetailDialog v-model:visible="detailVisible.plant" :plant="currentDetail" />
@@ -279,29 +365,31 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, inject, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, DeleteFilled, HomeFilled } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 import AdminDashboard from '@/components/business/admin/AdminDashboard.vue'
 import AdminDataTable from '@/components/business/admin/AdminDataTable.vue'
 import AdminSidebar from '@/components/business/admin/AdminSidebar.vue'
-import CommentDetailDialog from '@/components/business/admin/dialogs/CommentDetailDialog.vue'
-import FeedbackDetailDialog from '@/components/business/admin/dialogs/FeedbackDetailDialog.vue'
-import InheritorDetailDialog from '@/components/business/admin/dialogs/InheritorDetailDialog.vue'
-import KnowledgeDetailDialog from '@/components/business/admin/dialogs/KnowledgeDetailDialog.vue'
-import LogDetailDialog from '@/components/business/admin/dialogs/LogDetailDialog.vue'
-import PlantDetailDialog from '@/components/business/admin/dialogs/PlantDetailDialog.vue'
-import QaDetailDialog from '@/components/business/admin/dialogs/QaDetailDialog.vue'
-import QuizDetailDialog from '@/components/business/admin/dialogs/QuizDetailDialog.vue'
-import ResourceDetailDialog from '@/components/business/admin/dialogs/ResourceDetailDialog.vue'
-import UserDetailDialog from '@/components/business/admin/dialogs/UserDetailDialog.vue'
-import InheritorFormDialog from '@/components/business/admin/forms/InheritorFormDialog.vue'
-import KnowledgeFormDialog from '@/components/business/admin/forms/KnowledgeFormDialog.vue'
-import PlantFormDialog from '@/components/business/admin/forms/PlantFormDialog.vue'
-import QaFormDialog from '@/components/business/admin/forms/QaFormDialog.vue'
-import QuizFormDialog from '@/components/business/admin/forms/QuizFormDialog.vue'
-import ResourceFormDialog from '@/components/business/admin/forms/ResourceFormDialog.vue'
+
+const CommentDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/CommentDetailDialog.vue'))
+const FeedbackDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/FeedbackDetailDialog.vue'))
+const InheritorDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/InheritorDetailDialog.vue'))
+const KnowledgeDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/KnowledgeDetailDialog.vue'))
+const LogDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/LogDetailDialog.vue'))
+const PlantDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/PlantDetailDialog.vue'))
+const QaDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/QaDetailDialog.vue'))
+const QuizDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/QuizDetailDialog.vue'))
+const ResourceDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/ResourceDetailDialog.vue'))
+const UserDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/UserDetailDialog.vue'))
+const InheritorFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/InheritorFormDialog.vue'))
+const KnowledgeFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/KnowledgeFormDialog.vue'))
+const PlantFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/PlantFormDialog.vue'))
+const QaFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/QaFormDialog.vue'))
+const QuizFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/QuizFormDialog.vue'))
+const ResourceFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/ResourceFormDialog.vue'))
 import { useAdminData, useAdminDialogs, useAdminActions } from '@/composables/useAdminData'
 import { getCorrectAnswerContent, menuTitles, formatFileSize, getFileTypeTagType, getFileTypeText } from '@/utils/adminUtils'
 import { parseMediaList, getMediaType } from '@/utils/media'
@@ -309,15 +397,17 @@ import { parseMediaList, getMediaType } from '@/utils/media'
 const router = useRouter()
 const request = inject('request')
 const updateUserState = inject('updateUserState')
+const userStore = useUserStore()
 
-const userName = computed(() => localStorage.getItem('userName') || '管理员')
+const userName = computed(() => userStore.username || '管理员')
 const activeMenu = ref('dashboard')
 const logoutLoading = ref(false)
 
 const {
   users, knowledgeList, inheritorsList, plantsList, qaList,
   resourcesList, feedbackList, quizList, commentsList, logList,
-  sortedComments, sortedFeedback, sortedUsers, fetchData
+  adminStats, pagination, sortedComments, sortedFeedback, sortedUsers,
+  fetchData, handleAdminPage, handleAdminSize
 } = useAdminData(request)
 
 const {
@@ -336,6 +426,54 @@ const formatLogTime = (time) => time ? new Date(time).toLocaleString('zh-CN') : 
 
 const viewUser = (row) => viewDetail('user', row)
 const deleteUser = (id) => confirmDelete('确定删除？', () => request.delete(`/admin/users/${id}`))
+
+const confirmBanUser = async (user) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要封禁用户 "${user.username}" 吗？封禁后该用户将无法登录系统。`,
+      '封禁确认',
+      { type: 'warning', confirmButtonText: '确定封禁', cancelButtonText: '取消' }
+    )
+    await handleBanUser(user)
+  } catch {
+    // 用户取消
+  }
+}
+
+const confirmUnbanUser = async (user) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要解除用户 "${user.username}" 的封禁吗？`,
+      '解封确认',
+      { type: 'info', confirmButtonText: '确定解封', cancelButtonText: '取消' }
+    )
+    await handleUnbanUser(user)
+  } catch {
+    // 用户取消
+  }
+}
+
+const handleBanUser = async (user) => {
+  try {
+    await request.put(`/admin/users/${user.id}/ban`)
+    ElMessage.success('用户已被封禁')
+    detailVisible.value.user = false
+    fetchData()
+  } catch (e) {
+    ElMessage.error('封禁失败')
+  }
+}
+
+const handleUnbanUser = async (user) => {
+  try {
+    await request.put(`/admin/users/${user.id}/unban`)
+    ElMessage.success('用户已解封')
+    detailVisible.value.user = false
+    fetchData()
+  } catch (e) {
+    ElMessage.error('解封失败')
+  }
+}
 
 const viewKnowledge = (row) => viewDetail('knowledge', row)
 const editKnowledge = (row) => editItem('knowledge', row)
@@ -377,7 +515,7 @@ const viewResource = (row) => viewDetail('resource', row)
 const getResourceFileData = (row) => {
   if (!row?.files) return null
   try { const files = parseMediaList(row.files); return files.length > 0 ? files[0] : null }
-  catch { return null }
+  catch (error) { console.warn('解析资源文件失败:', error); return null }
 }
 const getResourceFileType = (row) => {
   const fileData = getResourceFileData(row)
@@ -428,14 +566,13 @@ const logout = async () => {
   logoutLoading.value = true
   try { await request.post('/user/logout').catch(() => {}) }
   finally {
-    localStorage.removeItem('token'); localStorage.removeItem('userName'); localStorage.removeItem('userId'); localStorage.removeItem('role'); localStorage.removeItem('userInfo')
+    userStore.clearAuth()
     updateUserState(); ElMessage.success('已退出登录'); router.push('/')
   }
 }
 
 onMounted(() => {
-  const role = localStorage.getItem('role')
-  if (role !== 'admin' && role !== 'ADMIN') { ElMessage.error('您没有管理员权限'); router.push('/'); return }
+  if (!userStore.isAdmin) { ElMessage.error('您没有管理员权限'); router.push('/'); return }
   fetchData()
 })
 </script>

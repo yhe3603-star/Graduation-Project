@@ -179,7 +179,7 @@
 import { computed, inject, onMounted, ref } from 'vue'
 import { Aim, ArrowRight, ChatDotRound, Compass, DataLine, Document, Folder, InfoFilled, Medal, Picture, User } from '@element-plus/icons-vue'
 import { quickEntries, coreModules, extendModules, getLevelClass, createHeroStats } from '@/config/homeConfig'
-import { extractData } from '@/utils'
+import { extractPageData, logFetchError } from "@/utils";
 
 const request = inject('request')
 const stats = ref({ plants: 21, formulas: 10, inheritors: 10, therapies: 5 })
@@ -190,15 +190,17 @@ const heroStats = computed(() => createHeroStats(stats.value))
 onMounted(async () => {
   try {
     const [pRes, iRes] = await Promise.all([
-      request.get('/plants/list').catch(() => ({})),
-      request.get('/inheritors/list').catch(() => ({}))
+      request.get('/plants/list', { params: { page: 1, size: 1 } }).catch(() => ({})),
+      request.get('/inheritors/list', { params: { page: 1, size: 5 } }).catch(() => ({}))
     ])
-    const plantsData = extractData(pRes)
-    const inheritorsData = extractData(iRes)
-    stats.value.plants = plantsData.length
-    stats.value.inheritors = inheritorsData.length
-    featuredInheritors.value = inheritorsData.slice(0, 4)
-  } catch {}
+    const plantsData = extractPageData(pRes)
+    const inheritorsData = extractPageData(iRes)
+    stats.value.plants = plantsData.total
+    stats.value.inheritors = inheritorsData.total
+    featuredInheritors.value = inheritorsData.records.slice(0, 4)
+  } catch (e) {
+    logFetchError('首页数据', e)
+  }
 })
 </script>
 

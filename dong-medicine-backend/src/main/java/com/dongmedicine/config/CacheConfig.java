@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -29,6 +31,9 @@ import java.util.Map;
 public class CacheConfig {
 
     private static final Logger log = LoggerFactory.getLogger(CacheConfig.class);
+
+    @Value("${app.cache.enabled:true}")
+    private boolean cacheEnabled;
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -55,7 +60,18 @@ public class CacheConfig {
 
     @Bean
     @Primary
-    public CacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        try {
+            connectionFactory.getConnection().ping();
+            log.info("Redis connection successful, using Redis cache manager");
+            return createRedisCacheManager(connectionFactory);
+        } catch (Exception e) {
+            log.warn("Redis connection failed, falling back to in-memory cache: {}", e.getMessage());
+            return createFallbackCacheManager();
+        }
+    }
+
+    private CacheManager createRedisCacheManager(RedisConnectionFactory connectionFactory) {
         Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
@@ -86,5 +102,13 @@ public class CacheConfig {
                 .withInitialCacheConfigurations(cacheConfigurations)
                 .transactionAware()
                 .build();
+    }
+
+    private CacheManager createFallbackCacheManager() {
+        log.info("Using in-memory ConcurrentMapCacheManager as fallback");
+        return new ConcurrentMapCacheManager(
+            "plants", "knowledges", "inheritors", "resources",
+            "users", "quizQuestions", "searchResults", "hotData"
+        );
     }
 }

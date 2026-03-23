@@ -28,6 +28,7 @@
               class="carousel-image"
               :preview-src-list="imageList"
               :initial-index="index"
+              lazy
             >
               <template #placeholder>
                 <div class="image-placeholder">

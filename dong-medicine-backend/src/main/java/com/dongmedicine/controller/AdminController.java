@@ -1,9 +1,11 @@
 package com.dongmedicine.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.constant.RoleConstants;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.dto.CommentDTO;
 import com.dongmedicine.entity.*;
 import com.dongmedicine.service.*;
@@ -34,18 +36,14 @@ public class AdminController {
     private final ResourceService resourceService;
     private final FeedbackService feedbackService;
     private final CommentService commentService;
+    private final QuizService quizService;
 
     @GetMapping("/users")
     public R<Map<String, Object>> listUsers(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        Page<User> pageResult = userService.page(new Page<>(Math.max(page, 1), Math.min(Math.max(size, 1), 100)));
-        Map<String, Object> data = new HashMap<>();
-        data.put("records", pageResult.getRecords());
-        data.put("total", pageResult.getTotal());
-        data.put("page", pageResult.getCurrent());
-        data.put("size", pageResult.getSize());
-        return R.ok(data);
+        Page<User> pageResult = userService.page(PageUtils.getPage(page, size));
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @DeleteMapping("/users/{id}")
@@ -61,16 +59,30 @@ public class AdminController {
         return R.ok("角色更新成功");
     }
 
+    @PutMapping("/users/{id}/ban")
+    public R<String> banUser(@PathVariable @NotNull Integer id,
+                             @RequestParam(required = false) String reason) {
+        userService.banUser(id, reason);
+        return R.ok("用户已被封禁");
+    }
+
+    @PutMapping("/users/{id}/unban")
+    public R<String> unbanUser(@PathVariable @NotNull Integer id) {
+        userService.unbanUser(id);
+        return R.ok("用户已解封");
+    }
+
     @GetMapping("/inheritors")
-    public R<List<Inheritor>> listInheritors() {
-        return R.ok(inheritorService.list());
+    public R<Map<String, Object>> listInheritors(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<Inheritor> pageResult = inheritorService.page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Inheritor>().orderByDesc(Inheritor::getCreatedAt));
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @PostMapping("/inheritors")
     public R<String> createInheritor(@Valid @RequestBody Inheritor inheritor) {
-        if (inheritor.getName() == null || inheritor.getName().isBlank()) {
-            return R.error("传承人姓名不能为空");
-        }
         inheritorService.save(inheritor);
         inheritorService.clearCache();
         return R.ok("新增传承人成功");
@@ -91,18 +103,16 @@ public class AdminController {
     }
 
     @GetMapping("/knowledge")
-    public R<List<Knowledge>> listKnowledge() {
-        return R.ok(knowledgeService.list());
+    public R<Map<String, Object>> listKnowledge(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<Knowledge> pageResult = knowledgeService.page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Knowledge>().orderByDesc(Knowledge::getCreatedAt));
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @PostMapping("/knowledge")
     public R<String> createKnowledge(@Valid @RequestBody Knowledge knowledge) {
-        if (knowledge.getTitle() == null || knowledge.getTitle().isBlank()) {
-            return R.error("标题不能为空");
-        }
-        if (knowledge.getContent() == null || knowledge.getContent().isBlank()) {
-            return R.error("内容不能为空");
-        }
         knowledgeService.save(knowledge);
         knowledgeService.clearCache();
         return R.ok("新增知识条目成功");
@@ -123,8 +133,12 @@ public class AdminController {
     }
 
     @GetMapping("/plants")
-    public R<List<Plant>> listPlants() {
-        return R.ok(plantService.list());
+    public R<Map<String, Object>> listPlants(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<Plant> pageResult = plantService.page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Plant>().orderByDesc(Plant::getCreatedAt));
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @PostMapping("/plants")
@@ -152,15 +166,16 @@ public class AdminController {
     }
 
     @GetMapping("/qa")
-    public R<List<Qa>> listQa() {
-        return R.ok(qaService.list());
+    public R<Map<String, Object>> listQa(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<Qa> pageResult = qaService.page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Qa>().orderByDesc(Qa::getCreatedAt));
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @PostMapping("/qa")
     public R<String> createQa(@Valid @RequestBody Qa qa) {
-        if (qa.getQuestion() == null || qa.getQuestion().isBlank()) {
-            return R.error("问题不能为空");
-        }
         qaService.save(qa);
         return R.ok("新增问答成功");
     }
@@ -179,15 +194,16 @@ public class AdminController {
     }
 
     @GetMapping("/resources")
-    public R<List<Resource>> listResources() {
-        return R.ok(resourceService.list());
+    public R<Map<String, Object>> listResources(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<Resource> pageResult = resourceService.page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Resource>().orderByDesc(Resource::getCreatedAt));
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @PostMapping("/resources")
     public R<String> createResource(@Valid @RequestBody Resource resource) {
-        if (resource.getTitle() == null || resource.getTitle().isBlank()) {
-            return R.error("资源标题不能为空");
-        }
         if (resource.getDownloadCount() == null) resource.setDownloadCount(0);
         if (resource.getViewCount() == null) resource.setViewCount(0);
         if (resource.getFavoriteCount() == null) resource.setFavoriteCount(0);
@@ -220,13 +236,8 @@ public class AdminController {
         if (!"all".equalsIgnoreCase(status)) {
             wrapper.eq(Feedback::getStatus, status);
         }
-        Page<Feedback> pageResult = feedbackService.page(new Page<>(Math.max(page, 1), Math.min(Math.max(size, 1), 100)), wrapper);
-        Map<String, Object> data = new HashMap<>();
-        data.put("records", pageResult.getRecords());
-        data.put("total", pageResult.getTotal());
-        data.put("page", pageResult.getCurrent());
-        data.put("size", pageResult.getSize());
-        return R.ok(data);
+        Page<Feedback> pageResult = feedbackService.page(PageUtils.getPage(page, size), wrapper);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @PutMapping("/feedback/{id}/reply")
@@ -249,11 +260,12 @@ public class AdminController {
     }
 
     @GetMapping("/comments")
-    public R<List<CommentDTO>> listComments(
+    public R<Map<String, Object>> listComments(
             @RequestParam(defaultValue = "all") String status,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        return R.ok(commentService.listAllDTO(status, page, size));
+        Page<CommentDTO> pageResult = commentService.pageAllDTO(status, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @PutMapping("/comments/{id}/approve")
@@ -272,5 +284,36 @@ public class AdminController {
     public R<String> deleteComment(@PathVariable @NotNull Integer id) {
         commentService.removeById(id);
         return R.ok("删除评论成功");
+    }
+
+    @GetMapping("/stats")
+    public R<Map<String, Long>> stats() {
+        Map<String, Long> data = new HashMap<>();
+        data.put("users", userService.count());
+        data.put("knowledge", knowledgeService.count());
+        data.put("inheritors", inheritorService.count());
+        data.put("plants", plantService.count());
+        data.put("qa", qaService.count());
+        data.put("resources", resourceService.count());
+        data.put("quiz", quizService.countQuestions());
+        data.put("comments", commentService.count());
+        data.put("feedback", feedbackService.count());
+        return R.ok(data);
+    }
+
+    @GetMapping("/stats/plants-distribution")
+    public R<List<Map<String, Object>>> getPlantDistribution() {
+        return R.ok(plantService.listMaps(new QueryWrapper<Plant>()
+                .select("distribution as name", "count(*) as value")
+                .groupBy("distribution")
+                .orderByDesc("distribution")));
+    }
+
+    @GetMapping("/stats/knowledge-popularity")
+    public R<List<Map<String, Object>>> getKnowledgePopularity() {
+        return R.ok(knowledgeService.listMaps(new QueryWrapper<Knowledge>()
+                .select("title as name", "popularity as value")
+                .orderByDesc("popularity")
+                .last("LIMIT 10")));
     }
 }

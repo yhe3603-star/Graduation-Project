@@ -161,7 +161,7 @@ import { computed } from 'vue';
 import { Picture, Download } from '@element-plus/icons-vue';
 import { formatTime, formatFileSize, getFileTypeTagType, getFileTypeText } from '@/utils/adminUtils';
 import { getFileName, getFileIcon, getFileColor } from '@/utils';
-import { parseMediaList } from '@/utils/media';
+import { parseMediaList, normalizeUrl } from '@/utils/media';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -176,7 +176,7 @@ const fileList = computed(() => {
     const files = parseMediaList(props.resource.files);
     return files.map(file => ({
       ...file,
-      url: file.url || file.path,
+      url: normalizeUrl(file.url || file.path),
       type: file.type || 'document'
     }));
   } catch {
@@ -192,9 +192,9 @@ const isPdfFile = (file) => {
 };
 
 const handleDownload = (file) => {
-  if (!file?.path) return;
+  if (!file?.path && !file?.url) return;
   const link = document.createElement('a');
-  link.href = file.path.startsWith('http://') || file.path.startsWith('https://') || file.path.startsWith('/') ? file.path : `/${file.path}`;
+  link.href = normalizeUrl(file.url || file.path);
   link.download = file.name || file.originalFileName || getFileName(file.path) || 'resource';
   link.target = '_blank';
   document.body.appendChild(link);

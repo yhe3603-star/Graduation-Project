@@ -1,5 +1,6 @@
 package com.dongmedicine.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.dongmedicine.entity.Plant;
 import java.util.List;
@@ -11,13 +12,26 @@ import java.util.List;
 public interface PlantService extends IService<Plant> {
 
     /**
-     * 根据分类和用法双重过滤获取植物列表
+     * 根据关键词、分类和用法高级过滤获取植物列表
      * 
+     * @param keyword 搜索关键词（可选）
      * @param category 植物分类（可选）
      * @param usageWay 用法方式（可选）
      * @return 过滤后的植物列表（按中文名称排序）
      */
-    List<Plant> listByDoubleFilter(String category, String usageWay);
+    List<Plant> advancedSearch(String keyword, String category, String usageWay);
+
+    /**
+     * 分页高级搜索植物
+     * 
+     * @param keyword 搜索关键词（可选）
+     * @param category 植物分类（可选）
+     * @param usageWay 用法方式（可选）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 分页结果
+     */
+    Page<Plant> advancedSearchPaged(String keyword, String category, String usageWay, Integer page, Integer size);
 
     /**
      * 搜索植物（使用默认限制数量）
@@ -27,6 +41,16 @@ public interface PlantService extends IService<Plant> {
      * @throws com.dongmedicine.common.exception.BusinessException 当关键词为空时抛出
      */
     List<Plant> search(String keyword);
+
+    /**
+     * 分页搜索植物
+     * 
+     * @param keyword 搜索关键词
+     * @param page 页码
+     * @param size 每页大小
+     * @return 分页结果
+     */
+    Page<Plant> searchPaged(String keyword, Integer page, Integer size);
 
     /**
      * 搜索植物

@@ -1,8 +1,10 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.common.util.FileCleanupHelper;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Resource;
 import com.dongmedicine.mapper.ResourceMapper;
 import com.dongmedicine.service.ResourceService;
@@ -59,6 +61,20 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
         }
         qw.orderByDesc(Resource::getDownloadCount);
         return list(qw);
+    }
+
+    @Override
+    public Page<Resource> pageByCategoryAndKeywordAndType(String category, String keyword, String fileType, Integer page, Integer size) {
+        Page<Resource> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Resource> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(category)) {
+            qw.eq(Resource::getCategory, category);
+        }
+        if (StringUtils.hasText(keyword)) {
+            qw.and(wrapper -> wrapper.like(Resource::getTitle, keyword).or().like(Resource::getDescription, keyword));
+        }
+        qw.orderByDesc(Resource::getDownloadCount);
+        return page(pageParam, qw);
     }
 
     @Override

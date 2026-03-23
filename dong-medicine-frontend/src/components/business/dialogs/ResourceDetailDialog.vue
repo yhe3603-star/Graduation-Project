@@ -194,7 +194,8 @@ const loadDocuments = () => {
       url: path,
       type: getFileType(path)
     }));
-  } catch {
+  } catch (e) {
+    console.warn('解析资源文档列表失败:', e);
     documentList.value = [];
   } finally {
     documentsLoading.value = false;

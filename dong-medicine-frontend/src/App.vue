@@ -4,7 +4,7 @@
     :class="{ 'admin-layout': isAdminPage }"
   >
     <AppHeader
-      v-if="!isAdminPage"
+      v-if="!isAdminPage && !isNotFoundPage"
       :is-logged-in="isLoggedIn"
       :user-name="userName"
       :is-admin="isAdmin"
@@ -26,7 +26,7 @@
       </router-view>
     </main>
 
-    <AppFooter v-if="!isAdminPage" />
+    <AppFooter v-if="!isAdminPage && !isNotFoundPage" />
 
     <el-dialog
       v-model="showLoginDialog"
@@ -134,6 +134,7 @@ import AppFooter from "@/components/business/layout/AppFooter.vue"
 import ErrorBoundary from "@/components/base/ErrorBoundary.vue"
 import request from "@/utils/request"
 import { useUserStore } from "@/stores/user"
+import { logFetchError } from "@/utils"
 
 const router = useRouter()
 const route = useRoute()
@@ -143,6 +144,7 @@ const isLoggedIn = computed(() => userStore.isLoggedIn)
 const userName = computed(() => userStore.userName)
 const isAdmin = computed(() => userStore.isAdmin)
 const isAdminPage = computed(() => route.path === "/admin")
+const isNotFoundPage = computed(() => route.name === "NotFound")
 
 onMounted(() => {
   userStore.initialize()
@@ -186,16 +188,16 @@ const handleLogin = async () => {
   loginLoading.value = true
   try {
     const res = await request.post("/user/login", loginForm.value)
-    const data = res.data || res
-    if (data.token) {
-      userStore.login(data)
+    if (res.code === 200 && res.data) {
+      userStore.setAuth(res.data)
       ElMessage.success("登录成功")
       showLoginDialog.value = false
       loginForm.value = { username: "", password: "" }
     } else {
       ElMessage.error(res.msg || "登录失败")
     }
-  } catch {
+  } catch (e) {
+    logFetchError('登录', e)
     ElMessage.error("登录失败，请重试")
   } finally {
     loginLoading.value = false
@@ -212,7 +214,8 @@ const handleRegister = async () => {
     showLoginDialog.value = true
     loginForm.value.username = registerForm.value.username
     registerForm.value = { username: "", password: "", confirmPassword: "" }
-  } catch {
+  } catch (e) {
+    logFetchError('注册', e)
     ElMessage.error("注册失败，请重试")
   } finally {
     registerLoading.value = false
@@ -222,7 +225,9 @@ const handleRegister = async () => {
 const logout = async () => {
   try {
     await request.post("/user/logout")
-  } catch {}
+  } catch (e) {
+    console.debug('退出登录请求失败:', e)
+  }
   userStore.logout()
   ElMessage.success("已退出登录")
   router.push("/")

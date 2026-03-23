@@ -73,12 +73,12 @@
           description="暂无相关知识"
         />
         <Pagination
-          v-if="filteredList.length"
+          v-if="totalItems > 0"
           :page="currentPage"
           :size="pageSize"
-          :total="filteredList.length"
-          @update:page="currentPage = $event"
-          @update:size="pageSize = $event"
+          :total="totalItems"
+          @update:page="currentPage = $event; loadKnowledgeData();"
+          @update:size="pageSize = $event; currentPage = 1; loadKnowledgeData();"
         />
       </div>
 
@@ -116,7 +116,7 @@ import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
-import { extractData } from "@/utils";
+import { extractPageData, extractData, logFetchError } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
 import { useUserStore } from "@/stores/user";
@@ -137,6 +137,7 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 const pageLoading = ref(false);
 const keyword = ref("");
 const allKnowledge = ref([]);
+const allKnowledgeForStats = ref([]);
 const hotKnowledge = ref([]);
 const favorites = ref([]);
 const detailVisible = ref(false);
@@ -144,13 +145,16 @@ const currentItem = ref(null);
 
 const therapyFilter = ref("");
 const diseaseFilter = ref("");
+const herbFilter = ref("");
 
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
+const totalItems = ref(0);
 
 const filterConfig = [
   { key: "therapy", label: "疗法", options: [{ label: "全部", value: "" }, { label: "药浴疗法", value: "药浴疗法" }, { label: "艾灸疗法", value: "艾灸疗法" }, { label: "推拿疗法", value: "推拿疗法" }] },
-  { key: "disease", label: "疾病", type: "success", options: [{ label: "全部", value: "" }, { label: "风湿骨痛", value: "风湿骨痛" }, { label: "妇科疾病", value: "妇科疾病" }, { label: "儿科疾病", value: "儿科疾病" }] }
+  { key: "disease", label: "疾病", type: "success", options: [{ label: "全部", value: "" }, { label: "风湿骨痛", value: "风湿骨痛" }, { label: "妇科疾病", value: "妇科疾病" }, { label: "儿科疾病", value: "儿科疾病" }] },
+  { key: "herb", label: "药材", type: "warning", options: [{ label: "全部", value: "" }, { label: "根茎类", value: "根茎类" }, { label: "全草类", value: "全草类" }, { label: "叶类", value: "叶类" }, { label: "花类", value: "花类" }, { label: "果实种子类", value: "果实种子类" }] }
 ];
 
 const { parseUpdateLog, stringifyUpdateLog, addLog, updateLog, deleteLog, formatLogTime } = useUpdateLog();
@@ -171,46 +175,39 @@ const allUpdateLogs = computed(() => {
 });
 
 const stats = computed(() => {
-  const totalViews = allKnowledge.value.reduce((sum, k) => sum + (k.viewCount || 0), 0);
-  const totalFavorites = allKnowledge.value.reduce((sum, k) => sum + (k.favoriteCount || 0), 0);
+  const data = allKnowledgeForStats.value.length > 0 ? allKnowledgeForStats.value : allKnowledge.value;
+  const totalViews = data.reduce((sum, k) => sum + (k.viewCount || 0), 0);
+  const totalFavorites = data.reduce((sum, k) => sum + (k.favoriteCount || 0), 0);
   return [
-    { value: allKnowledge.value.length, label: "知识总数" },
-    { value: new Set(allKnowledge.value.map(k => k.therapyCategory).filter(Boolean)).size, label: "疗法分类" },
-    { value: new Set(allKnowledge.value.map(k => k.diseaseCategory).filter(Boolean)).size, label: "疾病分类" },
-    { value: new Set(allKnowledge.value.map(k => k.type).filter(Boolean)).size, label: "类型" },
+    { value: data.length, label: "知识总数" },
+    { value: new Set(data.map(k => k.therapyCategory).filter(Boolean)).size, label: "疗法分类" },
+    { value: new Set(data.map(k => k.diseaseCategory).filter(Boolean)).size, label: "疾病分类" },
+    { value: new Set(data.map(k => k.type).filter(Boolean)).size, label: "类型" },
     { value: totalFavorites, label: "收藏量" },
     { value: totalViews, label: "浏览量" }
   ];
 });
 
-const filteredList = computed(() => {
-  let result = allKnowledge.value;
-  const kw = keyword.value.toLowerCase();
-  if (kw) {
-    result = result.filter(k => 
-      k.title?.toLowerCase().includes(kw) || 
-      k.content?.toLowerCase().includes(kw)
-    );
-  }
-  if (therapyFilter.value) result = result.filter(k => k.therapyCategory === therapyFilter.value);
-  if (diseaseFilter.value) result = result.filter(k => k.diseaseCategory === diseaseFilter.value);
-  return result;
-});
+const filteredList = computed(() => allKnowledge.value);
 
-const paginatedList = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return filteredList.value.slice(start, start + pageSize.value);
-});
+const paginatedList = computed(() => allKnowledge.value);
 
 const debouncedSearch = useDebounceFn(() => {
   currentPage.value = 1;
+  loadKnowledgeData();
 }, DEBOUNCE_DELAY);
 
 const handleSearch = () => {
   debouncedSearch();
 };
 
-const handleFilter = (filters) => { therapyFilter.value = filters.therapy || ""; diseaseFilter.value = filters.disease || ""; currentPage.value = 1; };
+const handleFilter = (filters) => { 
+  therapyFilter.value = filters.therapy || ""; 
+  diseaseFilter.value = filters.disease || ""; 
+  herbFilter.value = filters.herb || ""; 
+  currentPage.value = 1;
+  loadKnowledgeData();
+};
 
 const isFavorited = computed(() => currentItem.value && favorites.value.includes(currentItem.value.id));
 
@@ -221,7 +218,9 @@ const showDetail = async (item) => {
     await request.post(`/knowledge/${item.id}/view`);
     const idx = allKnowledge.value.findIndex(k => k.id === item.id);
     if (idx > -1) allKnowledge.value[idx].viewCount = (allKnowledge.value[idx].viewCount || 0) + 1;
-  } catch {}
+  } catch (e) {
+    console.debug('浏览量更新失败:', e);
+  }
 };
 
 const toggleFavorite = async (item) => {
@@ -240,7 +239,10 @@ const toggleFavorite = async (item) => {
       if (idx > -1) allKnowledge.value[idx].favoriteCount = (allKnowledge.value[idx].favoriteCount || 0) + 1;
       ElMessage.success("收藏成功");
     }
-  } catch { ElMessage.error("操作失败"); }
+  } catch (e) {
+    logFetchError('收藏操作', e);
+    ElMessage.error("操作失败");
+  }
 };
 
 const toggleFavoriteDetail = () => { if (currentItem.value) toggleFavorite(currentItem.value); };
@@ -248,16 +250,49 @@ const toggleFavoriteDetail = () => { if (currentItem.value) toggleFavorite(curre
 const loadKnowledgeData = async () => {
   pageLoading.value = true;
   try {
-    const res = await request.get("/knowledge/list", { params: { _t: Date.now() } });
-    allKnowledge.value = extractData(res);
+    // 并行请求：获取分页数据和所有数据用于统计
+    const [pageRes, allRes] = await Promise.all([
+      request.get("/knowledge/list", {
+        params: {
+          page: currentPage.value,
+          size: pageSize.value,
+          keyword: keyword.value,
+          therapy: therapyFilter.value,
+          disease: diseaseFilter.value,
+          herb: herbFilter.value,
+          _t: Date.now()
+        }
+      }),
+      request.get("/knowledge/list", {
+        params: {
+          page: 1,
+          size: 9999, // 获取足够多的数据以确保包含所有记录
+          _t: Date.now()
+        }
+      })
+    ]);
+    
+    const { records, total } = extractPageData(pageRes);
+    allKnowledge.value = records;
+    totalItems.value = total;
     hotKnowledge.value = allKnowledge.value.slice(0, 5);
+    
+    // 加载所有数据用于统计
+    const allData = extractPageData(allRes);
+    allKnowledgeForStats.value = allData.records;
+    
     if (isLoggedIn.value) {
       try {
         const favData = extractData(await request.get("/favorites/my"));
         favorites.value = favData.filter(f => f.type === "knowledge").map(f => f.targetId);
-      } catch {}
+      } catch (e) {
+        console.debug('加载收藏失败:', e);
+      }
     }
-  } catch { ElMessage.error("加载失败"); }
+  } catch (e) {
+    logFetchError('知识数据', e);
+    ElMessage.error("加载失败");
+  }
   finally { pageLoading.value = false; }
 };
 

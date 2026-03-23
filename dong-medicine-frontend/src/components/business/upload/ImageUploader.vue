@@ -92,7 +92,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from 'vue'
+import { ref, computed, watch, inject, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Picture, Delete, Rank } from '@element-plus/icons-vue'
 import draggable from 'vuedraggable'
@@ -119,9 +119,10 @@ const imageList = ref([])
 const uploading = ref(false)
 const uploadProgress = ref(0)
 const pendingFile = ref(null)
+const progressInterval = ref(null)
 
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}/upload/image`)
-const headers = computed(() => ({ Authorization: localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '' }))
+const headers = computed(() => ({ Authorization: sessionStorage.getItem('token') ? `Bearer ${sessionStorage.getItem('token')}` : '' }))
 const limitReached = computed(() => imageList.value.length >= props.limit)
 const tipText = computed(() => `支持 jpg/jpeg/png/gif/bmp/webp 格式，单张不超过 ${props.maxSize}MB，最多 ${props.limit} 张`)
 
@@ -169,12 +170,12 @@ const handleBeforeUpload = async (file) => {
   if (imageList.value.length >= props.limit) { ElMessage.warning(`最多只能上传 ${props.limit} 张图片`); return false }
   uploading.value = true
   uploadProgress.value = 0
-  file._progressInterval = setInterval(() => { if (uploadProgress.value < 90) uploadProgress.value += 10 }, 100)
+  progressInterval.value = setInterval(() => { if (uploadProgress.value < 90) uploadProgress.value += 10 }, 100)
   return true
 }
 
 const handleSuccess = (response, file) => {
-  clearInterval(file._progressInterval)
+  if (progressInterval.value) { clearInterval(progressInterval.value); progressInterval.value = null }
   uploadProgress.value = 100
   setTimeout(() => { uploading.value = false; uploadProgress.value = 0 }, 500)
   if (response.code === 200 && response.data) {
@@ -191,7 +192,7 @@ const handleSuccess = (response, file) => {
 }
 
 const handleError = (error, file) => {
-  clearInterval(file._progressInterval)
+  if (progressInterval.value) { clearInterval(progressInterval.value); progressInterval.value = null }
   uploading.value = false
   uploadProgress.value = 0
   console.error('图片上传失败:', error)
@@ -227,6 +228,13 @@ const clearImages = () => {
   emit('update:modelValue', props.multiple ? [] : '')
   emit('change', [])
 }
+
+onUnmounted(() => {
+  if (progressInterval.value) {
+    clearInterval(progressInterval.value)
+    progressInterval.value = null
+  }
+})
 
 defineExpose({ clearImages, getImages: () => imageList.value })
 </script>

@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue"
+import { ref, watch, onUnmounted } from "vue"
 import { Search } from "@element-plus/icons-vue"
 
 const props = defineProps({
@@ -68,6 +68,13 @@ const selectFilter = (key, value) => {
   activeFilters.value[key] = activeFilters.value[key] === value ? "" : value
   emit("filter", { ...activeFilters.value })
 }
+
+onUnmounted(() => {
+  if (timer) {
+    clearTimeout(timer)
+    timer = null
+  }
+})
 </script>
 
 <style scoped>

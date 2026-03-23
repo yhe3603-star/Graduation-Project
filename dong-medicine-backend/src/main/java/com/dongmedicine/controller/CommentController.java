@@ -1,7 +1,10 @@
 package com.dongmedicine.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
+import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.dto.CommentAddDTO;
 import com.dongmedicine.dto.CommentDTO;
 import com.dongmedicine.entity.Comment;
@@ -15,6 +18,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/comments")
@@ -28,7 +32,7 @@ public class CommentController {
     @PreAuthorize("isAuthenticated()")
     public R<String> add(@Valid @RequestBody CommentAddDTO dto) {
         Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) return R.error("请先登录");
+        if (userId == null) throw BusinessException.unauthorized("请先登录");
         Comment comment = new Comment();
         comment.setUserId(userId);
         comment.setUsername(SecurityUtils.getCurrentUsername());
@@ -52,15 +56,18 @@ public class CommentController {
     }
 
     @GetMapping("/list/all")
-    public R<List<CommentDTO>> listAll() {
-        return R.ok(service.listAllApproved());
+    public R<Map<String, Object>> listAll(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "12") Integer size) {
+        Page<CommentDTO> pageResult = service.pageAllApproved(page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public R<List<CommentDTO>> myComments() {
         Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) return R.error("请先登录");
+        if (userId == null) throw BusinessException.unauthorized("请先登录");
         return R.ok(service.listByUserId(userId));
     }
 }

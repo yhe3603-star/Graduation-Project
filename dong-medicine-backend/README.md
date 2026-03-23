@@ -6,15 +6,12 @@
 
 - [项目概述](#项目概述)
 - [技术栈](#技术栈)
-- [项目结构详解](#项目结构详解)
-- [核心模块说明](#核心模块说明)
-- [实体类详解](#实体类详解)
-- [API 接口详解](#api-接口详解)
-- [配置文件详解](#配置文件详解)
-- [安全机制](#安全机制)
-- [缓存策略](#缓存策略)
-- [数据库设计](#数据库设计)
+- [项目结构](#项目结构)
+- [API 接口](#api-接口)
+- [实体类](#实体类)
+- [配置说明](#配置说明)
 - [快速开始](#快速开始)
+- [Docker 部署](#docker-部署)
 
 ---
 
@@ -26,12 +23,13 @@
 
 | 功能模块 | 说明 |
 |---------|------|
-| 用户系统 | 注册、登录、权限管理 |
-| 内容管理 | 植物、知识、传承人、资源管理 |
+| 用户系统 | 注册、登录、权限管理、Token 刷新 |
+| 内容管理 | 植物、知识、传承人、资源、问答管理 |
 | 互动功能 | 评论、收藏、反馈 |
-| 游戏化学习 | 测验、植物识别游戏 |
-| AI问答 | DeepSeek智能问答 |
+| 游戏化学习 | 测验、植物识别游戏、排行榜 |
+| AI问答 | DeepSeek 智能问答 |
 | 后台管理 | 数据统计、内容审核、日志管理 |
+| 文件上传 | 图片、视频、文档上传管理 |
 
 ---
 
@@ -43,14 +41,15 @@
 | Spring Security | - | 安全认证 |
 | MyBatis Plus | 3.5.9 | ORM框架 |
 | MySQL | 8.0+ | 数据库 |
-| JWT | 0.11.5 | Token认证 |
+| Redis | 7.0+ | 分布式缓存 |
 | Caffeine | - | 本地缓存 |
+| JWT | 0.11.5 | Token认证 |
 | SpringDoc | 2.2.0 | API文档 |
-| dotenv-java | 3.0.0 | 环境变量 |
+| Docker | - | 容器化部署 |
 
 ---
 
-## 项目结构详解
+## 项目结构
 
 ```
 dong-medicine-backend/
@@ -58,443 +57,322 @@ dong-medicine-backend/
 ├── src/main/java/com/dongmedicine/
 │   │
 │   ├── common/                          # 公共模块
+│   │   ├── constant/                    # 常量定义
 │   │   ├── exception/                   # 异常处理
 │   │   │   ├── BusinessException.java        # 业务异常类
-│   │   │   │   # 用于业务逻辑中抛出可预期的错误
-│   │   │   │   # 示例: throw new BusinessException("用户不存在")
-│   │   │   │
 │   │   │   └── GlobalExceptionHandler.java  # 全局异常处理器
-│   │   │       # 使用 @RestControllerAdvice 捕获所有异常
-│   │   │       # 统一返回错误响应格式
-│   │   │
-│   │   └── util/                        # 工具类
-│   │       ├── XssUtils.java                 # XSS防护工具
-│   │       │   # 过滤危险字符，防止XSS攻击
-│   │       │   # 方法: sanitize(String input)
-│   │       │
-│   │       └── IpUtils.java                  # IP获取工具
-│   │           # 从请求中获取真实IP地址
-│   │           # 支持代理服务器场景
+│   │   ├── util/                        # 工具类
+│   │   │   ├── XssUtils.java                # XSS防护工具
+│   │   │   └── IpUtils.java                 # IP获取工具
+│   │   ├── R.java                       # 统一响应封装
+│   │   └── SecurityUtils.java           # 安全工具类
 │   │
 │   ├── config/                          # 配置模块
-│   │   ├── SecurityConfig.java               # Spring Security配置
-│   │   │   # 配置URL权限规则
-│   │   │   # 配置JWT过滤器
-│   │   │   # 配置密码加密器(BCrypt)
-│   │   │   #
-│   │   │   # 关键方法:
-│   │   │   # - filterChain(): 配置安全过滤链
-│   │   │   # - passwordEncoder(): 密码加密Bean
-│   │   │   #
-│   │   ├── JwtUtil.java                      # JWT工具类
-│   │   │   # 生成和验证JWT Token
-│   │   │   # Token包含: username, userId, role
-│   │   │   #
-│   │   │   # 关键方法:
-│   │   │   # - generateToken(username, userId, role): 生成Token
-│   │   │   # - validateToken(token): 验证Token有效性
-│   │   │   # - getUsernameFromToken(token): 从Token获取用户名
-│   │   │   #
-│   │   ├── JwtAuthenticationFilter.java      # JWT认证过滤器
-│   │   │   # 拦截所有HTTP请求
-│   │   │   # 从Header中提取Token
-│   │   │   # 验证Token并设置SecurityContext
-│   │   │   #
-│   │   ├── CacheConfig.java                  # 缓存配置
-│   │   │   # 配置Caffeine缓存
-│   │   │   # 缓存名称: users, plants, knowledges等
-│   │   │   # 过期时间: 1小时
-│   │   │   #
-│   │   ├── CorsConfig.java                   # 跨域配置
-│   │   │   # 允许的前端域名
-│   │   │   # 允许的HTTP方法
-│   │   │   #
-│   │   ├── RateLimitAspect.java              # 限流切面
-│   │   │   # 使用滑动窗口算法
-│   │   │   # 防止接口被恶意调用
-│   │   │   # 示例: @RateLimit(value = 5, key = "login")
-│   │   │   #
-│   │   └── OperationLogAspect.java           # 操作日志切面
-│   │       # AOP自动记录所有Controller操作
-│   │       # 记录: 用户、模块、操作、参数、IP、耗时
+│   │   ├── SecurityConfig.java          # Spring Security配置
+│   │   ├── JwtUtil.java                 # JWT工具类
+│   │   ├── JwtAuthenticationFilter.java # JWT认证过滤器
+│   │   ├── CacheConfig.java             # 缓存配置
+│   │   ├── CorsConfig.java              # 跨域配置
+│   │   ├── RateLimitAspect.java         # 限流切面
+│   │   ├── OperationLogAspect.java      # 操作日志切面
+│   │   └── OpenApiConfig.java           # API文档配置
 │   │
-│   ├── controller/                      # 控制器层
-│   │   ├── UserController.java               # 用户接口
-│   │   │   # POST /login       - 用户登录
-│   │   │   # POST /register    - 用户注册
-│   │   │   # GET  /me          - 获取当前用户
-│   │   │   # POST /change-password - 修改密码
-│   │   │   # POST /logout      - 退出登录
-│   │   │   #
-│   │   ├── PlantController.java              # 药用植物接口
-│   │   │   # GET  /list        - 植物列表(支持分类筛选)
-│   │   │   # GET  /search      - 搜索植物
-│   │   │   # GET  /{id}        - 植物详情
-│   │   │   # GET  /{id}/similar - 相似植物
-│   │   │   # GET  /random      - 随机植物(游戏用)
-│   │   │   # POST /{id}/view   - 增加浏览量
-│   │   │   #
-│   │   ├── KnowledgeController.java          # 知识库接口
-│   │   │   # GET  /list        - 知识列表
-│   │   │   # GET  /search      - 高级搜索
-│   │   │   # GET  /{id}        - 知识详情
-│   │   │   # POST /{id}/view   - 增加浏览量
-│   │   │   #
-│   │   ├── InheritorController.java          # 传承人接口
-│   │   │   # GET  /list        - 传承人列表
-│   │   │   # GET  /search      - 搜索传承人
-│   │   │   # GET  /{id}        - 传承人详情
-│   │   │   #
-│   │   ├── ResourceController.java           # 学习资源接口
-│   │   │   # GET  /list        - 资源列表
-│   │   │   # GET  /hot         - 热门资源
-│   │   │   # GET  /{id}        - 资源详情
-│   │   │   # GET  /download/{id} - 下载资源
-│   │   │   #
-│   │   ├── CommentController.java            # 评论接口
-│   │   │   # POST /             - 发表评论
-│   │   │   # GET  /list/{type}/{id} - 评论列表
-│   │   │   # GET  /my           - 我的评论
-│   │   │   #
-│   │   ├── FavoriteController.java           # 收藏接口
-│   │   │   # POST /{type}/{id}  - 添加收藏
-│   │   │   # DELETE /{type}/{id} - 取消收藏
-│   │   │   # GET  /my           - 我的收藏
-│   │   │   #
-│   │   ├── FeedbackController.java           # 反馈接口
-│   │   │   # POST /             - 提交反馈
-│   │   │   # GET  /my           - 我的反馈
-│   │   │   #
-│   │   ├── QuizController.java               # 测验接口
-│   │   │   # GET  /questions    - 获取随机题目
-│   │   │   # POST /submit       - 提交答案
-│   │   │   # GET  /records      - 测验记录
-│   │   │   #
-│   │   ├── PlantGameController.java          # 植物游戏接口
-│   │   │   # POST /submit       - 提交游戏成绩
-│   │   │   # GET  /records      - 游戏记录
-│   │   │   #
-│   │   ├── AiChatController.java             # AI聊天接口
-│   │   │   # POST /             - AI智能问答
-│   │   │   #
-│   │   ├── LeaderboardController.java        # 排行榜接口
-│   │   │   # GET  /combined     - 综合排行榜
-│   │   │   # GET  /quiz         - 测验排行榜
-│   │   │   # GET  /game         - 游戏排行榜
-│   │   │   #
-│   │   ├── UploadController.java             # 文件上传接口
-│   │   │   # POST /image        - 上传图片
-│   │   │   # POST /images       - 批量上传图片
-│   │   │   # POST /video        - 上传视频
-│   │   │   # POST /document     - 上传文档
-│   │   │   # DELETE /           - 删除文件
-│   │   │   #
-│   │   └── AdminController.java              # 管理后台接口
-│   │       # 用户管理: GET/DELETE/PUT /users/*
-│   │       # 内容管理: CRUD /inheritors/*, /knowledge/*, /plants/*
-│   │       # 互动管理: GET/PUT/DELETE /feedback/*, /comments/*
-│   │       # 系统管理: GET/DELETE /logs/*
+│   ├── controller/                      # 控制器层 (16个)
+│   │   ├── UserController.java          # 用户接口
+│   │   ├── AdminController.java         # 管理员接口
+│   │   ├── PlantController.java         # 药用植物接口
+│   │   ├── KnowledgeController.java     # 知识库接口
+│   │   ├── InheritorController.java     # 传承人接口
+│   │   ├── ResourceController.java      # 学习资源接口
+│   │   ├── CommentController.java       # 评论接口
+│   │   ├── FavoriteController.java      # 收藏接口
+│   │   ├── FeedbackController.java      # 反馈接口
+│   │   ├── QuizController.java          # 测验接口
+│   │   ├── PlantGameController.java     # 植物游戏接口
+│   │   ├── QaController.java            # 常见问答接口
+│   │   ├── ChatController.java          # AI聊天接口
+│   │   ├── LeaderboardController.java   # 排行榜接口
+│   │   ├── FileUploadController.java    # 文件上传接口
+│   │   └── OperationLogController.java  # 操作日志接口
 │   │
 │   ├── service/                         # 服务层接口
-│   │   ├── UserService.java                  # 用户服务接口
-│   │   ├── PlantService.java                 # 植物服务接口
-│   │   ├── KnowledgeService.java             # 知识服务接口
-│   │   ├── InheritorService.java             # 传承人服务接口
-│   │   ├── ResourceService.java              # 资源服务接口
-│   │   ├── CommentService.java               # 评论服务接口
-│   │   ├── FavoriteService.java              # 收藏服务接口
-│   │   ├── FeedbackService.java              # 反馈服务接口
-│   │   ├── QuizService.java                  # 测验服务接口
-│   │   ├── PlantGameService.java             # 游戏服务接口
-│   │   ├── AiChatService.java                # AI聊天服务接口
-│   │   ├── LeaderboardService.java           # 排行榜服务接口
-│   │   ├── FileService.java                  # 文件服务接口
-│   │   └── OperationLogService.java          # 操作日志服务接口
-│   │
-│   ├── service/impl/                    # 服务层实现
-│   │   │
-│   │   ├── UserServiceImpl.java              # 用户服务实现
-│   │   │   # login(): BCrypt验证密码，生成JWT
-│   │   │   # register(): 密码加密，创建用户
-│   │   │   # changePassword(): 验证旧密码，更新新密码
-│   │   │   #
-│   │   ├── PlantServiceImpl.java             # 植物服务实现
-│   │   │   # listByDoubleFilter(): 双重分类筛选
-│   │   │   # search(): 关键词搜索
-│   │   │   # getSimilarPlants(): 相似植物推荐
-│   │   │   # @Cacheable: 缓存植物列表
-│   │   │   #
-│   │   ├── KnowledgeServiceImpl.java         # 知识服务实现
-│   │   │   # 支持疗法分类和疾病分类筛选
-│   │   │   # 支持关键词搜索
-│   │   │   #
-│   │   ├── AiChatServiceImpl.java            # AI聊天服务实现
-│   │   │   # 调用DeepSeek API
-│   │   │   # 系统提示词: 侗族医药智能助手
-│   │   │   # 支持多轮对话历史
-│   │   │   #
-│   │   └── ...其他服务实现
+│   │   └── impl/                        # 服务层实现
 │   │
 │   ├── mapper/                          # 数据访问层
-│   │   ├── UserMapper.java                   # 用户Mapper
-│   │   ├── PlantMapper.java                  # 植物Mapper
-│   │   ├── KnowledgeMapper.java              # 知识Mapper
-│   │   ├── InheritorMapper.java              # 传承人Mapper
-│   │   ├── ResourceMapper.java               # 资源Mapper
-│   │   ├── CommentMapper.java                # 评论Mapper
-│   │   ├── FavoriteMapper.java               # 收藏Mapper
-│   │   ├── FeedbackMapper.java               # 反馈Mapper
-│   │   ├── QuizQuestionMapper.java           # 题目Mapper
-│   │   ├── QuizRecordMapper.java             # 测验记录Mapper
-│   │   ├── PlantGameRecordMapper.java        # 游戏记录Mapper
-│   │   ├── QaMapper.java                     # 问答Mapper
-│   │   └── OperationLogMapper.java           # 操作日志Mapper
 │   │
-│   ├── entity/                          # 实体类
-│   │   └── ... (详见实体类详解章节)
+│   ├── entity/                          # 实体类 (13个)
 │   │
 │   └── dto/                             # 数据传输对象
-│       ├── LoginDTO.java                     # 登录请求DTO
-│       │   # 字段: username, password
-│       │   #
-│       │   ├── RegisterDTO.java              # 注册请求DTO
-│       │   # 字段: username, password, confirmPassword
-│       │   #
-│       │   ├── ChangePasswordDTO.java        # 修改密码DTO
-│       │   # 字段: oldPassword, newPassword
-│       │   #
-│       │   ├── CommentDTO.java               # 评论DTO
-│       │   # 字段: targetType, targetId, content, replyToId
-│       │   #
-│       │   ├── FeedbackDTO.java              # 反馈DTO
-│       │   # 字段: type, title, content
-│       │   #
-│       │   └── ...其他DTO
-│   │
+│
 ├── src/main/resources/
-│   ├── application.yml                       # 主配置文件
-│   ├── application-dev.yml                   # 开发环境配置
-│   ├── application-prod.yml                  # 生产环境配置
-│   └── logback-spring.xml                    # 日志配置
+│   ├── application.yml                  # 主配置文件
+│   ├── application-dev.yml              # 开发环境配置
+│   ├── application-prod.yml             # 生产环境配置
+│   └── logback-spring.xml               # 日志配置
 │
 ├── sql/                                 # 数据库脚本
-│   └── dong_medicine.sql                     # 完整数据库脚本
+│   └── dong_medicine.sql                # 完整数据库脚本
 │
 ├── public/                              # 静态资源目录
-│   ├── images/                               # 图片资源
-│   ├── videos/                               # 视频资源
-│   └── documents/                            # 文档资源
+│   └── images/
+│       ├── plants/                      # 植物图片
+│       ├── knowledge/                   # 知识图片
+│       └── inheritors/                  # 传承人图片
 │
-└── pom.xml                              # Maven配置
+├── Dockerfile                           # Docker构建文件
+├── pom.xml                              # Maven配置
+└── .dockerignore                        # Docker忽略文件
 ```
 
 ---
 
-## 核心模块说明
-
-### 1. 用户认证流程
-
-```
-用户登录请求
-     │
-     ▼
-UserController.login()
-     │
-     ▼
-UserServiceImpl.login()
-     │
-     ├── BCrypt密码验证
-     │
-     ├── 生成JWT Token
-     │   └── JwtUtil.generateToken()
-     │
-     └── 返回Token和用户信息
-```
-
-### 2. 请求认证流程
-
-```
-HTTP请求
-     │
-     ▼
-JwtAuthenticationFilter
-     │
-     ├── 提取Authorization Header
-     │
-     ├── 验证Token
-     │   └── JwtUtil.validateToken()
-     │
-     ├── 设置SecurityContext
-     │
-     └── 继续请求处理
-```
-
-### 3. 缓存使用示例
-
-```java
-// 缓存植物列表
-@Cacheable(value = "plants", key = "'list:' + (#category ?: 'all')")
-public List<Plant> listByDoubleFilter(String category, String usageWay) {
-    return plantMapper.selectList(...);
-}
-
-// 清除缓存
-@CacheEvict(value = "plants", allEntries = true)
-public void clearCache() {
-    // 清除plants缓存
-}
-```
-
-### 4. 限流使用示例
-
-```java
-@PostMapping("/login")
-@RateLimit(value = 5, key = "user_login")  // 每分钟最多5次
-public Result<LoginVO> login(@RequestBody LoginDTO dto) {
-    // ...
-}
-```
-
----
-
-## 实体类详解
-
-### User.java - 用户实体
-
-```java
-@TableName("users")
-public class User {
-    private Long id;                    // 主键ID
-    private String username;            // 用户名（唯一）
-    private String passwordHash;        // BCrypt加密后的密码
-    private String role;                // 角色: USER, ADMIN
-    private LocalDateTime createdAt;    // 创建时间
-}
-```
-
-### Plant.java - 药用植物实体
-
-```java
-@TableName("plants")
-public class Plant {
-    private Long id;                    // 主键ID
-    private String nameCn;              // 中文名
-    private String nameDong;            // 侗语名
-    private String scientificName;      // 学名
-    private String category;            // 分类（根茎类、叶类等）
-    private String usageWay;            // 用法方式
-    private String efficacy;            // 功效
-    private String story;               // 相关故事
-    private String images;              // 图片URL（JSON数组）
-    private String videos;              // 视频URL（JSON数组）
-    private Integer viewCount;          // 浏览次数
-    private Integer favoriteCount;      // 收藏次数
-}
-```
-
-### Knowledge.java - 知识库实体
-
-```java
-@TableName("knowledge")
-public class Knowledge {
-    private Long id;                    // 主键ID
-    private String title;               // 标题
-    private String type;                // 类型: 药方/疗法
-    private String therapyCategory;     // 疗法分类
-    private String diseaseCategory;     // 疾病分类
-    private String content;             // 内容
-    private String formula;             // 配方
-    private String usageMethod;         // 用法
-    private String steps;               // 步骤（JSON数组）
-    private String relatedPlants;       // 相关植物（JSON数组）
-    private Integer viewCount;          // 浏览次数
-}
-```
-
-### Inheritor.java - 传承人实体
-
-```java
-@TableName("inheritors")
-public class Inheritor {
-    private Long id;                    // 主键ID
-    private String name;                // 姓名
-    private String level;               // 等级: 国家级/省级/市级/县级
-    private String bio;                 // 个人简介
-    private String specialties;         // 特色技艺（JSON数组）
-    private Integer experienceYears;    // 从业年限
-    private String honors;              // 荣誉资质（JSON数组）
-    private String representativeCases; // 代表案例
-    private String photo;               // 照片URL
-}
-```
-
----
-
-## API 接口详解
+## API 接口
 
 ### 用户模块 `/api/user`
 
-| 方法 | 路径 | 说明 | 请求体 | 响应 |
-|------|------|------|--------|------|
-| POST | /login | 登录 | `{username, password}` | `{token, user}` |
-| POST | /register | 注册 | `{username, password}` | `{id, username}` |
-| GET | /me | 获取当前用户 | - | `{id, username, role}` |
-| POST | /change-password | 修改密码 | `{oldPassword, newPassword}` | `{success}` |
-| POST | /logout | 退出登录 | - | `{success}` |
-| GET | /validate | 验证Token | - | `{valid, user}` |
-
-### 植物模块 `/api/plants`
-
-| 方法 | 路径 | 说明 | 参数 |
+| 方法 | 端点 | 说明 | 权限 |
 |------|------|------|------|
-| GET | /list | 植物列表 | `category`, `usageWay`, `page`, `size` |
-| GET | /search | 搜索 | `keyword` |
-| GET | /{id} | 详情 | - |
-| GET | /{id}/similar | 相似植物 | - |
-| GET | /random | 随机植物 | `count` |
-| POST | /{id}/view | 增加浏览量 | - |
+| POST | `/login` | 用户登录 | 公开 |
+| POST | `/register` | 用户注册 | 公开 |
+| GET | `/me` | 获取当前用户信息 | 需登录 |
+| POST | `/change-password` | 修改密码 | 需登录 |
+| POST | `/logout` | 退出登录 | 需登录 |
+| GET | `/validate` | 验证Token | 公开 |
+| POST | `/refresh-token` | 刷新Token | 需登录 |
 
-### 管理后台 `/api/admin`
+### 药用植物模块 `/api/plants`
 
-| 路径 | 说明 |
-|------|------|
-| /users/* | 用户管理 |
-| /plants/* | 植物管理 |
-| /knowledge/* | 知识管理 |
-| /inheritors/* | 传承人管理 |
-| /resources/* | 资源管理 |
-| /feedback/* | 反馈管理 |
-| /comments/* | 评论审核 |
-| /logs/* | 操作日志 |
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/list` | 植物列表(支持分类/用法过滤) | 公开 |
+| GET | `/search` | 搜索植物 | 公开 |
+| GET | `/{id}` | 植物详情 | 公开 |
+| GET | `/{id}/similar` | 相似植物 | 公开 |
+| GET | `/random` | 按难度随机获取植物 | 公开 |
+| POST | `/{id}/view` | 增加浏览次数 | 公开 |
+
+### 知识库模块 `/api/knowledge`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/list` | 知识列表 | 公开 |
+| GET | `/search` | 高级搜索(支持疗法/疾病分类) | 公开 |
+| GET | `/{id}` | 知识详情 | 公开 |
+| POST | `/{id}/view` | 增加浏览次数 | 公开 |
+| POST | `/favorite/{id}` | 收藏知识 | 需登录 |
+| POST | `/feedback` | 提交反馈 | 公开 |
+
+### 传承人模块 `/api/inheritors`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/list` | 传承人列表(支持级别过滤) | 公开 |
+| GET | `/search` | 搜索传承人 | 公开 |
+| GET | `/{id}` | 传承人详情 | 公开 |
+| POST | `/{id}/view` | 增加浏览次数 | 公开 |
+
+### 学习资源模块 `/api/resources`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/list` | 资源列表(支持分类/类型过滤) | 公开 |
+| GET | `/hot` | 热门资源 | 公开 |
+| GET | `/{id}` | 资源详情 | 公开 |
+| GET | `/download/{id}` | 下载资源文件 | 公开 |
+| POST | `/{id}/view` | 增加浏览次数 | 公开 |
+| POST | `/{id}/download` | 增加下载次数 | 公开 |
+
+### 评论模块 `/api/comments`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/` | 发表评论 | 需登录 |
+| GET | `/list/{targetType}/{targetId}` | 目标评论列表 | 公开 |
+| GET | `/list/all` | 所有已审核评论 | 公开 |
+| GET | `/my` | 我的评论 | 需登录 |
+
+### 收藏模块 `/api/favorites`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/{targetType}/{targetId}` | 添加收藏 | 需登录 |
+| DELETE | `/{targetType}/{targetId}` | 取消收藏 | 需登录 |
+| GET | `/my` | 我的收藏列表 | 需登录 |
+
+### 测验模块 `/api/quiz`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/questions` | 获取随机问题 | 公开 |
+| POST | `/submit` | 提交答案 | 公开 |
+| GET | `/records` | 答题记录 | 需登录 |
+| GET | `/list` | 所有问题 | 公开 |
+| POST | `/add` | 添加问题 | ADMIN |
+| PUT | `/update` | 更新问题 | ADMIN |
+| DELETE | `/{id}` | 删除问题 | ADMIN |
+
+### 植物游戏模块 `/api/plant-game`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/submit` | 提交游戏结果 | 公开 |
+| GET | `/records` | 游戏记录 | 需登录 |
+
+### AI聊天模块 `/api/chat`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/` | 发送聊天消息(DeepSeek AI) | 公开 |
+| GET | `/stats` | 聊天统计 | ADMIN |
+
+### 排行榜模块 `/api/leaderboard`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/combined` | 综合排行榜 | 公开 |
+| GET | `/quiz` | 问答排行榜 | 公开 |
+| GET | `/game` | 游戏排行榜 | 公开 |
+
+### 文件上传模块 `/api/upload` (需要 ADMIN 角色)
+
+| 方法 | 端点 | 说明 |
+|------|------|------|
+| POST | `/image` | 上传单个图片 |
+| POST | `/images` | 批量上传图片 |
+| POST | `/video` | 上传单个视频 |
+| POST | `/videos` | 批量上传视频 |
+| POST | `/document` | 上传单个文档 |
+| POST | `/documents` | 批量上传文档 |
+| POST | `/file` | 通用文件上传 |
+| DELETE | `/` | 删除文件 |
+
+### 管理后台 `/api/admin` (需要 ADMIN 角色)
+
+| 模块 | 端点 | 功能 |
+|------|------|------|
+| 用户管理 | `GET/DELETE/PUT /users/*` | 用户列表、删除、角色更新 |
+| 内容管理 | `CRUD /inheritors/*` | 传承人管理 |
+| | `CRUD /knowledge/*` | 知识管理 |
+| | `CRUD /plants/*` | 植物管理 |
+| | `CRUD /qa/*` | 问答管理 |
+| | `CRUD /resources/*` | 资源管理 |
+| 互动管理 | `GET/PUT/DELETE /feedback/*` | 反馈管理 |
+| | `GET/PUT/DELETE /comments/*` | 评论审核 |
+| 系统管理 | `GET/DELETE /logs/*` | 操作日志 |
 
 ---
 
-## 配置文件详解
+## 实体类
+
+### User - 用户
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer | 主键（自增） |
+| username | String | 用户名 |
+| passwordHash | String | 密码哈希(BCrypt) |
+| role | String | 角色(USER/ADMIN) |
+| createdAt | LocalDateTime | 创建时间 |
+
+### Plant - 药用植物
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer | 主键 |
+| nameCn | String | 中文名称 |
+| nameDong | String | 侗语名称 |
+| scientificName | String | 学名 |
+| category | String | 分类 |
+| usageWay | String | 用法方式 |
+| habitat | String | 生长环境 |
+| efficacy | String | 功效 |
+| story | String | 相关故事 |
+| images | String | 图片(JSON) |
+| videos | String | 视频(JSON) |
+| documents | String | 文档(JSON) |
+| distribution | String | 分布地区 |
+| difficulty | String | 难度级别 |
+| viewCount | Integer | 浏览次数 |
+| favoriteCount | Integer | 收藏次数 |
+
+### Knowledge - 知识库
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer | 主键 |
+| title | String | 标题 |
+| type | String | 类型 |
+| therapyCategory | String | 疗法分类 |
+| diseaseCategory | String | 疾病分类 |
+| content | String | 内容 |
+| formula | String | 配方 |
+| usageMethod | String | 使用方法 |
+| steps | String | 步骤(JSON) |
+| images/videos/documents | String | 媒体资源(JSON) |
+| relatedPlants | String | 相关植物 |
+| viewCount | Integer | 浏览次数 |
+
+### Inheritor - 传承人
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer | 主键 |
+| name | String | 姓名 |
+| level | String | 级别(国家级/省级/市级/县级) |
+| bio | String | 简介 |
+| specialties | String | 专长(JSON) |
+| experienceYears | Integer | 从业年限 |
+| honors | String | 荣誉(JSON) |
+| representativeCases | String | 代表案例 |
+| viewCount | Integer | 浏览次数 |
+
+### Resource - 学习资源
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Integer | 主键 |
+| title | String | 标题 |
+| category | String | 分类 |
+| files | String | 文件(JSON) |
+| description | String | 描述 |
+| viewCount | Integer | 浏览次数 |
+| downloadCount | Integer | 下载次数 |
+
+### 其他实体
+
+| 实体 | 说明 |
+|------|------|
+| Comment | 评论，支持嵌套回复 |
+| Favorite | 收藏，支持多种资源类型 |
+| Feedback | 用户反馈 |
+| QuizQuestion | 问答题 |
+| QuizRecord | 答题记录 |
+| PlantGameRecord | 植物游戏记录 |
+| Qa | 常见问答 |
+| OperationLog | 操作日志 |
+
+---
+
+## 配置说明
 
 ### application.yml - 主配置
 
 ```yaml
 server:
-  port: 8080                          # 服务端口
+  port: 8080
 
 spring:
-  application:
-    name: dong-medicine-backend       # 应用名称
   profiles:
-    active: dev                       # 激活的环境
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
 jwt:
-  expiration: 86400000                # Token有效期(24小时)
-
-file:
-  upload:
-    base-path: ${user.dir}/public     # 文件上传路径
+  expiration: ${JWT_EXPIRATION:86400000}  # 24小时
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,caches  # Actuator端点
+        include: health,info,metrics,caches
 ```
 
 ### application-dev.yml - 开发环境
@@ -505,21 +383,27 @@ spring:
     url: jdbc:mysql://localhost:3306/dong_medicine
     username: root
     password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
 
-  servlet:
-    multipart:
-      max-file-size: 100MB            # 单文件最大100MB
-      max-request-size: 100MB         # 请求最大100MB
-
-deepseek:
-  api-key: ${DEEPSEEK_API_KEY:}       # DeepSeek API密钥
-  base-url: https://api.deepseek.com
-  model: deepseek-chat
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 logging:
   level:
-    com.dongmedicine: DEBUG           # 日志级别
+    com.dongmedicine: DEBUG
+
+file:
+  upload:
+    base-path: ${user.dir}/public
+    image-max-size: 10485760      # 10MB
+    video-max-size: 104857600     # 100MB
+    document-max-size: 52428800   # 50MB
+
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: https://api.deepseek.com
+  model: deepseek-chat
 ```
 
 ### application-prod.yml - 生产环境
@@ -527,15 +411,22 @@ logging:
 ```yaml
 spring:
   datasource:
-    username: ${DB_USERNAME}          # 从环境变量读取
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:dong_medicine}
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+
 jwt:
-  secret: ${JWT_SECRET}               # JWT密钥
+  secret: ${JWT_SECRET}
 
 file:
   upload:
-    base-path: /opt/dong-medicine/backend/public
+    base-path: ${FILE_UPLOAD_PATH:/opt/dong-medicine/backend/public}
 
 logging:
   level:
@@ -544,9 +435,76 @@ logging:
 
 ---
 
+## 快速开始
+
+### 环境要求
+
+- JDK 17+
+- Maven 3.6+
+- MySQL 8.0+
+- Redis 7.0+
+
+### 启动步骤
+
+```bash
+# 1. 创建数据库
+mysql -u root -p -e "CREATE DATABASE dong_medicine DEFAULT CHARACTER SET utf8mb4;"
+
+# 2. 导入数据
+mysql -u root -p dong_medicine < sql/dong_medicine.sql
+
+# 3. 启动 Redis
+redis-server
+
+# 4. 启动后端服务
+./mvnw spring-boot:run
+
+# 或指定环境
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+### 访问地址
+
+- 服务地址: http://localhost:8080
+- API文档: http://localhost:8080/swagger-ui/index.html
+- 健康检查: http://localhost:8080/actuator/health
+
+---
+
+## Docker 部署
+
+### 构建镜像
+
+```bash
+docker build -t dong-medicine-backend .
+```
+
+### 运行容器
+
+```bash
+docker run -d \
+  --name dong-medicine-backend \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e DB_HOST=mysql \
+  -e DB_USERNAME=dongmedicine \
+  -e DB_PASSWORD=your_password \
+  -e JWT_SECRET=your_jwt_secret \
+  dong-medicine-backend
+```
+
+### 使用 Docker Compose
+
+```bash
+# 在项目根目录执行
+docker-compose up -d --build
+```
+
+---
+
 ## 安全机制
 
-### 1. 密码安全
+### 密码安全
 
 ```java
 // 注册时加密
@@ -556,7 +514,7 @@ String hashedPassword = passwordEncoder.encode(rawPassword);
 passwordEncoder.matches(rawPassword, user.getPasswordHash())
 ```
 
-### 2. JWT认证
+### JWT 认证
 
 ```java
 // 生成Token
@@ -570,18 +528,7 @@ String token = Jwts.builder()
     .compact();
 ```
 
-### 3. XSS防护
-
-```java
-// 过滤危险字符
-public static String sanitize(String input) {
-    return input.replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll("\"", "&quot;");
-}
-```
-
-### 4. 限流保护
+### 限流保护
 
 ```java
 @RateLimit(value = 5, key = "login")  // 每分钟最多5次
@@ -592,8 +539,6 @@ public Result<LoginVO> login(LoginDTO dto) { ... }
 
 ## 缓存策略
 
-### 缓存配置
-
 | 缓存名称 | 说明 | 过期时间 |
 |---------|------|----------|
 | users | 用户信息 | 1小时 |
@@ -602,92 +547,3 @@ public Result<LoginVO> login(LoginDTO dto) { ... }
 | inheritors | 传承人数据 | 1小时 |
 | resources | 资源数据 | 1小时 |
 | quizQuestions | 测验题目 | 1小时 |
-
-### 缓存使用
-
-```java
-// 查询时缓存
-@Cacheable(value = "plants", key = "#id")
-public Plant getById(Long id) { ... }
-
-// 更新时清除
-@CacheEvict(value = "plants", key = "#plant.id")
-public void update(Plant plant) { ... }
-```
-
----
-
-## 数据库设计
-
-### 核心表结构
-
-```sql
--- 用户表
-CREATE TABLE users (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'USER',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- 植物表
-CREATE TABLE plants (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name_cn VARCHAR(100) NOT NULL,
-    name_dong VARCHAR(100),
-    scientific_name VARCHAR(200),
-    category VARCHAR(50),
-    usage_way VARCHAR(50),
-    efficacy TEXT,
-    story TEXT,
-    images JSON,
-    videos JSON,
-    view_count INT DEFAULT 0,
-    favorite_count INT DEFAULT 0
-);
-
--- 知识表
-CREATE TABLE knowledge (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(200) NOT NULL,
-    type VARCHAR(20),
-    therapy_category VARCHAR(50),
-    disease_category VARCHAR(50),
-    content TEXT,
-    formula TEXT,
-    usage_method TEXT,
-    steps JSON,
-    related_plants JSON,
-    view_count INT DEFAULT 0
-);
-```
-
----
-
-## 快速开始
-
-### 环境要求
-
-- JDK 17+
-- Maven 3.6+
-- MySQL 8.0+
-
-### 启动步骤
-
-```bash
-# 1. 创建数据库
-mysql -u root -p -e "CREATE DATABASE dong_medicine DEFAULT CHARACTER SET utf8mb4;"
-
-# 2. 导入数据
-mysql -u root -p dong_medicine < sql/dong_medicine.sql
-
-# 3. 启动服务
-./mvnw spring-boot:run
-```
-
-### 访问地址
-
-- 服务地址: http://localhost:8080
-- API文档: http://localhost:8080/swagger-ui.html
-- 健康检查: http://localhost:8080/actuator/health

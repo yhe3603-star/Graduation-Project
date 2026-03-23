@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCountdown } from './useInteraction'
 import { logOperationWarn } from '@/utils'
@@ -17,6 +17,7 @@ export const usePlantGame = (request, isLoggedIn) => {
   const gameFinished = ref(false)
   const submittingGame = ref(false)
   const gameRecords = ref([])
+  let nextPlantTimer = null
 
   const { formattedTime, isRunning, isExpired, isLowTime, start: startTimer, stop: stopTimer, reset: resetTimer } = useCountdown(3)
 
@@ -109,10 +110,10 @@ export const usePlantGame = (request, isLoggedIn) => {
       const baseScore = SCORE_CONFIG[difficulty.value] || 10
       const bonus = Math.min(streak.value - 1, 5) * 2
       gameScore.value += baseScore + bonus
-      setTimeout(showNextPlant, 1000)
+      nextPlantTimer = setTimeout(showNextPlant, 1000)
     } else {
       streak.value = 0
-      setTimeout(showNextPlant, 1500)
+      nextPlantTimer = setTimeout(showNextPlant, 1500)
     }
   }
 
@@ -140,6 +141,10 @@ export const usePlantGame = (request, isLoggedIn) => {
 
   const resetGame = () => {
     stopTimer()
+    if (nextPlantTimer) {
+      clearTimeout(nextPlantTimer)
+      nextPlantTimer = null
+    }
     difficulty.value = 'easy'
     currentPlant.value = null
     options.value = []
@@ -170,10 +175,20 @@ export const usePlantGame = (request, isLoggedIn) => {
     try {
       const res = await request.get('/plant-game/records')
       gameRecords.value = res?.data?.data || res?.data || []
-    } catch {}
+    } catch (e) {
+      console.debug('加载游戏记录失败:', e)
+    }
   }
 
   const totalGameScore = computed(() => gameRecords.value.reduce((sum, r) => sum + (r.score || 0), 0))
+
+  onUnmounted(() => {
+    stopTimer()
+    if (nextPlantTimer) {
+      clearTimeout(nextPlantTimer)
+      nextPlantTimer = null
+    }
+  })
 
   return {
     difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, submittingGame, gameRecords,

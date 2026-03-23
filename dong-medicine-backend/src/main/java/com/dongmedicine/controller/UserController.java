@@ -3,6 +3,7 @@ package com.dongmedicine.controller;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.common.constant.RoleConstants;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.entity.User;
 import com.dongmedicine.config.JwtUtil;
 import com.dongmedicine.config.RateLimit;
@@ -16,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -47,7 +49,7 @@ public class UserController {
     public R<User> me() {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            return R.error("未登录");
+            throw BusinessException.unauthorized("请先登录");
         }
         return R.ok(service.getUserInfo(userId));
     }
@@ -56,7 +58,7 @@ public class UserController {
     public R<String> changePassword(@Valid @RequestBody ChangePasswordDTO dto, HttpServletRequest request) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
-            return R.error("未登录");
+            throw BusinessException.unauthorized("请先登录");
         }
         service.changePassword(userId, dto.getCurrentPassword(), dto.getNewPassword());
         String token = request.getHeader("Authorization");
@@ -82,7 +84,7 @@ public class UserController {
         String role = SecurityUtils.getCurrentUserRole();
         
         if (userId == null || username == null) {
-            return R.error("Token无效或已过期");
+            throw BusinessException.unauthorized("Token无效或已过期");
         }
         
         return R.ok(Map.of(
@@ -94,26 +96,30 @@ public class UserController {
 
     @PostMapping("/refresh-token")
     public R<Map<String, Object>> refreshToken(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token == null || !token.startsWith("Bearer ")) {
-            return R.error("Token无效");
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw BusinessException.badRequest("Token无效");
         }
-        
-        JwtUtil.TokenInfo tokenInfo = jwtUtil.parseToken(token);
-        if (tokenInfo != null && tokenInfo.getClaims() != null && jwtUtil.shouldRefresh(token)) {
-            String newToken = jwtUtil.refreshToken(token);
-            tokenBlacklistService.addToBlacklist(token);
-            
-            JwtUtil.TokenInfo newTokenInfo = jwtUtil.parseToken(newToken);
-            
-            return R.ok(Map.of(
-                "token", newToken,
-                "id", newTokenInfo != null ? newTokenInfo.getUserId() : null,
-                "username", newTokenInfo != null ? newTokenInfo.getUsername() : null,
-                "role", newTokenInfo != null && newTokenInfo.getRole() != null ? newTokenInfo.getRole() : RoleConstants.ROLE_USER
-            ));
+        String cleanToken = authHeader.substring(7).trim();
+        if (tokenBlacklistService.isBlacklisted(cleanToken)) {
+            throw BusinessException.badRequest("Token已失效");
         }
-        
-        return R.error("Token无法刷新");
+        if (!jwtUtil.canRefresh(cleanToken)) {
+            throw BusinessException.badRequest("Token无法刷新");
+        }
+        String newToken = jwtUtil.refreshToken(cleanToken);
+        if (newToken == null) {
+            throw BusinessException.badRequest("Token无法刷新");
+        }
+        tokenBlacklistService.addToBlacklist(cleanToken);
+
+        JwtUtil.TokenInfo newTokenInfo = jwtUtil.parseToken(newToken);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("token", newToken);
+        body.put("id", newTokenInfo != null ? newTokenInfo.getUserId() : null);
+        body.put("username", newTokenInfo != null ? newTokenInfo.getUsername() : null);
+        body.put("role", newTokenInfo != null && newTokenInfo.getRole() != null ? newTokenInfo.getRole() : RoleConstants.ROLE_USER);
+        return R.ok(body);
     }
 }

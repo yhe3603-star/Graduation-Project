@@ -3,6 +3,7 @@ package com.dongmedicine.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,8 @@ import java.time.LocalDateTime;
 public class Resource {
     @TableId(type = IdType.AUTO)
     private Integer id;
+    
+    @NotBlank(message = "资源标题不能为空")
     private String title;
     private String category;
     private String files;

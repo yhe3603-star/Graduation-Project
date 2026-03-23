@@ -52,11 +52,11 @@ class PlantServiceImplTest {
 
     @Test
     @DisplayName("根据分类和用法过滤 - 成功")
-    void testListByDoubleFilterSuccess() {
+    void testAdvancedSearchSuccess() {
         List<Plant> plants = Arrays.asList(testPlant);
         when(plantMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(plants);
 
-        List<Plant> result = plantService.listByDoubleFilter("清热药", "内服");
+        List<Plant> result = plantService.advancedSearch(null, "清热药", "内服");
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -65,11 +65,11 @@ class PlantServiceImplTest {
 
     @Test
     @DisplayName("根据分类和用法过滤 - 空参数")
-    void testListByDoubleFilterEmptyParams() {
+    void testAdvancedSearchEmptyParams() {
         List<Plant> plants = Arrays.asList(testPlant);
         when(plantMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(plants);
 
-        List<Plant> result = plantService.listByDoubleFilter(null, null);
+        List<Plant> result = plantService.advancedSearch(null, null, null);
 
         assertNotNull(result);
         assertEquals(1, result.size());

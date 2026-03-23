@@ -86,7 +86,12 @@
               :is-logged-in="isLoggedIn"
               :user-name="userName"
               :loading="commentLoading"
+              :total="totalItems"
+              :page="currentPage"
+              :size="pageSize"
               @post="handleCommentPost"
+              @page-change="handlePageChange"
+              @size-change="handleSizeChange"
             />
           </el-tab-pane>
         </el-tabs>
@@ -127,7 +132,7 @@ const {
   setDifficulty, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore,
 } = usePlantGame(request, isLoggedIn);
 
-const { comments, commentLoading, loadComments, handleCommentPost } = useComments(request);
+const { comments, commentLoading, loadComments, handleCommentPost, currentPage, pageSize, totalItems, handlePageChange, handleSizeChange } = useComments(request, isLoggedIn);
 
 const handleQuizSubmit = async () => {
   await submitQuiz();

@@ -1,10 +1,10 @@
 import { ref, computed, inject } from 'vue'
 import { ElMessage } from 'element-plus'
-import { extractData } from '@/utils'
+import { extractData, logFetchError, logOperationWarn } from '@/utils'
 
 export const useFavorite = (type) => {
   const request = inject('request')
-  const isLoggedIn = computed(() => !!localStorage.getItem('token'))
+  const isLoggedIn = computed(() => !!sessionStorage.getItem('token'))
   const favorites = ref([])
   const items = ref([])
 
@@ -16,7 +16,9 @@ export const useFavorite = (type) => {
     if (!isLoggedIn.value) return
     try {
       favorites.value = extractData(await request.get('/favorites/my'))
-    } catch {}
+    } catch (e) {
+      logFetchError('收藏列表', e)
+    }
   }
 
   const toggleFavorite = async (id, isFav) => {
@@ -37,7 +39,8 @@ export const useFavorite = (type) => {
         ElMessage.success('收藏成功')
       }
       return true
-    } catch {
+    } catch (e) {
+      logOperationWarn('收藏操作')
       ElMessage.error('操作失败')
       return false
     }
@@ -57,7 +60,9 @@ export const useFavorite = (type) => {
       if (idx > -1) {
         items.value[idx].viewCount = (items.value[idx].viewCount || 0) + 1
       }
-    } catch {}
+    } catch (e) {
+      console.debug('浏览量更新失败:', e)
+    }
   }
 
   return {

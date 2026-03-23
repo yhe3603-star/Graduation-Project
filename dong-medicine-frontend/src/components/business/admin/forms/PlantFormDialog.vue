@@ -46,28 +46,12 @@
               placeholder="请选择分类"
             >
               <el-option
-                label="藤本类"
-                value="藤本类"
+                label="木本"
+                value="木本"
               />
               <el-option
-                label="全草类"
-                value="全草类"
-              />
-              <el-option
-                label="根茎类"
-                value="根茎类"
-              />
-              <el-option
-                label="叶类"
-                value="叶类"
-              />
-              <el-option
-                label="花类"
-                value="花类"
-              />
-              <el-option
-                label="果实类"
-                value="果实类"
+                label="草本"
+                value="草本"
               />
               <el-option
                 label="其他"

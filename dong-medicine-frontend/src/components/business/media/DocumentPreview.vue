@@ -84,6 +84,7 @@ import { computed } from 'vue'
 import { Document, Download } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatFileSize } from '@/utils/adminUtils'
+import { normalizeUrl } from '@/utils/media'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -93,9 +94,9 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'download', 'close'])
 
 const visible = computed({ get: () => props.modelValue, set: (val) => emit('update:modelValue', val) })
-const documentUrl = computed(() => props.document?.url || props.document?.path || '')
+const documentUrl = computed(() => normalizeUrl(props.document?.url || props.document?.path || ''))
 const isPdf = computed(() => props.document?.type?.toLowerCase() === 'pdf')
-const isLoggedIn = computed(() => !!localStorage.getItem('token'))
+const isLoggedIn = computed(() => !!sessionStorage.getItem('token'))
 
 const FILE_TYPE_TAGS = { pdf: 'danger', doc: 'primary', docx: 'primary', xls: 'success', xlsx: 'success', ppt: 'warning', pptx: 'warning', txt: 'info' }
 
@@ -111,7 +112,9 @@ const handleLoginPrompt = async () => {
       type: 'info'
     })
     window.location.href = '/'
-  } catch {}
+  } catch (e) {
+    console.debug('用户取消登录提示:', e)
+  }
 }
 
 const handleDownload = () => {
@@ -122,7 +125,7 @@ const handleDownload = () => {
   emit('download', props.document)
   if (props.document?.url || props.document?.path) {
     const link = document.createElement('a')
-    link.href = props.document?.url || props.document?.path
+    link.href = normalizeUrl(props.document?.url || props.document?.path)
     link.download = props.document?.originalFileName || props.document?.name || 'document'
     link.target = '_blank'
     document.body.appendChild(link)

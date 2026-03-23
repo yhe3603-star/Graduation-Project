@@ -1,5 +1,21 @@
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { logFetchError, logOperationWarn } from '@/utils'
+
+function parsePageResponse(res) {
+  const raw = res?.data ?? res
+  const data = raw?.data ?? raw
+  if (data && typeof data === 'object' && !Array.isArray(data) && Array.isArray(data.records)) {
+    return {
+      records: data.records,
+      total: Number(data.total) || 0,
+      page: data.page ?? 1,
+      size: data.size ?? 20
+    }
+  }
+  const arr = Array.isArray(data) ? data : []
+  return { records: arr, total: arr.length, page: 1, size: arr.length }
+}
 
 export function useAdminData(request) {
   const users = ref([])
@@ -12,6 +28,31 @@ export function useAdminData(request) {
   const quizList = ref([])
   const commentsList = ref([])
   const logList = ref([])
+  const adminStats = ref(null)
+
+  const pagination = ref({
+    users: { page: 1, size: 20, total: 0 },
+    knowledge: { page: 1, size: 20, total: 0 },
+    inheritors: { page: 1, size: 20, total: 0 },
+    plants: { page: 1, size: 20, total: 0 },
+    qa: { page: 1, size: 20, total: 0 },
+    resources: { page: 1, size: 20, total: 0 },
+    feedback: { page: 1, size: 20, total: 0 },
+    comments: { page: 1, size: 20, total: 0 },
+    quiz: { page: 1, size: 20, total: 0 }
+  })
+
+  const SECTIONS = {
+    users: { ref: users, path: '/admin/users' },
+    knowledge: { ref: knowledgeList, path: '/admin/knowledge' },
+    inheritors: { ref: inheritorsList, path: '/admin/inheritors' },
+    plants: { ref: plantsList, path: '/admin/plants' },
+    qa: { ref: qaList, path: '/admin/qa' },
+    resources: { ref: resourcesList, path: '/admin/resources' },
+    feedback: { ref: feedbackList, path: '/admin/feedback', extra: 'status=all' },
+    comments: { ref: commentsList, path: '/admin/comments', extra: 'status=all' },
+    quiz: { ref: quizList, path: '/quiz/list' }
+  }
 
   const sortedComments = computed(() => {
     const list = commentsList.value || []
@@ -31,40 +72,48 @@ export function useAdminData(request) {
 
   const sortedUsers = computed(() => [...(users.value || [])].sort((a, b) => a.id - b.id))
 
+  async function fetchStats() {
+    const res = await request.get('/admin/stats').catch(() => ({}))
+    const raw = res?.data ?? res
+    adminStats.value = raw?.data ?? raw ?? {}
+  }
+
+  async function loadSection(key) {
+    const cfg = SECTIONS[key]
+    if (!cfg) return
+    const p = pagination.value[key]
+    let qs = `page=${p.page}&size=${p.size}`
+    if (cfg.extra) qs += `&${cfg.extra}`
+    const res = await request.get(`${cfg.path}?${qs}`).catch(() => ({}))
+    const parsed = parsePageResponse(res)
+    pagination.value[key] = {
+      ...pagination.value[key],
+      total: parsed.total,
+      page: parsed.page,
+      size: parsed.size
+    }
+    cfg.ref.value = parsed.records
+  }
+
+  async function handleAdminPage(key, page) {
+    pagination.value[key] = { ...pagination.value[key], page }
+    await loadSection(key)
+  }
+
+  async function handleAdminSize(key, size) {
+    pagination.value[key] = { ...pagination.value[key], page: 1, size }
+    await loadSection(key)
+  }
+
   const fetchData = async () => {
     try {
-      const [uRes, kRes, iRes, pRes, qRes, rRes, fRes, quizRes, cRes, logRes] = await Promise.all([
-        request.get('/admin/users').catch(() => ({})),
-        request.get('/admin/knowledge').catch(() => ({})),
-        request.get('/admin/inheritors').catch(() => ({})),
-        request.get('/admin/plants').catch(() => ({})),
-        request.get('/admin/qa').catch(() => ({})),
-        request.get('/admin/resources').catch(() => ({})),
-        request.get('/admin/feedback').catch(() => ({})),
-        request.get('/quiz/list').catch(() => ({})),
-        request.get('/admin/comments').catch(() => ({})),
-        request.get('/admin/logs/list').catch(() => ({}))
-      ])
-      
-      const extractData = (res) => {
-    const data = res?.data?.data || res?.data || []
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      return data.records || []
-    }
-    return Array.isArray(data) ? data : []
-  }
-      
-      users.value = extractData(uRes)
-      knowledgeList.value = extractData(kRes)
-      inheritorsList.value = extractData(iRes)
-      plantsList.value = extractData(pRes)
-      qaList.value = extractData(qRes)
-      resourcesList.value = extractData(rRes)
-      feedbackList.value = extractData(fRes)
-      quizList.value = extractData(quizRes)
-      commentsList.value = extractData(cRes)
-      logList.value = extractData(logRes)
-    } catch {
+      await fetchStats()
+      await Promise.all(Object.keys(SECTIONS).map(loadSection))
+      const logRes = await request.get('/admin/logs/list?limit=500').catch(() => ({}))
+      const logRaw = logRes?.data?.data ?? logRes?.data ?? logRes
+      logList.value = Array.isArray(logRaw) ? logRaw : []
+    } catch (e) {
+      logFetchError('管理后台数据', e)
       ElMessage.error('数据加载失败')
     }
   }
@@ -80,10 +129,14 @@ export function useAdminData(request) {
     quizList,
     commentsList,
     logList,
+    adminStats,
+    pagination,
     sortedComments,
     sortedFeedback,
     sortedUsers,
-    fetchData
+    fetchData,
+    handleAdminPage,
+    handleAdminSize
   }
 }
 
@@ -165,7 +218,11 @@ export function useAdminActions(request, fetchData) {
       await fn()
       ElMessage.success('删除成功')
       fetchData()
-    } catch {}
+    } catch (e) {
+      if (e !== 'cancel') {
+        console.debug('删除操作取消或失败:', e)
+      }
+    }
   }
 
   const saveItem = async (type, data, endpoints) => {
@@ -178,7 +235,8 @@ export function useAdminActions(request, fetchData) {
       ElMessage.success('保存成功')
       fetchData()
       return true
-    } catch {
+    } catch (e) {
+      logOperationWarn(`保存${type}`)
       ElMessage.error('保存失败')
       return false
     }
@@ -193,7 +251,8 @@ export function useAdminActions(request, fetchData) {
       await request.put(`/admin/comments/${row.id}/approve`)
       ElMessage.success('审核通过')
       fetchData()
-    } catch {
+    } catch (e) {
+      logOperationWarn('审核评论')
       ElMessage.error('操作失败')
     }
   }
@@ -203,7 +262,8 @@ export function useAdminActions(request, fetchData) {
       await request.put(`/admin/comments/${row.id}/reject`)
       ElMessage.success('已拒绝该评论')
       fetchData()
-    } catch {
+    } catch (e) {
+      logOperationWarn('拒绝评论')
       ElMessage.error('操作失败')
     }
   }
@@ -220,7 +280,11 @@ export function useAdminActions(request, fetchData) {
       ElMessage.success('批量删除成功')
       selectedLogs.value = []
       fetchData()
-    } catch {}
+    } catch (e) {
+      if (e !== 'cancel') {
+        console.debug('批量删除日志失败:', e)
+      }
+    }
   }
 
   const clearAllLogs = async () => {
@@ -234,7 +298,11 @@ export function useAdminActions(request, fetchData) {
       ElMessage.success('清空成功')
       selectedLogs.value = []
       fetchData()
-    } catch {}
+    } catch (e) {
+      if (e !== 'cancel') {
+        console.debug('清空日志失败:', e)
+      }
+    }
   }
 
   const replyFeedback = async ({ feedback, reply }) => {
@@ -242,7 +310,8 @@ export function useAdminActions(request, fetchData) {
       await request.put(`/admin/feedback/${feedback.id}/reply`, { reply })
       ElMessage.success('回复成功')
       return true
-    } catch {
+    } catch (e) {
+      logOperationWarn('回复反馈')
       ElMessage.error('回复失败')
       return false
     }

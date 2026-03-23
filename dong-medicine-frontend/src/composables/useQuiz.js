@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCountdown } from './useInteraction'
+import { logFetchError } from '@/utils'
 
 export const useQuiz = (request, isLoggedIn) => {
   const isQuizStarted = ref(false)
@@ -38,7 +39,8 @@ export const useQuiz = (request, isLoggedIn) => {
       quizFinished.value = false
       resetTimer(3)
       startTimer()
-    } catch {
+    } catch (e) {
+      logFetchError('答题题目', e)
       ElMessage.error('加载题目失败')
     } finally {
       quizLoading.value = false
@@ -79,9 +81,12 @@ export const useQuiz = (request, isLoggedIn) => {
         try {
           const quizRes = await request.get('/quiz/records')
           quizRecords.value = quizRes?.data?.data || quizRes?.data || []
-        } catch {}
+        } catch (e) {
+          console.debug('加载答题记录失败:', e)
+        }
       }
-    } catch {
+    } catch (e) {
+      logFetchError('提交答卷', e)
       ElMessage.error('提交失败，请重试')
     } finally {
       submitting.value = false
@@ -102,7 +107,9 @@ export const useQuiz = (request, isLoggedIn) => {
     try {
       const res = await request.get('/quiz/records')
       quizRecords.value = res?.data?.data || res?.data || []
-    } catch {}
+    } catch (e) {
+      console.debug('加载答题记录失败:', e)
+    }
   }
 
   const bestScore = computed(() => {

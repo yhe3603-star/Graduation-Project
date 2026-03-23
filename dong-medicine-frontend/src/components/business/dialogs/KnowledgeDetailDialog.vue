@@ -19,6 +19,13 @@
           >
             {{ knowledge?.diseaseCategory }}
           </el-tag>
+          <el-tag
+            v-if="knowledge?.herbCategory"
+            type="warning"
+            effect="light"
+          >
+            {{ knowledge?.herbCategory }}
+          </el-tag>
         </div>
         <div class="header-stats">
           <span class="stat-item"><el-icon><View /></el-icon>{{ knowledge?.viewCount || 0 }}</span>
@@ -31,7 +38,7 @@
       <div class="knowledge-sections">
         <section class="info-section">
           <el-descriptions
-            :column="2"
+            :column="3"
             border
             size="small"
             class="responsive-descriptions"
@@ -41,6 +48,9 @@
             </el-descriptions-item>
             <el-descriptions-item label="疾病分类">
               {{ knowledge?.diseaseCategory || '暂无' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="药材分类">
+              {{ knowledge?.herbCategory || '暂无' }}
             </el-descriptions-item>
           </el-descriptions>
         </section>

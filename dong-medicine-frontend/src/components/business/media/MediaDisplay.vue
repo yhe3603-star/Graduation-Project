@@ -22,6 +22,7 @@
             class="preview-image"
             :preview-src-list="previewList"
             :initial-index="index"
+            lazy
           >
             <template #error>
               <div class="image-error">

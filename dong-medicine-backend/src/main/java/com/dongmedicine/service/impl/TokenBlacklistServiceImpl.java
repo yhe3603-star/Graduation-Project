@@ -33,9 +33,13 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
             Long expirationTime = tokenInfo.getExpiration().getTime();
             long ttl = expirationTime - System.currentTimeMillis();
             if (ttl > 0) {
-                String key = BLACKLIST_PREFIX + cleanToken;
-                stringRedisTemplate.opsForValue().set(key, "1", ttl, TimeUnit.MILLISECONDS);
-                log.info("Token added to blacklist, expires in {} ms", ttl);
+                try {
+                    String key = BLACKLIST_PREFIX + cleanToken;
+                    stringRedisTemplate.opsForValue().set(key, "1", ttl, TimeUnit.MILLISECONDS);
+                    log.info("Token added to blacklist, expires in {} ms", ttl);
+                } catch (Exception e) {
+                    log.warn("Redis 不可用，跳过黑名单写入: {}", e.getMessage());
+                }
             }
         }
     }
@@ -47,7 +51,12 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
         }
         String cleanToken = token.replace("Bearer ", "");
         String key = BLACKLIST_PREFIX + cleanToken;
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
+        try {
+            return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
+        } catch (Exception e) {
+            log.warn("Redis 不可用，跳过黑名单查询: {}", e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -56,7 +65,17 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
     }
 
     public long getBlacklistSize() {
-        var keys = stringRedisTemplate.keys(BLACKLIST_PREFIX + "*");
-        return keys != null ? keys.size() : 0;
+        long count = 0;
+        try (var cursor = stringRedisTemplate.scan(
+                org.springframework.data.redis.core.ScanOptions.scanOptions()
+                        .match(BLACKLIST_PREFIX + "*")
+                        .count(1000)
+                        .build())) {
+            while (cursor.hasNext()) {
+                cursor.next();
+                count++;
+            }
+        }
+        return count;
     }
 }

@@ -2,6 +2,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Avatar, ChatDotRound, Document, EditPen, Folder, Lock, Picture, Setting, Star, SwitchButton, User } from '@element-plus/icons-vue'
+import { logFetchError, logOperationWarn } from '@/utils'
 
 export const actions = [
   { key: 'favorites', icon: Star, label: '我的收藏' },
@@ -37,10 +38,10 @@ export const typeNameMap = {
 export function usePersonalCenter(request, updateUserState) {
   const router = useRouter()
 
-  const isLoggedIn = computed(() => !!localStorage.getItem('token'))
-  const userName = computed(() => localStorage.getItem('userName') || '')
+  const isLoggedIn = computed(() => !!sessionStorage.getItem('token'))
+  const userName = computed(() => sessionStorage.getItem('userName') || '')
   const isAdmin = computed(() => {
-    const role = localStorage.getItem('role') || ''
+    const role = sessionStorage.getItem('role') || ''
     return role === 'ADMIN' || role === 'admin'
   })
 
@@ -114,10 +115,10 @@ export function usePersonalCenter(request, updateUserState) {
     pageLoading.value = true
     try {
       const [favRes, quizRes, gameRes, commentRes] = await Promise.all([
-        request.get('/favorites/list').catch(() => ({})),
+        request.get('/favorites/my').catch(() => ({})),
         request.get('/quiz/records').catch(() => ({})),
-        request.get('/game/records').catch(() => ({})),
-        request.get('/comments/user').catch(() => ({}))
+        request.get('/plant-game/records').catch(() => ({})),
+        request.get('/comments/my').catch(() => ({}))
       ])
       
       const extractData = (res) => res?.data?.data || res?.data || []
@@ -125,7 +126,8 @@ export function usePersonalCenter(request, updateUserState) {
       quizRecords.value = extractData(quizRes)
       gameRecords.value = extractData(gameRes)
       comments.value = extractData(commentRes)
-    } catch {
+    } catch (e) {
+      logFetchError('个人中心数据', e)
       ElMessage.error('数据加载失败')
     } finally {
       pageLoading.value = false
@@ -154,7 +156,8 @@ export function usePersonalCenter(request, updateUserState) {
       })
       ElMessage.success('密码修改成功，请重新登录')
       handleLogout()
-    } catch {
+    } catch (e) {
+      logOperationWarn('修改密码')
       ElMessage.error('密码修改失败')
     } finally {
       passwordLoading.value = false
@@ -180,11 +183,11 @@ export function usePersonalCenter(request, updateUserState) {
     try {
       await request.post('/user/logout').catch(() => {})
     } finally {
-      localStorage.removeItem('token')
-      localStorage.removeItem('userName')
-      localStorage.removeItem('userId')
-      localStorage.removeItem('role')
-      localStorage.removeItem('userInfo')
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('userName')
+      sessionStorage.removeItem('userId')
+      sessionStorage.removeItem('role')
+      sessionStorage.removeItem('userInfo')
       updateUserState()
       ElMessage.success('已退出登录')
       router.push('/')

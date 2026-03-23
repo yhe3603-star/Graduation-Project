@@ -39,8 +39,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/images/**", "/videos/**", "/documents/**", "/public/**").permitAll()
-                        .requestMatchers("/api/user/login", "/api/user/register", "/api/user/validate").permitAll()
-                        .requestMatchers("/api/user/change-password", "/api/user/logout", "/api/user/me", "/api/user/refresh-token").authenticated()
+                        .requestMatchers("/api/user/login", "/api/user/register", "/api/user/validate", "/api/user/refresh-token").permitAll()
+                        .requestMatchers("/api/user/change-password", "/api/user/logout", "/api/user/me").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
@@ -85,8 +85,8 @@ public class SecurityConfig {
                 "*".equals(origin) || "http://*".equals(origin) || "https://*".equals(origin));
         
         config.setAllowedOriginPatterns(allowedOrigins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
         config.setAllowCredentials(!wildcardOrigin);
         config.setMaxAge(3600L);
 

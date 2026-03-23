@@ -2,14 +2,17 @@ package com.dongmedicine.controller;
 
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.entity.QuizQuestion;
 import com.dongmedicine.entity.QuizRecord;
 import com.dongmedicine.service.QuizService;
 import com.dongmedicine.dto.QuizQuestionDTO;
 import com.dongmedicine.dto.QuizSubmitDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,11 +44,22 @@ public class QuizController {
     }
 
     @GetMapping("/list")
-    public R<List<QuizQuestion>> listAll() {
-        return R.ok(service.getAllQuestions());
+    public R<Map<String, Object>> listAll(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        Page<QuizQuestion> pageResult = service.pageQuestions(
+                page == null ? 1 : page,
+                size == null ? 20 : size);
+        Map<String, Object> data = new HashMap<>();
+        data.put("records", pageResult.getRecords());
+        data.put("total", pageResult.getTotal());
+        data.put("page", pageResult.getCurrent());
+        data.put("size", pageResult.getSize());
+        return R.ok(data);
     }
 
     @PostMapping("/add")
+    @PreAuthorize("hasRole('ADMIN')")
     public R<String> add(@RequestBody QuizQuestion question) {
         normalizeOptions(question);
         service.addQuestionDirect(question);
@@ -53,6 +67,7 @@ public class QuizController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasRole('ADMIN')")
     public R<String> update(@RequestBody QuizQuestion question) {
         normalizeOptions(question);
         service.updateQuestionDirect(question);
@@ -60,6 +75,7 @@ public class QuizController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public R<String> delete(@PathVariable Integer id) {
         service.deleteQuestion(id);
         return R.ok("删除成功");

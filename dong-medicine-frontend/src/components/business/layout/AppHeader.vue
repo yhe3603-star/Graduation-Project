@@ -109,7 +109,7 @@
           <div class="user-info desktop-user-info">
             <span class="user-name">{{ userName || '游客' }}</span>
             <span
-              v-if="isAdmin"
+              v-if="isLoggedIn && isAdmin"
               class="user-role"
             >管理员</span>
           </div>

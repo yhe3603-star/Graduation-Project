@@ -35,16 +35,23 @@ public class RateLimitAspect {
         long windowSeconds = 1;
 
         String redisKey = RATE_LIMIT_PREFIX + key;
-        
-        Long currentCount = stringRedisTemplate.opsForValue().increment(redisKey);
-        
-        if (currentCount != null && currentCount == 1) {
-            stringRedisTemplate.expire(redisKey, windowSeconds, TimeUnit.SECONDS);
-        }
 
-        if (currentCount != null && currentCount > limit) {
-            logger.warn("请求过于频繁: {} (限制: {}/秒, 当前: {})", key, limit, currentCount);
-            throw new BusinessException(ErrorCode.OPERATION_TOO_FREQUENT);
+        try {
+            Long currentCount = stringRedisTemplate.opsForValue().increment(redisKey);
+
+            if (currentCount != null && currentCount == 1) {
+                stringRedisTemplate.expire(redisKey, windowSeconds, TimeUnit.SECONDS);
+            }
+
+            if (currentCount != null && currentCount > limit) {
+                logger.warn("请求过于频繁: {} (限制: {}/秒, 当前: {})", key, limit, currentCount);
+                throw new BusinessException(ErrorCode.OPERATION_TOO_FREQUENT);
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            // Redis 未启动或不可用时避免整站 500，降级为不限流
+            logger.warn("限流依赖不可用，跳过限流: {} — {}", key, e.getMessage());
         }
 
         return joinPoint.proceed();

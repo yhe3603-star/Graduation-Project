@@ -27,16 +27,12 @@
               placeholder="请选择级别"
             >
               <el-option
-                label="省级"
-                value="省级"
+                label="国家级"
+                value="国家级"
               />
               <el-option
                 label="自治区级"
                 value="自治区级"
-              />
-              <el-option
-                label="州级"
-                value="州级"
               />
               <el-option
                 label="市级"

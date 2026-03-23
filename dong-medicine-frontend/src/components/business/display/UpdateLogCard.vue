@@ -134,7 +134,9 @@ const handleDeleteLog = (log) => {
   }).then(() => {
     emit('delete', log)
     ElMessage.success('删除成功')
-  }).catch(() => {})
+  }).catch((e) => {
+    console.debug('用户取消删除日志:', e)
+  })
 }
 </script>
 

@@ -89,6 +89,7 @@ const emit = defineEmits(['video-play', 'video-pause', 'video-ended'])
 
 const videoRef = ref(null)
 const currentIndex = ref(0)
+let canPlayHandler = null
 
 const videoList = computed(() => {
   const items = parseMediaList(props.videos)
@@ -128,10 +129,18 @@ watch(videoList, (newList, oldList) => {
 watch(() => props.autoPlay, (newVal) => { if (videoRef.value) newVal ? play() : pause() })
 
 onMounted(() => {
-  if (videoRef.value && props.autoPlay && videoList.value.length > 0) videoRef.value.addEventListener('canplay', play, { once: true })
+  if (videoRef.value && props.autoPlay && videoList.value.length > 0) {
+    canPlayHandler = play
+    videoRef.value.addEventListener('canplay', canPlayHandler, { once: true })
+  }
 })
 
-onUnmounted(pause)
+onUnmounted(() => {
+  pause()
+  if (videoRef.value && canPlayHandler) {
+    videoRef.value.removeEventListener('canplay', canPlayHandler)
+  }
+})
 
 defineExpose({ play, pause, prevVideo, nextVideo, switchToVideo, getCurrentIndex: () => currentIndex.value })
 </script>

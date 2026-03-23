@@ -98,12 +98,12 @@
           description="暂无资源"
         />
         <Pagination
-          v-if="filteredResources.length"
+          v-if="totalItems > 0"
           :page="currentPage"
           :size="pageSize"
-          :total="filteredResources.length"
-          @update:page="currentPage = $event"
-          @update:size="pageSize = $event"
+          :total="totalItems"
+          @update:page="currentPage = $event; loadResourcesData();"
+          @update:size="pageSize = $event; currentPage = 1; loadResourcesData();"
         />
       </div>
 
@@ -142,7 +142,8 @@ import Pagination from "@/components/business/display/Pagination.vue";
 import ResourceDetailDialog from "@/components/business/dialogs/ResourceDetailDialog.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
-import { extractData } from "@/utils";
+import { extractPageData, extractData } from "@/utils";
+import { parseMediaList } from "@/utils/media";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
 import { useUserStore } from "@/stores/user";
@@ -163,13 +164,17 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 const pageLoading = ref(false);
 const keyword = ref("");
 const allResources = ref([]);
+const allResourcesForStats = ref([]);
 const hotResources = ref([]);
+const detailVisible = ref(false);
 const previewVisible = ref(false);
 const currentResource = ref(null);
 const favorites = ref([]);
+const categoryFilter = ref("");
 const typeFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
+const totalItems = ref(0);
 
 const FILE_TYPE_MAP = {
   video: { extensions: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'], icon: VideoPlay, name: '视频' },
@@ -178,24 +183,31 @@ const FILE_TYPE_MAP = {
 };
 
 const filterConfig = [
+  { key: "category", label: "难度", options: [{ label: "全部", value: "" }, { label: "入门", value: "入门" }, { label: "进阶", value: "进阶" }, { label: "专业", value: "专业" }] },
   { key: "type", label: "类型", type: "success", options: [{ label: "全部", value: "" }, { label: "视频", value: "video" }, { label: "文档", value: "document" }, { label: "图片", value: "image" }] }
 ];
 
 const stats = computed(() => {
-  const totalViews = allResources.value.reduce((sum, r) => sum + (r.viewCount || 0), 0);
-  const totalDownloads = allResources.value.reduce((sum, r) => sum + (r.downloadCount || 0), 0);
-  const totalFavorites = allResources.value.reduce((sum, r) => sum + (r.favoriteCount || 0), 0);
-  const totalSize = allResources.value.reduce((sum, r) => {
+  const data = allResourcesForStats.value.length > 0 ? allResourcesForStats.value : allResources.value;
+  const totalViews = data.reduce((sum, r) => sum + (r.viewCount || 0), 0);
+  const totalDownloads = data.reduce((sum, r) => sum + (r.downloadCount || 0), 0);
+  const totalFavorites = data.reduce((sum, r) => sum + (r.favoriteCount || 0), 0);
+  const totalSize = data.reduce((sum, r) => {
     const fileInfo = getFileInfo(r);
+    // 调试信息
+    if (r.files) {
+      console.log('资源文件信息:', r.id, r.files, fileInfo);
+    }
     return sum + (fileInfo.size || 0);
   }, 0);
+  console.log('总大小计算:', totalSize);
   
-  const videoCount = allResources.value.filter(r => getFileInfo(r).type === 'video').length;
-  const docCount = allResources.value.filter(r => getFileInfo(r).type === 'document').length;
-  const imgCount = allResources.value.filter(r => getFileInfo(r).type === 'image').length;
+  const videoCount = data.filter(r => getFileInfo(r).type === 'video').length;
+  const docCount = data.filter(r => getFileInfo(r).type === 'document').length;
+  const imgCount = data.filter(r => getFileInfo(r).type === 'image').length;
   
   return [
-    { value: allResources.value.length, label: "资源总数" },
+    { value: data.length, label: "资源总数" },
     { value: videoCount, label: "视频数量" },
     { value: docCount, label: "文档数量" },
     { value: imgCount, label: "图片数量" },
@@ -223,37 +235,25 @@ const allUpdateLogs = computed(() => {
   return logs.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
 });
 
-const filteredResources = computed(() => {
-  let result = allResources.value;
-  const kw = keyword.value.toLowerCase();
-  if (kw) {
-    result = result.filter(r => 
-      r.title?.toLowerCase().includes(kw) || 
-      r.description?.toLowerCase().includes(kw)
-    );
-  }
-  if (typeFilter.value) result = result.filter(r => r.fileType === typeFilter.value);
-  return result;
-});
+const filteredResources = computed(() => allResources.value);
 
-const paginatedList = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return filteredResources.value.slice(start, start + pageSize.value);
-});
+const paginatedList = computed(() => allResources.value);
 
 const getFileInfo = (item) => {
   if (!item.files) return { url: '', type: 'document', size: 0 };
   try {
-    const files = typeof item.files === 'string' ? JSON.parse(item.files) : item.files;
-    if (Array.isArray(files) && files.length > 0) {
+    const files = parseMediaList(item.files);
+    if (files.length > 0) {
       const firstFile = files[0];
       return {
-        url: firstFile.path || firstFile.url || '',
+        url: firstFile.url || firstFile.path || '',
         type: firstFile.type || 'document',
         size: firstFile.size || 0
       };
     }
-  } catch {}
+  } catch (e) {
+    console.debug('解析资源文件失败:', e);
+  }
   return { url: '', type: 'document', size: 0 };
 };
 
@@ -287,13 +287,19 @@ const formatSize = (bytes) => {
 
 const debouncedSearch = useDebounceFn(() => {
   currentPage.value = 1;
+  loadResourcesData();
 }, DEBOUNCE_DELAY);
 
 const handleSearch = () => {
   debouncedSearch();
 };
 
-const handleFilter = (filters) => { typeFilter.value = filters.type || ""; currentPage.value = 1; };
+const handleFilter = (filters) => { 
+  typeFilter.value = filters.type || ""; 
+  categoryFilter.value = filters.category || ""; 
+  currentPage.value = 1;
+  loadResourcesData();
+};
 
 const openResource = async (item) => {
   currentResource.value = item;
@@ -355,9 +361,36 @@ const downloadCurrentResource = () => { if (currentResource.value) downloadResou
 const loadResourcesData = async () => {
   pageLoading.value = true;
   try {
-    const res = await request.get("/resources/list", { params: { _t: Date.now() } });
-    allResources.value = extractData(res).map(r => ({ ...r, fileType: detectFileType(getFileInfo(r).url, getFileInfo(r).type) }));
+    // 并行请求：获取分页数据和所有数据用于统计
+    const [pageRes, allRes] = await Promise.all([
+      request.get("/resources/list", {
+        params: {
+          page: currentPage.value,
+          size: pageSize.value,
+          keyword: keyword.value,
+          fileType: typeFilter.value,
+          category: categoryFilter.value,
+          _t: Date.now()
+        }
+      }),
+      request.get("/resources/list", {
+        params: {
+          page: 1,
+          size: 9999, // 获取足够多的数据以确保包含所有记录
+          _t: Date.now()
+        }
+      })
+    ]);
+    
+    const { records, total } = extractPageData(pageRes);
+    allResources.value = records.map(r => ({ ...r, fileType: detectFileType(getFileInfo(r).url, getFileInfo(r).type) }));
+    totalItems.value = total;
     hotResources.value = allResources.value.slice(0, 5);
+    
+    // 加载所有数据用于统计
+    const allData = extractPageData(allRes);
+    allResourcesForStats.value = allData.records;
+    
     if (isLoggedIn.value) {
       try { favorites.value = extractData(await request.get("/favorites/my")); } catch {}
     }

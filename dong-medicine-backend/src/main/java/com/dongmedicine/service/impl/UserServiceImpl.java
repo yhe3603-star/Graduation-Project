@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.entity.User;
 import com.dongmedicine.mapper.UserMapper;
 import com.dongmedicine.service.UserService;
+import com.dongmedicine.service.TokenBlacklistService;
 import com.dongmedicine.config.JwtUtil;
+import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.exception.ErrorCode;
@@ -26,6 +28,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
@@ -36,6 +40,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
         if (user == null) {
             throw BusinessException.userNotFound();
+        }
+        if (user.isBanned()) {
+            throw BusinessException.forbidden("账号已被封禁，请联系管理员");
         }
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw BusinessException.passwordWrong();
@@ -66,6 +73,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setRole(RoleConstants.ROLE_USER);
+        user.setStatus(User.STATUS_ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
         save(user);
     }
@@ -104,15 +112,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userId == null) {
             throw BusinessException.badRequest("用户ID不能为空");
         }
+        Integer currentId = SecurityUtils.getCurrentUserId();
+        if (currentId != null && currentId.equals(userId)) {
+            throw BusinessException.forbidden("不能删除当前登录账号");
+        }
+        User target = getById(userId);
+        if (target == null) {
+            throw BusinessException.userNotFound();
+        }
+        if (RoleConstants.ROLE_ADMIN.equals(target.getRole()) && countAdmins() <= 1) {
+            throw BusinessException.forbidden("不能删除系统唯一的管理员账号");
+        }
         if (!removeById(userId)) {
             throw BusinessException.notFound("删除用户失败");
         }
     }
 
+    private long countAdmins() {
+        return count(new LambdaQueryWrapper<User>().eq(User::getRole, RoleConstants.ROLE_ADMIN));
+    }
+
     @Override
     public List<User> getAllUsers() {
         return list(new LambdaQueryWrapper<User>()
-                .select(User::getId, User::getUsername, User::getPasswordHash, User::getRole, User::getCreatedAt)
+                .select(User::getId, User::getUsername, User::getPasswordHash, User::getRole, User::getStatus, User::getCreatedAt)
                 .orderByDesc(User::getCreatedAt));
     }
 
@@ -157,7 +180,63 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw BusinessException.userNotFound();
         }
+        if (RoleConstants.ROLE_ADMIN.equals(user.getRole())
+                && !RoleConstants.ROLE_ADMIN.equals(role)
+                && countAdmins() <= 1) {
+            throw BusinessException.forbidden("不能移除系统唯一的管理员角色");
+        }
         user.setRole(role);
         updateById(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "users", allEntries = true)
+    public void banUser(Integer userId, String reason) {
+        if (userId == null) {
+            throw BusinessException.badRequest("用户ID不能为空");
+        }
+        Integer currentId = SecurityUtils.getCurrentUserId();
+        if (currentId != null && currentId.equals(userId)) {
+            throw BusinessException.forbidden("不能封禁当前登录账号");
+        }
+        User user = getById(userId);
+        if (user == null) {
+            throw BusinessException.userNotFound();
+        }
+        if (RoleConstants.ROLE_ADMIN.equals(user.getRole())) {
+            throw BusinessException.forbidden("不能封禁管理员账号");
+        }
+        user.setStatus(User.STATUS_BANNED);
+        updateById(user);
+        String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+        tokenBlacklistService.addToBlacklist(token);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "users", allEntries = true)
+    public void unbanUser(Integer userId) {
+        if (userId == null) {
+            throw BusinessException.badRequest("用户ID不能为空");
+        }
+        User user = getById(userId);
+        if (user == null) {
+            throw BusinessException.userNotFound();
+        }
+        user.setStatus(User.STATUS_ACTIVE);
+        updateById(user);
+    }
+
+    @Override
+    public String getUserToken(Integer userId) {
+        if (userId == null) {
+            throw BusinessException.badRequest("用户ID不能为空");
+        }
+        User user = getById(userId);
+        if (user == null) {
+            throw BusinessException.userNotFound();
+        }
+        return jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
     }
 }

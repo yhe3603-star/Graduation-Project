@@ -57,22 +57,48 @@ export function useCountdown(durationMinutes = 3) {
   return { remainingSeconds, formattedTime, isRunning, isExpired, isLowTime, start, stop, reset, forceExpire }
 }
 
-export function useComments(request) {
+export function useComments(request, isLoggedIn) {
   const comments = ref([])
   const commentLoading = ref(false)
+  const currentPage = ref(1)
+  const pageSize = ref(12)
+  const totalItems = ref(0)
 
   const loadComments = async () => {
     commentLoading.value = true
     try {
-      const res = await request.get('/comments/list/all')
-      comments.value = res?.data || []
+      const res = await request.get('/comments/list/all', {
+        params: {
+          page: currentPage.value,
+          size: pageSize.value
+        }
+      })
+      const data = res?.data || {}
+      comments.value = data.records || data || []
+      totalItems.value = data.total || comments.value.length
     } catch {
     } finally {
       commentLoading.value = false
     }
   }
 
+  const handlePageChange = (page) => {
+    currentPage.value = page
+    loadComments()
+  }
+
+  const handleSizeChange = (size) => {
+    pageSize.value = size
+    currentPage.value = 1
+    loadComments()
+  }
+
   const handleCommentPost = async (content, replyData, onSuccess, onError) => {
+    if (!isLoggedIn?.value) {
+      ElMessage.warning('请先登录后再发表评论')
+      onError?.()
+      return
+    }
     if (!content?.trim()) return
     try {
       const payload = { targetType: 'general', targetId: 0, content }
@@ -92,7 +118,7 @@ export function useComments(request) {
     }
   }
 
-  return { comments, commentLoading, loadComments, handleCommentPost }
+  return { comments, commentLoading, loadComments, handleCommentPost, currentPage, pageSize, totalItems, handlePageChange, handleSizeChange }
 }
 
 export const usePagination = (defaultSize = 12) => {

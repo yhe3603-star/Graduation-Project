@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.entity.Feedback;
 import com.dongmedicine.entity.User;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.mapper.FeedbackMapper;
 import com.dongmedicine.mapper.UserMapper;
 import com.dongmedicine.service.FeedbackService;
@@ -52,7 +53,7 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
     public void replyFeedback(Integer id, String reply) {
         Feedback feedback = getById(id);
         if (feedback == null) {
-            throw new RuntimeException("反馈不存在");
+            throw BusinessException.notFound("反馈不存在");
         }
         feedback.setReply(reply);
         feedback.setStatus("resolved");

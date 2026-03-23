@@ -1,6 +1,8 @@
 package com.dongmedicine.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.service.PlantService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/plants")
@@ -22,26 +25,23 @@ public class PlantController {
     private final PlantService service;
 
     @GetMapping("/list")
-    public R<List<Plant>> list(
+    public R<Map<String, Object>> list(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "12") Integer size,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String usageWay,
             @RequestParam(required = false) String keyword) {
-        if (keyword != null && !keyword.isBlank()) {
-            return R.ok(service.search(keyword));
-        }
-        return R.ok(service.listByDoubleFilter(category, usageWay));
+        Page<Plant> pageResult = service.advancedSearchPaged(keyword, category, usageWay, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @GetMapping("/search")
-    public R<List<Plant>> search(
+    public R<Map<String, Object>> search(
             @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
-            @RequestParam(defaultValue = "10") @Min(value = 1, message = "页大小不能小于1")
-            @Max(value = 100, message = "页大小不能大于100") Integer pageSize) {
-        List<Plant> results = service.search(keyword);
-        if (results.size() > pageSize) {
-            results = results.subList(0, pageSize);
-        }
-        return R.ok(results);
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "12") Integer size) {
+        Page<Plant> pageResult = service.searchPaged(keyword, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @GetMapping("/{id}")

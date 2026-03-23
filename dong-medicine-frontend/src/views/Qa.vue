@@ -75,12 +75,12 @@
           description="暂无问答数据"
         />
         <Pagination
-          v-if="filteredList.length"
+          v-if="totalItems > 0"
           :page="currentPage"
           :size="pageSize"
-          :total="filteredList.length"
-          @update:page="currentPage = $event"
-          @update:size="pageSize = $event"
+          :total="totalItems"
+          @update:page="currentPage = $event; loadQaData();"
+          @update:size="pageSize = $event; currentPage = 1; loadQaData();"
         />
       </div>
 
@@ -114,7 +114,7 @@ import Pagination from "@/components/business/display/Pagination.vue";
 import QuizDetailDialog from "@/components/business/dialogs/QuizDetailDialog.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import AiChatCard from "@/components/business/display/AiChatCard.vue";
-import { extractData } from "@/utils";
+import { extractPageData, extractData } from "@/utils";
 import { useDebounceFn } from "@/composables/useDebounce";
 import { useUserStore } from "@/stores/user";
 
@@ -134,56 +134,50 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 const pageLoading = ref(false);
 const keyword = ref("");
 const allQa = ref([]);
+const allQaForStats = ref([]);
 const hotQa = ref([]);
-const favorites = ref([]);
 const detailVisible = ref(false);
 const currentQa = ref(null);
+const favorites = ref([]);
 const categoryFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
+const totalItems = ref(0);
 
 const filterConfig = [
   { key: "category", label: "分类", options: [{ label: "全部", value: "" }, { label: "侗药常识", value: "侗药常识" }, { label: "侗医疗法", value: "侗医疗法" }, { label: "文化背景", value: "文化背景" }] }
 ];
 
 const stats = computed(() => {
-  const totalViews = allQa.value.reduce((sum, q) => sum + (q.viewCount || 0), 0);
-  const totalFavorites = allQa.value.reduce((sum, q) => sum + (q.favoriteCount || 0), 0);
+  const data = allQaForStats.value.length > 0 ? allQaForStats.value : allQa.value;
+  const totalViews = data.reduce((sum, q) => sum + (q.viewCount || 0), 0);
+  const totalFavorites = data.reduce((sum, q) => sum + (q.favoriteCount || 0), 0);
   return [
-    { value: allQa.value.length, label: "问题总数" },
-    { value: new Set(allQa.value.map(q => q.category)).size, label: "分类数" },
+    { value: data.length, label: "问题总数" },
+    { value: new Set(data.map(q => q.category).filter(Boolean)).size, label: "分类数" },
     { value: totalViews, label: "浏览量" },
     { value: totalFavorites, label: "收藏量" }
   ];
 });
 
-const filteredList = computed(() => {
-  let result = allQa.value;
-  const kw = keyword.value.toLowerCase();
-  if (kw) {
-    result = result.filter(q => 
-      q.question?.toLowerCase().includes(kw) || 
-      q.answer?.toLowerCase().includes(kw)
-    );
-  }
-  if (categoryFilter.value) result = result.filter(q => q.category === categoryFilter.value);
-  return result;
-});
+const filteredList = computed(() => allQa.value);
 
-const paginatedList = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return filteredList.value.slice(start, start + pageSize.value);
-});
+const paginatedList = computed(() => allQa.value);
 
 const debouncedSearch = useDebounceFn(() => {
   currentPage.value = 1;
+  loadQaData();
 }, DEBOUNCE_DELAY);
 
 const handleSearch = () => {
   debouncedSearch();
 };
 
-const handleFilter = (filters) => { categoryFilter.value = filters.category || ""; currentPage.value = 1; };
+const handleFilter = (filters) => { 
+  categoryFilter.value = filters.category || ""; 
+  currentPage.value = 1;
+  loadQaData();
+};
 
 const isFavorited = (id) => favorites.value.some(f => f.targetId === id && f.type === "qa");
 const isCurrentFavorited = computed(() => currentQa.value && isFavorited(currentQa.value.id));
@@ -202,18 +196,21 @@ const toggleFavorite = async (item) => {
   if (!isLoggedIn.value) { ElMessage.warning("请先登录"); return; }
   try {
     const qaIdx = allQa.value.findIndex(q => q.id === item.id);
-    if (isFavorited(item.id)) {
-      await request.delete(`/favorites/qa/${item.id}`);
-      favorites.value = favorites.value.filter(f => !(f.targetId === item.id && f.type === "qa"));
-      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = Math.max(0, (allQa.value[qaIdx].favoriteCount || 1) - 1);
-      ElMessage.success("已取消收藏");
+    const favIdx = favorites.value.indexOf(item.id)
+    if (favIdx > -1) {
+      favorites.value.splice(favIdx, 1)
+      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = Math.max(0, (allQa.value[qaIdx].favoriteCount || 1) - 1)
+      ElMessage.success("已取消收藏")
     } else {
-      await request.post(`/favorites/qa/${item.id}`);
-      favorites.value.push({ targetId: item.id, type: "qa" });
-      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = (allQa.value[qaIdx].favoriteCount || 0) + 1;
-      ElMessage.success("收藏成功");
+      await request.post(`/favorites/qa/${item.id}`)
+      favorites.value.push({ targetId: item.id, type: "qa" })
+      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = (allQa.value[qaIdx].favoriteCount || 1) + 1
+      ElMessage.success("收藏成功")
     }
-  } catch { ElMessage.error("操作失败"); }
+  } catch (e) {
+    logFetchError('收藏操作', e)
+    ElMessage.error("操作失败")
+  }
 };
 
 const toggleFavoriteDetail = () => { if (currentQa.value) toggleFavorite(currentQa.value); };
@@ -221,9 +218,35 @@ const toggleFavoriteDetail = () => { if (currentQa.value) toggleFavorite(current
 const loadQaData = async () => {
   pageLoading.value = true;
   try {
-    const res = await request.get("/qa/list", { params: { _t: Date.now() } });
-    allQa.value = extractData(res);
+    // 并行请求：获取分页数据和所有数据用于统计
+    const [pageRes, allRes] = await Promise.all([
+      request.get("/qa/list", {
+        params: {
+          page: currentPage.value,
+          size: pageSize.value,
+          keyword: keyword.value,
+          category: categoryFilter.value,
+          _t: Date.now()
+        }
+      }),
+      request.get("/qa/list", {
+        params: {
+          page: 1,
+          size: 9999, // 获取足够多的数据以确保包含所有记录
+          _t: Date.now()
+        }
+      })
+    ]);
+    
+    const { records, total } = extractPageData(pageRes);
+    allQa.value = records;
+    totalItems.value = total;
     hotQa.value = allQa.value.slice(0, 5);
+    
+    // 加载所有数据用于统计
+    const allData = extractPageData(allRes);
+    allQaForStats.value = allData.records;
+    
     if (isLoggedIn.value) {
       try { favorites.value = extractData(await request.get("/favorites/my")); } catch {}
     }

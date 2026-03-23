@@ -1,10 +1,12 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.exception.ErrorCode;
 import com.dongmedicine.common.util.FileCleanupHelper;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.mapper.PlantMapper;
 import com.dongmedicine.service.PlantService;
@@ -37,9 +39,15 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     private boolean useFullTextSearch;
 
     @Override
-    @Cacheable(value = "plants", key = "'list:' + (#category ?: 'all') + ':' + (#usageWay ?: 'all')")
-    public List<Plant> listByDoubleFilter(String category, String usageWay) {
+    @Cacheable(value = "plants", key = "'list:' + (#keyword ?: 'all') + ':' + (#category ?: 'all') + ':' + (#usageWay ?: 'all')")
+    public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
         LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            qw.and(wrapper -> wrapper.like(Plant::getNameCn, keyword)
+                                     .or().like(Plant::getNameDong, keyword)
+                                     .or().like(Plant::getEfficacy, keyword)
+                                     .or().like(Plant::getStory, keyword));
+        }
         if (StringUtils.hasText(category)) {
             qw.eq(Plant::getCategory, category);
         }
@@ -51,11 +59,45 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     }
 
     @Override
+    public Page<Plant> advancedSearchPaged(String keyword, String category, String usageWay, Integer page, Integer size) {
+        Page<Plant> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            qw.and(wrapper -> wrapper.like(Plant::getNameCn, keyword)
+                                     .or().like(Plant::getNameDong, keyword)
+                                     .or().like(Plant::getEfficacy, keyword)
+                                     .or().like(Plant::getStory, keyword));
+        }
+        if (StringUtils.hasText(category)) {
+            qw.eq(Plant::getCategory, category);
+        }
+        if (StringUtils.hasText(usageWay)) {
+            qw.eq(Plant::getUsageWay, usageWay);
+        }
+        qw.orderByAsc(Plant::getNameCn);
+        return page(pageParam, qw);
+    }
+
+    @Override
     public List<Plant> search(String keyword) {
         if (!StringUtils.hasText(keyword)) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "搜索关键词不能为空");
         }
         return search(keyword, DEFAULT_SEARCH_LIMIT);
+    }
+
+    @Override
+    public Page<Plant> searchPaged(String keyword, Integer page, Integer size) {
+        if (!StringUtils.hasText(keyword)) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "搜索关键词不能为空");
+        }
+        Page<Plant> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<Plant>()
+                .like(Plant::getNameCn, keyword)
+                .or().like(Plant::getNameDong, keyword)
+                .or().like(Plant::getEfficacy, keyword)
+                .orderByAsc(Plant::getNameCn);
+        return page(pageParam, qw);
     }
 
     @Override

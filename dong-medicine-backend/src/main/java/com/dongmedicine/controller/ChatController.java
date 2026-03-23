@@ -7,6 +7,7 @@ import com.dongmedicine.dto.ChatRequest;
 import com.dongmedicine.dto.ChatResponse;
 import com.dongmedicine.service.AiChatService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class ChatController {
 
     @PostMapping
     @RateLimit(value = 10, key = "chat")
-    public R<String> chat(@RequestBody ChatRequest request, HttpServletRequest httpRequest) {
+    public R<String> chat(@Valid @RequestBody ChatRequest request, HttpServletRequest httpRequest) {
         totalRequests.incrementAndGet();
         
         String clientIp = getClientIp(httpRequest);
