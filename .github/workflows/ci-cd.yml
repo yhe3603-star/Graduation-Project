@@ -56,6 +56,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Build Frontend
+        working-directory: dong-medicine-frontend
+        run: npm run build
+
       - name: Prepare deployment package
         run: |
           mkdir -p deploy-package
