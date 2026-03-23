@@ -107,6 +107,20 @@ jobs:
           chmod +x deploy-package/docker-deploy.sh
           chmod +x deploy-package/init-server.sh
 
+      - name: Verify Deployment Package
+        run: |
+          echo "Checking deployment package structure..."
+          ls -la deploy-package/
+          echo "Checking frontend directory in deployment package..."
+          ls -la deploy-package/dong-medicine-frontend/
+          if [ -d "deploy-package/dong-medicine-frontend/dist" ]; then
+            echo "dist directory exists in deployment package, contents:"
+            ls -la deploy-package/dong-medicine-frontend/dist/
+          else
+            echo "ERROR: dist directory does not exist in deployment package!"
+            exit 1
+          fi
+
       - name: Create production .env file
         run: |
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" > deploy-package/.env
