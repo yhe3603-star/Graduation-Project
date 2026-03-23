@@ -395,7 +395,8 @@ const getTypeName = (type) => typeNameMap[type] || '其他'
   align-items: center;
   justify-content: center;
   font-weight: var(--font-weight-bold);
-  color: var(--text-inverse);
+  color: #000000;
+  font-size: 18px;
 }
 
 .record-score.excellent {
