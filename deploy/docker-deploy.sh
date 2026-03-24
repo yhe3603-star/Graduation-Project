@@ -68,25 +68,50 @@ print_success "应用文件部署完成"
 
 print_step "停止旧容器..."
 cd "$APP_DIR"
-$COMPOSE_CMD down --remove-orphans 2>/dev/null || true
+# 强制停止所有相关容器
+print_info "强制停止所有相关容器..."
+docker stop $(docker ps -q --filter name=dong-medicine-) 2>/dev/null || true
+docker rm $(docker ps -aq --filter name=dong-medicine-) 2>/dev/null || true
+# 执行docker-compose down
+$COMPOSE_CMD down --remove-orphans --volumes 2>/dev/null || true
 print_success "旧容器已停止"
 
 print_step "检查并清理占用端口的进程..."
+# 使用netstat检查端口占用
+print_info "检查8080端口占用情况..."
+netstat -tuln 2>/dev/null | grep :8080 || echo "8080端口未被占用"
+
 # 检查并停止占用8080端口的进程
 if command -v lsof &> /dev/null; then
     PORT_PID=$(lsof -t -i:8080 2>/dev/null || true)
     if [ -n "$PORT_PID" ]; then
         print_info "发现占用8080端口的进程: $PORT_PID"
+        # 尝试优雅停止
+        kill $PORT_PID 2>/dev/null || true
+        sleep 2
+        # 强制停止
         kill -9 $PORT_PID 2>/dev/null || true
         print_info "已停止占用8080端口的进程"
     else
         print_info "8080端口未被占用"
     fi
 else
-    print_info "lsof 未安装，跳过端口检查"
+    # 尝试使用netstat和killall作为替代
+    print_info "lsof 未安装，尝试使用其他方法..."
+    if command -v netstat &> /dev/null && command -v awk &> /dev/null; then
+        PORT_PID=$(netstat -tuln | grep :8080 | awk '{print $7}' | cut -d'/' -f1 2>/dev/null || true)
+        if [ -n "$PORT_PID" ]; then
+            print_info "发现占用8080端口的进程: $PORT_PID"
+            kill -9 $PORT_PID 2>/dev/null || true
+            print_info "已停止占用8080端口的进程"
+        fi
+    fi
 fi
 
 # 检查并停止占用80端口的进程
+print_info "检查80端口占用情况..."
+netstat -tuln 2>/dev/null | grep :80 || echo "80端口未被占用"
+
 if command -v lsof &> /dev/null; then
     PORT_PID=$(lsof -t -i:80 2>/dev/null || true)
     if [ -n "$PORT_PID" ]; then
@@ -98,17 +123,29 @@ if command -v lsof &> /dev/null; then
     fi
 fi
 
+# 等待端口释放
+sleep 5
 print_success "端口清理完成"
 
 print_step "清理Docker网络..."
 # 检查并清理旧的网络
+print_info "当前Docker网络状态..."
+docker network ls 2>/dev/null || echo "无法列出网络"
+
 if docker network ls | grep -q "dong-medicine-network"; then
     print_info "发现旧的网络 dong-medicine-network，正在清理..."
+    # 强制清理网络
     docker network rm dong-medicine-network 2>/dev/null || true
+    # 再次尝试清理
+    docker network prune -f 2>/dev/null || true
     print_info "网络清理完成"
 else
     print_info "网络 dong-medicine-network 不存在，跳过清理"
 fi
+
+# 再次检查端口状态
+print_step "最终端口状态检查..."
+netstat -tuln 2>/dev/null | grep -E ':8080|:80' || echo "8080和80端口均未被占用"
 
 print_step "拉取最新镜像..."
 $COMPOSE_CMD pull 2>/dev/null || true
