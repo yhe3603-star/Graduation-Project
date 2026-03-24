@@ -2,196 +2,91 @@
 
 ## 文件夹结构
 
-本目录包含项目的状态管理文件，使用Pinia进行状态管理。
+本目录包含项目的Pinia状态管理store。
 
 ```
 stores/
-├── index.js  # Pinia初始化
-└── user.js   # 用户状态管理
+├── user.js         # 用户状态管理
+└── README.md        # 说明文档
 ```
 
 ## 详细说明
 
-### 1. index.js
+### user.js - 用户状态管理
 
-**功能**：初始化Pinia状态管理库。
+**功能**：管理用户认证状态、登录登出、Token验证等。
 
-**主要内容**：
-- 导入Pinia
-- 创建Pinia实例
-- 导出Pinia实例
+**状态属性**：
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| token | Ref<String> | JWT令牌 |
+| userId | Ref<String> | 用户ID |
+| username | Ref<String> | 用户名 |
+| role | Ref<String> | 用户角色 |
+| userInfo | Ref<Object> | 用户详细信息 |
 
-**使用方法**：
+**计算属性**：
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| isLoggedIn | Computed<Boolean> | 是否已登录（检查Token有效性） |
+| userName | Computed<String> | 用户名 |
+| isAdmin | Computed<Boolean> | 是否为管理员 |
 
-在 `main.js` 中导入并使用：
+**Actions**：
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|-------|------|
+| initialize | - | void | 初始化状态 |
+| checkTokenExpiry | - | void | 检查Token是否过期 |
+| setAuth | data | void | 设置认证信息 |
+| clearAuth | - | void | 清除认证信息 |
+| fetchUserInfo | - | Promise<Object> | 获取用户信息 |
+| validateToken | - | Promise<Boolean> | 验证Token有效性 |
+| login | loginData | Promise<Object> | 用户登录 |
+| logout | - | Promise<void> | 用户登出 |
+| changePassword | data | Promise<Object> | 修改密码 |
+| initializeFromStorage | - | void | 从存储初始化 |
+| getTokenRemainingTime | - | Number | 获取Token剩余时间 |
 
-```javascript
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import App from './App.vue'
-import router from './router'
+**Token过期检查**：
+- 使用JWT payload中的exp字段判断过期
+- 提前5分钟缓冲时间
+- 过期自动清除认证信息
 
-const app = createApp(App)
-app.use(createPinia())
-app.use(router)
-app.mount('#app')
-```
+**存储方式**：
+- 使用sessionStorage存储Token等认证信息
+- 提供安全的存储方法（处理存储不可用情况）
 
-### 2. user.js
-
-**功能**：管理用户相关的状态。
-
-**主要状态**：
-- `userInfo`：用户信息
-- `token`：认证令牌
-- `isLogin`：登录状态
-- `permissions`：用户权限
-
-**主要方法**：
-- `login`：用户登录
-- `logout`：用户登出
-- `updateUserInfo`：更新用户信息
-- `setToken`：设置令牌
-- `clearToken`：清除令牌
-
-**使用方法**：
-
+**使用示例**：
 ```javascript
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 
+// 检查登录状态
+if (userStore.isLoggedIn) {
+  console.log('当前用户:', userStore.userName)
+}
+
 // 登录
-await userStore.login({
+const result = await userStore.login({
   username: 'admin',
   password: 'password'
 })
 
-// 检查登录状态
-if (userStore.isLogin) {
-  console.log('用户已登录')
+if (result.success) {
+  console.log('登录成功')
 }
 
 // 登出
-userStore.logout()
+await userStore.logout()
 ```
 
-**状态持久化**：
-
-用户令牌和基本信息会存储在localStorage中，实现页面刷新后状态保持。
-
-**权限管理**：
-
-通过 `permissions` 状态管理用户权限，用于控制页面访问和功能权限。
-
-## Pinia使用指南
-
-### 创建新的Store
-
-```javascript
-// stores/example.js
-import { defineStore } from 'pinia'
-
-export const useExampleStore = defineStore('example', {
-  state: () => ({
-    count: 0,
-    name: 'example'
-  }),
-  getters: {
-    doubleCount: (state) => state.count * 2
-  },
-  actions: {
-    increment() {
-      this.count++
-    },
-    setName(name) {
-      this.name = name
-    }
-  }
-})
-```
-
-### 访问Store
-
-```javascript
-import { useExampleStore } from '@/stores/example'
-
-const exampleStore = useExampleStore()
-
-// 访问状态
-console.log(exampleStore.count)
-console.log(exampleStore.doubleCount)
-
-// 调用方法
-exampleStore.increment()
-exampleStore.setName('new name')
-```
-
-### 响应式使用
-
-```vue
-<template>
-  <div>
-    <p>Count: {{ exampleStore.count }}</p>
-    <p>Double Count: {{ exampleStore.doubleCount }}</p>
-    <button @click="exampleStore.increment">Increment</button>
-  </div>
-</template>
-
-<script setup>
-import { useExampleStore } from '@/stores/example'
-
-const exampleStore = useExampleStore()
-</script>
-```
-
-### 组合式API风格
-
-```javascript
-// stores/composable.js
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-
-export const useComposableStore = defineStore('composable', () => {
-  const count = ref(0)
-  const name = ref('composable')
-  
-  const doubleCount = computed(() => count.value * 2)
-  
-  function increment() {
-    count.value++
-  }
-  
-  function setName(newName) {
-    name.value = newName
-  }
-  
-  return {
-    count,
-    name,
-    doubleCount,
-    increment,
-    setName
-  }
-})
-```
-
-## 开发规范
-
-1. **命名规范**：Store名称使用camelCase，文件名为功能相关的名称
-2. **状态管理**：每个Store应该专注于管理特定领域的状态
-3. **方法命名**：使用camelCase命名方法
-4. **状态持久化**：对于需要持久化的状态，使用localStorage或sessionStorage
-5. **类型定义**：为状态和方法添加适当的注释说明
-
-## 注意事项
-
-- 避免在Store中直接操作DOM
-- 避免在Store中进行复杂的业务逻辑，应该将业务逻辑放在composables中
-- 对于异步操作，使用async/await
-- 合理使用getters进行状态计算
-- 避免创建过多的Store，应该按照功能模块进行组织
+**Token验证流程**：
+1. 检查本地Token是否存在
+2. 解析JWT payload检查是否过期
+3. 调用服务端验证接口
+4. 验证失败时清除认证信息
 
 ---
 
-**最后更新时间**：2026年3月23日
+**最后更新时间**：2026年3月25日

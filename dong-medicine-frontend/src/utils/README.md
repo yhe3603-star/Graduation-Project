@@ -18,204 +18,233 @@ utils/
 
 ## 详细说明
 
-### 1. adminUtils.js
+### 1. request.js - 网络请求工具
 
-**功能**：管理后台相关的工具函数。
-
-**主要方法**：
-- `formatAdminData`：格式化管理后台数据
-- `validateAdminForm`：验证管理后台表单
-- `generateAdminFilters`：生成管理后台筛选条件
-- `handleAdminExport`：处理管理后台数据导出
-
-**使用场景**：管理后台页面的数据处理和表单验证。
-
-### 2. cache.js
-
-**功能**：缓存管理工具。
-
-**主要方法**：
-- `setCache`：设置缓存
-- `getCache`：获取缓存
-- `removeCache`：移除缓存
-- `clearCache`：清除所有缓存
-- `setSessionCache`：设置会话缓存
-- `getSessionCache`：获取会话缓存
-
-**参数**：
-- `key`：缓存键名
-- `value`：缓存值
-- `expire`：过期时间（毫秒）
-
-**使用场景**：缓存API响应、用户设置等数据，提高性能。
-
-### 3. index.js
-
-**功能**：统一导出所有工具函数。
-
-**使用方法**：
-
-```javascript
-import { request, cache, logger } from '@/utils'
-```
-
-### 4. logger.js
-
-**功能**：日志工具，提供统一的日志记录功能。
-
-**主要方法**：
-- `log`：普通日志
-- `info`：信息日志
-- `warn`：警告日志
-- `error`：错误日志
-- `debug`：调试日志
-
-**使用场景**：记录应用运行状态、错误信息等。
-
-### 5. media.js
-
-**功能**：媒体文件处理工具。
-
-**主要方法**：
-- `getImageUrl`：获取图片URL
-- `getVideoUrl`：获取视频URL
-- `getDocumentUrl`：获取文档URL
-- `validateImage`：验证图片文件
-- `validateVideo`：验证视频文件
-- `validateDocument`：验证文档文件
-- `getMediaType`：获取媒体类型
-- `formatFileSize`：格式化文件大小
-
-**使用场景**：处理媒体文件的上传、验证和显示。
-
-### 6. request.js
-
-**功能**：网络请求工具，封装了axios。
-
-**主要方法**：
-- `get`：GET请求
-- `post`：POST请求
-- `put`：PUT请求
-- `delete`：DELETE请求
-- `upload`：文件上传
+**功能**：封装axios，提供统一的HTTP请求处理。
 
 **配置**：
-- 基础URL设置
-- 请求超时设置
-- 请求/响应拦截器
-- 错误处理
+| 配置项 | 值 | 说明 |
+|-------|-----|------|
+| baseURL | /api | API基础路径 |
+| timeout | 60000 | 请求超时时间 |
 
-**使用场景**：与后端API进行通信。
+**请求拦截器功能**：
+- 自动添加Authorization头（Bearer Token）
+- 自动添加userId头
+- 请求数据XSS过滤
+- SQL注入检测
+- 请求去重（取消重复请求）
+
+**响应拦截器功能**：
+- 统一错误处理
+- Token自动刷新（401时）
+- 请求重试机制
+- 错误消息提示
+
+**重试配置**：
+```javascript
+const RETRY_CONFIG = {
+  maxRetries: 3,           // 最大重试次数
+  retryDelay: 1000,        // 基础延迟时间
+  retryableStatuses: [408, 429, 500, 502, 503, 504],
+  retryableMethods: ['get', 'head', 'options']
+}
+```
+
+**导出方法**：
+| 方法 | 说明 |
+|------|------|
+| `request.get(url, config)` | GET请求 |
+| `request.post(url, data, config)` | POST请求 |
+| `request.put(url, data, config)` | PUT请求 |
+| `request.delete(url, config)` | DELETE请求 |
+| `cancelAllRequests()` | 取消所有请求 |
+| `cancelRequestByUrl(url)` | 取消指定URL的请求 |
+
+**Token刷新机制**：
+- 401响应时自动尝试刷新Token
+- 刷新成功后重试原请求
+- 刷新失败后清除认证信息并提示重新登录
 
 **使用示例**：
-
 ```javascript
-import { request } from '@/utils'
+import request from '@/utils/request'
 
 // GET请求
-const response = await request.get('/api/plants', {
+const response = await request.get('/plants/list', {
   params: { page: 1, size: 10 }
 })
 
 // POST请求
-const response = await request.post('/api/auth/login', {
+const result = await request.post('/user/login', {
   username: 'admin',
   password: 'password'
 })
-
-// 文件上传
-const formData = new FormData()
-formData.append('file', file)
-const response = await request.upload('/api/upload', formData)
 ```
 
-### 7. xss.js
+### 2. adminUtils.js - 管理后台工具函数
 
-**功能**：XSS（跨站脚本）防护工具。
+**功能**：管理后台相关的工具函数和配置。
 
-**主要方法**：
-- `filterXss`：过滤XSS攻击代码
-- `sanitizeHtml`：清理HTML内容
-- `validateInput`：验证输入内容
+**配置对象**：
 
-**使用场景**：防止用户输入的内容包含恶意脚本。
-
-**使用示例**：
-
+**TABLE_CONFIGS**：表格配置对象
 ```javascript
-import { xss } from '@/utils'
-
-// 过滤用户输入
-const safeContent = xss.filterXss(userInput)
-
-// 清理HTML内容
-const sanitizedHtml = xss.sanitizeHtml(htmlContent)
-```
-
-## 工具函数使用指南
-
-### 导入方式
-
-```javascript
-// 方法1：导入整个工具模块
-import * as utils from '@/utils'
-
-// 方法2：导入指定工具
-import { request, cache } from '@/utils'
-
-// 方法3：导入单个工具
-import request from '@/utils/request'
-```
-
-### 错误处理
-
-```javascript
-import { request, logger } from '@/utils'
-
-try {
-  const response = await request.get('/api/data')
-  return response.data
-} catch (error) {
-  logger.error('API请求失败:', error)
-  throw error
+{
+  users: {
+    title: '用户',
+    showTitle: false,
+    columns: [
+      { prop: 'username', label: '用户名', minWidth: 120 },
+      { prop: 'role', label: '角色', type: 'tag' },
+      { prop: 'status', label: '状态', slotName: 'status', width: 80 },
+      { prop: 'createdAt', label: '创建时间', width: 160 }
+    ],
+    showAdd: false,
+    showEdit: false,
+    actionWidth: 250
+  },
+  // ... 其他表格配置
 }
 ```
 
-### 缓存使用
-
+**menuTitles**：菜单标题映射
 ```javascript
-import { cache } from '@/utils'
-
-// 设置缓存，1小时过期
-cache.setCache('userInfo', userData, 60 * 60 * 1000)
-
-// 获取缓存
-const userInfo = cache.getCache('userInfo')
-
-// 移除缓存
-cache.removeCache('userInfo')
-
-// 清除所有缓存
-cache.clearCache()
+{
+  dashboard: '仪表盘',
+  users: '用户管理',
+  knowledge: '知识管理',
+  inheritors: '传承人管理',
+  plants: '植物管理',
+  qa: '问答管理',
+  resources: '资源管理',
+  quiz: '答题管理',
+  comments: '评论管理',
+  feedback: '反馈管理',
+  logs: '日志管理'
+}
 ```
+
+**工具函数**：
+| 函数 | 参数 | 返回值 | 说明 |
+|------|------|-------|------|
+| `getLogModuleTagType(module)` | module: String | String | 获取日志模块标签类型 |
+| `getLogTypeTagType(type)` | type: String | String | 获取日志类型标签类型 |
+| `formatLogTime(time)` | time: String | String | 格式化日志时间 |
+| `formatFileSize(bytes)` | bytes: Number | String | 格式化文件大小 |
+| `getFileTypeTagType(type)` | type: String | String | 获取文件类型标签样式 |
+| `getFileTypeText(type)` | type: String | String | 获取文件类型显示文本 |
+| `getCorrectAnswerContent(quiz)` | quiz: Object | String | 获取正确答案内容 |
+
+### 3. media.js - 媒体处理工具
+
+**功能**：处理媒体文件相关的工具函数。
+
+**主要函数**：
+| 函数 | 参数 | 返回值 | 说明 |
+|------|------|-------|------|
+| `parseMediaList(mediaStr)` | mediaStr: String | Array | 解析媒体列表JSON字符串 |
+| `getMediaType(filename)` | filename: String | String | 根据文件名获取媒体类型 |
+| `formatFileSize(bytes)` | bytes: Number | String | 格式化文件大小 |
+| `getImageUrl(path)` | path: String | String | 获取图片完整URL |
+| `getVideoUrl(path)` | path: String | String | 获取视频完整URL |
+| `getDocumentUrl(path)` | path: String | String | 获取文档完整URL |
+
+**媒体类型判断**：
+```javascript
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
+const VIDEO_EXTENSIONS = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv']
+const DOCUMENT_EXTENSIONS = ['docx', 'doc', 'pdf', 'pptx', 'ppt', 'xlsx', 'xls', 'txt']
+```
+
+### 4. cache.js - 缓存工具
+
+**功能**：缓存管理工具，支持设置过期时间。
+
+**主要方法**：
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|-------|------|
+| `setCache(key, value, expire)` | key, value, expire(ms) | void | 设置缓存（支持过期时间） |
+| `getCache(key)` | key | any | 获取缓存 |
+| `removeCache(key)` | key | void | 移除缓存 |
+| `clearCache()` | - | void | 清除所有缓存 |
+| `setSessionCache(key, value)` | key, value | void | 设置会话缓存 |
+| `getSessionCache(key)` | key | any | 获取会话缓存 |
+
+### 5. logger.js - 日志工具
+
+**功能**：提供统一的日志记录功能。
+
+**主要方法**：
+| 方法 | 说明 |
+|------|------|
+| `log(...args)` | 普通日志 |
+| `logInfo(...args)` | 信息日志 |
+| `logWarn(...args)` | 警告日志 |
+| `logError(...args)` | 错误日志 |
+| `logDebug(...args)` | 调试日志 |
+| `logAuthWarn(...args)` | 认证警告日志 |
+| `logSecurityWarn(...args)` | 安全警告日志 |
+
+### 6. xss.js - XSS防护工具
+
+**功能**：防止XSS（跨站脚本）攻击和SQL注入。
+
+**主要方法**：
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|-------|------|
+| `sanitize(input)` | input: String | String | 对输入进行HTML转义 |
+| `containsXss(input)` | input: String | Boolean | 检测是否包含XSS攻击代码 |
+| `containsSqlInjection(input)` | input: String | Boolean | 检测是否包含SQL注入 |
+| `sanitizeForLog(input)` | input: String | String | 清理日志中的特殊字符 |
+
+**检测的危险模式**：
+- `<script>`标签
+- `javascript:`协议
+- 事件处理器（onclick, onerror等）
+- `eval()`函数
+- SQL注入关键字
+
+### 7. index.js - 工具函数导出
+
+**主要导出**：
+| 导出项 | 说明 |
+|-------|------|
+| `request` | axios请求实例 |
+| `extractPageData(res)` | 提取分页数据 |
+| `extractData(res)` | 提取普通数据 |
+| `logFetchError(context, error)` | 记录获取错误 |
+| `logOperationWarn(...args)` | 记录操作警告 |
+
+**使用方法**：
+```javascript
+import { request, extractPageData, logFetchError } from '@/utils'
+
+const response = await request.get('/api/plants')
+const { records, total } = extractPageData(response)
+```
+
+## 工具函数统计
+
+| 文件 | 导出数量 | 主要用途 |
+|------|---------|---------|
+| request.js | 2 | 网络请求 |
+| adminUtils.js | 12 | 管理后台配置和工具 |
+| media.js | 6 | 媒体处理 |
+| cache.js | 6 | 缓存管理 |
+| logger.js | 7 | 日志记录 |
+| xss.js | 4 | XSS防护 |
+| index.js | 4 | 数据提取和日志 |
+| **总计** | **41** | - |
 
 ## 开发规范
 
-1. **命名规范**：函数名使用camelCase，文件名使用小写字母，单词间用连字符分隔
+1. **命名规范**：函数名使用camelCase，文件名使用小写字母
 2. **功能单一**：每个工具函数应该只负责一个功能
 3. **参数验证**：对函数参数进行适当的验证
 4. **错误处理**：包含适当的错误处理逻辑
 5. **文档说明**：为每个函数添加详细的注释说明
-6. **性能优化**：考虑函数的性能，避免不必要的计算
-
-## 注意事项
-
-- 工具函数应该是纯函数，避免修改全局状态
-- 对于异步操作，应该返回Promise
-- 避免在工具函数中直接操作DOM
-- 合理使用缓存，避免内存泄漏
-- 定期检查和更新工具函数，保持代码的可维护性
 
 ---
 
-**最后更新时间**：2026年3月23日
+**最后更新时间**：2026年3月25日

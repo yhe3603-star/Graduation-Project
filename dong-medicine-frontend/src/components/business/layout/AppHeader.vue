@@ -75,6 +75,7 @@
           v-model="searchKeyword"
           placeholder="搜索知识、植物、传承人..."
           clearable
+          @focus="goToSearch"
           @keyup.enter="doSearch"
         >
           <template #prefix>
@@ -216,6 +217,7 @@ const allNavItems = [...navItems, ...moreItems];
 
 const doSearch = () => {
   if (searchKeyword.value.trim()) router.push({ path: "/search", query: { q: searchKeyword.value.trim() } });
+  else router.push("/search");
 };
 
 const goToSearch = () => {

@@ -13,9 +13,7 @@
         <div class="header-left">
           <h2>{{ menuTitles[activeMenu] }}</h2>
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/' }">
-首页
-</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item>管理后台</el-breadcrumb-item>
             <el-breadcrumb-item>{{ menuTitles[activeMenu] }}</el-breadcrumb-item>
           </el-breadcrumb>
@@ -44,13 +42,8 @@
 
         <AdminDataTable
           v-if="activeMenu === 'users'"
-          title="用户"
+          v-bind="getTableConfig('users')"
           :data="sortedUsers"
-          :columns="[{ prop: 'username', label: '用户名', minWidth: 120 }, { prop: 'role', label: '角色', type: 'tag' }, { prop: 'status', label: '状态', slotName: 'status', width: 80 }, { prop: 'createdAt', label: '创建时间', width: 160 }]"
-          :show-add="false"
-          :show-edit="false"
-          :show-title="false"
-          action-width="250"
           server-pagination
           :server-total="pagination.users.total"
           :page="pagination.users.page"
@@ -66,160 +59,43 @@
             </el-tag>
           </template>
           <template #actions="{ row }">
-            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewUser(row)">
-              查看
-            </el-button>
-            <el-button 
-              v-if="row.status !== 'banned' && row.role !== 'admin'" 
-              type="danger" 
-              size="small" 
-              @click="confirmBanUser(row)"
-            >
-              封禁
-            </el-button>
-            <el-button 
-              v-if="row.status === 'banned'" 
-              type="success" 
-              size="small" 
-              style="color: var(--text-inverse);" 
-              @click="confirmUnbanUser(row)"
-            >
-              解封
-            </el-button>
-            <el-button type="danger" size="small" @click="deleteUser(row.id)">
-              删除
-            </el-button>
+            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewUser(row)">查看</el-button>
+            <el-button v-if="row.status !== 'banned' && row.role !== 'admin'" type="danger" size="small" @click="confirmBanUser(row)">封禁</el-button>
+            <el-button v-if="row.status === 'banned'" type="success" size="small" style="color: var(--text-inverse);" @click="confirmUnbanUser(row)">解封</el-button>
+            <el-button type="danger" size="small" @click="deleteUser(row.id)">删除</el-button>
           </template>
         </AdminDataTable>
 
-        <AdminDataTable
-          v-if="activeMenu === 'knowledge'"
-          title="知识"
-          :data="knowledgeList"
-          :columns="[{ prop: 'type', label: '类型', width: 80 }, { prop: 'therapyCategory', label: '疗法分类', width: 100 }, { prop: 'diseaseCategory', label: '疾病分类', width: 100 }, { prop: 'popularity', label: '热度', width: 70 }]"
-          server-pagination
-          :server-total="pagination.knowledge.total"
-          :page="pagination.knowledge.page"
-          :page-size="pagination.knowledge.size"
-          @page-change="(p) => handleAdminPage('knowledge', p)"
-          @size-change="(s) => handleAdminSize('knowledge', s)"
-          @add="openDialog('knowledge')"
-          @edit="editKnowledge"
-          @view="viewKnowledge"
-          @delete="deleteKnowledge"
-        />
-        
-        <AdminDataTable
-          v-if="activeMenu === 'inheritors'"
-          title="传承人"
-          :data="inheritorsList"
-          :columns="[{ prop: 'level', label: '级别', type: 'tag', width: 80 }, { prop: 'specialties', label: '技艺特色', minWidth: 150 }, { prop: 'experienceYears', label: '经验年限', width: 90 }]"
-          server-pagination
-          :server-total="pagination.inheritors.total"
-          :page="pagination.inheritors.page"
-          :page-size="pagination.inheritors.size"
-          @page-change="(p) => handleAdminPage('inheritors', p)"
-          @size-change="(s) => handleAdminSize('inheritors', s)"
-          @add="openDialog('inheritor')"
-          @edit="editInheritor"
-          @view="viewInheritor"
-          @delete="deleteInheritor"
-        />
-        
-        <AdminDataTable
-          v-if="activeMenu === 'plants'"
-          title="植物"
-          :data="plantsList"
-          :columns="[{ prop: 'scientificName', label: '学名', minWidth: 120 }, { prop: 'category', label: '分类', width: 80 }, { prop: 'usageWay', label: '用法', width: 70 }, { prop: 'difficulty', label: '难度', type: 'tag', width: 70 }]"
-          server-pagination
-          :server-total="pagination.plants.total"
-          :page="pagination.plants.page"
-          :page-size="pagination.plants.size"
-          @page-change="(p) => handleAdminPage('plants', p)"
-          @size-change="(s) => handleAdminSize('plants', s)"
-          @add="openDialog('plant')"
-          @edit="editPlant"
-          @view="viewPlant"
-          @delete="deletePlant"
-        />
-        
-        <AdminDataTable
-          v-if="activeMenu === 'qa'"
-          title="问答"
-          title-name="问题"
-          :data="qaList"
-          :columns="[{ prop: 'category', label: '分类', width: 100 }, { prop: 'popularity', label: '热度', width: 70 }]"
-          server-pagination
-          :server-total="pagination.qa.total"
-          :page="pagination.qa.page"
-          :page-size="pagination.qa.size"
-          @page-change="(p) => handleAdminPage('qa', p)"
-          @size-change="(s) => handleAdminSize('qa', s)"
-          @add="openDialog('qa')"
-          @edit="editQa"
-          @view="viewQa"
-          @delete="deleteQa"
-        />
-        
-        <AdminDataTable
-          v-if="activeMenu === 'resources'"
-          title="资源"
-          :data="resourcesList"
-          :columns="[{ prop: 'category', label: '分类', width: 100 }, { slotName: 'fileType', label: '类型', width: 70 }, { slotName: 'fileSize', label: '文件大小', width: 90 }, { prop: 'downloadCount', label: '下载次数', width: 90 }, { prop: 'popularity', label: '热度', width: 70 }]"
-          server-pagination
-          :server-total="pagination.resources.total"
-          :page="pagination.resources.page"
-          :page-size="pagination.resources.size"
-          @page-change="(p) => handleAdminPage('resources', p)"
-          @size-change="(s) => handleAdminSize('resources', s)"
-          @add="openDialog('resource')"
-          @edit="editResource"
-          @view="viewResource"
-          @delete="deleteResource"
-        >
-          <template #fileType="{ row }">
-            <el-tag :type="getResourceFileType(row).tagType">
-{{ getResourceFileType(row).text }}
-</el-tag>
-          </template>
-          <template #fileSize="{ row }">
-{{ getResourceFileSize(row) }}
-</template>
-        </AdminDataTable>
-
-        <AdminDataTable
-          v-if="activeMenu === 'quiz'"
-          title="题目"
-          title-name="问题"
-          :data="quizList"
-          :columns="[{ prop: 'category', label: '分类', width: 100 }, { prop: 'difficulty', label: '难度', type: 'tag', width: 70 }, { slotName: 'correctAnswer', label: '正确答案', width: 150 }]"
-          server-pagination
-          :server-total="pagination.quiz.total"
-          :page="pagination.quiz.page"
-          :page-size="pagination.quiz.size"
-          @page-change="(p) => handleAdminPage('quiz', p)"
-          @size-change="(s) => handleAdminSize('quiz', s)"
-          @add="openDialog('quiz')"
-          @edit="editQuiz"
-          @view="viewQuiz"
-          @delete="deleteQuiz"
-        >
-          <template #correctAnswer="{ row }">
-            <el-tag type="success">
-{{ getCorrectAnswerContent(row) }}
-</el-tag>
-          </template>
-        </AdminDataTable>
+        <template v-for="item in standardTables" :key="item.key">
+          <AdminDataTable
+            v-if="activeMenu === item.key"
+            v-bind="getTableConfig(item.key)"
+            :data="dataMap[item.key]"
+            server-pagination
+            :server-total="pagination[item.key].total"
+            :page="pagination[item.key].page"
+            :page-size="pagination[item.key].size"
+            @page-change="(p) => handleAdminPage(item.key, p)"
+            @size-change="(s) => handleAdminSize(item.key, s)"
+            @add="openDialog(item.formType)"
+            @edit="(row) => editItem(item.formType, row, item.extraData?.(row))"
+            @view="(row) => viewDetail(item.formType, row)"
+            @delete="(id) => confirmDelete('确定删除？', () => request.delete(`${item.deletePath}/${id}`))"
+          >
+            <template v-if="item.key === 'resources'" #fileType="{ row }">
+              <el-tag :type="getResourceFileType(row).tagType">{{ getResourceFileType(row).text }}</el-tag>
+            </template>
+            <template v-if="item.key === 'resources'" #fileSize="{ row }">{{ getResourceFileSize(row) }}</template>
+            <template v-if="item.key === 'quiz'" #correctAnswer="{ row }">
+              <el-tag type="success">{{ getCorrectAnswerContent(row) }}</el-tag>
+            </template>
+          </AdminDataTable>
+        </template>
 
         <AdminDataTable
           v-if="activeMenu === 'comments'"
-          title="评论"
-          title-name="评论内容"
+          v-bind="getTableConfig('comments')"
           :data="sortedComments"
-          :columns="[{ prop: 'username', label: '用户', width: 100 }, { prop: 'targetType', label: '类型', width: 80 }, { prop: 'status', label: '状态', type: 'tag', width: 80 }]"
-          :show-add="false"
-          :show-edit="false"
-          action-width="250"
           server-pagination
           :server-total="pagination.comments.total"
           :page="pagination.comments.page"
@@ -230,30 +106,17 @@
           @delete="deleteComment"
         >
           <template #actions="{ row }">
-            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewComment(row)">
-查看
-</el-button>
-            <el-button v-if="row.status !== 'approved'" type="success" size="small" style="color: var(--text-inverse);" @click="approveComment(row)">
-通过
-</el-button>
-            <el-button v-if="row.status === 'pending'" type="warning" size="small" style="color: var(--text-inverse);" @click="rejectComment(row)">
-拒绝
-</el-button>
-            <el-button type="danger" size="small" @click="deleteComment(row.id)">
-删除
-</el-button>
+            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewComment(row)">查看</el-button>
+            <el-button v-if="row.status !== 'approved'" type="success" size="small" style="color: var(--text-inverse);" @click="approveComment(row)">通过</el-button>
+            <el-button v-if="row.status === 'pending'" type="warning" size="small" style="color: var(--text-inverse);" @click="rejectComment(row)">拒绝</el-button>
+            <el-button type="danger" size="small" @click="deleteComment(row.id)">删除</el-button>
           </template>
         </AdminDataTable>
 
         <AdminDataTable
           v-if="activeMenu === 'feedback'"
-          title="反馈"
-          title-name="标题"
+          v-bind="getTableConfig('feedback')"
           :data="sortedFeedback"
-          :columns="[{ prop: 'userName', label: '用户', width: 100 }, { prop: 'type', label: '类型', width: 80 }, { prop: 'contact', label: '联系方式', width: 120 }, { prop: 'status', label: '状态', type: 'tag', width: 80 }]"
-          :show-add="false"
-          :show-edit="false"
-          action-width="200"
           server-pagination
           :server-total="pagination.feedback.total"
           :page="pagination.feedback.page"
@@ -264,15 +127,9 @@
           @delete="deleteFeedback"
         >
           <template #actions="{ row }">
-            <el-button type="primary" size="small" style="color: var(--text-inverse);" @click="viewFeedback(row)">
-查看
-</el-button>
-            <el-button v-if="row.status !== 'resolved'" type="success" size="small" style="color: var(--text-inverse);" @click="resolveFeedback(row)">
-处理
-</el-button>
-            <el-button type="danger" size="small" @click="deleteFeedback(row.id)">
-删除
-</el-button>
+            <el-button type="primary" size="small" style="color: var(--text-inverse);" @click="viewFeedback(row)">查看</el-button>
+            <el-button v-if="row.status !== 'resolved'" type="success" size="small" style="color: var(--text-inverse);" @click="resolveFeedback(row)">处理</el-button>
+            <el-button type="danger" size="small" @click="deleteFeedback(row.id)">删除</el-button>
           </template>
         </AdminDataTable>
 
@@ -288,7 +145,7 @@
           <AdminDataTable
             title="操作日志"
             :data="logList"
-            :columns="[{ prop: 'username', label: '用户', width: 100 }, { prop: 'operation', label: '操作', minWidth: 150 }, { prop: 'ip', label: 'IP', width: 120 }]"
+            :columns="logColumns"
             :show-add="false"
             :show-edit="false"
             :show-title="false"
@@ -301,16 +158,12 @@
               <el-table-column type="selection" width="50" />
               <el-table-column prop="module" label="模块" width="90">
                 <template #default="{ row }">
-                  <el-tag :type="getLogModuleTagType(row.module)" size="small">
-{{ row.module }}
-</el-tag>
+                  <el-tag :type="getLogModuleTagType(row.module)" size="small">{{ row.module }}</el-tag>
                 </template>
               </el-table-column>
               <el-table-column prop="type" label="类型" width="80">
                 <template #default="{ row }">
-                  <el-tag :type="getLogTypeTagType(row.type)" size="small">
-{{ row.type }}
-</el-tag>
+                  <el-tag :type="getLogTypeTagType(row.type)" size="small">{{ row.type }}</el-tag>
                 </template>
               </el-table-column>
               <el-table-column prop="duration" label="耗时" width="80">
@@ -320,24 +173,16 @@
               </el-table-column>
               <el-table-column prop="success" label="状态" width="70">
                 <template #default="{ row }">
-                  <el-tag :type="row.success ? 'success' : 'danger'" size="small">
-{{ row.success ? '成功' : '失败' }}
-</el-tag>
+                  <el-tag :type="row.success ? 'success' : 'danger'" size="small">{{ row.success ? '成功' : '失败' }}</el-tag>
                 </template>
               </el-table-column>
               <el-table-column prop="createdAt" label="时间" width="160">
-                <template #default="{ row }">
-{{ formatLogTime(row.createdAt) }}
-</template>
+                <template #default="{ row }">{{ formatLogTime(row.createdAt) }}</template>
               </el-table-column>
             </template>
             <template #actions="{ row }">
-              <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewLog(row)">
-查看
-</el-button>
-              <el-button type="danger" size="small" @click="deleteLog(row.id)">
-删除
-</el-button>
+              <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewLog(row)">查看</el-button>
+              <el-button type="danger" size="small" @click="deleteLog(row.id)">删除</el-button>
             </template>
           </AdminDataTable>
         </div>
@@ -390,8 +235,12 @@ const PlantFormDialog = defineAsyncComponent(() => import('@/components/business
 const QaFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/QaFormDialog.vue'))
 const QuizFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/QuizFormDialog.vue'))
 const ResourceFormDialog = defineAsyncComponent(() => import('@/components/business/admin/forms/ResourceFormDialog.vue'))
+
 import { useAdminData, useAdminDialogs, useAdminActions } from '@/composables/useAdminData'
-import { getCorrectAnswerContent, menuTitles, formatFileSize, getFileTypeTagType, getFileTypeText } from '@/utils/adminUtils'
+import {
+  getCorrectAnswerContent, menuTitles, formatFileSize, getFileTypeTagType, getFileTypeText,
+  TABLE_CONFIGS, getLogModuleTagType, getLogTypeTagType, formatLogTime
+} from '@/utils/adminUtils'
 import { parseMediaList, getMediaType } from '@/utils/media'
 
 const router = useRouter()
@@ -420,37 +269,58 @@ const { selectedLogs, confirmDelete, approveComment: doApproveComment, rejectCom
   handleLogSelectionChange, batchDeleteLogs, clearAllLogs, replyFeedback
 } = useAdminActions(request, fetchData)
 
-const getLogModuleTagType = (module) => ({ USER: 'primary', PLANT: 'success', KNOWLEDGE: 'warning', INHERITOR: 'info', RESOURCE: 'danger', QA: '', FEEDBACK: 'warning', COMMENT: 'info', FAVORITE: 'success', SYSTEM: 'danger' }[module] || '')
-const getLogTypeTagType = (type) => ({ CREATE: 'success', UPDATE: 'warning', DELETE: 'danger', QUERY: '' }[type] || '')
-const formatLogTime = (time) => time ? new Date(time).toLocaleString('zh-CN') : '无'
+const dataMap = computed(() => ({
+  knowledge: knowledgeList.value,
+  inheritors: inheritorsList.value,
+  plants: plantsList.value,
+  qa: qaList.value,
+  resources: resourcesList.value,
+  quiz: quizList.value
+}))
+
+const standardTables = [
+  { key: 'knowledge', formType: 'knowledge', deletePath: '/admin/knowledge' },
+  { key: 'inheritors', formType: 'inheritor', deletePath: '/admin/inheritors', extraData: (row) => ({ experienceYears: row.experienceYears || 0 }) },
+  { key: 'plants', formType: 'plant', deletePath: '/admin/plants' },
+  { key: 'qa', formType: 'qa', deletePath: '/admin/qa' },
+  { key: 'resources', formType: 'resource', deletePath: '/admin/resources', extraData: (row) => ({ fileSize: row.fileSize || 0 }) },
+  { key: 'quiz', formType: 'quiz', deletePath: '/quiz' }
+]
+
+const logColumns = [
+  { prop: 'username', label: '用户', width: 100 },
+  { prop: 'operation', label: '操作', minWidth: 150 },
+  { prop: 'ip', label: 'IP', width: 120 }
+]
+
+const getTableConfig = (key) => {
+  const config = TABLE_CONFIGS[key]
+  return {
+    title: config.title,
+    titleName: config.titleName,
+    columns: config.columns,
+    showTitle: config.showTitle !== false,
+    showAdd: config.showAdd !== false,
+    showEdit: config.showEdit !== false,
+    actionWidth: config.actionWidth || 220
+  }
+}
 
 const viewUser = (row) => viewDetail('user', row)
 const deleteUser = (id) => confirmDelete('确定删除？', () => request.delete(`/admin/users/${id}`))
 
 const confirmBanUser = async (user) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要封禁用户 "${user.username}" 吗？封禁后该用户将无法登录系统。`,
-      '封禁确认',
-      { type: 'warning', confirmButtonText: '确定封禁', cancelButtonText: '取消' }
-    )
+    await ElMessageBox.confirm(`确定要封禁用户 "${user.username}" 吗？封禁后该用户将无法登录系统。`, '封禁确认', { type: 'warning', confirmButtonText: '确定封禁', cancelButtonText: '取消' })
     await handleBanUser(user)
-  } catch {
-    // 用户取消
-  }
+  } catch {}
 }
 
 const confirmUnbanUser = async (user) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要解除用户 "${user.username}" 的封禁吗？`,
-      '解封确认',
-      { type: 'info', confirmButtonText: '确定解封', cancelButtonText: '取消' }
-    )
+    await ElMessageBox.confirm(`确定要解除用户 "${user.username}" 的封禁吗？`, '解封确认', { type: 'info', confirmButtonText: '确定解封', cancelButtonText: '取消' })
     await handleUnbanUser(user)
-  } catch {
-    // 用户取消
-  }
+  } catch {}
 }
 
 const handleBanUser = async (user) => {
@@ -459,9 +329,7 @@ const handleBanUser = async (user) => {
     ElMessage.success('用户已被封禁')
     detailVisible.value.user = false
     fetchData()
-  } catch (e) {
-    ElMessage.error('封禁失败')
-  }
+  } catch { ElMessage.error('封禁失败') }
 }
 
 const handleUnbanUser = async (user) => {
@@ -470,79 +338,43 @@ const handleUnbanUser = async (user) => {
     ElMessage.success('用户已解封')
     detailVisible.value.user = false
     fetchData()
-  } catch (e) {
-    ElMessage.error('解封失败')
-  }
+  } catch { ElMessage.error('解封失败') }
 }
 
-const viewKnowledge = (row) => viewDetail('knowledge', row)
-const editKnowledge = (row) => editItem('knowledge', row)
-const saveKnowledge = async (data) => {
-  const success = await (data.id ? request.put(`/admin/knowledge/${data.id}`, data) : request.post('/admin/knowledge', data)).then(() => true).catch(() => false)
-  if (success) { ElMessage.success('保存成功'); dialogVisible.value.knowledge = false; fetchData() }
-  else ElMessage.error('保存失败')
-}
-const deleteKnowledge = (id) => confirmDelete('确定删除？', () => request.delete(`/admin/knowledge/${id}`))
-
-const viewInheritor = (row) => viewDetail('inheritor', row)
-const editInheritor = (row) => editItem('inheritor', row, { experienceYears: row.experienceYears || 0 })
-const saveInheritor = async (data) => {
-  const success = await (data.id ? request.put(`/admin/inheritors/${data.id}`, data) : request.post('/admin/inheritors', data)).then(() => true).catch(() => false)
-  if (success) { ElMessage.success('保存成功'); dialogVisible.value.inheritor = false; fetchData() }
-  else ElMessage.error('保存失败')
-}
-const deleteInheritor = (id) => confirmDelete('确定删除？', () => request.delete(`/admin/inheritors/${id}`))
-
-const viewPlant = (row) => viewDetail('plant', row)
-const editPlant = (row) => editItem('plant', row)
-const savePlant = async (data) => {
-  const success = await (data.id ? request.put(`/admin/plants/${data.id}`, data) : request.post('/admin/plants', data)).then(() => true).catch(() => false)
-  if (success) { ElMessage.success('保存成功'); dialogVisible.value.plant = false; fetchData() }
-  else ElMessage.error('保存失败')
-}
-const deletePlant = (id) => confirmDelete('确定删除？', () => request.delete(`/admin/plants/${id}`))
-
-const viewQa = (row) => viewDetail('qa', row)
-const editQa = (row) => editItem('qa', row)
-const saveQa = async (data) => {
-  const success = await (data.id ? request.put(`/admin/qa/${data.id}`, data) : request.post('/admin/qa', data)).then(() => true).catch(() => false)
-  if (success) { ElMessage.success('保存成功'); dialogVisible.value.qa = false; fetchData() }
-  else ElMessage.error('保存失败')
-}
-const deleteQa = (id) => confirmDelete('确定删除？', () => request.delete(`/admin/qa/${id}`))
-
-const viewResource = (row) => viewDetail('resource', row)
 const getResourceFileData = (row) => {
   if (!row?.files) return null
   try { const files = parseMediaList(row.files); return files.length > 0 ? files[0] : null }
-  catch (error) { console.warn('解析资源文件失败:', error); return null }
+  catch { return null }
 }
+
 const getResourceFileType = (row) => {
   const fileData = getResourceFileData(row)
   if (!fileData) return { tagType: 'info', text: '未知' }
   const type = fileData.type || getMediaType(fileData.path || fileData.url || '')
   return { tagType: getFileTypeTagType(type), text: getFileTypeText(type) }
 }
+
 const getResourceFileSize = (row) => {
   const fileData = getResourceFileData(row)
   return fileData?.size ? formatFileSize(fileData.size) : '-'
 }
-const editResource = (row) => editItem('resource', row, { fileSize: row.fileSize || 0 })
-const saveResource = async (data) => {
-  const success = await (data.id ? request.put(`/admin/resources/${data.id}`, data) : request.post('/admin/resources', data)).then(() => true).catch(() => false)
-  if (success) { ElMessage.success('保存成功'); dialogVisible.value.resource = false; fetchData() }
+
+const createSaveHandler = (endpoint) => async (data) => {
+  const success = await (data.id ? request.put(`${endpoint}/${data.id}`, data) : request.post(endpoint, data)).then(() => true).catch(() => false)
+  if (success) { ElMessage.success('保存成功'); fetchData() }
   else ElMessage.error('保存失败')
 }
-const deleteResource = (id) => confirmDelete('确定删除？', () => request.delete(`/admin/resources/${id}`))
 
-const viewQuiz = (row) => viewDetail('quiz', row)
-const editQuiz = (row) => { formData.value.quiz = row; dialogVisible.value.quiz = true }
+const saveKnowledge = createSaveHandler('/admin/knowledge')
+const saveInheritor = createSaveHandler('/admin/inheritors')
+const savePlant = createSaveHandler('/admin/plants')
+const saveQa = createSaveHandler('/admin/qa')
+const saveResource = createSaveHandler('/admin/resources')
 const saveQuiz = async (data) => {
   const success = await (data.id ? request.put('/quiz/update', data) : request.post('/quiz/add', data)).then(() => true).catch(() => false)
   if (success) { ElMessage.success('保存成功'); dialogVisible.value.quiz = false; fetchData() }
   else ElMessage.error('保存失败')
 }
-const deleteQuiz = (id) => confirmDelete('确定删除？', () => request.delete(`/quiz/${id}`))
 
 const viewComment = (row) => { currentComment.value = row; commentDetailVisible.value = true }
 const deleteComment = (id) => confirmDelete('确定删除该评论？', () => request.delete(`/admin/comments/${id}`))
@@ -565,10 +397,7 @@ const logout = async () => {
   catch { return }
   logoutLoading.value = true
   try { await request.post('/user/logout').catch(() => {}) }
-  finally {
-    userStore.clearAuth()
-    updateUserState(); ElMessage.success('已退出登录'); router.push('/')
-  }
+  finally { userStore.clearAuth(); updateUserState(); ElMessage.success('已退出登录'); router.push('/') }
 }
 
 onMounted(() => {

@@ -1,311 +1,347 @@
-# 配置目录说明
+# 配置模块目录说明
 
 ## 文件夹结构
 
-本目录包含项目的各种配置类，包括应用配置、安全配置、缓存配置等。
+本目录包含项目的所有配置类，包括安全配置、缓存配置、切面配置等。
 
 ```
 config/
-├── health/         # 健康检查配置
-├── logging/        # 日志配置
-├── AdminDataInitializer.java    # 管理员数据初始化
-├── AppProperties.java           # 应用属性配置
-├── AsyncConfig.java             # 异步配置
-├── CacheConfig.java             # 缓存配置
-├── CustomUserDetails.java       # 自定义用户详情
-├── DeepSeekConfig.java          # DeepSeek AI配置
-├── FileUploadProperties.java    # 文件上传配置
-├── JwtAuthenticationFilter.java # JWT认证过滤器
-├── JwtSecretValidator.java      # JWT密钥验证器
-├── JwtUtil.java                 # JWT工具类
-├── LoggingAspect.java           # 日志切面
-├── MybatisPlusConfig.java       # MyBatis Plus配置
-├── OpenApiConfig.java           # OpenAPI配置
-├── OperationLogAspect.java      # 操作日志切面
-├── RateLimit.java               # 速率限制注解
-├── RateLimitAspect.java         # 速率限制切面
-├── RequestIdFilter.java         # 请求ID过滤器
-├── RequestSizeFilter.java       # 请求大小过滤器
-├── SecurityConfig.java          # 安全配置
-├── SecurityConfigValidator.java # 安全配置验证器
-├── StartupInfoPrinter.java      # 启动信息打印
-├── WebMvcConfig.java            # Web MVC配置
-└── XssFilter.java               # XSS过滤器
+├── health/                     # 健康检查
+│   ├── CacheHealthIndicator.java
+│   ├── DatabaseHealthIndicator.java
+│   └── RedisHealthIndicator.java
+├── logging/                    # 日志配置
+│   └── SensitiveDataConverter.java
+├── AdminDataInitializer.java   # 管理员数据初始化
+├── AppProperties.java          # 应用配置属性
+├── AsyncConfig.java            # 异步配置
+├── CacheConfig.java            # 缓存配置
+├── CustomUserDetails.java      # 自定义用户详情
+├── DeepSeekConfig.java         # DeepSeek AI配置
+├── FileUploadProperties.java   # 文件上传配置
+├── JwtAuthenticationFilter.java# JWT认证过滤器
+├── JwtSecretValidator.java     # JWT密钥验证器
+├── JwtUtil.java                # JWT工具类
+├── LoggingAspect.java          # 日志切面
+├── MybatisPlusConfig.java      # MyBatis-Plus配置
+├── OpenApiConfig.java          # OpenAPI配置
+├── OperationLogAspect.java     # 操作日志切面
+├── RateLimit.java              # 限流注解
+├── RateLimitAspect.java        # 限流切面
+├── RequestIdFilter.java        # 请求ID过滤器
+├── RequestSizeFilter.java      # 请求大小过滤器
+├── SecurityConfig.java         # 安全配置
+├── SecurityConfigValidator.java# 安全配置验证器
+├── StartupInfoPrinter.java     # 启动信息打印
+├── WebMvcConfig.java           # Web MVC配置
+├── XssFilter.java              # XSS过滤器
+└── README.md                   # 说明文档
 ```
 
 ## 详细说明
 
-### 1. health/ 目录
+### 1. SecurityConfig.java - 安全配置
 
-**用途**：健康检查配置。
-
-**文件列表**：
-
-- **CacheHealthIndicator.java**
-  - 功能：缓存健康检查指示器
-  - 检查内容：缓存连接状态
-
-- **DatabaseHealthIndicator.java**
-  - 功能：数据库健康检查指示器
-  - 检查内容：数据库连接状态
-
-### 2. logging/ 目录
-
-**用途**：日志配置。
-
-**文件列表**：
-
-- **SensitiveDataConverter.java**
-  - 功能：敏感数据转换器
-  - 作用：在日志中脱敏敏感数据
-
-### 3. AdminDataInitializer.java
-
-**功能**：管理员数据初始化。
-
-**主要功能**：
-- 在应用启动时初始化管理员账号
-- 检查管理员账号是否存在，不存在则创建
-- 设置默认管理员密码
-
-### 4. AppProperties.java
-
-**功能**：应用属性配置。
-
-**主要属性**：
-- 应用基本信息
-- 服务配置
-- 第三方服务配置
-
-### 5. AsyncConfig.java
-
-**功能**：异步配置。
+**功能**：配置Spring Security安全框架。
 
 **主要配置**：
-- 线程池配置
-- 异步任务执行器
+- 禁用CSRF（使用JWT认证）
+- 配置CORS跨域
+- 无状态Session管理
+- JWT过滤器配置
+- 请求授权规则
 
-### 6. CacheConfig.java
+**权限配置**：
+| 路径 | 权限 |
+|------|------|
+| `/api/user/login`, `/api/user/register` | 公开 |
+| `/api/plants/**`, `/api/knowledge/**` 等 | GET公开 |
+| `/api/admin/**` | 需要ADMIN角色 |
+| `/api/upload/**` | 需要ADMIN角色 |
+| `/api/favorites/**` | 需要认证 |
+| `/actuator/health` | 公开 |
+| `/actuator/**` | 需要ADMIN角色 |
 
-**功能**：缓存配置。
+### 2. JwtUtil.java - JWT工具类
 
-**主要配置**：
-- Redis缓存配置
-- 缓存管理器
-- 缓存键生成策略
-
-### 7. CustomUserDetails.java
-
-**功能**：自定义用户详情。
-
-**主要功能**：
-- 实现UserDetails接口
-- 提供用户权限信息
-- 支持JWT认证
-
-### 8. DeepSeekConfig.java
-
-**功能**：DeepSeek AI配置。
-
-**主要配置**：
-- API密钥配置
-- 请求超时设置
-- 模型参数配置
-
-### 9. FileUploadProperties.java
-
-**功能**：文件上传配置。
-
-**主要配置**：
-- 上传路径
-- 文件大小限制
-- 允许的文件类型
-- 临时文件清理
-
-### 10. JwtAuthenticationFilter.java
-
-**功能**：JWT认证过滤器。
-
-**主要功能**：
-- 从请求头获取JWT令牌
-- 验证JWT令牌
-- 设置认证信息到安全上下文
-
-### 11. JwtSecretValidator.java
-
-**功能**：JWT密钥验证器。
-
-**主要功能**：
-- 验证JWT密钥的安全性
-- 检查密钥长度和复杂度
-
-### 12. JwtUtil.java
-
-**功能**：JWT工具类。
+**功能**：处理JWT令牌的生成、解析和验证。
 
 **主要方法**：
-- `generateToken`：生成JWT令牌
-- `parseToken`：解析JWT令牌
-- `validateToken`：验证JWT令牌
-- `getUserIdFromToken`：从令牌中获取用户ID
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `generateToken(username, userId, role)` | String | 生成JWT令牌 |
+| `refreshToken(oldToken)` | String | 刷新令牌 |
+| `parseToken(token)` | TokenInfo | 解析令牌 |
+| `validateToken(token)` | boolean | 验证令牌有效性 |
+| `shouldRefresh(token)` | boolean | 判断是否需要刷新 |
+| `canRefresh(token)` | boolean | 判断是否可以刷新 |
+| `isTokenExpired(token)` | boolean | 判断令牌是否过期 |
 
-### 13. LoggingAspect.java
+**TokenInfo 内部类属性**：
+- `username`：用户名
+- `userId`：用户ID
+- `role`：角色
+- `expiration`：过期时间
+- `claims`：JWT Claims
 
-**功能**：日志切面。
+**配置项**：
+- `app.security.jwt-refresh-threshold-minutes`：刷新阈值（默认30分钟）
+- `app.security.jwt-refresh-grace-days`：刷新宽限期（默认7天）
 
-**主要功能**：
-- 记录方法执行时间
-- 记录方法参数和返回值
-- 异常日志记录
+### 3. JwtAuthenticationFilter.java - JWT认证过滤器
 
-### 14. MybatisPlusConfig.java
+**功能**：拦截请求，验证JWT令牌并设置认证信息。
 
-**功能**：MyBatis Plus配置。
+**处理流程**：
+1. 从请求头获取Authorization
+2. 解析JWT令牌
+3. 验证令牌有效性
+4. 设置Spring Security上下文
+5. 判断是否需要刷新令牌
 
-**主要配置**：
-- 分页插件
-- 性能分析插件
-- 乐观锁插件
-- SQL注入器
+### 4. RateLimit.java - 限流注解
 
-### 15. OpenApiConfig.java
+**功能**：定义接口限流注解。
 
-**功能**：OpenAPI配置。
+**注解属性**：
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|-------|------|
+| `value` | int | 10 | 每秒允许的请求数 |
+| `key` | String | "" | 自定义限流key |
 
-**主要配置**：
-- API文档标题和描述
-- 版本信息
-- 安全配置
-- 路径分组
+**使用示例**：
+```java
+@RateLimit(value = 5, key = "login")
+@PostMapping("/login")
+public R<UserVO> login(@RequestBody LoginDTO dto) {
+    // ...
+}
+```
 
-### 16. OperationLogAspect.java
+### 5. RateLimitAspect.java - 限流切面
 
-**功能**：操作日志切面。
+**功能**：实现接口限流功能。
 
-**主要功能**：
-- 记录用户操作
-- 记录操作类型、模块、IP地址等信息
-- 持久化操作日志
+**实现方式**：
+- 使用Redis的increment操作实现计数器
+- 基于滑动窗口算法
+- 支持用户级别和IP级别限流
+- Redis不可用时自动降级（不限流）
 
-### 17. RateLimit.java
+**限流Key生成规则**：
+- 已登录用户：`方法名:用户名`
+- 未登录用户：`方法名:IP地址`
 
-**功能**：速率限制注解。
+### 6. OperationLogAspect.java - 操作日志切面
 
-**主要属性**：
-- `value`：限制次数
-- `timeUnit`：时间单位
-- `key`：限制键
+**功能**：自动记录控制器操作日志。
 
-### 18. RateLimitAspect.java
+**记录内容**：
+- 操作用户
+- 操作模块
+- 操作类型（CREATE/UPDATE/DELETE/QUERY）
+- 操作方法
+- 请求参数
+- 执行时长
+- 操作结果（成功/失败）
+- 错误信息
+- 客户端IP
+- 操作时间
 
-**功能**：速率限制切面。
+**模块映射**：
+| 控制器名 | 模块 |
+|---------|------|
+| UserController | USER |
+| PlantController | PLANT |
+| KnowledgeController | KNOWLEDGE |
+| InheritorController | INHERITOR |
+| ResourceController | RESOURCE |
+| QaController/QuizController | QA |
+| FeedbackController | FEEDBACK |
+| CommentController | COMMENT |
+| FavoriteController | FAVORITE |
+| 其他 | SYSTEM |
 
-**主要功能**：
-- 实现接口速率限制
-- 防止API滥用
-- 返回429状态码（Too Many Requests）
+### 7. LoggingAspect.java - 日志切面
 
-### 19. RequestIdFilter.java
+**功能**：记录请求日志，便于调试和问题追踪。
 
-**功能**：请求ID过滤器。
+**记录内容**：
+- 追踪ID（traceId）
+- 请求方法和路径
+- 客户端IP
+- 用户ID
+- 方法名
+- 请求参数（敏感参数脱敏）
+- 响应结果
+- 执行时长
+- 错误信息
 
-**主要功能**：
-- 为每个请求生成唯一ID
-- 将请求ID添加到响应头
-- 便于请求跟踪和日志关联
+**敏感参数列表**：
+- password, passwordHash, currentPassword, newPassword
+- token, authorization, secret
 
-### 20. RequestSizeFilter.java
+**慢请求警告**：执行时间超过1000ms的请求会记录WARN级别日志
 
-**功能**：请求大小过滤器。
+### 8. XssFilter.java - XSS过滤器
 
-**主要功能**：
-- 限制请求体大小
-- 防止大请求攻击
-- 返回413状态码（Payload Too Large）
+**功能**：防止XSS（跨站脚本）攻击。
 
-### 21. SecurityConfig.java
+**处理方式**：
+- 对表单参数进行XSS过滤
+- 对JSON请求体进行XSS过滤
+- 对请求头进行XSS过滤
+- 检测到XSS攻击时记录警告日志
 
-**功能**：安全配置。
+**过滤规则**：
+- 检测危险模式（script标签、javascript协议、事件处理器等）
+- 对危险内容进行HTML转义
+- 递归处理JSON对象和数组
 
-**主要配置**：
-- 认证管理器
-- 授权规则
-- 安全过滤器链
-- 密码编码器
+### 9. CacheConfig.java - 缓存配置
 
-### 22. SecurityConfigValidator.java
+**功能**：配置Redis缓存管理器。
 
-**功能**：安全配置验证器。
+**缓存区域及TTL**：
+| 缓存区域 | TTL | 说明 |
+|---------|-----|------|
+| plants | 6小时 | 药材数据 |
+| knowledges | 6小时 | 知识数据 |
+| inheritors | 6小时 | 传承人数据 |
+| resources | 4小时 | 资源数据 |
+| users | 30分钟 | 用户数据 |
+| quizQuestions | 12小时 | 答题题目 |
+| searchResults | 5分钟 | 搜索结果 |
+| hotData | 1小时 | 热门数据 |
 
-**主要功能**：
-- 验证安全配置的有效性
-- 检查密钥配置
-- 检查权限规则
+**降级策略**：Redis不可用时自动切换到内存缓存
 
-### 23. StartupInfoPrinter.java
+### 10. MybatisPlusConfig.java - MyBatis-Plus配置
 
-**功能**：启动信息打印。
+**功能**：配置MyBatis-Plus插件。
 
-**主要功能**：
-- 在应用启动时打印服务信息
-- 打印配置信息
-- 打印健康状态
+**配置内容**：
+- 分页插件（PaginationInnerInterceptor）
+- 数据库类型：MySQL
 
-### 24. WebMvcConfig.java
+### 11. WebMvcConfig.java - Web MVC配置
 
-**功能**：Web MVC配置。
+**功能**：配置Spring MVC。
 
-**主要配置**：
-- 拦截器配置
-- 资源处理器
-- 消息转换器
-- 跨域配置
+**配置内容**：
+- URL路径解码配置
+- 静态资源映射（/images/**, /videos/**, /documents/**, /public/**）
 
-### 25. XssFilter.java
+**配置项**：
+- `file.upload.base-path`：文件上传基础路径（默认：public）
 
-**功能**：XSS过滤器。
+### 12. OpenApiConfig.java - OpenAPI配置
 
-**主要功能**：
-- 过滤请求参数中的XSS攻击代码
-- 保护应用免受XSS攻击
+**功能**：配置Swagger/OpenAPI文档。
 
-## 配置文件
+**配置内容**：
+- API标题：侗乡医药数字展示平台 API
+- API版本：1.0.0
+- JWT认证配置
+- 服务器列表（开发服务器、生产服务器）
 
-应用的配置文件位于 `src/main/resources` 目录下：
+**访问地址**：
+- Swagger UI：`http://localhost:8080/swagger-ui.html`
+- API Docs：`http://localhost:8080/v3/api-docs`
 
-- **application.yml**：主配置文件
-- **application-dev.yml**：开发环境配置
-- **application-prod.yml**：生产环境配置
-- **application.properties**：属性配置
+### 13. AppProperties.java - 应用配置属性
 
-## 环境变量
+**功能**：定义应用配置属性类。
 
-应用支持以下环境变量：
+**配置项**：
+- `app.security.jwt-secret`：JWT密钥
+- `app.security.jwt-expiration`：JWT过期时间
+- `app.security.cors-allowed-origins`：CORS允许的源
+- `app.cache.enabled`：是否启用缓存
 
-- `SPRING_PROFILES_ACTIVE`：激活的环境配置
-- `JWT_SECRET`：JWT密钥
-- `DATABASE_URL`：数据库URL
-- `DATABASE_USERNAME`：数据库用户名
-- `DATABASE_PASSWORD`：数据库密码
-- `REDIS_URL`：Redis URL
-- `DEEPSEEK_API_KEY`：DeepSeek API密钥
+### 14. AsyncConfig.java - 异步配置
+
+**功能**：配置异步任务执行器。
+
+**配置内容**：
+- 核心线程数
+- 最大线程数
+- 队列容量
+- 线程名称前缀
+
+### 15. DeepSeekConfig.java - DeepSeek AI配置
+
+**功能**：配置DeepSeek AI服务。
+
+**配置项**：
+- API密钥
+- API地址
+- 模型名称
+
+### 16. FileUploadProperties.java - 文件上传配置
+
+**功能**：配置文件上传相关属性。
+
+**配置项**：
+- 上传路径
+- 最大文件大小
+- 允许的文件类型
+
+### 17. RequestIdFilter.java - 请求ID过滤器
+
+**功能**：为每个请求生成唯一ID，便于日志追踪。
+
+### 18. RequestSizeFilter.java - 请求大小过滤器
+
+**功能**：限制请求体大小，防止大文件攻击。
+
+### 19. AdminDataInitializer.java - 管理员数据初始化
+
+**功能**：应用启动时初始化管理员账号。
+
+### 20. StartupInfoPrinter.java - 启动信息打印
+
+**功能**：应用启动时打印启动信息。
+
+### 21. CustomUserDetails.java - 自定义用户详情
+
+**功能**：实现Spring Security的UserDetails接口。
+
+### 22. JwtSecretValidator.java - JWT密钥验证器
+
+**功能**：验证JWT密钥的安全性和有效性。
+
+### 23. SecurityConfigValidator.java - 安全配置验证器
+
+**功能**：验证安全配置的正确性。
+
+### 24-26. health/ 目录 - 健康检查
+
+**CacheHealthIndicator.java**：缓存健康检查
+**DatabaseHealthIndicator.java**：数据库健康检查
+**RedisHealthIndicator.java**：Redis健康检查
+
+### 27. logging/SensitiveDataConverter.java - 敏感数据转换器
+
+**功能**：在日志输出时对敏感数据进行脱敏处理。
+
+## 文件统计
+
+| 目录/文件 | 文件数 | 主要用途 |
+|----------|-------|---------|
+| health/ | 3 | 健康检查 |
+| logging/ | 1 | 日志配置 |
+| 核心配置 | 23 | 框架配置 |
+| **总计** | **27** | - |
 
 ## 开发规范
 
-1. **命名规范**：配置类名使用大驼峰命名法，以`Config`结尾
-2. **配置管理**：配置项应该在配置类中集中管理
-3. **环境分离**：不同环境的配置应该分离到不同的配置文件
-4. **安全配置**：敏感配置应该使用环境变量或加密存储
-5. **配置验证**：配置项应该有适当的验证
-
-## 注意事项
-
-- 配置类应该使用`@Configuration`注解
-- 环境特定的配置应该放在对应的环境配置文件中
-- 敏感配置不应该硬编码在代码中
-- 配置变更应该考虑向后兼容性
-- 定期检查配置的安全性和有效性
+1. **配置类规范**：使用`@Configuration`注解，方法使用`@Bean`注解
+2. **属性配置**：使用`@Value`或`@ConfigurationProperties`注入配置
+3. **安全配置**：敏感配置应使用环境变量或配置中心
+4. **切面规范**：使用`@Aspect`注解，定义清晰的切点
+5. **过滤器规范**：实现`Filter`接口，使用`@Component`注解
 
 ---
 
-**最后更新时间**：2026年3月23日
+**最后更新时间**：2026年3月25日

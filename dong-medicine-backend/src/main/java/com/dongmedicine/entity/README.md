@@ -2,310 +2,315 @@
 
 ## 文件夹结构
 
-本目录包含项目中使用的实体类，对应数据库中的表结构。
+本目录包含项目的所有实体类，与数据库表一一对应。
 
 ```
 entity/
-├── Comment.java           # 评论实体
-├── Favorite.java          # 收藏实体
-├── Feedback.java          # 意见反馈实体
-├── Inheritor.java         # 传承人实体
-├── Knowledge.java         # 知识实体
-├── OperationLog.java      # 操作日志实体
+├── User.java              # 用户实体
 ├── Plant.java             # 药材实体
-├── PlantGameRecord.java   # 植物游戏记录实体
+├── Knowledge.java         # 知识实体
+├── Inheritor.java         # 传承人实体
+├── Resource.java          # 资源实体
 ├── Qa.java                # 问答实体
 ├── QuizQuestion.java      # 答题题目实体
 ├── QuizRecord.java        # 答题记录实体
-├── Resource.java          # 资源实体
-└── User.java              # 用户实体
+├── PlantGameRecord.java   # 植物游戏记录实体
+├── Comment.java           # 评论实体
+├── Favorite.java          # 收藏实体
+├── Feedback.java          # 反馈实体
+├── OperationLog.java      # 操作日志实体
+└── README.md              # 说明文档
 ```
 
 ## 详细说明
 
-### 1. Comment.java
+### 1. User.java - 用户实体
 
-**功能**：评论实体，对应数据库中的`comments`表。
+**对应表**：`users`
 
-**主要字段**：
-- `id`：评论ID
-- `targetType`：目标类型（药材、传承人、知识等）
-- `targetId`：目标ID
-- `content`：评论内容
-- `userId`：用户ID
-- `replyToId`：回复ID
-- `status`：状态（正常、审核中、已删除）
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| username | String | 用户名 |
+| passwordHash | String | 密码哈希 |
+| role | String | 角色（admin/user） |
+| status | String | 状态（active/banned） |
+| createdAt | LocalDateTime | 创建时间 |
 
-**关联关系**：
-- 与`User`实体：多对一
+**常量定义**：
+- `STATUS_ACTIVE`：激活状态
+- `STATUS_BANNED`：封禁状态
 
-### 2. Favorite.java
+**方法**：
+- `isBanned()`：判断用户是否被封禁
 
-**功能**：收藏实体，对应数据库中的`favorites`表。
+### 2. Plant.java - 药材实体
 
-**主要字段**：
-- `id`：收藏ID
-- `userId`：用户ID
-- `targetType`：目标类型
-- `targetId`：目标ID
-- `createdAt`：创建时间
+**对应表**：`plants`
 
-**关联关系**：
-- 与`User`实体：多对一
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| nameCn | String | 中文名称（必填） |
+| nameDong | String | 侗语名称 |
+| scientificName | String | 学名 |
+| category | String | 分类 |
+| usageWay | String | 用法 |
+| habitat | String | 生长环境 |
+| efficacy | String | 功效 |
+| story | String | 相关故事 |
+| images | String | 图片（JSON数组） |
+| videos | String | 视频（JSON数组） |
+| documents | String | 文档（JSON数组） |
+| distribution | String | 分布地区 |
+| difficulty | String | 难度等级 |
+| updateLog | String | 更新日志 |
+| viewCount | Integer | 浏览次数 |
+| favoriteCount | Integer | 收藏次数 |
+| popularity | Integer | 热度 |
+| createdAt | LocalDateTime | 创建时间 |
 
-### 3. Feedback.java
+### 3. Knowledge.java - 知识实体
 
-**功能**：意见反馈实体，对应数据库中的`feedback`表。
+**对应表**：`knowledge`
 
-**主要字段**：
-- `id`：反馈ID
-- `userId`：用户ID
-- `type`：反馈类型（建议、bug、其他）
-- `content`：反馈内容
-- `contact`：联系方式
-- `status`：状态（待处理、处理中、已处理）
-- `processedBy`：处理人
-- `processedAt`：处理时间
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| title | String | 标题（必填） |
+| type | String | 类型 |
+| therapyCategory | String | 疗法分类 |
+| diseaseCategory | String | 疾病分类 |
+| herbCategory | String | 药材分类 |
+| content | String | 内容（必填） |
+| formula | String | 配方 |
+| usageMethod | String | 使用方法 |
+| steps | String | 步骤 |
+| images | String | 图片（JSON数组） |
+| videos | String | 视频（JSON数组） |
+| documents | String | 文档（JSON数组） |
+| relatedPlants | String | 相关药材 |
+| updateLog | String | 更新日志 |
+| viewCount | Integer | 浏览次数 |
+| favoriteCount | Integer | 收藏次数 |
+| popularity | Integer | 热度 |
+| createdAt | LocalDateTime | 创建时间 |
 
-**关联关系**：
-- 与`User`实体：多对一
+### 4. Inheritor.java - 传承人实体
 
-### 4. Inheritor.java
+**对应表**：`inheritors`
 
-**功能**：传承人实体，对应数据库中的`inheritors`表。
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| name | String | 姓名（必填） |
+| level | String | 级别（国家级/省级/市级等） |
+| bio | String | 个人简介 |
+| specialties | String | 技艺特色 |
+| experienceYears | Integer | 从业年限 |
+| videos | String | 视频（JSON数组） |
+| images | String | 图片（JSON数组） |
+| documents | String | 文档（JSON数组） |
+| representativeCases | String | 代表案例 |
+| honors | String | 荣誉 |
+| updateLog | String | 更新日志 |
+| viewCount | Integer | 浏览次数 |
+| favoriteCount | Integer | 收藏次数 |
+| popularity | Integer | 热度 |
+| createdAt | LocalDateTime | 创建时间 |
 
-**主要字段**：
-- `id`：传承人ID
-- `name`：姓名
-- `level`：级别（国家级、自治区级、市级）
-- `specialties`：技艺特色
-- `experienceYears`：从业年限
-- `bio`：个人简介
-- `representativeCases`：代表案例
-- `honors`：荣誉资质
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
+### 5. Resource.java - 资源实体
 
-### 5. Knowledge.java
+**对应表**：`resources`
 
-**功能**：知识实体，对应数据库中的`knowledge`表。
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| title | String | 标题（必填） |
+| category | String | 分类 |
+| files | String | 文件列表（JSON数组） |
+| description | String | 描述 |
+| updateLog | String | 更新日志 |
+| viewCount | Integer | 浏览次数 |
+| downloadCount | Integer | 下载次数 |
+| favoriteCount | Integer | 收藏次数 |
+| popularity | Integer | 热度 |
+| createdAt | LocalDateTime | 创建时间 |
 
-**主要字段**：
-- `id`：知识ID
-- `title`：标题
-- `content`：内容
-- `type`：类型（理论知识、实践经验、历史文化）
-- `therapyCategory`：疗法分类
-- `diseaseCategory`：疾病分类
-- `viewCount`：浏览量
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
+### 6. Qa.java - 问答实体
 
-### 6. OperationLog.java
+**对应表**：`qa`
 
-**功能**：操作日志实体，对应数据库中的`operation_log`表。
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| category | String | 分类 |
+| question | String | 问题（必填） |
+| answer | String | 答案 |
+| viewCount | Integer | 浏览次数 |
+| favoriteCount | Integer | 收藏次数 |
+| popularity | Integer | 热度 |
+| createdAt | LocalDateTime | 创建时间 |
 
-**主要字段**：
-- `id`：日志ID
-- `userId`：用户ID
-- `userName`：用户名
-- `module`：操作模块
-- `type`：操作类型（添加、修改、删除、查询）
-- `content`：操作内容
-- `ipAddress`：IP地址
-- `userAgent`：用户代理
-- `createdAt`：创建时间
+### 7. QuizQuestion.java - 答题题目实体
 
-**关联关系**：
-- 与`User`实体：多对一
+**对应表**：`quiz_questions`
 
-### 7. Plant.java
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键 |
+| question | String | 题目 |
+| options | String | 选项（JSON数组，不序列化） |
+| answer | String | 答案 |
+| category | String | 分类 |
+| difficulty | String | 难度 |
+| correctAnswer | String | 正确答案 |
+| explanation | String | 解析 |
 
-**功能**：药材实体，对应数据库中的`plants`表。
+**方法**：
+- `getOptionList()`：获取选项列表（从JSON解析）
+- `setOptionList(List<String>)`：设置选项列表（转换为JSON）
 
-**主要字段**：
-- `id`：药材ID
-- `name`：名称
-- `latinName`：拉丁名
-- `category`：分类
-- `usageWay`：用法
-- `effect`：功效
-- `distribution`：分布
-- `description`：描述
-- `imageUrl`：图片URL
-- `viewCount`：浏览量
-- `favoriteCount`：收藏量
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
+### 8. QuizRecord.java - 答题记录实体
 
-### 8. PlantGameRecord.java
+**对应表**：`quiz_record`
 
-**功能**：植物游戏记录实体，对应数据库中的`plant_game_record`表。
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| userId | Integer | 用户ID |
+| score | Integer | 得分 |
+| totalQuestions | Integer | 总题数 |
+| correctAnswers | Integer | 正确数 |
+| createTime | LocalDateTime | 创建时间 |
 
-**主要字段**：
-- `id`：记录ID
-- `userId`：用户ID
-- `score`：得分
-- `difficulty`：难度
-- `correctCount`：正确数量
-- `totalCount`：总数量
-- `createdAt`：创建时间
+### 9. PlantGameRecord.java - 植物游戏记录实体
 
-**关联关系**：
-- 与`User`实体：多对一
+**对应表**：`plant_game_record`
 
-### 9. Qa.java
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| userId | Integer | 用户ID |
+| difficulty | String | 难度 |
+| score | Integer | 得分 |
+| correctCount | Integer | 正确数 |
+| totalCount | Integer | 总题数 |
+| createTime | LocalDateTime | 创建时间 |
 
-**功能**：问答实体，对应数据库中的`qa`表。
+### 10. Comment.java - 评论实体
 
-**主要字段**：
-- `id`：问答ID
-- `title`：标题
-- `content`：内容
-- `category`：分类
-- `userId`：用户ID
-- `userName`：用户名
-- `answerCount`：回答数量
-- `viewCount`：浏览量
-- `popularity`：热度
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
+**对应表**：`comments`
 
-**关联关系**：
-- 与`User`实体：多对一
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| userId | Integer | 用户ID |
+| username | String | 用户名 |
+| targetType | String | 目标类型 |
+| targetId | Integer | 目标ID |
+| content | String | 评论内容 |
+| replyToId | Integer | 回复的评论ID |
+| replyToUserId | Integer | 回复的用户ID |
+| replyToUsername | String | 回复的用户名 |
+| likes | Integer | 点赞数 |
+| replyCount | Integer | 回复数 |
+| status | String | 状态（pending/approved/rejected） |
+| createdAt | LocalDateTime | 创建时间 |
+| updatedAt | LocalDateTime | 更新时间 |
 
-### 10. QuizQuestion.java
+### 11. Favorite.java - 收藏实体
 
-**功能**：答题题目实体，对应数据库中的`quiz_questions`表。
+**对应表**：`favorites`
 
-**主要字段**：
-- `id`：题目ID
-- `content`：题目内容
-- `options`：选项（JSON格式）
-- `correctAnswer`：正确答案
-- `category`：分类
-- `difficulty`：难度
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| userId | Integer | 用户ID |
+| targetType | String | 目标类型 |
+| targetId | Integer | 目标ID |
+| createdAt | LocalDateTime | 创建时间 |
 
-### 11. QuizRecord.java
+### 12. Feedback.java - 反馈实体
 
-**功能**：答题记录实体，对应数据库中的`quiz_record`表。
+**对应表**：`feedback`
 
-**主要字段**：
-- `id`：记录ID
-- `userId`：用户ID
-- `score`：得分
-- `correctCount`：正确数量
-- `totalCount`：总数量
-- `createdAt`：创建时间
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| userId | Integer | 用户ID |
+| userName | String | 用户名 |
+| type | String | 反馈类型 |
+| title | String | 标题 |
+| content | String | 内容 |
+| contact | String | 联系方式 |
+| status | String | 状态（pending/resolved） |
+| reply | String | 回复 |
+| createTime | LocalDateTime | 创建时间 |
 
-**关联关系**：
-- 与`User`实体：多对一
+### 13. OperationLog.java - 操作日志实体
 
-### 12. Resource.java
+**对应表**：`operation_log`
 
-**功能**：资源实体，对应数据库中的`resources`表。
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | 主键，自增 |
+| userId | Integer | 用户ID |
+| username | String | 用户名 |
+| module | String | 模块 |
+| operation | String | 操作 |
+| type | String | 类型（CREATE/UPDATE/DELETE/QUERY） |
+| method | String | 请求方法 |
+| params | String | 请求参数 |
+| ip | String | 客户端IP |
+| duration | Integer | 执行时长（毫秒） |
+| success | Boolean | 是否成功 |
+| errorMsg | String | 错误信息 |
+| createdAt | LocalDateTime | 创建时间 |
 
-**主要字段**：
-- `id`：资源ID
-- `name`：名称
-- `description`：描述
-- `category`：分类
-- `fileUrl`：文件URL
-- `fileSize`：文件大小
-- `fileType`：文件类型
-- `downloadCount`：下载量
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
+## 实体统计
 
-### 13. User.java
-
-**功能**：用户实体，对应数据库中的`users`表。
-
-**主要字段**：
-- `id`：用户ID
-- `username`：用户名
-- `password`：密码（加密存储）
-- `email`：邮箱
-- `phone`：手机号
-- `nickname`：昵称
-- `avatar`：头像
-- `role`：角色（admin、user、guest）
-- `status`：状态（正常、禁用）
-- `lastLoginAt`：最后登录时间
-- `createdAt`：创建时间
-- `updatedAt`：更新时间
-
-**关联关系**：
-- 与`Comment`实体：一对多
-- 与`Favorite`实体：一对多
-- 与`Feedback`实体：一对多
-- 与`OperationLog`实体：一对多
-- 与`PlantGameRecord`实体：一对多
-- 与`Qa`实体：一对多
-- 与`QuizRecord`实体：一对多
-
-## 实体类使用指南
-
-### 1. 创建实体对象
-
-```java
-Plant plant = new Plant();
-plant.setName("人参");
-plant.setLatinName("Panax ginseng");
-plant.setCategory("根茎类");
-plant.setEffect("大补元气，复脉固脱，益精填髓");
-plantService.save(plant);
-```
-
-### 2. 查询实体对象
-
-```java
-// 根据ID查询
-Plant plant = plantService.getById(1L);
-
-// 根据条件查询
-QueryWrapper<Plant> wrapper = new QueryWrapper<>();
-wrapper.eq("category", "根茎类");
-List<Plant> plants = plantService.list(wrapper);
-```
-
-### 3. 更新实体对象
-
-```java
-Plant plant = plantService.getById(1L);
-plant.setName("西洋参");
-plantService.updateById(plant);
-```
-
-### 4. 删除实体对象
-
-```java
-plantService.removeById(1L);
-```
+| 实体类 | 对应表 | 主要用途 |
+|-------|-------|---------|
+| User | users | 用户管理 |
+| Plant | plants | 药材信息 |
+| Knowledge | knowledge | 知识库 |
+| Inheritor | inheritors | 传承人信息 |
+| Resource | resources | 学习资源 |
+| Qa | qa | 问答管理 |
+| QuizQuestion | quiz_questions | 答题题目 |
+| QuizRecord | quiz_record | 答题记录 |
+| PlantGameRecord | plant_game_record | 游戏记录 |
+| Comment | comments | 评论管理 |
+| Favorite | favorites | 收藏管理 |
+| Feedback | feedback | 意见反馈 |
+| OperationLog | operation_log | 操作日志 |
+| **总计** | **13个表** | - |
 
 ## 开发规范
 
-1. **命名规范**：实体类名使用大驼峰命名法，与表名对应
-2. **字段命名**：字段名使用小驼峰命名法，与数据库字段对应
-3. **注解使用**：使用MyBatis Plus的注解，如`@TableName`、`@TableId`、`@TableField`
-4. **关联关系**：使用`@OneToMany`、`@ManyToOne`等注解定义关联关系
-5. **数据验证**：使用`@NotNull`、`@Size`等注解进行数据验证
-6. **序列化**：实现`Serializable`接口
+1. **注解使用**：
+   - `@Data`：Lombok注解，自动生成getter/setter/toString等方法
+   - `@TableName`：MyBatis-Plus注解，指定表名
+   - `@TableId`：指定主键，支持自增
+   - `@TableField`：指定字段映射
+   - `@NotBlank`：参数验证注解
 
-## 注意事项
+2. **命名规范**：
+   - 类名使用大驼峰命名法
+   - 字段名使用小驼峰命名法
+   - 表名使用下划线命名法
 
-- 实体类应该与数据库表结构保持一致
-- 避免在实体类中包含业务逻辑
-- 合理使用索引，提高查询性能
-- 注意字段类型和长度，避免数据溢出
-- 敏感字段（如密码）应该加密存储
+3. **字段类型**：
+   - 主键使用`Integer`类型
+   - 时间使用`LocalDateTime`类型
+   - 布尔值使用`Boolean`类型
+   - JSON数据使用`String`类型存储
+
+4. **JSON字段处理**：
+   - 使用`@JsonIgnore`注解隐藏不需要序列化的字段
+   - 提供getXxxList/setXxxList方法进行JSON转换
 
 ---
 
-**最后更新时间**：2026年3月23日
+**最后更新时间**：2026年3月25日

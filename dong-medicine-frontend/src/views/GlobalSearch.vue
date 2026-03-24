@@ -15,6 +15,7 @@
           size="large"
           clearable
           @keyup.enter="doSearch"
+          @clear="onClear"
         >
           <template #prefix>
             <el-icon><Search /></el-icon>
@@ -31,7 +32,7 @@
       </div>
 
       <div
-        v-if="!keyword"
+        v-if="!searched"
         class="hot-keywords"
       >
         <span class="hot-label">热门搜索：</span>
@@ -47,16 +48,21 @@
       </div>
 
       <div
-        v-if="searchResults.length"
+        v-if="total > 0"
         class="search-stats"
       >
-        <span>找到 <strong>{{ searchResults.length }}</strong> 条结果</span>
+        <span>找到 <strong>{{ total }}</strong> 条结果</span>
+        <span
+          v-if="searched"
+          class="search-keyword"
+        >关键词：{{ lastKeyword }}</span>
       </div>
 
       <el-tabs
-        v-if="searchResults.length"
+        v-if="total > 0"
         v-model="activeTab"
         class="result-tabs"
+        @tab-change="onTabChange"
       >
         <el-tab-pane
           label="全部"
@@ -64,7 +70,7 @@
         >
           <div class="result-grid">
             <div
-              v-for="item in searchResults"
+              v-for="item in paginatedResults"
               :key="item.id + item.type"
               class="result-card"
               @click="goToDetail(item)"
@@ -88,12 +94,12 @@
         <el-tab-pane
           v-for="type in typeList"
           :key="type"
-          :label="getTypeName(type)"
+          :label="getTypeName(type) + ' (' + typeCounts[type] + ')'"
           :name="type"
         >
           <div class="result-list">
             <div
-              v-for="item in getResultsByType(type)"
+              v-for="item in searchResults"
               :key="item.id"
               class="result-item"
               @click="goToDetail(item)"
@@ -105,8 +111,23 @@
         </el-tab-pane>
       </el-tabs>
 
+      <div
+        v-if="total > pageSize"
+        class="pagination-wrap"
+      >
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[12, 24, 48]"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="onPageSizeChange"
+          @current-change="onPageChange"
+        />
+      </div>
+
       <el-empty
-        v-if="searched && !searchResults.length"
+        v-if="searched && total === 0"
         description="未找到相关结果"
       />
     </div>
@@ -114,7 +135,7 @@
 </template>
 
 <script setup>
-import { inject, onMounted, ref } from "vue";
+import { inject, onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ChatDotRound, Document, Picture, Search, User } from "@element-plus/icons-vue";
 
@@ -123,10 +144,17 @@ const route = useRoute();
 const request = inject("request");
 
 const keyword = ref("");
+const lastKeyword = ref("");
 const loading = ref(false);
 const searched = ref(false);
 const activeTab = ref("all");
+const allResults = ref([]);
 const searchResults = ref([]);
+const total = ref(0);
+const typeCounts = ref({ knowledge: 0, plant: 0, inheritor: 0, qa: 0 });
+
+const currentPage = ref(1);
+const pageSize = ref(12);
 
 const hotKeywords = ["侗医药", "药浴", "传承人", "艾灸", "鼻炎", "风湿"];
 const typeList = ["knowledge", "plant", "inheritor", "qa"];
@@ -135,28 +163,177 @@ const getTypeIcon = (type) => ({ knowledge: Document, plant: Picture, inheritor:
 const getTypeTag = (type) => ({ knowledge: "primary", plant: "success", inheritor: "warning", qa: "info" }[type] || "info");
 const getTypeName = (type) => ({ knowledge: "知识", plant: "植物", inheritor: "传承人", qa: "问答" }[type] || "其他");
 
-const getResultsByType = (type) => searchResults.value.filter(r => r.type === type);
+const paginatedResults = computed(() => {
+  if (activeTab.value !== "all") return searchResults.value;
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return allResults.value.slice(start, end);
+});
 
-const doSearch = async () => {
-  if (!keyword.value.trim()) return;
+const onTabChange = () => {
+  currentPage.value = 1;
+  if (activeTab.value === "all") {
+    searchResults.value = [];
+    total.value = allResults.value.length;
+  } else {
+    loadSingleType();
+  }
+};
+
+const onPageChange = () => {
+  window.scrollTo({ top: 300, behavior: 'smooth' });
+  if (activeTab.value !== "all") {
+    loadSingleType();
+  }
+};
+
+const onPageSizeChange = () => {
+  currentPage.value = 1;
+  if (activeTab.value !== "all") {
+    loadSingleType();
+  }
+};
+
+const onClear = () => {
+  keyword.value = "";
+  lastKeyword.value = "";
+  searched.value = false;
+  activeTab.value = "all";
+  currentPage.value = 1;
+  loadAllData();
+};
+
+const getData = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return { records: d, total: d.length };
+  if (d?.records && Array.isArray(d.records)) return { records: d.records, total: d.total || d.records.length };
+  return { records: [], total: 0 };
+};
+
+const loadAllData = async () => {
   loading.value = true;
-  searched.value = true;
   try {
     const [kRes, pRes, iRes, qRes] = await Promise.all([
-      request.get(`/knowledge/search?keyword=${keyword.value}`).catch(() => ({ data: [] })),
-      request.get(`/plants/search?keyword=${keyword.value}`).catch(() => ({ data: [] })),
-      request.get(`/inheritors/search?keyword=${keyword.value}`).catch(() => ({ data: [] })),
-      request.get(`/qa/search?keyword=${keyword.value}`).catch(() => ({ data: [] }))
+      request.get(`/knowledge/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/plants/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/inheritors/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/qa/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } }))
     ]);
-    searchResults.value = [
-      ...((kRes?.data ?? []).map(r => ({ ...r, type: "knowledge" }))),
-      ...((pRes?.data ?? []).map(r => ({ ...r, type: "plant" }))),
-      ...((iRes?.data ?? []).map(r => ({ ...r, type: "inheritor" }))),
-      ...((qRes?.data ?? []).map(r => ({ ...r, type: "qa" })))
+
+    const kData = getData(kRes);
+    const pData = getData(pRes);
+    const iData = getData(iRes);
+    const qData = getData(qRes);
+
+    allResults.value = [
+      ...(kData.records.map(r => ({ ...r, type: "knowledge" }))),
+      ...(pData.records.map(r => ({ ...r, type: "plant" }))),
+      ...(iData.records.map(r => ({ ...r, type: "inheritor" }))),
+      ...(qData.records.map(r => ({ ...r, type: "qa" })))
     ];
+
+    total.value = kData.total + pData.total + iData.total + qData.total;
+    typeCounts.value = {
+      knowledge: kData.total,
+      plant: pData.total,
+      inheritor: iData.total,
+      qa: qData.total
+    };
+
+    searchResults.value = [];
   } finally {
     loading.value = false;
   }
+};
+
+const loadSingleType = async () => {
+  loading.value = true;
+  try {
+    const tab = activeTab.value;
+    const page = currentPage.value;
+    const size = pageSize.value;
+
+    const typeUrls = {
+      knowledge: `/knowledge/list?page=${page}&size=${size}`,
+      plant: `/plants/list?page=${page}&size=${size}`,
+      inheritor: `/inheritors/list?page=${page}&size=${size}`,
+      qa: `/qa/list?page=${page}&size=${size}`
+    };
+
+    const res = await request.get(typeUrls[tab]).catch(() => ({ data: { records: [], total: 0 } }));
+    const data = getData(res);
+    searchResults.value = data.records.map(r => ({ ...r, type: tab }));
+    total.value = data.total;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const doSearch = async () => {
+  if (!keyword.value.trim()) {
+    onClear();
+    return;
+  }
+  loading.value = true;
+  searched.value = true;
+  lastKeyword.value = keyword.value.trim();
+  try {
+    const kw = keyword.value.trim();
+
+    const [kRes, pRes, iRes, qRes] = await Promise.all([
+      request.get(`/knowledge/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/plants/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/inheritors/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/qa/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } }))
+    ]);
+
+    const kData = getData(kRes);
+    const pData = getData(pRes);
+    const iData = getData(iRes);
+    const qData = getData(qRes);
+
+    allResults.value = [
+      ...(kData.records.map(r => ({ ...r, type: "knowledge" }))),
+      ...(pData.records.map(r => ({ ...r, type: "plant" }))),
+      ...(iData.records.map(r => ({ ...r, type: "inheritor" }))),
+      ...(qData.records.map(r => ({ ...r, type: "qa" })))
+    ];
+
+    typeCounts.value = {
+      knowledge: kData.total,
+      plant: pData.total,
+      inheritor: iData.total,
+      qa: qData.total
+    };
+
+    if (activeTab.value === "all") {
+      total.value = allResults.value.length;
+      searchResults.value = [];
+    } else {
+      await loadSingleTypeSearch();
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadSingleTypeSearch = async () => {
+  const tab = activeTab.value;
+  const page = currentPage.value;
+  const size = pageSize.value;
+  const kw = keyword.value.trim();
+
+  const typeUrls = {
+    knowledge: `/knowledge/search?keyword=${kw}&page=${page}&size=${size}`,
+    plant: `/plants/search?keyword=${kw}&page=${page}&size=${size}`,
+    inheritor: `/inheritors/search?keyword=${kw}&page=${page}&size=${size}`,
+    qa: `/qa/search?keyword=${kw}&page=${page}&size=${size}`
+  };
+
+  const res = await request.get(typeUrls[tab]).catch(() => ({ data: { records: [], total: 0 } }));
+  const data = getData(res);
+  searchResults.value = data.records.map(r => ({ ...r, type: tab }));
+  total.value = data.total;
 };
 
 const goToDetail = (item) => {
@@ -165,7 +342,12 @@ const goToDetail = (item) => {
 };
 
 onMounted(() => {
-  if (route.query.q) { keyword.value = route.query.q; doSearch(); }
+  if (route.query.q) {
+    keyword.value = route.query.q;
+    doSearch();
+  } else {
+    loadAllData();
+  }
 });
 </script>
 
@@ -206,6 +388,14 @@ onMounted(() => {
   margin-bottom: var(--space-lg);
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-keyword {
+  color: var(--dong-indigo);
+  font-weight: 500;
 }
 
 .result-tabs {
@@ -288,5 +478,15 @@ onMounted(() => {
 .result-desc {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
+}
+
+.pagination-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--text-inverse);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 </style>

@@ -2,320 +2,308 @@
 
 ## 文件夹结构
 
-本目录包含项目中使用的数据传输对象（DTO），用于在不同层之间传递数据。
+本目录包含项目的所有数据传输对象（DTO），用于前后端数据交互。
 
 ```
 dto/
-├── AnswerDTO.java           # 回答DTO
-├── ChangePasswordDTO.java   # 修改密码DTO
-├── ChatRequest.java         # 聊天请求DTO
-├── ChatResponse.java        # 聊天响应DTO
-├── CommentAddDTO.java       # 添加评论DTO
-├── CommentDTO.java          # 评论DTO
-├── FeedbackDTO.java         # 意见反馈DTO
-├── FeedbackReplyDTO.java    # 意见反馈回复DTO
-├── FileUploadResult.java    # 文件上传结果DTO
-├── InheritorDTO.java        # 传承人DTO
-├── KnowledgeDTO.java        # 知识DTO
-├── LoginDTO.java            # 登录DTO
-├── PlantDTO.java            # 药材DTO
-├── PlantGameSubmitDTO.java  # 植物游戏提交DTO
-├── QuizQuestionDTO.java     # 答题题目DTO
-├── QuizSubmitDTO.java       # 答题提交DTO
-├── RegisterDTO.java         # 注册DTO
-└── UserUpdateDTO.java       # 用户更新DTO
+├── LoginDTO.java             # 登录请求DTO
+├── RegisterDTO.java          # 注册请求DTO
+├── UserUpdateDTO.java        # 用户更新DTO
+├── PlantDTO.java             # 药材DTO
+├── KnowledgeDTO.java         # 知识DTO
+├── InheritorDTO.java         # 传承人DTO
+├── FeedbackDTO.java          # 反馈DTO
+├── FeedbackReplyDTO.java     # 反馈回复DTO
+├── CommentDTO.java           # 评论DTO
+├── CommentAddDTO.java        # 添加评论DTO
+├── QuizQuestionDTO.java      # 答题题目DTO
+├── QuizSubmitDTO.java        # 答题提交DTO
+├── PlantGameSubmitDTO.java   # 植物游戏提交DTO
+├── AnswerDTO.java            # 答案DTO
+├── ChatRequest.java          # AI对话请求DTO
+├── FileUploadResult.java     # 文件上传结果DTO
+└── README.md                 # 说明文档
 ```
 
 ## 详细说明
 
-### 1. AnswerDTO.java
+### 1. LoginDTO.java - 登录请求DTO
+
+**用途**：用户登录时的请求数据。
 
-**功能**：回答数据传输对象，用于传递回答相关的数据。
+**字段**：
+| 字段名 | 类型 | 验证规则 | 说明 |
+|-------|------|---------|------|
+| username | String | @NotBlank, @Size(3-20) | 用户名 |
+| password | String | @NotBlank, @Size(min=6) | 密码 |
+
+**使用场景**：`POST /api/user/login`
+
+### 2. RegisterDTO.java - 注册请求DTO
+
+**用途**：用户注册时的请求数据。
 
-**主要字段**：
-- `id`：回答ID
-- `questionId`：问题ID
-- `content`：回答内容
-- `userId`：用户ID
-- `userName`：用户名
-- `createdAt`：创建时间
-- `likes`：点赞数
+**字段**：
+| 字段名 | 类型 | 验证规则 | 说明 |
+|-------|------|---------|------|
+| username | String | @NotBlank, @Size(3-20), @Pattern | 用户名 |
+| password | String | @NotBlank, @Size(6-50) | 密码 |
+| confirmPassword | String | @NotBlank | 确认密码 |
 
-### 2. ChangePasswordDTO.java
+**用户名规则**：只能包含字母、数字和下划线
 
-**功能**：修改密码数据传输对象，用于传递修改密码相关的数据。
+**使用场景**：`POST /api/user/register`
 
-**主要字段**：
-- `oldPassword`：旧密码
-- `newPassword`：新密码
-- `confirmPassword`：确认新密码
+### 3. UserUpdateDTO.java - 用户更新DTO
 
-### 3. ChatRequest.java
+**用途**：用户更新个人信息时的请求数据。
 
-**功能**：聊天请求数据传输对象，用于传递聊天相关的数据。
+**使用场景**：`PUT /api/user/info`
 
-**主要字段**：
-- `message`：聊天消息
-- `history`：聊天历史
-- `userId`：用户ID
-
-### 4. ChatResponse.java
-
-**功能**：聊天响应数据传输对象，用于传递聊天响应相关的数据。
-
-**主要字段**：
-- `message`：聊天消息
-- `status`：状态
-- `responseTime`：响应时间
+### 4. PlantDTO.java - 药材DTO
 
-### 5. CommentAddDTO.java
-
-**功能**：添加评论数据传输对象，用于传递添加评论相关的数据。
+**用途**：药材数据的传输对象。
 
-**主要字段**：
-- `targetType`：目标类型
-- `targetId`：目标ID
-- `content`：评论内容
-- `replyToId`：回复ID
+**字段**：
+| 字段名 | 类型 | 验证规则 | 说明 |
+|-------|------|---------|------|
+| id | Integer | - | ID |
+| nameCn | String | @NotBlank, @Size(max=100) | 中文名 |
+| nameDong | String | @Size(max=100) | 侗语名 |
+| category | String | @Size(max=50) | 分类 |
+| usageWay | String | @Size(max=50) | 用法 |
+| efficacy | String | @Size(max=2000) | 功效 |
+| story | String | @Size(max=5000) | 故事 |
+| images | String | - | 图片 |
+| videos | String | - | 视频 |
+| documents | String | - | 文档 |
+| viewCount | Integer | - | 浏览次数 |
+| favoriteCount | Integer | - | 收藏次数 |
+| createdAt | LocalDateTime | - | 创建时间 |
 
-### 6. CommentDTO.java
+**静态方法**：
+- `fromEntity(Plant plant)`：从实体转换为DTO
 
-**功能**：评论数据传输对象，用于传递评论相关的数据。
-
-**主要字段**：
-- `id`：评论ID
-- `targetType`：目标类型
-- `targetId`：目标ID
-- `content`：评论内容
-- `userId`：用户ID
-- `userName`：用户名
-- `replyToId`：回复ID
-- `replyToName`：回复用户名
-- `status`：状态
-- `createdAt`：创建时间
-
-### 7. FeedbackDTO.java
-
-**功能**：意见反馈数据传输对象，用于传递意见反馈相关的数据。
-
-**主要字段**：
-- `id`：反馈ID
-- `userId`：用户ID
-- `userName`：用户名
-- `type`：反馈类型
-- `content`：反馈内容
-- `contact`：联系方式
-- `status`：状态
-- `createdAt`：创建时间
-- `processedBy`：处理人
-- `processedAt`：处理时间
-
-### 8. FeedbackReplyDTO.java
+### 5. KnowledgeDTO.java - 知识DTO
 
-**功能**：意见反馈回复数据传输对象，用于传递意见反馈回复相关的数据。
+**用途**：知识数据的传输对象。
 
-**主要字段**：
-- `feedbackId`：反馈ID
-- `replyContent`：回复内容
-- `status`：状态
+**字段**：
+| 字段名 | 类型 | 验证规则 | 说明 |
+|-------|------|---------|------|
+| id | Integer | - | ID |
+| title | String | @NotBlank, @Size(max=200) | 标题 |
+| type | String | @Size(max=50) | 类型 |
+| therapyCategory | String | @Size(max=50) | 疗法分类 |
+| diseaseCategory | String | @Size(max=50) | 疾病分类 |
+| content | String | @Size(max=10000) | 内容 |
+| images | String | - | 图片 |
+| videos | String | - | 视频 |
+| viewCount | Integer | - | 浏览次数 |
+| favoriteCount | Integer | - | 收藏次数 |
+| createdAt | LocalDateTime | - | 创建时间 |
 
-### 9. FileUploadResult.java
+**静态方法**：
+- `fromEntity(Knowledge knowledge)`：从实体转换为DTO
 
-**功能**：文件上传结果数据传输对象，用于传递文件上传结果相关的数据。
+### 6. InheritorDTO.java - 传承人DTO
 
-**主要字段**：
-- `fileId`：文件ID
-- `fileName`：文件名
-- `filePath`：文件路径
-- `fileUrl`：文件URL
-- `fileSize`：文件大小
-- `fileType`：文件类型
-- `uploadTime`：上传时间
+**用途**：传承人数据的传输对象。
 
-### 10. InheritorDTO.java
+**字段**：
+| 字段名 | 类型 | 验证规则 | 说明 |
+|-------|------|---------|------|
+| id | Integer | - | ID |
+| name | String | @NotBlank, @Size(max=50) | 姓名 |
+| level | String | @NotBlank, @Pattern | 级别 |
+| bio | String | @Size(max=5000) | 个人简介 |
+| images | String | - | 图片 |
+| videos | String | - | 视频 |
+| viewCount | Integer | - | 浏览次数 |
+| favoriteCount | Integer | - | 收藏次数 |
 
-**功能**：传承人数据传输对象，用于传递传承人相关的数据。
+**级别规则**：国家级/省级/市级/县级/自治区级
 
-**主要字段**：
-- `id`：传承人ID
-- `name`：姓名
-- `level`：级别
-- `specialties`：技艺特色
-- `experienceYears`：从业年限
-- `bio`：个人简介
-- `representativeCases`：代表案例
-- `honors`：荣誉资质
-- `createdAt`：创建时间
+**静态方法**：
+- `fromEntity(Inheritor inheritor)`：从实体转换为DTO
 
-### 11. KnowledgeDTO.java
+### 7. FeedbackDTO.java - 反馈DTO
 
-**功能**：知识数据传输对象，用于传递知识相关的数据。
+**用途**：用户提交反馈时的请求数据。
 
-**主要字段**：
-- `id`：知识ID
-- `title`：标题
-- `content`：内容
-- `type`：类型
-- `therapyCategory`：疗法分类
-- `diseaseCategory`：疾病分类
-- `viewCount`：浏览量
-- `createdAt`：创建时间
+**字段**：
+| 字段名 | 类型 | 验证规则 | 说明 |
+|-------|------|---------|------|
+| type | String | @NotBlank, @Size(max=20) | 反馈类型 |
+| title | String | @NotBlank, @Size(max=200) | 标题 |
+| content | String | @NotBlank, @Size(max=2000) | 内容 |
+| contact | String | @Size(max=100) | 联系方式 |
 
-### 12. LoginDTO.java
+**使用场景**：`POST /api/feedback`
 
-**功能**：登录数据传输对象，用于传递登录相关的数据。
+### 8. FeedbackReplyDTO.java - 反馈回复DTO
 
-**主要字段**：
-- `token`：认证令牌
-- `user`：用户信息
-- `expireTime`：过期时间
+**用途**：管理员回复反馈时的请求数据。
 
-### 13. PlantDTO.java
+**使用场景**：`PUT /api/admin/feedback/{id}/reply`
 
-**功能**：药材数据传输对象，用于传递药材相关的数据。
+### 9. CommentDTO.java - 评论DTO
 
-**主要字段**：
-- `id`：药材ID
-- `name`：名称
-- `latinName`：拉丁名
-- `category`：分类
-- `usageWay`：用法
-- `effect`：功效
-- `distribution`：分布
-- `description`：描述
-- `imageUrl`：图片URL
-- `viewCount`：浏览量
-- `favoriteCount`：收藏量
-- `createdAt`：创建时间
+**用途**：评论数据的传输对象。
 
-### 14. PlantGameSubmitDTO.java
-
-**功能**：植物游戏提交数据传输对象，用于传递植物游戏提交相关的数据。
-
-**主要字段**：
-- `questionId`：题目ID
-- `answer`：答案
-- `difficulty`：难度
-
-### 15. QuizQuestionDTO.java
-
-**功能**：答题题目数据传输对象，用于传递答题题目相关的数据。
-
-**主要字段**：
-- `id`：题目ID
-- `content`：题目内容
-- `options`：选项
-- `correctAnswer`：正确答案
-- `category`：分类
-- `difficulty`：难度
-
-### 16. QuizSubmitDTO.java
-
-**功能**：答题提交数据传输对象，用于传递答题提交相关的数据。
-
-**主要字段**：
-- `questionId`：题目ID
-- `answer`：答案
-
-### 17. RegisterDTO.java
-
-**功能**：注册数据传输对象，用于传递注册相关的数据。
-
-**主要字段**：
-- `username`：用户名
-- `password`：密码
-- `confirmPassword`：确认密码
-- `email`：邮箱
-- `phone`：手机号
-
-### 18. UserUpdateDTO.java
-
-**功能**：用户更新数据传输对象，用于传递用户更新相关的数据。
-
-**主要字段**：
-- `username`：用户名
-- `email`：邮箱
-- `phone`：手机号
-- `nickname`：昵称
-- `avatar`：头像
-
-## DTO使用指南
-
-### 1. 请求DTO
-
-**用于接收前端传递的数据**：
-
-```java
-@PostMapping("/login")
-public R<LoginDTO> login(@RequestBody @Valid LoginRequest request) {
-    // 处理登录逻辑
-}
-```
-
-### 2. 响应DTO
-
-**用于返回给前端的数据**：
-
-```java
-@GetMapping("/plants")
-public R<List<PlantDTO>> getPlants() {
-    List<Plant> plants = plantService.list();
-    List<PlantDTO> plantDTOs = plants.stream()
-        .map(plant -> new PlantDTO(plant))
-        .collect(Collectors.toList());
-    return R.ok(plantDTOs);
-}
-```
-
-### 3. 数据转换
-
-**实体类转DTO**：
-
-```java
-// 在DTO类中添加构造方法
-public PlantDTO(Plant plant) {
-    this.id = plant.getId();
-    this.name = plant.getName();
-    this.latinName = plant.getLatinName();
-    // 其他字段...
-}
-
-// 或者使用BeanUtils
-PlantDTO plantDTO = new PlantDTO();
-BeanUtils.copyProperties(plant, plantDTO);
-```
-
-**DTO转实体类**：
-
-```java
-// 在实体类中添加构造方法
-public Plant(PlantDTO plantDTO) {
-    this.id = plantDTO.getId();
-    this.name = plantDTO.getName();
-    this.latinName = plantDTO.getLatinName();
-    // 其他字段...
-}
-
-// 或者使用BeanUtils
-Plant plant = new Plant();
-BeanUtils.copyProperties(plantDTO, plant);
-```
+**字段**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | ID |
+| userId | Integer | 用户ID |
+| username | String | 用户名 |
+| targetType | String | 目标类型 |
+| targetId | Integer | 目标ID |
+| content | String | 评论内容 |
+| replyToId | Integer | 回复的评论ID |
+| replyToUserId | Integer | 回复的用户ID |
+| replyToUsername | String | 回复的用户名 |
+| likes | Integer | 点赞数 |
+| replyCount | Integer | 回复数 |
+| status | String | 状态 |
+| createTime | LocalDateTime | 创建时间 |
+| updateTime | LocalDateTime | 更新时间 |
+
+### 10. CommentAddDTO.java - 添加评论DTO
+
+**用途**：用户添加评论时的请求数据。
+
+**使用场景**：`POST /api/comments`
+
+### 11. QuizQuestionDTO.java - 答题题目DTO
+
+**用途**：答题题目数据的传输对象。
+
+**字段**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | Integer | ID |
+| q | String | 题目 |
+| options | List<String> | 选项列表 |
+
+**使用场景**：`GET /api/quiz/questions`
+
+### 12. QuizSubmitDTO.java - 答题提交DTO
+
+**用途**：用户提交答题答案时的请求数据。
+
+**使用场景**：`POST /api/quiz/submit`
+
+### 13. PlantGameSubmitDTO.java - 植物游戏提交DTO
+
+**用途**：用户提交植物游戏答案时的请求数据。
+
+**使用场景**：`POST /api/plant-game/submit`
+
+### 14. AnswerDTO.java - 答案DTO
+
+**用途**：答案数据的传输对象。
+
+### 15. ChatRequest.java - AI对话请求DTO
+
+**用途**：用户发送AI对话时的请求数据。
+
+**字段**：
+| 字段名 | 类型 | 验证规则 | 说明 |
+|-------|------|---------|------|
+| message | String | @NotBlank | 消息内容 |
+| history | List<Message> | - | 历史消息 |
+
+**内部类 Message**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| role | String | 角色 |
+| content | String | 内容 |
+
+**使用场景**：`POST /api/chat`
+
+### 16. FileUploadResult.java - 文件上传结果DTO
+
+**用途**：文件上传后的返回结果。
+
+**字段**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| success | boolean | 是否成功 |
+| fileName | String | 文件名 |
+| originalFileName | String | 原始文件名 |
+| filePath | String | 文件路径 |
+| fileUrl | String | 文件URL |
+| fileType | String | 文件类型 |
+| fileSize | Long | 文件大小 |
+| message | String | 提示信息 |
+
+**静态方法**：
+- `success(...)`：创建成功结果
+- `fail(String message)`：创建失败结果
+
+**使用场景**：`POST /api/upload/*`
+
+## DTO统计
+
+| DTO类 | 主要用途 | 验证注解 |
+|-------|---------|---------|
+| LoginDTO | 用户登录 | @NotBlank, @Size |
+| RegisterDTO | 用户注册 | @NotBlank, @Size, @Pattern |
+| UserUpdateDTO | 用户更新 | - |
+| PlantDTO | 药材数据 | @NotBlank, @Size |
+| KnowledgeDTO | 知识数据 | @NotBlank, @Size |
+| InheritorDTO | 传承人数据 | @NotBlank, @Size, @Pattern |
+| FeedbackDTO | 意见反馈 | @NotBlank, @Size |
+| FeedbackReplyDTO | 反馈回复 | - |
+| CommentDTO | 评论数据 | - |
+| CommentAddDTO | 添加评论 | - |
+| QuizQuestionDTO | 答题题目 | - |
+| QuizSubmitDTO | 答题提交 | - |
+| PlantGameSubmitDTO | 游戏提交 | - |
+| AnswerDTO | 答案数据 | - |
+| ChatRequest | AI对话 | @NotBlank |
+| FileUploadResult | 上传结果 | - |
+| **总计** | **16个** | - |
 
 ## 开发规范
 
-1. **命名规范**：DTO类名使用大驼峰命名法，以`DTO`结尾
-2. **字段命名**：字段名使用小驼峰命名法
-3. **数据验证**：使用`@NotNull`、`@Size`等注解进行数据验证
-4. **序列化**：使用`@JsonProperty`注解指定JSON字段名
-5. **文档说明**：为每个DTO类和字段添加注释说明
+1. **命名规范**：
+   - 类名使用大驼峰命名法，以DTO结尾
+   - 字段名使用小驼峰命名法
+
+2. **验证注解**：
+   - `@NotBlank`：字符串不能为空
+   - `@Size`：限制字符串长度
+   - `@Pattern`：正则表达式验证
+   - `@Min/@Max`：数值范围验证
+
+3. **转换方法**：
+   - 提供`fromEntity`静态方法用于实体转DTO
+   - DTO只包含需要传输的字段，不包含敏感信息
+
+4. **Lombok注解**：
+   - `@Data`：自动生成getter/setter/toString等方法
+   - `@Builder`：支持建造者模式
+   - `@NoArgsConstructor`：无参构造方法
+   - `@AllArgsConstructor`：全参构造方法
 
 ## 注意事项
 
-- DTO应该只包含需要在不同层之间传递的数据
-- 避免在DTO中包含业务逻辑
-- 合理使用DTO可以减少数据传输量，提高性能
-- 对于复杂的DTO，可以考虑使用MapStruct等工具进行数据转换
+- DTO与Entity的区别：
+  - Entity与数据库表对应，包含所有字段
+  - DTO用于数据传输，只包含必要字段
+  - DTO可以包含验证注解
+  - DTO可以隐藏敏感字段（如密码）
+
+- 前后端数据交互流程：
+  1. 前端发送DTO → Controller
+  2. Controller验证DTO
+  3. Service将DTO转换为Entity
+  4. Service处理业务逻辑
+  5. Service返回Entity或DTO
+  6. Controller返回DTO给前端
 
 ---
 
-**最后更新时间**：2026年3月23日
+**最后更新时间**：2026年3月25日

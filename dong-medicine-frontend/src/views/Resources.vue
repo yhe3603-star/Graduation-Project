@@ -1,13 +1,8 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="resources-page module-page"
-  >
+  <div v-loading="pageLoading" class="resources-page module-page">
     <div class="module-header">
       <h1>学习资源</h1>
-      <p class="subtitle">
-        侗医药学习资料库
-      </p>
+      <p class="subtitle">侗医药学习资料库</p>
     </div>
 
     <div class="resources-container">
@@ -21,41 +16,18 @@
         />
 
         <div class="resource-list">
-          <div
-            v-for="item in paginatedList"
-            :key="item.id"
-            class="resource-card"
-            @click="openResource(item)"
-          >
-            <div
-              class="resource-icon"
-              :class="getTypeClass(getFileInfo(item).type)"
-            >
-              <el-icon :size="28">
-                <component :is="getTypeIcon(getFileInfo(item).type)" />
-              </el-icon>
+          <div v-for="item in paginatedList" :key="item.id" class="resource-card" @click="openResource(item)">
+            <div class="resource-icon" :class="getTypeClass(getFileInfo(item).type)">
+              <el-icon :size="28"><component :is="getTypeIcon(getFileInfo(item).type)" /></el-icon>
             </div>
             <div class="resource-info">
               <h3>{{ item.title }}</h3>
-              <p class="resource-desc">
-                {{ (item.description || '').substring(0, 60) }}...
-              </p>
+              <p class="resource-desc">{{ (item.description || '').substring(0, 60) }}...</p>
               <div class="resource-meta">
-                <el-tag
-                  size="small"
-                  effect="light"
-                >
-                  {{ item.category }}
-                </el-tag>
+                <el-tag size="small" effect="light">{{ item.category }}</el-tag>
                 <span class="resource-type">{{ getTypeName(getFileInfo(item).type) }}</span>
-                <span
-                  v-if="getFileExt(getFileInfo(item).url)"
-                  class="resource-ext"
-                >{{ getFileExt(getFileInfo(item).url).toUpperCase() }}</span>
-                <span
-                  v-if="getFileInfo(item).size"
-                  class="resource-size"
-                >{{ formatSize(getFileInfo(item).size) }}</span>
+                <span v-if="getFileExt(getFileInfo(item).url)" class="resource-ext">{{ getFileExt(getFileInfo(item).url).toUpperCase() }}</span>
+                <span v-if="getFileInfo(item).size" class="resource-size">{{ formatSize(getFileInfo(item).size) }}</span>
                 <div class="card-stats">
                   <span class="stat-item"><el-icon><View /></el-icon>{{ item.viewCount || 0 }}</span>
                   <span class="stat-item"><el-icon><Star /></el-icon>{{ item.favoriteCount || 0 }}</span>
@@ -63,40 +35,20 @@
                 </div>
               </div>
             </div>
-            <div
-              class="resource-actions"
-              @click.stop
-            >
-              <el-button
-                :type="isFavorited(item.id) ? 'warning' : 'default'"
-                size="small"
-                @click="toggleFavorite(item)"
-              >
+            <div class="resource-actions" @click.stop>
+              <el-button :type="isFavorited(item.id) ? 'warning' : 'default'" size="small" @click="toggleFavorite(item)">
                 <el-icon><Star /></el-icon>{{ isFavorited(item.id) ? '已收藏' : '收藏' }}
               </el-button>
-              <el-button
-                type="primary"
-                size="small"
-                style="color: var(--text-inverse);"
-                @click="openResource(item)"
-              >
+              <el-button type="primary" size="small" style="color: var(--text-inverse);" @click="openResource(item)">
                 <el-icon><View /></el-icon>预览
               </el-button>
-              <el-button
-                type="success"
-                size="small"
-                style="color: var(--text-inverse);"
-                @click="downloadResource(item)"
-              >
+              <el-button type="success" size="small" style="color: var(--text-inverse);" @click="downloadResource(item)">
                 <el-icon><Download /></el-icon>下载
               </el-button>
             </div>
           </div>
         </div>
-        <el-empty
-          v-if="!filteredResources.length && !pageLoading"
-          description="暂无资源"
-        />
+        <el-empty v-if="!filteredResources.length && !pageLoading" description="暂无资源" />
         <Pagination
           v-if="totalItems > 0"
           :page="currentPage"
@@ -107,18 +59,8 @@
         />
       </div>
 
-      <PageSidebar
-        title="资源统计"
-        :stats="stats"
-        hot-title="热门资源"
-        :hot-items="hotResources"
-        @hot-click="openResource"
-      >
-        <UpdateLogCard 
-          :logs="allUpdateLogs" 
-          title="更新日志" 
-          :limit="5"
-        />
+      <PageSidebar title="资源统计" :stats="stats" hot-title="热门资源" :hot-items="hotResources" @hot-click="openResource">
+        <UpdateLogCard :logs="allUpdateLogs" title="更新日志" :limit="5" />
       </PageSidebar>
     </div>
 
@@ -148,34 +90,6 @@ import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
 import { useUserStore } from "@/stores/user";
 
-const PAGE_SIZE_OPTIONS = {
-  DEFAULT: 9,
-  LARGE: 18,
-  SMALL: 6
-};
-
-const DEBOUNCE_DELAY = 300;
-
-const route = useRoute();
-const request = inject("request");
-const userStore = useUserStore();
-const isLoggedIn = computed(() => userStore.isLoggedIn);
-
-const pageLoading = ref(false);
-const keyword = ref("");
-const allResources = ref([]);
-const allResourcesForStats = ref([]);
-const hotResources = ref([]);
-const detailVisible = ref(false);
-const previewVisible = ref(false);
-const currentResource = ref(null);
-const favorites = ref([]);
-const categoryFilter = ref("");
-const typeFilter = ref("");
-const currentPage = ref(1);
-const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
-const totalItems = ref(0);
-
 const FILE_TYPE_MAP = {
   video: { extensions: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'], icon: VideoPlay, name: '视频' },
   document: { extensions: ['docx', 'doc', 'pdf', 'pptx', 'ppt', 'xlsx', 'xls', 'txt'], icon: Document, name: '文档' },
@@ -187,30 +101,52 @@ const filterConfig = [
   { key: "type", label: "类型", type: "success", options: [{ label: "全部", value: "" }, { label: "视频", value: "video" }, { label: "文档", value: "document" }, { label: "图片", value: "image" }] }
 ];
 
+const route = useRoute();
+const request = inject("request");
+const userStore = useUserStore();
+const isLoggedIn = computed(() => userStore.isLoggedIn);
+
+const pageLoading = ref(false);
+const keyword = ref("");
+const allResources = ref([]);
+const allResourcesForStats = ref([]);
+const hotResources = ref([]);
+const previewVisible = ref(false);
+const currentResource = ref(null);
+const favorites = ref([]);
+const categoryFilter = ref("");
+const typeFilter = ref("");
+const currentPage = ref(1);
+const pageSize = ref(9);
+const totalItems = ref(0);
+
+const { parseUpdateLog } = useUpdateLog();
+
+const allUpdateLogs = computed(() => {
+  const logs = [];
+  allResources.value.forEach(item => {
+    parseUpdateLog(item.updateLog).forEach(log => {
+      logs.push({ ...log, resourceId: item.id, resourceName: item.title });
+    });
+  });
+  return logs.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
+});
+
+const filteredResources = computed(() => allResources.value);
+const paginatedList = computed(() => allResources.value);
+
 const stats = computed(() => {
   const data = allResourcesForStats.value.length > 0 ? allResourcesForStats.value : allResources.value;
   const totalViews = data.reduce((sum, r) => sum + (r.viewCount || 0), 0);
   const totalDownloads = data.reduce((sum, r) => sum + (r.downloadCount || 0), 0);
   const totalFavorites = data.reduce((sum, r) => sum + (r.favoriteCount || 0), 0);
-  const totalSize = data.reduce((sum, r) => {
-    const fileInfo = getFileInfo(r);
-    // 调试信息
-    if (r.files) {
-      console.log('资源文件信息:', r.id, r.files, fileInfo);
-    }
-    return sum + (fileInfo.size || 0);
-  }, 0);
-  console.log('总大小计算:', totalSize);
-  
-  const videoCount = data.filter(r => getFileInfo(r).type === 'video').length;
-  const docCount = data.filter(r => getFileInfo(r).type === 'document').length;
-  const imgCount = data.filter(r => getFileInfo(r).type === 'image').length;
+  const totalSize = data.reduce((sum, r) => sum + (getFileInfo(r).size || 0), 0);
   
   return [
     { value: data.length, label: "资源总数" },
-    { value: videoCount, label: "视频数量" },
-    { value: docCount, label: "文档数量" },
-    { value: imgCount, label: "图片数量" },
+    { value: data.filter(r => getFileInfo(r).type === 'video').length, label: "视频数量" },
+    { value: data.filter(r => getFileInfo(r).type === 'document').length, label: "文档数量" },
+    { value: data.filter(r => getFileInfo(r).type === 'image').length, label: "图片数量" },
     { value: totalFavorites, label: "收藏量" },
     { value: totalViews, label: "浏览量" },
     { value: totalDownloads, label: "下载量" },
@@ -218,42 +154,15 @@ const stats = computed(() => {
   ];
 });
 
-const { parseUpdateLog } = useUpdateLog();
-
-const allUpdateLogs = computed(() => {
-  const logs = [];
-  allResources.value.forEach(item => {
-    const itemLogs = parseUpdateLog(item.updateLog);
-    itemLogs.forEach(log => {
-      logs.push({
-        ...log,
-        resourceId: item.id,
-        resourceName: item.title
-      });
-    });
-  });
-  return logs.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
-});
-
-const filteredResources = computed(() => allResources.value);
-
-const paginatedList = computed(() => allResources.value);
-
 const getFileInfo = (item) => {
   if (!item.files) return { url: '', type: 'document', size: 0 };
   try {
     const files = parseMediaList(item.files);
     if (files.length > 0) {
       const firstFile = files[0];
-      return {
-        url: firstFile.url || firstFile.path || '',
-        type: firstFile.type || 'document',
-        size: firstFile.size || 0
-      };
+      return { url: firstFile.url || firstFile.path || '', type: firstFile.type || 'document', size: firstFile.size || 0 };
     }
-  } catch (e) {
-    console.debug('解析资源文件失败:', e);
-  }
+  } catch {}
   return { url: '', type: 'document', size: 0 };
 };
 
@@ -285,15 +194,8 @@ const formatSize = (bytes) => {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
-const debouncedSearch = useDebounceFn(() => {
-  currentPage.value = 1;
-  loadResourcesData();
-}, DEBOUNCE_DELAY);
-
-const handleSearch = () => {
-  debouncedSearch();
-};
-
+const debouncedSearch = useDebounceFn(() => { currentPage.value = 1; loadResourcesData(); }, 300);
+const handleSearch = () => debouncedSearch();
 const handleFilter = (filters) => { 
   typeFilter.value = filters.type || ""; 
   categoryFilter.value = filters.category || ""; 
@@ -363,25 +265,9 @@ const downloadCurrentResource = () => { if (currentResource.value) downloadResou
 const loadResourcesData = async () => {
   pageLoading.value = true;
   try {
-    // 并行请求：获取分页数据和所有数据用于统计
     const [pageRes, allRes] = await Promise.all([
-      request.get("/resources/list", {
-        params: {
-          page: currentPage.value,
-          size: pageSize.value,
-          keyword: keyword.value,
-          fileType: typeFilter.value,
-          category: categoryFilter.value,
-          _t: Date.now()
-        }
-      }),
-      request.get("/resources/list", {
-        params: {
-          page: 1,
-          size: 9999, // 获取足够多的数据以确保包含所有记录
-          _t: Date.now()
-        }
-      })
+      request.get("/resources/list", { params: { page: currentPage.value, size: pageSize.value, keyword: keyword.value, fileType: typeFilter.value, category: categoryFilter.value, _t: Date.now() } }),
+      request.get("/resources/list", { params: { page: 1, size: 9999, _t: Date.now() } })
     ]);
     
     const { records, total } = extractPageData(pageRes);
@@ -389,7 +275,6 @@ const loadResourcesData = async () => {
     totalItems.value = total;
     hotResources.value = allResources.value.slice(0, 5);
     
-    // 加载所有数据用于统计
     const allData = extractPageData(allRes);
     allResourcesForStats.value = allData.records;
     
@@ -408,168 +293,41 @@ watch(() => route.path, (newPath) => {
 </script>
 
 <style scoped>
-.resources-container {
-  display: grid;
-  grid-template-columns: 1fr var(--sidebar-width);
-  gap: var(--space-xl);
-}
-
-.resource-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xl);
-}
-
-.resource-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xl);
-  padding: var(--space-xl);
-  background: var(--text-inverse);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-sm);
-}
-
-.resource-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.resource-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-inverse);
-  flex-shrink: 0;
-}
-
-.type-video {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-}
-
-.type-doc {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-}
-
-.type-img {
-  background: linear-gradient(135deg, var(--dong-jade), var(--dong-jade-dark));
-}
-
-.resource-info {
-  flex: 1;
-}
-
-.resource-info h3 {
-  margin: 0 0 var(--space-sm) 0;
-  font-size: var(--font-size-md);
-}
-
-.resource-desc {
-  margin: 0 0 var(--space-sm) 0;
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
-}
-
-.resource-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-}
-
-.resource-type {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.resource-ext {
-  font-size: var(--font-size-xs);
-  color: var(--text-light);
-  background: var(--bg-rice-dark);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-xs);
-}
-
-.resource-size {
-  font-size: var(--font-size-sm);
-  color: var(--text-light);
-}
-
-.resource-actions {
-  display: flex;
-  gap: var(--space-sm);
-}
+.resources-container { display: grid; grid-template-columns: 1fr var(--sidebar-width); gap: var(--space-xl); }
+.resource-list { display: flex; flex-direction: column; gap: var(--space-xl); }
+.resource-card { display: flex; align-items: center; gap: var(--space-xl); padding: var(--space-xl); background: var(--text-inverse); border-radius: var(--radius-lg); cursor: pointer; transition: all var(--transition-normal); box-shadow: var(--shadow-sm); }
+.resource-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.resource-icon { width: 56px; height: 56px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--text-inverse); flex-shrink: 0; }
+.type-video { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.type-doc { background: linear-gradient(135deg, #3498db, #2980b9); }
+.type-img { background: linear-gradient(135deg, var(--dong-jade), var(--dong-jade-dark)); }
+.resource-info { flex: 1; }
+.resource-info h3 { margin: 0 0 var(--space-sm) 0; font-size: var(--font-size-md); }
+.resource-desc { margin: 0 0 var(--space-sm) 0; font-size: var(--font-size-sm); color: var(--text-muted); }
+.resource-meta { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+.resource-type { font-size: var(--font-size-sm); color: var(--text-secondary); }
+.resource-ext { font-size: var(--font-size-xs); color: var(--text-light); background: var(--bg-rice-dark); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-xs); }
+.resource-size { font-size: var(--font-size-sm); color: var(--text-light); }
+.resource-actions { display: flex; gap: var(--space-sm); }
 
 @media (max-width: 1024px) {
-  .resources-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .resource-card {
-    flex-wrap: wrap;
-  }
-  
-  .resource-actions {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: var(--space-md);
-  }
+  .resources-container { grid-template-columns: 1fr; }
+  .resource-card { flex-wrap: wrap; }
+  .resource-actions { width: 100%; justify-content: flex-end; margin-top: var(--space-md); }
 }
 
 @media (max-width: 768px) {
-  .resource-card {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: var(--space-lg);
-    gap: var(--space-md);
-  }
-  
-  .resource-icon {
-    width: 48px;
-    height: 48px;
-  }
-  
-  .resource-info {
-    width: 100%;
-  }
-  
-  .resource-info h3 {
-    font-size: var(--font-size-base);
-  }
-  
-  .resource-desc {
-    font-size: var(--font-size-xs);
-    -webkit-line-clamp: 2;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .resource-meta {
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-  }
-  
-  .resource-actions {
-    flex-wrap: wrap;
-    width: 100%;
-  }
-  
-  .resource-actions .el-button {
-    flex: 1;
-    min-width: 80px;
-  }
+  .resource-card { flex-direction: column; align-items: flex-start; padding: var(--space-lg); gap: var(--space-md); }
+  .resource-icon { width: 48px; height: 48px; }
+  .resource-info { width: 100%; }
+  .resource-info h3 { font-size: var(--font-size-base); }
+  .resource-desc { font-size: var(--font-size-xs); -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+  .resource-meta { flex-wrap: wrap; gap: var(--space-sm); }
+  .resource-actions { flex-wrap: wrap; width: 100%; }
+  .resource-actions .el-button { flex: 1; min-width: 80px; }
 }
 
 @media (max-width: 480px) {
-  .resource-actions .el-button {
-    font-size: var(--font-size-xs);
-    padding: var(--space-sm) var(--space-md);
-  }
+  .resource-actions .el-button { font-size: var(--font-size-xs); padding: var(--space-sm) var(--space-md); }
 }
 </style>

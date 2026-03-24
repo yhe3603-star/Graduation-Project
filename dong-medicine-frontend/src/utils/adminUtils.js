@@ -71,81 +71,129 @@ export const menuTitles = {
 
 export const TABLE_CONFIGS = {
   users: {
-    title: '用户管理',
+    title: '用户',
+    showTitle: false,
     columns: [
-      { prop: 'id', label: 'ID', width: 80 },
       { prop: 'username', label: '用户名', minWidth: 120 },
-      { prop: 'email', label: '邮箱', minWidth: 180 },
-      { prop: 'role', label: '角色', width: 100 },
-      { prop: 'createdAt', label: '注册时间', width: 160 }
-    ]
+      { prop: 'role', label: '角色', type: 'tag' },
+      { prop: 'status', label: '状态', slotName: 'status', width: 80 },
+      { prop: 'createdAt', label: '创建时间', width: 160 }
+    ],
+    showAdd: false,
+    showEdit: false,
+    actionWidth: 250
   },
   knowledge: {
-    title: '知识管理',
+    title: '知识',
+    showTitle: true,
+    titleName: '标题',
     columns: [
-      { prop: 'id', label: 'ID', width: 80 },
-      { prop: 'title', label: '标题', minWidth: 150 },
-      { prop: 'type', label: '类型', width: 100 },
-      { prop: 'popularity', label: '热度', width: 80 },
-      { prop: 'createdAt', label: '创建时间', width: 160 }
+      { prop: 'type', label: '类型', width: 80 },
+      { prop: 'therapyCategory', label: '疗法分类', width: 100 },
+      { prop: 'diseaseCategory', label: '疾病分类', width: 100 },
+      { prop: 'popularity', label: '热度', width: 70 }
     ]
   },
   inheritors: {
-    title: '传承人管理',
+    title: '传承人',
+    showTitle: true,
+    titleName: '姓名',
     columns: [
-      { prop: 'id', label: 'ID', width: 80 },
-      { prop: 'name', label: '姓名', minWidth: 120 },
-      { prop: 'level', label: '级别', width: 100 },
-      { prop: 'experienceYears', label: '经验年限', width: 100 },
-      { prop: 'createdAt', label: '创建时间', width: 160 }
+      { prop: 'level', label: '级别', type: 'tag', width: 80 },
+      { prop: 'specialties', label: '技艺特色', minWidth: 150 },
+      { prop: 'experienceYears', label: '经验年限', width: 90 }
     ]
   },
   plants: {
-    title: '植物管理',
+    title: '植物',
+    showTitle: true,
+    titleName: '名称',
     columns: [
-      { prop: 'id', label: 'ID', width: 80 },
-      { prop: 'nameCn', label: '中文名', minWidth: 120 },
-      { prop: 'nameDong', label: '侗语名', minWidth: 120 },
-      { prop: 'category', label: '分类', width: 100 },
-      { prop: 'createdAt', label: '创建时间', width: 160 }
+      { prop: 'scientificName', label: '学名', minWidth: 120 },
+      { prop: 'category', label: '分类', width: 80 },
+      { prop: 'usageWay', label: '用法', width: 70 },
+      { prop: 'difficulty', label: '难度', type: 'tag', width: 70 }
     ]
   },
   qa: {
-    title: '问答管理',
+    title: '问答',
+    showTitle: true,
+    titleName: '问题',
     columns: [
-      { prop: 'id', label: 'ID', width: 80 },
-      { prop: 'question', label: '问题', minWidth: 200 },
       { prop: 'category', label: '分类', width: 100 },
-      { prop: 'createdAt', label: '创建时间', width: 160 }
+      { prop: 'popularity', label: '热度', width: 70 }
     ]
   },
   resources: {
-    title: '资源管理',
+    title: '资源',
+    showTitle: true,
+    titleName: '标题',
     columns: [
-      { prop: 'id', label: 'ID', width: 80 },
-      { prop: 'title', label: '标题', minWidth: 150 },
       { prop: 'category', label: '分类', width: 100 },
-      { prop: 'fileType', label: '类型', width: 80 },
-      { prop: 'createdAt', label: '创建时间', width: 160 }
+      { slotName: 'fileType', label: '类型', width: 70 },
+      { slotName: 'fileSize', label: '文件大小', width: 90 },
+      { prop: 'downloadCount', label: '下载次数', width: 90 },
+      { prop: 'popularity', label: '热度', width: 70 }
     ]
   },
   quiz: {
-    title: '答题管理',
+    title: '题目',
+    showTitle: true,
+    titleName: '问题',
     columns: [
-      { prop: 'id', label: 'ID', width: 80 },
-      { prop: 'question', label: '题目', minWidth: 200 },
-      { prop: 'difficulty', label: '难度', width: 80 },
-      { prop: 'createdAt', label: '创建时间', width: 160 }
+      { prop: 'category', label: '分类', width: 100 },
+      { prop: 'difficulty', label: '难度', type: 'tag', width: 70 },
+      { slotName: 'correctAnswer', label: '正确答案', width: 150 }
     ]
   },
-  feedback: {
-    title: '反馈管理',
+  comments: {
+    title: '评论',
+    showTitle: true,
+    titleName: '评论内容',
     columns: [
-      { prop: 'id', label: 'ID', width: 80 },
-      { prop: 'title', label: '标题', minWidth: 150 },
-      { prop: 'type', label: '类型', width: 100 },
-      { prop: 'status', label: '状态', width: 100 },
-      { prop: 'createdAt', label: '创建时间', width: 160 }
-    ]
+      { prop: 'username', label: '用户', width: 100 },
+      { prop: 'targetType', label: '类型', width: 80 },
+      { prop: 'status', label: '状态', type: 'tag', width: 80 }
+    ],
+    showAdd: false,
+    showEdit: false,
+    actionWidth: 250
+  },
+  feedback: {
+    title: '反馈',
+    showTitle: true,
+    titleName: '标题',
+    columns: [
+      { prop: 'userName', label: '用户', width: 100 },
+      { prop: 'type', label: '类型', width: 80 },
+      { prop: 'contact', label: '联系方式', width: 120 },
+      { prop: 'status', label: '状态', type: 'tag', width: 80 }
+    ],
+    showAdd: false,
+    showEdit: false,
+    actionWidth: 200
   }
 }
+
+export const CRUD_ENDPOINTS = {
+  knowledge: { create: '/admin/knowledge', update: '/admin/knowledge', delete: '/admin/knowledge' },
+  inheritor: { create: '/admin/inheritors', update: '/admin/inheritors', delete: '/admin/inheritors' },
+  plant: { create: '/admin/plants', update: '/admin/plants', delete: '/admin/plants' },
+  qa: { create: '/admin/qa', update: '/admin/qa', delete: '/admin/qa' },
+  resource: { create: '/admin/resources', update: '/admin/resources', delete: '/admin/resources' },
+  quiz: { create: '/quiz/add', update: '/quiz/update', delete: '/quiz' }
+}
+
+export const LOG_MODULE_TAG_MAP = {
+  USER: 'primary', PLANT: 'success', KNOWLEDGE: 'warning', INHERITOR: 'info',
+  RESOURCE: 'danger', QA: '', FEEDBACK: 'warning', COMMENT: 'info',
+  FAVORITE: 'success', SYSTEM: 'danger'
+}
+
+export const LOG_TYPE_TAG_MAP = {
+  CREATE: 'success', UPDATE: 'warning', DELETE: 'danger', QUERY: ''
+}
+
+export const getLogModuleTagType = (module) => LOG_MODULE_TAG_MAP[module] || ''
+export const getLogTypeTagType = (type) => LOG_TYPE_TAG_MAP[type] || ''
+export const formatLogTime = (time) => time ? new Date(time).toLocaleString('zh-CN') : '无'
