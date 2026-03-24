@@ -217,7 +217,14 @@ echo "服务状态:"
 $COMPOSE_CMD ps
 echo ""
 echo "访问地址:"
-echo "  前端: http://$(hostname -I | awk '{print $1}')"
-echo "  后端: http://$(hostname -I | awk '{print $1}'):8080/api/"
-echo "  Swagger: http://$(hostname -I | awk '{print $1}'):8080/swagger-ui/"
+# 尝试获取公网IP
+PUBLIC_IP=$(curl -s ifconfig.me || curl -s icanhazip.com || curl -s ipinfo.io/ip || echo "47.112.111.115")
+# 如果公网IP获取失败，使用内网IP作为备选
+if [ -z "$PUBLIC_IP" ] || [[ "$PUBLIC_IP" == *"127.0.0.1"* ]] || [[ "$PUBLIC_IP" == *"172."* ]] || [[ "$PUBLIC_IP" == *"192.168."* ]]; then
+    PUBLIC_IP=$(hostname -I | awk '{print $1}')
+fi
+echo "  前端: http://$PUBLIC_IP"
+echo "  后端: http://$PUBLIC_IP:8080/api/"
+echo "  Swagger: http://$PUBLIC_IP:8080/swagger-ui/"
+echo "  注意: 请使用服务器公网IP访问: http://47.112.111.115"
 echo ""
