@@ -126,7 +126,7 @@ jobs:
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" > deploy-package/.env
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> deploy-package/.env
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> deploy-package/.env
-          echo "MYSQL_PORT=3306" >> deploy-package/.env
+          echo "MYSQL_PORT=3307" >> deploy-package/.env
           echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> deploy-package/.env
           echo "REDIS_PORT=6379" >> deploy-package/.env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> deploy-package/.env
