@@ -53,9 +53,6 @@ RUN mkdir -p /app/public && chown -R appuser:appgroup /app
 # 从构建阶段复制jar文件
 COPY --from=builder /build/target/*.jar app.jar
 
-# 切换到非root用户
-USER appuser
-
 # 暴露端口
 EXPOSE 8080
 
