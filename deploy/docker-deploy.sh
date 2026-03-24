@@ -145,7 +145,23 @@ fi
 
 # 再次检查端口状态
 print_step "最终端口状态检查..."
-netstat -tuln 2>/dev/null | grep -E ':8080|:80' || echo "8080和80端口均未被占用"
+PORT_8080_STATUS=$(netstat -tuln 2>/dev/null | grep :8080 || echo "未被占用")
+PORT_80_STATUS=$(netstat -tuln 2>/dev/null | grep :80 || echo "未被占用")
+print_info "8080端口状态: $PORT_8080_STATUS"
+print_info "80端口状态: $PORT_80_STATUS"
+
+# 尝试使用ss命令检查端口
+if command -v ss &> /dev/null; then
+    print_info "使用ss命令检查端口..."
+    ss -tuln | grep -E ':8080|:80' || echo "8080和80端口均未被占用"
+fi
+
+# 检查是否有其他Docker容器占用端口
+print_info "检查Docker容器端口占用..."
+docker ps -a --format '{{.Names}}: {{.Ports}}' | grep -E '8080|80' || echo "没有Docker容器占用8080或80端口"
+
+# 等待几秒钟确保端口完全释放
+sleep 3
 
 print_step "拉取最新镜像..."
 $COMPOSE_CMD pull 2>/dev/null || true

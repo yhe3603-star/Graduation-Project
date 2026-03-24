@@ -166,6 +166,48 @@ jobs:
           fi
           SCRIPT
 
+      - name: Pre-deployment Port Cleanup
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash -s' << 'SCRIPT'
+          echo "=========================================="
+          echo "  预部署端口清理"
+          echo "=========================================="
+          
+          # 停止所有相关容器
+          echo "停止所有相关容器..."
+          docker stop $(docker ps -q --filter name=dong-medicine-) 2>/dev/null || true
+          docker rm $(docker ps -aq --filter name=dong-medicine-) 2>/dev/null || true
+          
+          # 检查并清理8080端口
+          echo "检查8080端口占用..."
+          netstat -tuln | grep :8080 || echo "8080端口未被占用"
+          
+          # 尝试停止占用8080端口的进程
+          if command -v lsof &> /dev/null; then
+              PORT_PID=$(lsof -t -i:8080 2>/dev/null || true)
+              if [ -n "$PORT_PID" ]; then
+                  echo "发现占用8080端口的进程: $PORT_PID"
+                  kill -9 $PORT_PID 2>/dev/null || true
+                  echo "已停止占用8080端口的进程"
+              fi
+          fi
+          
+          # 检查80端口
+          echo "检查80端口占用..."
+          netstat -tuln | grep :80 || echo "80端口未被占用"
+          
+          # 清理Docker网络
+          echo "清理Docker网络..."
+          docker network rm dong-medicine-network 2>/dev/null || true
+          docker network prune -f 2>/dev/null || true
+          
+          # 最终端口状态
+          echo "最终端口状态..."
+          netstat -tuln | grep -E ':8080|:80' || echo "8080和80端口均未被占用"
+          
+          echo "预部署清理完成"
+          SCRIPT
+
       - name: Deploy Application
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash -s' << 'SCRIPT'
