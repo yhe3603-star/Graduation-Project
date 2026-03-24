@@ -86,7 +86,7 @@ mybatis-plus:
 
 file:
   upload:
-    base-path: ${FILE_UPLOAD_PATH:/opt/dong-medicine/backend/public}
+    base-path: ${FILE_UPLOAD_PATH:/app/public}
     image-max-size: 10485760
     video-max-size: 104857600
     document-max-size: 52428800

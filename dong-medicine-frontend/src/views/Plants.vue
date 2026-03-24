@@ -137,7 +137,7 @@ const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 const totalItems = ref(0);
 
 const filterConfig = [
-  { key: "category", label: "类型", options: [{ label: "全部", value: "" }, { label: "草本", value: "草本" }, { label: "木本", value: "木本" }] },
+  { key: "category", label: "类型", options: [{ label: "全部", value: "" }, { label: "根茎类", value: "根茎类" }, { label: "全草类", value: "全草类" }, { label: "藤本类", value: "藤本类" }, { label: "叶类", value: "叶类" }, { label: "花类", value: "花类" }, { label: "皮类", value: "皮类" }, { label: "菌类", value: "菌类" }] },
   { key: "usage", label: "用法", type: "success", options: [{ label: "全部", value: "" }, { label: "内服", value: "内服" }, { label: "外用", value: "外用" }, { label: "药浴", value: "药浴" }] }
 ];
 

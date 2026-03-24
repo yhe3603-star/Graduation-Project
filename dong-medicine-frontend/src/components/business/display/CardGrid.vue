@@ -94,11 +94,15 @@ const getImage = (item) => {
     if (Array.isArray(parsed)) {
       if (parsed.length === 0) return ""
       const firstItem = parsed[0]
-      return typeof firstItem === "object" && firstItem.path ? firstItem.path : firstItem
+      const path = typeof firstItem === "object" && firstItem.path ? firstItem.path : firstItem
+      if (path.startsWith('http://') || path.startsWith('https://')) return path
+      return path.startsWith('/') ? path : '/' + path
     }
-    return imgs
+    if (imgs.startsWith('http://') || imgs.startsWith('https://')) return imgs
+    return imgs.startsWith('/') ? imgs : '/' + imgs
   } catch {
-    return imgs
+    if (imgs.startsWith('http://') || imgs.startsWith('https://')) return imgs
+    return imgs.startsWith('/') ? imgs : '/' + imgs
   }
 }
 

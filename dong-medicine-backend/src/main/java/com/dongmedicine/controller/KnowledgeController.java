@@ -29,8 +29,12 @@ public class KnowledgeController {
     public R<Map<String, Object>> list(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "12") Integer size,
-            @RequestParam(required = false) String sortBy) {
-        Page<Knowledge> pageResult = service.pageAll(page, size, sortBy);
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String therapy,
+            @RequestParam(required = false) String disease,
+            @RequestParam(required = false) String herb) {
+        Page<Knowledge> pageResult = service.advancedSearchPaged(keyword, therapy, disease, herb, sortBy, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 

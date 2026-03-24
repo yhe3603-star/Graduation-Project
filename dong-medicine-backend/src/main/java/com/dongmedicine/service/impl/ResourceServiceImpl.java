@@ -73,6 +73,32 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
         if (StringUtils.hasText(keyword)) {
             qw.and(wrapper -> wrapper.like(Resource::getTitle, keyword).or().like(Resource::getDescription, keyword));
         }
+        if (StringUtils.hasText(fileType)) {
+            if ("document".equals(fileType)) {
+                qw.and(wrapper -> wrapper
+                    .like(Resource::getFiles, "\"type\":\"document\"")
+                    .or().like(Resource::getFiles, "\"type\":\"pdf\"")
+                    .or().like(Resource::getFiles, "\"type\":\"docx\"")
+                    .or().like(Resource::getFiles, "\"type\":\"doc\"")
+                    .or().like(Resource::getFiles, "\"type\":\"pptx\"")
+                    .or().like(Resource::getFiles, "\"type\":\"xlsx\"")
+                    .or().like(Resource::getFiles, "\"type\":\"txt\""));
+            } else if ("video".equals(fileType)) {
+                qw.and(wrapper -> wrapper
+                    .like(Resource::getFiles, "\"type\":\"video\"")
+                    .or().like(Resource::getFiles, "\"type\":\"mp4\"")
+                    .or().like(Resource::getFiles, "\"type\":\"avi\"")
+                    .or().like(Resource::getFiles, "\"type\":\"mov\""));
+            } else if ("image".equals(fileType)) {
+                qw.and(wrapper -> wrapper
+                    .like(Resource::getFiles, "\"type\":\"image\"")
+                    .or().like(Resource::getFiles, "\"type\":\"jpg\"")
+                    .or().like(Resource::getFiles, "\"type\":\"png\"")
+                    .or().like(Resource::getFiles, "\"type\":\"gif\""));
+            } else {
+                qw.like(Resource::getFiles, "\"type\":\"" + fileType + "\"");
+            }
+        }
         qw.orderByDesc(Resource::getDownloadCount);
         return page(pageParam, qw);
     }
