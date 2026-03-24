@@ -142,6 +142,11 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          # 添加 SSH 保活配置
+          echo "Host *" >> ~/.ssh/config
+          echo "  ServerAliveInterval 60" >> ~/.ssh/config
+          echo "  ServerAliveCountMax 10" >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
 
       - name: Upload files to server
         run: |
