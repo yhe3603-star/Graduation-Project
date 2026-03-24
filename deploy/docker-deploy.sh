@@ -71,6 +71,45 @@ cd "$APP_DIR"
 $COMPOSE_CMD down --remove-orphans 2>/dev/null || true
 print_success "旧容器已停止"
 
+print_step "检查并清理占用端口的进程..."
+# 检查并停止占用8080端口的进程
+if command -v lsof &> /dev/null; then
+    PORT_PID=$(lsof -t -i:8080 2>/dev/null || true)
+    if [ -n "$PORT_PID" ]; then
+        print_info "发现占用8080端口的进程: $PORT_PID"
+        kill -9 $PORT_PID 2>/dev/null || true
+        print_info "已停止占用8080端口的进程"
+    else
+        print_info "8080端口未被占用"
+    fi
+else
+    print_info "lsof 未安装，跳过端口检查"
+fi
+
+# 检查并停止占用80端口的进程
+if command -v lsof &> /dev/null; then
+    PORT_PID=$(lsof -t -i:80 2>/dev/null || true)
+    if [ -n "$PORT_PID" ]; then
+        print_info "发现占用80端口的进程: $PORT_PID"
+        kill -9 $PORT_PID 2>/dev/null || true
+        print_info "已停止占用80端口的进程"
+    else
+        print_info "80端口未被占用"
+    fi
+fi
+
+print_success "端口清理完成"
+
+print_step "清理Docker网络..."
+# 检查并清理旧的网络
+if docker network ls | grep -q "dong-medicine-network"; then
+    print_info "发现旧的网络 dong-medicine-network，正在清理..."
+    docker network rm dong-medicine-network 2>/dev/null || true
+    print_info "网络清理完成"
+else
+    print_info "网络 dong-medicine-network 不存在，跳过清理"
+fi
+
 print_step "拉取最新镜像..."
 $COMPOSE_CMD pull 2>/dev/null || true
 print_info "镜像拉取完成"
