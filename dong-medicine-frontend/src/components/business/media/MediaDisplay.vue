@@ -94,7 +94,14 @@
           </div>
           <div class="document-actions">
             <el-button
+              v-if="canPreview(doc)"
               type="primary"
+              size="small"
+              @click="handlePreview(doc)"
+            >
+              <el-icon><View /></el-icon>预览
+            </el-button>
+            <el-button
               size="small"
               @click="handleDownload(doc)"
             >
@@ -104,13 +111,19 @@
         </div>
       </div>
     </div>
+
+    <DocumentPreview
+      v-model="previewVisible"
+      :document="previewDocument"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { Picture, Download } from '@element-plus/icons-vue'
+import { computed, ref } from 'vue'
+import { Picture, Download, View } from '@element-plus/icons-vue'
 import { parseMediaList, separateMediaByType, downloadMedia, getFileIcon, getFileColor, formatFileSize } from '@/utils'
+import DocumentPreview from './DocumentPreview.vue'
 
 const props = defineProps({
   files: { type: [String, Array], default: '' },
@@ -138,6 +151,23 @@ const previewList = computed(() => imageList.value.map(img => img.url))
 const getIcon = (type) => getFileIcon(type)
 const getIconColor = (type) => getFileColor(type)
 const formatSize = (bytes) => formatFileSize(bytes)
+
+const PREVIEW_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt']
+
+const canPreview = (doc) => {
+  if (!doc) return false
+  const path = doc.path || doc.url || ''
+  const ext = path.split('.').pop()?.toLowerCase()
+  return PREVIEW_EXTENSIONS.includes(ext)
+}
+
+const previewVisible = ref(false)
+const previewDocument = ref(null)
+
+const handlePreview = (doc) => {
+  previewDocument.value = doc
+  previewVisible.value = true
+}
 
 const handleDownload = (doc) => downloadMedia(doc)
 </script>

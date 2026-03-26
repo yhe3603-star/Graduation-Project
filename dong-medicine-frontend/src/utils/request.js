@@ -27,6 +27,7 @@ function onRefreshFailed() {
       // ignore
     }
   })
+  window.dispatchEvent(new CustomEvent('auth-expired'))
 }
 
 function generateRequestKey(config) {
@@ -148,8 +149,10 @@ async function refreshToken() {
       setAuthData(response.data.data)
       return response.data.data.token
     }
+    onRefreshFailed()
     return null
-  } catch {
+  } catch (error) {
+    onRefreshFailed()
     return null
   }
 }
@@ -160,10 +163,12 @@ const request = axios.create({
 })
 
 request.interceptors.request.use((config) => {
-  const token = getToken()
+  if (!config.headers.Authorization) {
+    const token = getToken()
+    if (token) config.headers.Authorization = "Bearer " + token
+  }
+  
   const userId = sessionStorage.getItem("userId")
-
-  if (token) config.headers.Authorization = "Bearer " + token
   if (userId) config.headers["userId"] = userId
 
   if (config.data && typeof config.data === 'object') {
@@ -178,6 +183,7 @@ request.interceptors.request.use((config) => {
   }
 
   config.__retryCount = config.__retryCount || 0
+  config._skipAuthRefresh = config.skipAuthRefresh || false
 
   return config
 })
@@ -216,11 +222,30 @@ request.interceptors.response.use(
     }
 
     if (status === 403) {
-            logAuthWarn(msg)
-            return Promise.reject(err.response?.data || err)
+      const token = getToken()
+      
+      if (token && !config._retry) {
+        config._retry = true
+        
+        const newToken = await refreshToken()
+        
+        if (newToken) {
+          config.headers.Authorization = "Bearer " + newToken
+          return request(config)
         }
+      }
+      
+      onRefreshFailed()
+      logAuthWarn(msg)
+      ElMessage.warning("权限不足或登录已过期，请重新登录")
+      return Promise.reject(err.response?.data || err)
+    }
 
     if (status === 401) {
+      if (config._skipAuthRefresh) {
+        return Promise.reject(err.response?.data || err)
+      }
+      
       const token = getToken()
       
       if (token && !config._retry) {

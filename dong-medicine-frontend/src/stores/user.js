@@ -21,11 +21,14 @@ function decodeJwtPayload(token) {
   }
 }
 
-function isTokenExpired(token) {
+function isTokenExpired(token, useBuffer = true) {
   if (!token) return true
   const payload = decodeJwtPayload(token)
   if (!payload || !payload.exp) return true
   const expiryTime = payload.exp * 1000
+  if (!useBuffer) {
+    return Date.now() >= expiryTime
+  }
   return Date.now() >= expiryTime - TOKEN_EXPIRY_BUFFER_MS
 }
 
@@ -77,11 +80,11 @@ export const useUserStore = defineStore('user', () => {
   
   const isLoggedIn = computed(() => {
     if (!token.value) return false
-    return !isTokenExpired(token.value)
+    return !isTokenExpired(token.value, false)
   })
   const userName = computed(() => username.value)
   const isAdmin = computed(() => {
-    if (!token.value || isTokenExpired(token.value)) return false
+    if (!token.value || isTokenExpired(token.value, false)) return false
     const r = role.value
     return !!(r && r.toLowerCase() === 'admin')
   })
@@ -89,6 +92,10 @@ export const useUserStore = defineStore('user', () => {
   function initialize() {
     initializeFromStorage()
     checkTokenExpiry()
+    
+    window.addEventListener('auth-expired', () => {
+      clearAuth()
+    })
   }
   
   function checkTokenExpiry() {
@@ -214,7 +221,7 @@ export const useUserStore = defineStore('user', () => {
     const storedUsername = safeGetItem('userName')
     const storedRole = safeGetItem('role')
     
-    if (storedToken && !isTokenExpired(storedToken)) {
+    if (storedToken && !isTokenExpired(storedToken, false)) {
       token.value = storedToken
       userId.value = storedUserId || ''
       username.value = storedUsername || ''

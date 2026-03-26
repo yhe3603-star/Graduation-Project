@@ -8,6 +8,16 @@ WORKDIR /build
 # 配置npm国内镜像源
 RUN npm config set registry https://registry.npmmirror.com
 
+# 构建参数
+ARG VITE_API_BASE_URL=http://localhost:8080/api
+ARG VITE_KKFILEVIEW_URL=/kkfileview
+ARG VITE_KKFILEVIEW_FILE_HOST=http://backend:8080
+
+# 设置环境变量
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_KKFILEVIEW_URL=$VITE_KKFILEVIEW_URL
+ENV VITE_KKFILEVIEW_FILE_HOST=$VITE_KKFILEVIEW_FILE_HOST
+
 # 复制package.json
 COPY package*.json ./
 

@@ -50,6 +50,11 @@ export default defineConfig({
         target: "http://localhost:8080",
         changeOrigin: true,
       },
+      "/kkfileview": {
+        target: "http://localhost:8012",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/kkfileview/, ""),
+      },
     },
   },
 });

@@ -3,7 +3,7 @@
     <div class="module-header">
       <h1>全局搜索</h1>
       <p class="subtitle">
-        搜索知识、植物、传承人、问答
+        搜索知识、植物、传承人、问答、资源
       </p>
     </div>
 
@@ -137,7 +137,7 @@
 <script setup>
 import { inject, onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ChatDotRound, Document, Picture, Search, User } from "@element-plus/icons-vue";
+import { ChatDotRound, Document, FolderOpened, Picture, Search, User } from "@element-plus/icons-vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -151,17 +151,17 @@ const activeTab = ref("all");
 const allResults = ref([]);
 const searchResults = ref([]);
 const total = ref(0);
-const typeCounts = ref({ knowledge: 0, plant: 0, inheritor: 0, qa: 0 });
+const typeCounts = ref({ knowledge: 0, plant: 0, inheritor: 0, qa: 0, resource: 0 });
 
 const currentPage = ref(1);
 const pageSize = ref(12);
 
 const hotKeywords = ["侗医药", "药浴", "传承人", "艾灸", "鼻炎", "风湿"];
-const typeList = ["knowledge", "plant", "inheritor", "qa"];
+const typeList = ["knowledge", "plant", "inheritor", "qa", "resource"];
 
-const getTypeIcon = (type) => ({ knowledge: Document, plant: Picture, inheritor: User, qa: ChatDotRound }[type] || Document);
-const getTypeTag = (type) => ({ knowledge: "primary", plant: "success", inheritor: "warning", qa: "info" }[type] || "info");
-const getTypeName = (type) => ({ knowledge: "知识", plant: "植物", inheritor: "传承人", qa: "问答" }[type] || "其他");
+const getTypeIcon = (type) => ({ knowledge: Document, plant: Picture, inheritor: User, qa: ChatDotRound, resource: FolderOpened }[type] || Document);
+const getTypeTag = (type) => ({ knowledge: "primary", plant: "success", inheritor: "warning", qa: "info", resource: "danger" }[type] || "info");
+const getTypeName = (type) => ({ knowledge: "知识", plant: "植物", inheritor: "传承人", qa: "问答", resource: "资源" }[type] || "其他");
 
 const paginatedResults = computed(() => {
   if (activeTab.value !== "all") return searchResults.value;
@@ -213,31 +213,35 @@ const getData = (res) => {
 const loadAllData = async () => {
   loading.value = true;
   try {
-    const [kRes, pRes, iRes, qRes] = await Promise.all([
+    const [kRes, pRes, iRes, qRes, rRes] = await Promise.all([
       request.get(`/knowledge/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
       request.get(`/plants/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
       request.get(`/inheritors/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/qa/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } }))
+      request.get(`/qa/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/resources/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } }))
     ]);
 
     const kData = getData(kRes);
     const pData = getData(pRes);
     const iData = getData(iRes);
     const qData = getData(qRes);
+    const rData = getData(rRes);
 
     allResults.value = [
       ...(kData.records.map(r => ({ ...r, type: "knowledge" }))),
       ...(pData.records.map(r => ({ ...r, type: "plant" }))),
       ...(iData.records.map(r => ({ ...r, type: "inheritor" }))),
-      ...(qData.records.map(r => ({ ...r, type: "qa" })))
+      ...(qData.records.map(r => ({ ...r, type: "qa" }))),
+      ...(rData.records.map(r => ({ ...r, type: "resource" })))
     ];
 
-    total.value = kData.total + pData.total + iData.total + qData.total;
+    total.value = kData.total + pData.total + iData.total + qData.total + rData.total;
     typeCounts.value = {
       knowledge: kData.total,
       plant: pData.total,
       inheritor: iData.total,
-      qa: qData.total
+      qa: qData.total,
+      resource: rData.total
     };
 
     searchResults.value = [];
@@ -257,7 +261,8 @@ const loadSingleType = async () => {
       knowledge: `/knowledge/list?page=${page}&size=${size}`,
       plant: `/plants/list?page=${page}&size=${size}`,
       inheritor: `/inheritors/list?page=${page}&size=${size}`,
-      qa: `/qa/list?page=${page}&size=${size}`
+      qa: `/qa/list?page=${page}&size=${size}`,
+      resource: `/resources/list?page=${page}&size=${size}`
     };
 
     const res = await request.get(typeUrls[tab]).catch(() => ({ data: { records: [], total: 0 } }));
@@ -280,30 +285,34 @@ const doSearch = async () => {
   try {
     const kw = keyword.value.trim();
 
-    const [kRes, pRes, iRes, qRes] = await Promise.all([
+    const [kRes, pRes, iRes, qRes, rRes] = await Promise.all([
       request.get(`/knowledge/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
       request.get(`/plants/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
       request.get(`/inheritors/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/qa/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } }))
+      request.get(`/qa/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/resources/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } }))
     ]);
 
     const kData = getData(kRes);
     const pData = getData(pRes);
     const iData = getData(iRes);
     const qData = getData(qRes);
+    const rData = getData(rRes);
 
     allResults.value = [
       ...(kData.records.map(r => ({ ...r, type: "knowledge" }))),
       ...(pData.records.map(r => ({ ...r, type: "plant" }))),
       ...(iData.records.map(r => ({ ...r, type: "inheritor" }))),
-      ...(qData.records.map(r => ({ ...r, type: "qa" })))
+      ...(qData.records.map(r => ({ ...r, type: "qa" }))),
+      ...(rData.records.map(r => ({ ...r, type: "resource" })))
     ];
 
     typeCounts.value = {
       knowledge: kData.total,
       plant: pData.total,
       inheritor: iData.total,
-      qa: qData.total
+      qa: qData.total,
+      resource: rData.total
     };
 
     if (activeTab.value === "all") {
@@ -327,7 +336,8 @@ const loadSingleTypeSearch = async () => {
     knowledge: `/knowledge/search?keyword=${kw}&page=${page}&size=${size}`,
     plant: `/plants/search?keyword=${kw}&page=${page}&size=${size}`,
     inheritor: `/inheritors/search?keyword=${kw}&page=${page}&size=${size}`,
-    qa: `/qa/search?keyword=${kw}&page=${page}&size=${size}`
+    qa: `/qa/search?keyword=${kw}&page=${page}&size=${size}`,
+    resource: `/resources/search?keyword=${kw}&page=${page}&size=${size}`
   };
 
   const res = await request.get(typeUrls[tab]).catch(() => ({ data: { records: [], total: 0 } }));
@@ -337,7 +347,7 @@ const loadSingleTypeSearch = async () => {
 };
 
 const goToDetail = (item) => {
-  const routes = { knowledge: "/knowledge", plant: "/plants", inheritor: "/inheritors", qa: "/qa" };
+  const routes = { knowledge: "/knowledge", plant: "/plants", inheritor: "/inheritors", qa: "/qa", resource: "/resources" };
   router.push(routes[item.type] || "/");
 };
 

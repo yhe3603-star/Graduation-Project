@@ -45,7 +45,7 @@ jwt:
 app:
   security:
     jwt-secret: ${JWT_SECRET}
-    jwt-expiration: ${JWT_EXPIRATION:86400000}
+    jwt-expiration: ${JWT_EXPIRATION:7200000}
     cors-allowed-origins:
       - ${CORS_ALLOWED_ORIGIN:https://your-domain.com}
   cache:

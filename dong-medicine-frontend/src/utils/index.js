@@ -205,7 +205,7 @@ export {
   normalizeUrl, getFileName, getFileType, getFileTypeDisplay, getMediaType,
   getMediaTypeByExt, getExtensionsByType, parseMediaList, stringifyMediaList,
   downloadMedia, downloadDocument, getFileInfo, getAllFiles, separateMediaByType,
-  getFileIcon, getFileColor, getFileTypeName,
+  getFileIcon, getFileColor, getFileTypeName, getFileExt,
   parseImageList, parseVideoList, parseDocumentList,
   stringifyImageList, stringifyVideoList, stringifyDocumentList,
   getResourceUrl, parseResourceFiles, stringifyResourceFiles,

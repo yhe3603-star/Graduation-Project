@@ -198,7 +198,7 @@ public class AdminController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
         Page<Resource> pageResult = resourceService.page(PageUtils.getPage(page, size),
-                new LambdaQueryWrapper<Resource>().orderByDesc(Resource::getCreatedAt));
+                new LambdaQueryWrapper<Resource>().orderByAsc(Resource::getId));
         return R.ok(PageUtils.toMap(pageResult));
     }
 

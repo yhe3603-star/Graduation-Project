@@ -115,33 +115,10 @@
       {{ tipText }}
     </div>
 
-    <el-dialog
+    <DocumentPreview
       v-model="previewVisible"
-      :title="previewTitle"
-      width="800px"
-      destroy-on-close
-    >
-      <iframe
-        v-if="previewType === 'pdf'"
-        :src="previewUrl"
-        style="width: 100%; height: 600px; border: none;"
-      />
-      <div
-        v-else
-        class="preview-placeholder"
-      >
-        <el-icon :size="60">
-          <Document />
-        </el-icon>
-        <p>{{ previewFileName }}</p>
-        <el-button
-          type="primary"
-          @click="downloadFile(previewUrl, previewFileName)"
-        >
-          <el-icon><Download /></el-icon>下载文件
-        </el-button>
-      </div>
-    </el-dialog>
+      :document="previewDocument"
+    />
   </div>
 </template>
 
@@ -149,8 +126,9 @@
 import { ref, computed, watch, inject } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Document, Upload, UploadFilled, Delete, View, Download } from '@element-plus/icons-vue'
-import { getResourceUrl, getFileType, parseDocumentList, getFileIcon, getFileColor, logDeleteWarn } from '@/utils'
+import { getResourceUrl, getMediaType, parseDocumentList, getFileIcon, getFileColor, logDeleteWarn } from '@/utils'
 import { formatFileSize } from '@/utils/adminUtils'
+import DocumentPreview from '../media/DocumentPreview.vue'
 
 const request = inject('request')
 
@@ -174,13 +152,10 @@ const documentList = ref([])
 const uploading = ref(false)
 const uploadProgress = ref(0)
 const previewVisible = ref(false)
-const previewUrl = ref('')
-const previewTitle = ref('文档预览')
-const previewFileName = ref('')
-const previewType = ref('')
+const previewDocument = ref(null)
 
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}/upload/document`)
-const headers = computed(() => ({ Authorization: localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '' }))
+const headers = computed(() => ({ Authorization: sessionStorage.getItem('token') ? `Bearer ${sessionStorage.getItem('token')}` : '' }))
 const limitReached = computed(() => documentList.value.length >= props.limit)
 const tipText = computed(() => `支持 pdf/docx/doc/xlsx/xls/pptx/ppt/txt 格式，单个文档不超过 ${props.maxSize}MB，最多 ${props.limit} 个`)
 
@@ -259,7 +234,7 @@ const handleSuccess = (response, file) => {
       url: getResourceUrl(response.data.fileUrl || filePath),
       path: filePath,
       name: response.data.originalFileName || file.name,
-      type: getFileType(filePath),
+      type: getMediaType(filePath),
       size: response.data.fileSize || file.size
     })
     updateModelValue()
@@ -297,10 +272,14 @@ const handleRemove = async (index) => {
 }
 
 const handlePreview = (doc) => {
-  previewUrl.value = doc.url || doc.path
-  previewFileName.value = doc.name
-  previewTitle.value = '文档预览 - ' + doc.name
-  previewType.value = doc.type
+  previewDocument.value = {
+    url: getResourceUrl(doc.url || doc.path),
+    path: doc.path || doc.url,
+    name: doc.name,
+    size: doc.size,
+    type: doc.type,
+    originalFileName: doc.name
+  }
   previewVisible.value = true
 }
 

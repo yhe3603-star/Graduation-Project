@@ -130,7 +130,7 @@ public class QuizServiceImpl implements QuizService {
     public Page<QuizQuestion> pageQuestions(int page, int size) {
         return questionMapper.selectPage(
                 PageUtils.getPage(page, size),
-                new LambdaQueryWrapper<QuizQuestion>().orderByDesc(QuizQuestion::getId));
+                new LambdaQueryWrapper<QuizQuestion>().orderByAsc(QuizQuestion::getId));
     }
 
     @Override

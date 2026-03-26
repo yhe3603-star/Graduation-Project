@@ -163,6 +163,9 @@ provide("updateUserState", () => userStore.initialize())
 
 const showLoginDialog = ref(false)
 const showRegisterDialog = ref(false)
+
+provide("showLoginDialog", () => { showLoginDialog.value = true })
+
 const loginLoading = ref(false)
 const registerLoading = ref(false)
 const loginFormRef = ref(null)
@@ -224,14 +227,14 @@ const handleRegister = async () => {
 }
 
 const logout = async () => {
-  try {
-    await request.post("/user/logout")
-  } catch (e) {
-    console.debug('退出登录请求失败:', e)
-  }
   userStore.logout()
   ElMessage.success("已退出登录")
   router.push("/")
+  try {
+    await request.post("/user/logout", {}, { skipAuthRefresh: true })
+  } catch (e) {
+    console.debug('退出登录请求失败:', e)
+  }
 }
 </script>
 

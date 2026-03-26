@@ -42,6 +42,7 @@ public final class FileTypeUtils {
         Map.entry("png", new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}),
         Map.entry("gif", new byte[]{'G', 'I', 'F'}),
         Map.entry("bmp", new byte[]{'B', 'M'}),
+        Map.entry("webp", new byte[]{'R', 'I', 'F', 'F'}),
         Map.entry("pdf", new byte[]{'%', 'P', 'D', 'F'}),
         Map.entry("doc", new byte[]{(byte) 0xD0, (byte) 0xCF, (byte) 0x11, (byte) 0xE0}),
         Map.entry("xls", new byte[]{(byte) 0xD0, (byte) 0xCF, (byte) 0x11, (byte) 0xE0}),
@@ -126,32 +127,53 @@ public final class FileTypeUtils {
     }
 
     public static String detectFileTypeByContent(InputStream inputStream, String extension) throws IOException {
-        byte[] signature = FILE_SIGNATURES.get(extension.toLowerCase());
-        if (signature == null) {
-            return extension.toLowerCase();
+        String ext = extension.toLowerCase();
+        byte[] expectedSignature = FILE_SIGNATURES.get(ext);
+        
+        if (expectedSignature == null) {
+            return ext;
         }
 
-        byte[] fileHeader = new byte[signature.length];
-        inputStream.mark(signature.length + 1);
-        int bytesRead = inputStream.read(fileHeader);
-        inputStream.reset();
+        int maxSignatureLen = 8;
+        byte[] fileHeader = new byte[maxSignatureLen];
+        
+        java.io.BufferedInputStream bufferedStream = null;
+        boolean needClose = false;
+        
+        try {
+            if (!inputStream.markSupported()) {
+                bufferedStream = new java.io.BufferedInputStream(inputStream);
+                needClose = false;
+                inputStream = bufferedStream;
+            }
+            
+            inputStream.mark(maxSignatureLen + 1);
+            int bytesRead = inputStream.read(fileHeader);
+            inputStream.reset();
 
-        if (bytesRead < signature.length) {
+            if (bytesRead < expectedSignature.length) {
+                return null;
+            }
+
+            if (matchesSignature(fileHeader, expectedSignature)) {
+                return ext;
+            }
+            
             return null;
-        }
-
-        for (Map.Entry<String, byte[]> entry : FILE_SIGNATURES.entrySet()) {
-            if (matchesSignature(fileHeader, entry.getValue())) {
-                return entry.getKey();
+        } finally {
+            if (bufferedStream != null && needClose) {
+                try {
+                    bufferedStream.close();
+                } catch (IOException ignored) {
+                }
             }
         }
-        return null;
     }
 
     public static boolean validateFileContent(InputStream inputStream, String extension) throws IOException {
         String detectedType = detectFileTypeByContent(inputStream, extension);
         if (detectedType == null) {
-            return true;
+            return false;
         }
         String ext = extension.toLowerCase();
         if (detectedType.equalsIgnoreCase(ext)) {

@@ -1,5 +1,6 @@
 package com.dongmedicine.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -36,6 +37,18 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"code\":401,\"msg\":\"未登录或登录已过期\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"code\":403,\"msg\":\"权限不足\"}");
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/images/**", "/videos/**", "/documents/**", "/public/**").permitAll()
@@ -47,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/plants/**", "/api/knowledge/**", "/api/inheritors/**",
-                                "/api/qa/**", "/api/resources/list", "/api/resources/hot",
+                                "/api/qa/**", "/api/resources/list", "/api/resources/hot", "/api/resources/search",
                                 "/api/comments/**", "/api/leaderboard/**", "/api/documents/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/plants/random").permitAll()
                         .requestMatchers(HttpMethod.POST,
@@ -82,12 +95,17 @@ public class SecurityConfig {
             allowedOrigins = List.of("http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173");
         }
         
+        if (!allowedOrigins.contains("http://localhost")) {
+            allowedOrigins = new java.util.ArrayList<>(allowedOrigins);
+            allowedOrigins.add("http://localhost");
+        }
+        
         boolean wildcardOrigin = allowedOrigins.stream().anyMatch(origin ->
                 "*".equals(origin) || "http://*".equals(origin) || "https://*".equals(origin));
         
         config.setAllowedOriginPatterns(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "X-Requested-With"));
+        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "userid", "Userid", "UserId"));
         config.setAllowCredentials(!wildcardOrigin);
         config.setMaxAge(3600L);
 

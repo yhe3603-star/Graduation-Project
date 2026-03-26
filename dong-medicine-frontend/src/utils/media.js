@@ -174,6 +174,18 @@ export const normalizeUrl = (path) => {
 }
 
 /**
+ * 获取文件扩展名
+ * @param {string} path - 文件路径
+ * @returns {string} 文件扩展名（不含点）
+ */
+export const getFileExt = (path) => {
+  if (!path) return ''
+  const lastDot = path.lastIndexOf('.')
+  if (lastDot === -1) return ''
+  return path.substring(lastDot + 1).toLowerCase()
+}
+
+/**
  * 从URL中提取文件名
  * @param {string} url - 文件URL
  * @returns {string} 文件名
@@ -229,7 +241,12 @@ export function parseMediaList(data) {
       path = item.path || item.url || item.filePath || ''
       originalName = item.name || item.originalFileName || item.fileName || getFileName(path)
       fileSize = item.size || item.fileSize || 0
-      mediaType = item.type || item.mediaType || getMediaType(path)
+      const rawType = item.type || item.mediaType
+      if (rawType && ['video', 'image', 'document'].includes(rawType)) {
+        mediaType = rawType
+      } else {
+        mediaType = getMediaType(path)
+      }
     } else {
       return null
     }
@@ -278,7 +295,7 @@ export function stringifyMediaList(items) {
 export const downloadMedia = (media) => {
   if (!media?.url && !media?.path) return
   const link = document.createElement('a')
-  link.href = media.url || normalizeUrl(media.path)
+  link.href = normalizeUrl(media.url || media.path)
   link.download = media.name || media.originalFileName || 'file'
   link.target = '_blank'
   document.body.appendChild(link)
@@ -342,7 +359,7 @@ export function separateMediaByType(files) {
     const type = file.type || getMediaType(file.path || file.url || '')
     const fileObj = {
       ...file,
-      url: file.url || normalizeUrl(file.path),
+      url: normalizeUrl(file.url || file.path),
       type
     }
     

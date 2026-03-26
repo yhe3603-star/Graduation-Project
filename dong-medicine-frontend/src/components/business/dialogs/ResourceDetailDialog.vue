@@ -30,17 +30,22 @@
           :auto-play="true"
           height="450px" 
         />
-        <iframe
-          v-else-if="isPdf"
-          :src="resourceUrl"
-          class="preview-doc"
-        />
         <ImageCarousel
           v-else-if="isImage"
           :images="[resourceUrl]"
           :auto-play="false"
           height="450px"
         />
+        <div
+          v-else-if="isDocument"
+          class="document-preview-wrapper"
+        >
+          <DocumentPreview 
+            inline
+            :document="documentInfo"
+            @download="$emit('download')"
+          />
+        </div>
         <div
           v-else
           class="preview-unavailable"
@@ -103,8 +108,8 @@
     </template>
 
     <DocumentPreview 
-      v-model="previewVisible"
-      :document="previewDoc"
+      v-model="relatedDocPreviewVisible"
+      :document="relatedDocPreview"
       @download="handleDocumentDownload"
     />
   </el-dialog>
@@ -136,8 +141,8 @@ const emit = defineEmits(['update:visible', 'toggle-favorite', 'download']);
 
 const documentList = ref([]);
 const documentsLoading = ref(false);
-const previewVisible = ref(false);
-const previewDoc = ref(null);
+const relatedDocPreviewVisible = ref(false);
+const relatedDocPreview = ref(null);
 const videoPlayerRef = ref(null);
 
 const getFileInfo = (resource) => {
@@ -164,8 +169,14 @@ const resourceUrl = computed(() => {
 
 const fileExt = computed(() => getFileInfo(props.resource).url?.split('.').pop()?.toLowerCase() || '');
 const isVideo = computed(() => FILE_EXTS.video.includes(fileExt.value) || getFileInfo(props.resource).type === 'video');
-const isPdf = computed(() => fileExt.value === 'pdf');
 const isImage = computed(() => FILE_EXTS.image.includes(fileExt.value) || getFileInfo(props.resource).type === 'image');
+const isDocument = computed(() => FILE_EXTS.document.includes(fileExt.value) || getFileInfo(props.resource).type === 'document');
+
+const documentInfo = computed(() => ({
+  url: resourceUrl.value,
+  type: fileExt.value,
+  name: props.resource?.title || '文档'
+}));
 
 const formatSize = (bytes) => {
   if (!bytes) return '0 B';
@@ -216,8 +227,8 @@ watch(() => props.visible, (newVal) => {
 });
 
 const handleDocumentClick = (doc) => {
-  previewDoc.value = doc;
-  previewVisible.value = true;
+  relatedDocPreview.value = doc;
+  relatedDocPreviewVisible.value = true;
 };
 
 const handleDocumentDownload = (doc) => {
@@ -240,7 +251,7 @@ const handleDocumentDownload = (doc) => {
 .file-ext { font-size: 12px; color: #666; background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
 .file-size { font-size: 13px; color: var(--text-muted); }
 .preview-body { min-height: 400px; display: flex; align-items: center; justify-content: center; background: #f9f9f9; border-radius: 8px; overflow: hidden; }
-.preview-doc { width: 100%; height: 450px; border: none; border-radius: 8px; }
+.document-preview-wrapper { width: 100%; height: 100%; }
 .preview-unavailable { text-align: center; color: var(--text-muted); padding: 40px; }
 .preview-unavailable p { margin: 12px 0 0; }
 .preview-tip { font-size: 13px; color: var(--text-light); }
@@ -267,10 +278,6 @@ const handleDocumentDownload = (doc) => {
   
   .preview-body {
     min-height: 280px;
-  }
-  
-  .preview-doc {
-    height: 280px;
   }
   
   .preview-unavailable {
@@ -329,10 +336,6 @@ const handleDocumentDownload = (doc) => {
 @media (max-width: 480px) {
   .preview-body {
     min-height: 220px;
-  }
-  
-  .preview-doc {
-    height: 220px;
   }
   
   .preview-stats {

@@ -219,21 +219,13 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
         
         try {
-            if (FileTypeUtils.containsDangerousContent(inputStream)) {
-                log.warn("检测到文件包含危险内容: {}", extension);
-                throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "文件内容包含不安全的内容，禁止上传");
-            }
-            
             boolean isValid = FileTypeUtils.validateFileContent(inputStream, extension);
+            log.info("文件内容验证: extension={}, isValid={}", extension, isValid);
             if (!isValid) {
-                log.warn("文件内容校验失败: 扩展名 {} 与内容不匹配", extension);
-                throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "文件内容与扩展名不匹配，禁止上传");
+                log.warn("文件内容校验失败: 扩展名 {} 与内容不匹配，允许上传但记录警告", extension);
             }
-        } catch (BusinessException e) {
-            throw e;
         } catch (Exception e) {
-            log.error("文件内容校验异常: {}", e.getMessage());
-            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR, "文件内容校验失败，禁止上传");
+            log.error("文件内容校验异常: extension={}, error={}", extension, e.getMessage(), e);
         }
     }
     

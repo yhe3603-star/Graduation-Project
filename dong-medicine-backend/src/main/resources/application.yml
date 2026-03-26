@@ -35,7 +35,7 @@ jwt:
 app:
   security:
     jwt-secret: ${JWT_SECRET:dev-secret-key-for-jwt-token-generation-must-be-at-least-64-characters-long-for-hs512}
-    jwt-expiration: ${JWT_EXPIRATION:86400000}
+    jwt-expiration: ${JWT_EXPIRATION:7200000}
     jwt-refresh-threshold-minutes: ${JWT_REFRESH_THRESHOLD:30}
     jwt-refresh-grace-days: ${JWT_REFRESH_GRACE_DAYS:7}
     cors-allowed-origins:
@@ -57,6 +57,8 @@ app:
 file:
   upload:
     base-path: ${user.dir}/public
+  kkfileview:
+    url: ${KKFILEVIEW_URL:http://localhost:8012}
 
 logging:
   level:

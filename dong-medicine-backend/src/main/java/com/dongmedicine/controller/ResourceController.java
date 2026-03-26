@@ -38,7 +38,7 @@ public class ResourceController {
     private final ResourceService service;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${app.upload.path:./uploads}")
+    @Value("${file.upload.base-path:./public}")
     private String uploadPath;
 
     private static final int STREAM_BUFFER_SIZE = 8192;
@@ -57,6 +57,15 @@ public class ResourceController {
     @GetMapping("/hot")
     public R<List<Resource>> hot() {
         return R.ok(service.getHotResources());
+    }
+
+    @GetMapping("/search")
+    public R<Map<String, Object>> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "12") Integer size) {
+        Page<Resource> pageResult = service.pageByCategoryAndKeywordAndType(null, keyword, null, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @GetMapping("/{id}")

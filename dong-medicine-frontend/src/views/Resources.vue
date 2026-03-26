@@ -103,6 +103,7 @@ const filterConfig = [
 
 const route = useRoute();
 const request = inject("request");
+const showLoginDialog = inject("showLoginDialog");
 const userStore = useUserStore();
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 
@@ -243,21 +244,33 @@ const downloadResource = async (item) => {
   if (!isLoggedIn.value) {
     try {
       await ElMessageBox.confirm("下载资源需要登录，是否前往登录？", "提示", { confirmButtonText: "去登录", cancelButtonText: "取消", type: "info" });
-      window.location.href = "/";
+      showLoginDialog();
     } catch {}
     return;
   }
+  
   try {
-    const link = document.createElement("a");
-    link.href = `/api/resources/download/${item.id}`;
+    const response = await request.get(`/resources/download/${item.id}`, {
+      responseType: 'blob'
+    });
+    
+    const blob = new Blob([response]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
     link.download = item.title + '.' + getFileExt(getFileInfo(item).url);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
     const idx = allResources.value.findIndex(r => r.id === item.id);
     if (idx > -1) allResources.value[idx].downloadCount = (allResources.value[idx].downloadCount || 0) + 1;
-    ElMessage.success("开始下载");
-  } catch { ElMessage.error("下载失败"); }
+    ElMessage.success("下载成功");
+  } catch (e) {
+    console.error('下载失败:', e);
+    ElMessage.error("下载失败，请重试");
+  }
 };
 
 const downloadCurrentResource = () => { if (currentResource.value) downloadResource(currentResource.value); };

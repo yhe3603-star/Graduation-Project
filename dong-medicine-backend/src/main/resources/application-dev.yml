@@ -45,7 +45,7 @@ jwt:
 app:
   security:
     jwt-secret: ${JWT_SECRET:dev-secret-key-for-jwt-token-generation-must-be-at-least-64-characters-long-for-hs512}
-    jwt-expiration: ${JWT_EXPIRATION:86400000}
+    jwt-expiration: ${JWT_EXPIRATION:7200000}
     cors-allowed-origins:
       - http://localhost:5173
       - http://localhost:3000

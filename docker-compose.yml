@@ -50,6 +50,30 @@ services:
     networks:
       - dong-medicine-network
 
+  # kkFileView 文档预览服务
+  kkfileview:
+    image: keking/kkfileview:latest
+    container_name: dong-medicine-kkfileview
+    restart: unless-stopped
+    environment:
+      - KK_OFFICE_PREVIEW_TYPE=image
+      - KK_CONTEXT_PATH=/kkfileview
+      - KK_FILE_UPLOAD_MAX_SIZE=104857600
+    ports:
+      - "${KKFILEVIEW_PORT:-8012}:8012"
+    volumes:
+      - kkfileview_data:/opt/kkFileView-4.1.0/file
+    extra_hosts:
+      - "localhost:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8012/kkfileview"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    networks:
+      - dong-medicine-network
+
   # 后端服务
   backend:
     build:
@@ -72,6 +96,7 @@ services:
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       FILE_UPLOAD_PATH: /app/public
+      KKFILEVIEW_URL: http://kkfileview:8012
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     volumes:
@@ -81,6 +106,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      kkfileview:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -94,6 +121,10 @@ services:
   frontend:
     build:
       context: ./dong-medicine-frontend
+      args:
+        - VITE_API_BASE_URL=/api
+        - VITE_KKFILEVIEW_URL=/kkfileview
+        - VITE_KKFILEVIEW_FILE_HOST=http://backend:8080
     image: dong-medicine-frontend:latest
     container_name: dong-medicine-frontend
     restart: unless-stopped
@@ -113,6 +144,8 @@ volumes:
   mysql_data:
     driver: local
   redis_data:
+    driver: local
+  kkfileview_data:
     driver: local
 
 networks:

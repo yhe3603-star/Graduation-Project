@@ -90,12 +90,26 @@
         </div>
 
         <div
-          v-else-if="isPdfFile(file)"
+          v-else-if="canPreviewWithKkFileView(file)"
           class="pdf-container"
         >
+          <div
+            v-if="previewLoading"
+            class="preview-loading"
+          >
+            <el-icon
+              class="is-loading"
+              :size="48"
+            >
+              <Loading />
+            </el-icon>
+            <p>正在加载预览...</p>
+          </div>
           <iframe
-            :src="file.url || file.path"
+            v-show="!previewLoading"
+            :src="getKkFileViewUrl(file)"
             class="pdf-viewer"
+            @load="onPreviewLoad"
           />
         </div>
 
@@ -157,11 +171,15 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { Picture, Download } from '@element-plus/icons-vue';
+import { computed, ref, watch } from 'vue';
+import { Picture, Download, Loading } from '@element-plus/icons-vue';
 import { formatTime, formatFileSize, getFileTypeTagType, getFileTypeText } from '@/utils/adminUtils';
 import { getFileName, getFileIcon, getFileColor } from '@/utils';
 import { parseMediaList, normalizeUrl } from '@/utils/media';
+
+const KKFILEVIEW_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+const KKFILEVIEW_SERVER = import.meta.env.VITE_KKFILEVIEW_URL || '/kkfileview';
+const KKFILEVIEW_FILE_HOST = import.meta.env.VITE_KKFILEVIEW_FILE_HOST || '';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -169,6 +187,8 @@ const props = defineProps({
 });
 
 defineEmits(['update:visible']);
+
+const previewLoading = ref(true);
 
 const fileList = computed(() => {
   if (!props.resource?.files) return [];
@@ -184,12 +204,46 @@ const fileList = computed(() => {
   }
 });
 
-const isPdfFile = (file) => {
-  if (!file) return false;
+const getFileExtension = (file) => {
+  if (!file) return '';
   const path = file.path || file.url || '';
-  const ext = path.split('.').pop()?.toLowerCase();
-  return ext === 'pdf';
+  return path.split('.').pop()?.toLowerCase() || '';
 };
+
+const canPreviewWithKkFileView = (file) => {
+  const ext = getFileExtension(file);
+  return KKFILEVIEW_EXTENSIONS.includes(ext);
+};
+
+const getFullFileUrl = (relativeUrl) => {
+  if (!relativeUrl) return '';
+  if (relativeUrl.startsWith('http://') || relativeUrl.startsWith('https://')) {
+    return relativeUrl;
+  }
+  if (KKFILEVIEW_FILE_HOST) {
+    return KKFILEVIEW_FILE_HOST + (relativeUrl.startsWith('/') ? relativeUrl : '/' + relativeUrl);
+  }
+  const origin = window.location.origin;
+  return origin + (relativeUrl.startsWith('/') ? relativeUrl : '/' + relativeUrl);
+};
+
+const getKkFileViewUrl = (file) => {
+  if (!file) return '';
+  const url = normalizeUrl(file.url || file.path);
+  const fullUrl = getFullFileUrl(url);
+  const base64Url = btoa(unescape(encodeURIComponent(fullUrl)));
+  return `${KKFILEVIEW_SERVER}/onlinePreview?url=${base64Url}`;
+};
+
+const onPreviewLoad = () => {
+  previewLoading.value = false;
+};
+
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    previewLoading.value = true;
+  }
+});
 
 const handleDownload = (file) => {
   if (!file?.path && !file?.url) return;
@@ -207,11 +261,14 @@ const handleDownload = (file) => {
 @import '@/styles/media-common.css';
 
 .media-section { margin-top: 20px; }
-.pdf-container { width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #e8e8e8; }
+.pdf-container { width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #e8e8e8; position: relative; min-height: 400px; }
 .pdf-viewer { width: 100%; height: 500px; border: none; }
+.preview-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: #999; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #f9f9f9; z-index: 10; }
+.preview-loading p { margin: 0; font-size: 14px; }
 .preview-tip { font-size: 13px; color: #909399; margin-top: 12px; text-align: center; }
 
 @media (max-width: 768px) {
   .pdf-viewer { height: 350px; }
+  .pdf-container { min-height: 300px; }
 }
 </style>
