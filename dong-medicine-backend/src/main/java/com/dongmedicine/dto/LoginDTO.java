@@ -14,4 +14,16 @@ public class LoginDTO {
     @NotBlank(message = "密码不能为空")
     @Size(min = 6, message = "密码长度不能少于6位")
     private String password;
+
+    /**
+     * 验证码key
+     */
+    @NotBlank(message = "验证码key不能为空")
+    private String captchaKey;
+
+    /**
+     * 验证码
+     */
+    @NotBlank(message = "请输入验证码")
+    private String captchaCode;
 }

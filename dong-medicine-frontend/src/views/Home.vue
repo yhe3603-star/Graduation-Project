@@ -190,8 +190,8 @@ const heroStats = computed(() => createHeroStats(stats.value))
 onMounted(async () => {
   try {
     const [pRes, iRes] = await Promise.all([
-      request.get('/plants/list', { params: { page: 1, size: 1 } }).catch(() => ({})),
-      request.get('/inheritors/list', { params: { page: 1, size: 5 } }).catch(() => ({}))
+      request.get('/plants/list', { params: { page: 1, size: 1 }, skipAuthRefresh: true }).catch(() => ({})),
+      request.get('/inheritors/list', { params: { page: 1, size: 5 }, skipAuthRefresh: true }).catch(() => ({}))
     ])
     const plantsData = extractPageData(pRes)
     const inheritorsData = extractPageData(iRes)

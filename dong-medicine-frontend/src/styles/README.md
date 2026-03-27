@@ -1,204 +1,178 @@
-# 样式文件目录说明
+# Styles 样式文件目录
 
-## 文件夹结构
+本目录包含项目的全局样式文件。
 
-本目录包含项目的样式文件，使用CSS变量和模块化的样式管理。
+## 目录结构
 
 ```
 styles/
-├── base.css          # 基础样式
-├── common.css        # 通用样式
-├── components.css    # 组件样式
-├── dialog-common.css # 对话框通用样式
-├── home.css          # 首页样式（新增）
-├── index.css         # 样式入口
-├── media-common.css  # 媒体相关样式
-├── pages.css         # 页面样式
-├── variables.css     # CSS变量定义
-└── README.md         # 样式说明文档
+├── index.css             # 样式入口文件
+├── variables.css         # CSS 变量定义
+├── base.css              # 基础样式
+├── components.css        # 组件样式
+├── pages.css             # 页面样式
+├── common.css            # 通用样式
+├── home.css              # 首页专用样式
+├── media-common.css      # 媒体相关通用样式
+├── dialog-common.css     # 对话框通用样式
+└── README.md             # 说明文档
 ```
 
-## 详细说明
+## 样式文件说明
 
-### 1. variables.css
+### variables.css - CSS 变量定义
 
-**功能**：定义项目中使用的CSS变量，包括颜色、字体、间距等。
+**用途**: 定义全局 CSS 变量，构建设计系统
 
-**主要变量分类**：
-
-**颜色变量**：
-- `--dong-indigo` / `--dong-indigo-dark`：侗乡靛蓝主题色
-- `--dong-jade` / `--dong-jade-dark`：侗乡玉绿强调色
-- `--dong-gold` / `--dong-gold-light`：侗乡金色点缀
-- `--text-primary` / `--text-secondary` / `--text-muted`：文字颜色
-- `--text-inverse`：反色文字
-- `--bg-rice` / `--bg-rice-dark`：米色背景
-
-**字体变量**：
-- `--font-display`：展示字体
-- `--font-size-xs` ~ `--font-size-4xl`：字体大小
-- `--font-weight-normal` / `--font-weight-medium` / `--font-weight-semibold` / `--font-weight-bold`：字重
-
-**间距变量**：
-- `--space-xs` ~ `--space-4xl`：间距大小
-
-**圆角变量**：
-- `--radius-xs` ~ `--radius-2xl` / `--radius-full`：圆角大小
-
-**阴影变量**：
-- `--shadow-sm` / `--shadow-md` / `--shadow-lg` / `--shadow-xl`：阴影
-- `--shadow-glow`：发光效果
-
-**过渡变量**：
-- `--transition-fast` / `--transition-normal` / `--transition-slow`：过渡时间
-
-**布局变量**：
-- `--container-max`：最大容器宽度
-- `--sidebar-width`：侧边栏宽度
-
-### 2. base.css
-
-**功能**：基础样式重置和全局样式设置。
-
-**主要内容**：
-- 浏览器样式重置
-- 全局字体设置
-- 基础元素样式
-- 滚动条样式
-
-### 3. common.css
-
-**功能**：通用样式类，可在多个组件中复用。
-
-**主要样式类**：
-- `.module-page`：模块页面容器
-- `.module-header`：模块页面头部
-- `.card-stats`：卡片统计信息
-- `.stat-item`：统计项
-
-### 4. components.css
-
-**功能**：组件通用样式。
-
-**主要内容**：
-- Element Plus组件样式覆盖
-- 自定义组件样式
-
-### 5. dialog-common.css
-
-**功能**：对话框通用样式。
-
-**主要内容**：
-- 对话框基础样式
-- 对话框内容布局
-- 详情描述列表样式
-
-### 6. home.css（新增）
-
-**功能**：首页独立样式文件。
-
-**主要内容**：
-- Hero区域样式（背景、动画、统计卡片）
-- 快捷导航卡片样式
-- 功能模块卡片样式
-- 传承人卡片样式
-- 拓展功能卡片样式
-- CTA区域样式
-- 响应式媒体查询
-
-**代码行数**：约885行
-
-### 7. media-common.css
-
-**功能**：媒体相关样式。
-
-**主要内容**：
-- 图片样式
-- 视频样式
-- 文档样式
-
-### 8. pages.css
-
-**功能**：页面特定样式。
-
-**主要内容**：
-- 各页面的特定样式
-
-### 9. index.css
-
-**功能**：样式文件入口，导入所有样式文件。
-
-**导入顺序**：
-1. variables.css（变量定义）
-2. base.css（基础样式）
-3. common.css（通用样式）
-4. components.css（组件样式）
-5. dialog-common.css（对话框样式）
-6. media-common.css（媒体样式）
-7. pages.css（页面样式）
-
-## 样式文件统计
-
-| 文件 | 行数 | 主要用途 |
-|------|------|---------|
-| variables.css | ~150 | CSS变量定义 |
-| base.css | ~100 | 基础样式重置 |
-| common.css | ~200 | 通用样式类 |
-| components.css | ~150 | 组件样式 |
-| dialog-common.css | ~100 | 对话框样式 |
-| media-common.css | ~80 | 媒体样式 |
-| pages.css | ~300 | 页面样式 |
-| home.css | ~885 | 首页样式 |
-| index.css | ~20 | 样式入口 |
-
-## CSS变量使用示例
-
+**品牌色（侗族文化特色）**:
 ```css
-/* 使用主题色 */
-.button {
-  background: linear-gradient(135deg, var(--dong-indigo), var(--dong-indigo-dark));
-  color: var(--text-inverse);
-}
-
-/* 使用间距和圆角 */
-.card {
-  padding: var(--space-xl);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-}
-
-/* 使用过渡 */
-.button:hover {
-  transform: translateY(-2px);
-  transition: all var(--transition-normal);
+:root {
+  --dong-indigo: #1A5276;        /* 靛蓝 - 主色调 */
+  --dong-jade: #28B463;          /* 青绿 - 辅助色 */
+  --dong-gold: #c9a227;          /* 金铜 - 强调色 */
 }
 ```
 
-## 响应式断点
+**功能色**:
+```css
+:root {
+  --color-primary: #1A5276;      /* 主色 */
+  --color-success: #28B463;      /* 成功 */
+  --color-warning: #f5a623;      /* 警告 */
+  --color-danger: #e74c3c;       /* 危险 */
+  --color-info: #3498db;         /* 信息 */
+}
+```
 
-| 断点 | 描述 | 媒体查询 |
-|------|------|----------|
-| xs | 超小屏幕 | < 480px |
-| sm | 小屏幕 | < 768px |
-| md | 中等屏幕 | < 1024px |
-| lg | 大屏幕 | < 1200px |
+**间距系统**:
+```css
+:root {
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+}
+```
 
-## 开发规范
+**圆角系统**:
+```css
+:root {
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+}
+```
 
-1. **命名规范**：使用BEM（Block, Element, Modifier）命名规范
-2. **模块化**：按功能和组件划分样式文件
-3. **变量使用**：优先使用CSS变量，避免硬编码
-4. **响应式**：使用媒体查询实现响应式设计
-5. **性能优化**：避免使用复杂的选择器
-
-## 注意事项
-
-- 所有样式都应该使用CSS变量，便于主题定制
-- 避免使用!important，优先通过选择器优先级解决样式冲突
-- 对于重复使用的样式，应该提取为通用类
-- 注意样式的继承和层叠，避免不必要的样式覆盖
-- 定期清理未使用的样式，保持样式文件的简洁
+**阴影系统**:
+```css
+:root {
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+```
 
 ---
 
-**最后更新时间**：2026年3月25日
+### base.css - 基础样式
+
+**用途**: 重置样式、排版、通用布局
+
+**包含内容**:
+- CSS Reset
+- 字体设置
+- 全局盒模型
+- 滚动条样式
+- 选中文本样式
+
+---
+
+### components.css - 组件样式
+
+**用途**: 组件通用样式
+
+**包含组件**:
+- 卡片样式
+- 按钮样式
+- 表单样式
+- 标签样式
+- 分页样式
+
+---
+
+### pages.css - 页面样式
+
+**用途**: 各页面通用样式
+
+**包含内容**:
+- 页面容器
+- 页面标题
+- 页面布局
+- 响应式适配
+
+---
+
+### common.css - 通用样式
+
+**用途**: 通用工具类样式
+
+**包含内容**:
+- 文本工具类
+- 间距工具类
+- 显示工具类
+- 动画工具类
+
+---
+
+### home.css - 首页专用样式
+
+**用途**: 首页特定样式
+
+**包含内容**:
+- 首页布局
+- 统计卡片
+- 导航卡片
+- 轮播样式
+
+---
+
+### media-common.css - 媒体相关通用样式
+
+**用途**: 媒体组件通用样式
+
+**包含内容**:
+- 图片容器
+- 视频播放器
+- 文档预览
+- 媒体列表
+
+---
+
+### dialog-common.css - 对话框通用样式
+
+**用途**: 对话框组件通用样式
+
+**包含内容**:
+- 对话框容器
+- 对话框头部
+- 对话框内容
+- 对话框底部
+- 对话框动画
+
+---
+
+## 开发规范
+
+1. **命名规范**: 使用小写字母，多个单词用连字符连接
+2. **变量使用**: 优先使用 CSS 变量
+3. **响应式**: 使用媒体查询适配不同屏幕
+4. **命名空间**: 组件样式使用 `.dm-` 前缀
+
+---
+
+**最后更新时间**: 2026年3月27日

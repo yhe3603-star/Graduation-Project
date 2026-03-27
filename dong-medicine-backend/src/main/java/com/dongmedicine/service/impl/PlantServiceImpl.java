@@ -43,10 +43,11 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
         LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            qw.and(wrapper -> wrapper.like(Plant::getNameCn, keyword)
-                                     .or().like(Plant::getNameDong, keyword)
-                                     .or().like(Plant::getEfficacy, keyword)
-                                     .or().like(Plant::getStory, keyword));
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(wrapper -> wrapper.like(Plant::getNameCn, escapedKeyword)
+                                     .or().like(Plant::getNameDong, escapedKeyword)
+                                     .or().like(Plant::getEfficacy, escapedKeyword)
+                                     .or().like(Plant::getStory, escapedKeyword));
         }
         if (StringUtils.hasText(category)) {
             qw.eq(Plant::getCategory, category);
@@ -63,10 +64,11 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         Page<Plant> pageParam = PageUtils.getPage(page, size);
         LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            qw.and(wrapper -> wrapper.like(Plant::getNameCn, keyword)
-                                     .or().like(Plant::getNameDong, keyword)
-                                     .or().like(Plant::getEfficacy, keyword)
-                                     .or().like(Plant::getStory, keyword));
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(wrapper -> wrapper.like(Plant::getNameCn, escapedKeyword)
+                                     .or().like(Plant::getNameDong, escapedKeyword)
+                                     .or().like(Plant::getEfficacy, escapedKeyword)
+                                     .or().like(Plant::getStory, escapedKeyword));
         }
         if (StringUtils.hasText(category)) {
             qw.eq(Plant::getCategory, category);
@@ -91,11 +93,12 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         if (!StringUtils.hasText(keyword)) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "搜索关键词不能为空");
         }
+        String escapedKeyword = PageUtils.escapeLike(keyword);
         Page<Plant> pageParam = PageUtils.getPage(page, size);
         LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<Plant>()
-                .like(Plant::getNameCn, keyword)
-                .or().like(Plant::getNameDong, keyword)
-                .or().like(Plant::getEfficacy, keyword)
+                .like(Plant::getNameCn, escapedKeyword)
+                .or().like(Plant::getNameDong, escapedKeyword)
+                .or().like(Plant::getEfficacy, escapedKeyword)
                 .orderByAsc(Plant::getNameCn);
         return page(pageParam, qw);
     }
@@ -110,7 +113,7 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
                     String.format("限制数量必须在%d-%d之间", MIN_PAGE_SIZE, MAX_PAGE_SIZE));
         }
 
-        String escapedKeyword = escapeLikeSpecialChars(keyword);
+        String escapedKeyword = PageUtils.escapeLike(keyword);
 
         try {
             if (useFullTextSearch) {
@@ -127,16 +130,6 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         List<Plant> results = plantMapper.searchByLike(escapedKeyword, limit);
         log.debug("LIKE搜索找到 {} 条结果: {}", results.size(), keyword);
         return results;
-    }
-
-    private String escapeLikeSpecialChars(String keyword) {
-        if (keyword == null) {
-            return null;
-        }
-        return keyword
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
     }
 
     @Override

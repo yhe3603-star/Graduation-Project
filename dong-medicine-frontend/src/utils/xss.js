@@ -1,17 +1,34 @@
 const XSS_PATTERNS = [
   /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-  /javascript:/gi,
+  /<script[^>]*\/>/gi,
+  /javascript\s*:/gi,
+  /vbscript\s*:/gi,
   /on\w+\s*=/gi,
+  /on\w+=/gi,
+  /&#x?[0-9a-f]+;?/gi,
   /eval\s*\(/gi,
   /expression\s*\(/gi,
-  /vbscript:/gi,
   /<iframe/gi,
   /<object/gi,
   /<embed/gi,
   /<link/gi,
   /<meta/gi,
-  /data:/gi,
-  /base64/gi
+  /<base/gi,
+  /<form/gi,
+  /<input/gi,
+  /<button/gi,
+  /<textarea/gi,
+  /<select/gi,
+  /<style/gi,
+  /data\s*:/gi,
+  /srcdoc\s*=/gi,
+  /xlink:href\s*=/gi,
+  /xmlns\s*=/gi,
+  /<svg/gi,
+  /<math/gi,
+  /<audio/gi,
+  /<video/gi,
+  /<source/gi
 ]
 
 const HTML_ENTITIES = {

@@ -77,7 +77,7 @@ public class AdminController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
         Page<Inheritor> pageResult = inheritorService.page(PageUtils.getPage(page, size),
-                new LambdaQueryWrapper<Inheritor>().orderByDesc(Inheritor::getCreatedAt));
+                new LambdaQueryWrapper<Inheritor>().orderByAsc(Inheritor::getId));
         return R.ok(PageUtils.toMap(pageResult));
     }
 
@@ -107,7 +107,7 @@ public class AdminController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
         Page<Knowledge> pageResult = knowledgeService.page(PageUtils.getPage(page, size),
-                new LambdaQueryWrapper<Knowledge>().orderByDesc(Knowledge::getCreatedAt));
+                new LambdaQueryWrapper<Knowledge>().orderByAsc(Knowledge::getId));
         return R.ok(PageUtils.toMap(pageResult));
     }
 
@@ -137,7 +137,7 @@ public class AdminController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
         Page<Plant> pageResult = plantService.page(PageUtils.getPage(page, size),
-                new LambdaQueryWrapper<Plant>().orderByDesc(Plant::getCreatedAt));
+                new LambdaQueryWrapper<Plant>().orderByAsc(Plant::getId));
         return R.ok(PageUtils.toMap(pageResult));
     }
 
@@ -170,7 +170,7 @@ public class AdminController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
         Page<Qa> pageResult = qaService.page(PageUtils.getPage(page, size),
-                new LambdaQueryWrapper<Qa>().orderByDesc(Qa::getCreatedAt));
+                new LambdaQueryWrapper<Qa>().orderByAsc(Qa::getId));
         return R.ok(PageUtils.toMap(pageResult));
     }
 

@@ -1,268 +1,282 @@
-# 页面视图目录说明
+# Views 页面组件目录
 
-## 文件夹结构
+本目录包含项目的所有页面级组件，每个页面对应一个路由。
 
-本目录包含项目的所有页面视图组件。
+## 目录结构
 
 ```
 views/
 ├── Home.vue              # 首页
-├── Knowledge.vue         # 知识库页面
+├── Plants.vue            # 药用植物页面
 ├── Inheritors.vue        # 传承人页面
-├── Plants.vue            # 药材页面
-├── Qa.vue                # 问答页面
-├── Interact.vue          # 互动体验页面
+├── Knowledge.vue         # 知识库页面
+├── Qa.vue                # 问答社区页面
 ├── Resources.vue         # 学习资源页面
+├── Interact.vue          # 互动专区页面
 ├── Visual.vue            # 数据可视化页面
 ├── PersonalCenter.vue    # 个人中心页面
 ├── Admin.vue             # 管理后台页面
-├── About.vue             # 关于我们页面
+├── About.vue             # 关于页面
 ├── Feedback.vue          # 意见反馈页面
 ├── GlobalSearch.vue      # 全局搜索页面
-├── NotFound.vue          # 404页面
-└── README.md             # 说明文档
+└── NotFound.vue          # 404页面
 ```
 
-## 详细说明
-
-### 1. Home.vue - 首页
-
-**路径**：`/`
-
-**功能**：网站首页，展示平台核心功能和统计数据。
-
-**主要模块**：
-| 模块 | 说明 |
-|------|------|
-| Hero区域 | 展示平台标题、副标题、快捷操作按钮、统计数据 |
-| 快捷导航 | 4个导航卡片（知识库、传承人、药材库、互动体验） |
-| 核心功能 | 4个功能模块卡片 |
-| 传承人风采 | 展示传承人列表 |
-| 拓展功能 | 3个拓展功能卡片 |
-| CTA区域 | 号召行动区域 |
-
-**数据加载**：
-- 药材总数
-- 传承人总数
-- 热门传承人列表
-
-**样式文件**：`@/styles/home.css`（独立样式文件，约885行）
-
-**代码行数**：约210行（优化后）
-
-### 2. Knowledge.vue - 知识库页面
-
-**路径**：`/knowledge`
-
-**功能**：展示侗医药知识库内容。
-
-**主要功能**：
-- 知识列表展示
-- 分类筛选
-- 关键词搜索
-- 分页显示
-- 详情查看
-
-### 3. Inheritors.vue - 传承人页面
-
-**路径**：`/inheritors`
-
-**功能**：展示侗医药传承人信息。
-
-**主要功能**：
-- 传承人列表
-- 级别筛选
-- 详情查看
-- 收藏功能
-
-### 4. Plants.vue - 药材页面
-
-**路径**：`/plants`
-
-**功能**：展示侗乡药用植物信息。
-
-**主要功能**：
-- 药材列表展示
-- 分类筛选
-- 用法筛选
-- 关键词搜索
-- 详情查看
-- 收藏功能
-
-### 5. Qa.vue - 问答页面
-
-**路径**：`/qa`
-
-**功能**：展示侗医药常见问答。
-
-**主要功能**：
-- 问答列表
-- 分类筛选
-- 搜索功能
-- 详情查看
-
-### 6. Interact.vue - 互动体验页面
-
-**路径**：`/interact`
-
-**功能**：提供互动学习体验。
-
-**主要功能**：
-- 答题模块
-- 植物识别游戏
-- AI对话
-- 排行榜
-
-### 7. Resources.vue - 学习资源页面
-
-**路径**：`/resources`
-
-**功能**：展示学习资源文件。
-
-**主要功能**：
-- 资源列表展示
-- 类型筛选
-- 文件预览
-- 文件下载
-- 收藏功能
-
-**代码行数**：约334行（优化后）
-
-### 8. Visual.vue - 数据可视化页面
-
-**路径**：`/visual`
-
-**功能**：展示数据可视化图表。
-
-### 9. PersonalCenter.vue - 个人中心页面
-
-**路径**：`/personal`
-
-**权限**：需要登录
-
-**功能**：用户个人中心管理。
-
-**主要功能**：
-- 用户信息展示
-- 收藏列表管理
-- 答题记录查看
-- 游戏记录查看
-- 密码修改
-- 反馈提交
-
-### 10. Admin.vue - 管理后台页面
-
-**路径**：`/admin`
-
-**权限**：需要管理员角色
-
-**功能**：管理后台系统。
-
-**主要模块**：
-| 模块 | 说明 |
-|------|------|
-| 仪表盘 | 统计数据展示、快捷操作 |
-| 用户管理 | 用户列表、封禁/解封 |
-| 知识管理 | CRUD操作 |
-| 传承人管理 | CRUD操作 |
-| 植物管理 | CRUD操作 |
-| 问答管理 | CRUD操作 |
-| 资源管理 | CRUD操作 |
-| 答题管理 | CRUD操作 |
-| 评论管理 | 审核、删除 |
-| 反馈管理 | 回复、处理 |
-| 日志管理 | 查看、删除 |
-
-**代码行数**：约412行（优化后）
-
-**使用的组件**：
-- AdminSidebar：侧边栏导航
-- AdminDashboard：仪表盘
-- AdminDataTable：数据表格
-- 各种详情对话框
-- 各种表单对话框
-
-### 11. About.vue - 关于我们页面
-
-**路径**：`/about`
-
-**功能**：展示平台介绍信息。
-
-### 12. Feedback.vue - 意见反馈页面
-
-**路径**：`/feedback`
-
-**功能**：用户提交意见反馈。
-
-### 13. GlobalSearch.vue - 全局搜索页面
-
-**路径**：`/search`
-
-**功能**：全局搜索功能。
-
-**搜索范围**：
-- 药材
-- 知识
-- 传承人
-- 问答
-- 资源
-
-### 14. NotFound.vue - 404页面
-
-**路径**：`/:pathMatch(.*)*`
-
-**功能**：处理未匹配的路由。
-
-## 页面统计
-
-| 页面 | 路径 | 权限 | 代码行数 |
-|------|------|------|---------|
-| Home.vue | / | 公开 | ~210 |
-| Knowledge.vue | /knowledge | 公开 | ~400 |
-| Inheritors.vue | /inheritors | 公开 | ~380 |
-| Plants.vue | /plants | 公开 | ~420 |
-| Qa.vue | /qa | 公开 | ~350 |
-| Interact.vue | /interact | 公开 | ~450 |
-| Resources.vue | /resources | 公开 | ~334 |
-| Visual.vue | /visual | 公开 | ~300 |
-| PersonalCenter.vue | /personal | 需登录 | ~400 |
-| Admin.vue | /admin | 需管理员 | ~412 |
-| About.vue | /about | 公开 | ~200 |
-| Feedback.vue | /feedback | 公开 | ~150 |
-| GlobalSearch.vue | /search | 公开 | ~250 |
-| NotFound.vue | 404 | 公开 | ~50 |
-| **总计** | **14个页面** | - | - |
-
-## 开发规范
-
-1. **页面结构**：
-   - 使用 `<script setup>` 语法
-   - 使用 Composition API
-   - 样式使用 scoped
-
-2. **数据获取**：
-   - 使用 inject 获取 request 实例
-   - 使用 composables 封装数据逻辑
-   - 使用 onMounted 加载数据
-
-3. **路由配置**：
-   - 所有路由在 router/index.js 中定义
-   - 需要认证的页面设置 meta.requiresAuth
-   - 需要管理员的页面设置 meta.requiresAdmin
-
-4. **样式规范**：
-   - 使用 CSS 变量
-   - 支持响应式设计
-   - 大型样式提取到独立文件
-
-## 页面优化记录
-
-| 页面 | 优化前行数 | 优化后行数 | 优化策略 |
-|------|-----------|-----------|---------|
-| Home.vue | 992 | 210 | 提取样式到 home.css |
-| Admin.vue | 555 | 412 | 提取表格配置、CRUD操作 |
-| Resources.vue | 523 | 334 | 移除调试代码、简化逻辑 |
+## 页面说明
+
+### Home.vue - 首页
+
+**路由**: `/`
+
+**功能**:
+- 平台核心功能入口展示
+- 统计数据概览（植物数、传承人数、知识条目数）
+- 传承人风采轮播展示
+- 快速导航卡片
+- AI智能问答入口
+
+**依赖组件**:
+- `AiChatCard.vue` - AI对话卡片
+- `CardGrid.vue` - 卡片网格
+- `UpdateLogCard.vue` - 更新日志
 
 ---
 
-**最后更新时间**：2026年3月25日
+### Plants.vue - 药用植物页面
+
+**路由**: `/plants`
+
+**功能**:
+- 药用植物列表展示（卡片网格布局）
+- 分类筛选（按药材分类）
+- 用法方式筛选
+- 关键词搜索
+- 植物详情查看（对话框）
+- 收藏功能
+
+**依赖组件**:
+- `CardGrid.vue` - 卡片网格
+- `SearchFilter.vue` - 搜索过滤
+- `PlantDetailDialog.vue` - 植物详情对话框
+- `Pagination.vue` - 分页
+
+---
+
+### Inheritors.vue - 传承人页面
+
+**路由**: `/inheritors`
+
+**功能**:
+- 传承人列表展示
+- 按级别筛选（国家级/省级/市级/县级）
+- 关键词搜索
+- 传承人详情查看
+- 收藏功能
+
+**依赖组件**:
+- `CardGrid.vue` - 卡片网格
+- `SearchFilter.vue` - 搜索过滤
+- `InheritorDetailDialog.vue` - 传承人详情对话框
+- `Pagination.vue` - 分页
+
+---
+
+### Knowledge.vue - 知识库页面
+
+**路由**: `/knowledge`
+
+**功能**:
+- 知识条目列表展示
+- 分类筛选（疗法分类、疾病分类）
+- 关键词搜索
+- 知识详情查看
+- 收藏功能
+
+**依赖组件**:
+- `CardGrid.vue` - 卡片网格
+- `SearchFilter.vue` - 搜索过滤
+- `KnowledgeDetailDialog.vue` - 知识详情对话框
+- `PageSidebar.vue` - 侧边栏
+
+---
+
+### Qa.vue - 问答社区页面
+
+**路由**: `/qa`
+
+**功能**:
+- 常见问答列表
+- 分类筛选
+- 关键词搜索
+- 问答详情查看
+
+**依赖组件**:
+- `CardGrid.vue` - 卡片网格
+- `SearchFilter.vue` - 搜索过滤
+- `Pagination.vue` - 分页
+
+---
+
+### Resources.vue - 学习资源页面
+
+**路由**: `/resources`
+
+**功能**:
+- 学习资源列表展示
+- 分类筛选（视频/文档/图片）
+- 文件类型筛选
+- 资源预览（视频播放、文档预览）
+- 资源下载
+- 收藏功能
+
+**依赖组件**:
+- `CardGrid.vue` - 卡片网格
+- `SearchFilter.vue` - 搜索过滤
+- `ResourceDetailDialog.vue` - 资源详情对话框
+- `VideoPlayer.vue` - 视频播放
+- `DocumentPreview.vue` - 文档预览
+
+---
+
+### Interact.vue - 互动专区页面
+
+**路由**: `/interact`
+
+**功能**:
+- 趣味答题模块
+- 植物识别游戏
+- 评论交流
+- 排行榜展示
+
+**依赖组件**:
+- `QuizSection.vue` - 答题组件
+- `PlantGame.vue` - 植物游戏
+- `CommentSection.vue` - 评论组件
+- `InteractSidebar.vue` - 互动侧边栏
+
+---
+
+### Visual.vue - 数据可视化页面
+
+**路由**: `/visual`
+
+**功能**:
+- 药方频次统计图表
+- 疗法分类统计
+- 传承人分布地图
+- 平台数据趋势
+
+**依赖组件**:
+- `ChartCard.vue` - 图表卡片（ECharts）
+
+---
+
+### PersonalCenter.vue - 个人中心页面
+
+**路由**: `/personal` (需登录)
+
+**功能**:
+- 用户信息展示与修改
+- 我的收藏管理
+- 答题记录查看
+- 评论历史查看
+- 密码修改
+
+**依赖组件**:
+- `usePersonalCenter.js` - 个人中心逻辑
+
+---
+
+### Admin.vue - 管理后台页面
+
+**路由**: `/admin` (需管理员权限)
+
+**功能**:
+- 数据统计仪表盘
+- 用户管理（列表、封禁、角色分配）
+- 内容管理（植物、知识、传承人、资源、问答）
+- 评论审核
+- 反馈处理
+- 操作日志查看
+
+**依赖组件**:
+- `AdminDashboard.vue` - 仪表盘
+- `AdminDataTable.vue` - 数据表格
+- `AdminSidebar.vue` - 侧边栏
+- `admin/dialogs/*` - 详情对话框
+- `admin/forms/*` - 表单对话框
+
+---
+
+### About.vue - 关于页面
+
+**路由**: `/about`
+
+**功能**:
+- 选题背景介绍
+- 平台特色说明
+- 功能模块介绍
+- 侗医文化背景
+
+---
+
+### Feedback.vue - 意见反馈页面
+
+**路由**: `/feedback`
+
+**功能**:
+- 反馈表单提交
+- 反馈类型选择
+- 反馈记录查看
+
+---
+
+### GlobalSearch.vue - 全局搜索页面
+
+**路由**: `/search`
+
+**功能**:
+- 跨模块统一搜索
+- 搜索结果分类展示
+- 搜索历史记录
+
+---
+
+### NotFound.vue - 404页面
+
+**路由**: `/:pathMatch(.*)*`
+
+**功能**:
+- 404错误提示
+- 返回首页链接
+
+## 开发规范
+
+1. **命名规范**: 页面组件使用大驼峰命名法
+2. **路由配置**: 在 `router/index.js` 中配置路由
+3. **权限控制**: 通过路由 `meta` 字段配置权限要求
+4. **状态管理**: 使用 Pinia 管理页面状态
+5. **组合式函数**: 复杂逻辑抽取到 `composables/` 目录
+
+## 页面与路由映射
+
+| 页面组件 | 路由路径 | 权限要求 |
+|---------|---------|---------|
+| Home.vue | `/` | 无 |
+| Plants.vue | `/plants` | 无 |
+| Inheritors.vue | `/inheritors` | 无 |
+| Knowledge.vue | `/knowledge` | 无 |
+| Qa.vue | `/qa` | 无 |
+| Resources.vue | `/resources` | 无 |
+| Interact.vue | `/interact` | 无 |
+| Visual.vue | `/visual` | 无 |
+| PersonalCenter.vue | `/personal` | 需登录 |
+| Admin.vue | `/admin` | 需登录 + 管理员 |
+| About.vue | `/about` | 无 |
+| Feedback.vue | `/feedback` | 无 |
+| GlobalSearch.vue | `/search` | 无 |
+| NotFound.vue | `/:pathMatch(.*)*` | 无 |
+
+---
+
+**最后更新时间**: 2026年3月27日

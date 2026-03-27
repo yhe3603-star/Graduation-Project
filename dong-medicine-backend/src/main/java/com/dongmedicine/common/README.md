@@ -28,15 +28,15 @@ common/
 
 ### 1. R.java - 统一响应封装
 
-**功能**：封装所有API接口的统一响应格式。
+**功能**：封装所有API接口的统一响应格式，支持请求追踪。
 
 **类结构**：
 ```java
 public class R<T> {
-    private Integer code;      // 状态码
-    private String message;    // 提示信息
-    private T data;           // 响应数据
-    private Long timestamp;   // 时间戳
+    private int code;          // 状态码
+    private String msg;        // 提示信息
+    private T data;            // 响应数据
+    private String requestId;  // 请求追踪ID（用于日志追踪）
 }
 ```
 
@@ -45,10 +45,25 @@ public class R<T> {
 |------|------|
 | `R.ok()` | 返回成功响应（无数据） |
 | `R.ok(T data)` | 返回成功响应（带数据） |
-| `R.ok(String message, T data)` | 返回成功响应（带消息和数据） |
-| `R.fail(String message)` | 返回失败响应 |
-| `R.fail(Integer code, String message)` | 返回失败响应（带状态码） |
-| `R.fail(ErrorCode errorCode)` | 返回失败响应（带错误码枚举） |
+| `R.ok(String msg, T data)` | 返回成功响应（带消息和数据） |
+| `R.error(String msg)` | 返回失败响应（默认500） |
+| `R.error(int code, String msg)` | 返回失败响应（指定状态码） |
+| `R.error(ErrorCode errorCode)` | 返回失败响应（带错误码枚举） |
+| `R.error(ErrorCode errorCode, String message)` | 返回失败响应（自定义消息） |
+| `R.unauthorized(String msg)` | 返回未授权响应（401） |
+| `R.forbidden(String msg)` | 返回禁止访问响应（403） |
+| `R.notFound(String msg)` | 返回资源不存在响应（404） |
+| `R.badRequest(String msg)` | 返回请求错误响应（400） |
+
+**实例方法**：
+| 方法 | 说明 |
+|------|------|
+| `isSuccess()` | 判断响应是否成功 |
+
+**请求追踪**：
+- 每个响应自动包含`requestId`字段
+- 通过`RequestIdFilter`和MDC实现请求追踪
+- 便于日志排查和问题定位
 
 **使用示例**：
 ```java
@@ -187,13 +202,33 @@ public void deleteUser(Long id) {
 
 ### 9. util/PageUtils.java - 分页工具
 
-**功能**：处理分页相关的工具方法。
+**功能**：处理分页相关的工具方法，包含SQL注入防护。
 
 **主要方法**：
 | 方法 | 说明 |
 |------|------|
-| `getPage(int page, int size)` | 创建分页对象 |
-| `toPageResult(Page<T> page)` | 将MyBatis-Plus分页对象转换为统一分页结果 |
+| `getPage(Integer page, Integer size)` | 创建分页对象（带边界检查：page最小1，size范围1-100） |
+| `toMap(Page<?> pageResult)` | 将MyBatis-Plus分页对象转换为Map格式 |
+| `escapeLike(String keyword)` | 转义LIKE查询特殊字符，防止SQL注入 |
+
+**escapeLike方法**：
+转义LIKE查询中的特殊字符（`\`、`%`、`_`），防止SQL注入攻击。
+
+```java
+// 使用示例
+String safeKeyword = PageUtils.escapeLike(keyword);
+wrapper.like("name", safeKeyword);
+```
+
+**分页响应格式**：
+```json
+{
+  "records": [...],
+  "total": 100,
+  "page": 1,
+  "size": 20
+}
+```
 
 ### 10. util/PasswordValidator.java - 密码验证器
 
@@ -270,16 +305,25 @@ public void deleteUser(Long id) {
 | `escapeJavaScript(String input)` | 转义JavaScript特殊字符 |
 | `sanitizeUrl(String url)` | 清理URL中的危险内容 |
 | `sanitizeFileName(String fileName)` | 清理文件名中的危险字符 |
-| `sanitizeForLog(String input)` | 清理日志中的特殊字符 |
+| `sanitizeForLog(String input)` | 清理日志中的特殊字符（限制1000字符） |
 | `isSafeInput(String input, int maxLength)` | 判断输入是否安全 |
 
-**检测的危险模式**：
-- `<script>`标签
-- `javascript:`协议
-- 事件处理器（onclick, onerror等）
-- `eval()`函数
+**检测的危险模式（30+）**：
+- `<script>`标签（包括自闭合）
+- `javascript:`、`vbscript:`协议
+- 事件处理器（onclick, onerror, onload等）
+- `eval()`、`expression()`函数
 - `<iframe>`, `<object>`, `<embed>`标签
-- SQL注入关键字（select, insert, update, delete等）
+- `<link>`, `<meta>`, `<base>`标签
+- `<form>`, `<input>`, `<button>`表单元素
+- `<style>`样式标签
+- `data:`协议
+- `srcdoc`属性
+- `xlink:href`属性
+- `<svg>`, `<math>`数学标签
+- `<audio>`, `<video>`, `<source>`媒体标签
+- HTML实体编码（`&#x?...`）
+- SQL注入关键字（select, insert, update, delete, drop等）
 
 ## 文件统计
 
@@ -302,4 +346,4 @@ public void deleteUser(Long id) {
 
 ---
 
-**最后更新时间**：2026年3月25日
+**最后更新时间**：2026年3月27日

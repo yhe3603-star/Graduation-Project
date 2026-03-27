@@ -57,7 +57,8 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
             qw.eq(Resource::getCategory, category);
         }
         if (StringUtils.hasText(keyword)) {
-            qw.and(wrapper -> wrapper.like(Resource::getTitle, keyword).or().like(Resource::getDescription, keyword));
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(wrapper -> wrapper.like(Resource::getTitle, escapedKeyword).or().like(Resource::getDescription, escapedKeyword));
         }
         qw.orderByDesc(Resource::getDownloadCount);
         return list(qw);
@@ -71,9 +72,11 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
             qw.eq(Resource::getCategory, category);
         }
         if (StringUtils.hasText(keyword)) {
-            qw.and(wrapper -> wrapper.like(Resource::getTitle, keyword).or().like(Resource::getDescription, keyword));
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(wrapper -> wrapper.like(Resource::getTitle, escapedKeyword).or().like(Resource::getDescription, escapedKeyword));
         }
         if (StringUtils.hasText(fileType)) {
+            String escapedFileType = PageUtils.escapeLike(fileType);
             if ("document".equals(fileType)) {
                 qw.and(wrapper -> wrapper
                     .like(Resource::getFiles, "\"type\":\"document\"")
@@ -96,7 +99,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
                     .or().like(Resource::getFiles, "\"type\":\"png\"")
                     .or().like(Resource::getFiles, "\"type\":\"gif\""));
             } else {
-                qw.like(Resource::getFiles, "\"type\":\"" + fileType + "\"");
+                qw.like(Resource::getFiles, "\"type\":\"" + escapedFileType + "\"");
             }
         }
         qw.orderByDesc(Resource::getDownloadCount);

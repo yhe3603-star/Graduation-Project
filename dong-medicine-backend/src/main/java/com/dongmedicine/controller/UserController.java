@@ -8,8 +8,10 @@ import com.dongmedicine.entity.User;
 import com.dongmedicine.config.JwtUtil;
 import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.dto.LoginDTO;
+import com.dongmedicine.dto.RegisterDTO;
 import com.dongmedicine.dto.ChangePasswordDTO;
 import com.dongmedicine.service.UserService;
+import com.dongmedicine.service.CaptchaService;
 import com.dongmedicine.service.TokenBlacklistService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +31,14 @@ public class UserController {
     private final UserService service;
     private final TokenBlacklistService tokenBlacklistService;
     private final JwtUtil jwtUtil;
+    private final CaptchaService captchaService;
 
     @PostMapping("/login")
     @RateLimit(value = 5, key = "user_login")
     public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
+        // 验证验证码
+        captchaService.validateCaptchaOrThrow(dto.getCaptchaKey(), dto.getCaptchaCode());
+        
         String token = service.login(dto.getUsername(), dto.getPassword());
         User user = service.getUserByUsername(dto.getUsername());
         return R.ok(Map.of("token", token, "id", user.getId(), "username", user.getUsername(), "role", user.getRole()));
@@ -40,7 +46,15 @@ public class UserController {
 
     @PostMapping("/register")
     @RateLimit(value = 3, key = "user_register")
-    public R<String> register(@Valid @RequestBody LoginDTO dto) {
+    public R<String> register(@Valid @RequestBody RegisterDTO dto) {
+        // 验证验证码
+        captchaService.validateCaptchaOrThrow(dto.getCaptchaKey(), dto.getCaptchaCode());
+        
+        // 验证两次密码是否一致
+        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
+            throw BusinessException.badRequest("两次输入的密码不一致");
+        }
+        
         service.register(dto.getUsername(), dto.getPassword());
         return R.ok("注册成功");
     }
@@ -60,6 +74,10 @@ public class UserController {
         if (userId == null) {
             throw BusinessException.unauthorized("请先登录");
         }
+        
+        // 验证验证码
+        captchaService.validateCaptchaOrThrow(dto.getCaptchaKey(), dto.getCaptchaCode());
+        
         service.changePassword(userId, dto.getCurrentPassword(), dto.getNewPassword());
         String token = request.getHeader("Authorization");
         if (token != null) {

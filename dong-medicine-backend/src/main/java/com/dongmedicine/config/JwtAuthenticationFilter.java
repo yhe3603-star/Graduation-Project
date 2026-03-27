@@ -128,6 +128,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
                 
+                if (user.isBanned()) {
+                    LOGGER.debug("User is banned: {}", userId);
+                    SecurityContextHolder.clearContext();
+                    if (!isRefreshTokenRequest) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"code\":403,\"msg\":\"账号已被封禁\"}");
+                        return;
+                    }
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                
                 String currentRole = user.getRole();
                 if (!RoleConstants.normalize(currentRole).equals(RoleConstants.normalize(role))) {
                     LOGGER.debug("User role changed, token invalid: {}", userId);

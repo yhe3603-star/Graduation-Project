@@ -4,7 +4,7 @@ import { logAuthWarn, logSecurityWarn } from '@/utils/logger'
 import { sanitize, containsXss, containsSqlInjection, sanitizeForLog } from "./xss"
 
 const pendingRequests = new Map()
-let isRefreshing = false
+let refreshPromise = null
 let refreshSubscribers = []
 
 function subscribeTokenRefresh(callback) {
@@ -133,6 +133,21 @@ function setAuthData(data) {
   }
 }
 
+async function getOrRefreshToken() {
+  if (refreshPromise) {
+    return refreshPromise
+  }
+  
+  refreshPromise = refreshToken()
+  
+  try {
+    const result = await refreshPromise
+    return result
+  } finally {
+    refreshPromise = null
+  }
+}
+
 async function refreshToken() {
   const token = getToken()
   if (!token) return null
@@ -227,7 +242,7 @@ request.interceptors.response.use(
       if (token && !config._retry) {
         config._retry = true
         
-        const newToken = await refreshToken()
+        const newToken = await getOrRefreshToken()
         
         if (newToken) {
           config.headers.Authorization = "Bearer " + newToken
@@ -251,35 +266,16 @@ request.interceptors.response.use(
       if (token && !config._retry) {
         config._retry = true
         
-        if (!isRefreshing) {
-          isRefreshing = true
-          
-          try {
-            const newToken = await refreshToken()
-            
-            if (newToken) {
-              onRefreshed(newToken)
-              config.headers.Authorization = "Bearer " + newToken
-              return request(config)
-            } else {
-              onRefreshFailed()
-              ElMessage.warning("登录已过期，请重新登录")
-              return Promise.reject(err)
-            }
-          } finally {
-            isRefreshing = false
-          }
+        const newToken = await getOrRefreshToken()
+        
+        if (newToken) {
+          onRefreshed(newToken)
+          config.headers.Authorization = "Bearer " + newToken
+          return request(config)
         } else {
-          return new Promise((resolve, reject) => {
-            subscribeTokenRefresh((newToken) => {
-              if (newToken) {
-                config.headers.Authorization = "Bearer " + newToken
-                resolve(request(config))
-              } else {
-                reject(err)
-              }
-            })
-          })
+          onRefreshFailed()
+          ElMessage.warning("登录已过期，请重新登录")
+          return Promise.reject(err)
         }
       }
       
@@ -294,10 +290,41 @@ request.interceptors.response.use(
       return Promise.reject(err.response?.data || err)
     }
 
-    ElMessage.error(msg)
+    showErrorMessage(status, msg, err)
     return Promise.reject(err.response?.data || err)
   }
 )
+
+function showErrorMessage(status, msg, err) {
+  const errorMessages = {
+    400: "请求参数有误，请检查输入",
+    404: "请求的资源不存在",
+    405: "请求方法不允许",
+    408: "请求超时，请稍后重试",
+    409: "资源冲突，请刷新后重试",
+    413: "上传文件过大，请压缩后重试",
+    422: "提交数据验证失败",
+    429: "请求过于频繁，请稍后重试",
+    500: "服务器内部错误，请稍后重试",
+    502: "网关错误，请稍后重试",
+    503: "服务暂时不可用，请稍后重试",
+    504: "网关超时，请稍后重试"
+  }
+  
+  if (status === 429) {
+    ElMessage.warning("操作过于频繁，请稍后再试")
+    return
+  }
+  
+  const friendlyMsg = errorMessages[status]
+  if (friendlyMsg) {
+    ElMessage.error(friendlyMsg)
+  } else if (msg && msg !== "Network Error" && msg !== "Unknown Error") {
+    ElMessage.error(msg)
+  } else {
+    ElMessage.error("网络异常，请检查网络连接")
+  }
+}
 
 function sanitizeRequestData(data) {
   if (!data || typeof data !== 'object') return data

@@ -207,8 +207,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         user.setStatus(User.STATUS_BANNED);
         updateById(user);
-        String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
-        tokenBlacklistService.addToBlacklist(token);
     }
 
     @Override

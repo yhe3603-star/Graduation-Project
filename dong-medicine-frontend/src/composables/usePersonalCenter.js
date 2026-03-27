@@ -61,21 +61,39 @@ export function usePersonalCenter(request, updateUserState) {
   const commentPageSize = ref(6)
 
   const passwordFormRef = ref(null)
+  const passwordCaptchaRef = ref(null)
   const passwordLoading = ref(false)
   const logoutLoading = ref(false)
   const passwordForm = ref({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    captchaKey: '',
+    captchaCode: ''
   })
 
   const passwordRules = {
     currentPassword: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
     newPassword: [
       { required: true, message: '请输入新密码', trigger: 'blur' },
-      { min: 6, max: 20, message: '密码长度为6-20位', trigger: 'blur' }
+      { min: 8, max: 50, message: '密码长度为8-50位', trigger: 'blur' },
+      { 
+        validator: (rule, value, callback) => {
+          if (!/[a-zA-Z]/.test(value)) {
+            callback(new Error('密码必须包含字母'))
+          } else if (!/[0-9]/.test(value)) {
+            callback(new Error('密码必须包含数字'))
+          } else if (/\s/.test(value)) {
+            callback(new Error('密码不能包含空格'))
+          } else {
+            callback()
+          }
+        }, 
+        trigger: 'blur' 
+      }
     ],
-    confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }]
+    confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
+    captchaCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
   }
 
   function validateConfirmPassword(rule, value, callback) {
@@ -150,23 +168,27 @@ export function usePersonalCenter(request, updateUserState) {
     try {
       await passwordFormRef.value.validate()
       passwordLoading.value = true
-      await request.put('/user/password', {
+      await request.post('/user/change-password', {
         currentPassword: passwordForm.value.currentPassword,
-        newPassword: passwordForm.value.newPassword
+        newPassword: passwordForm.value.newPassword,
+        captchaKey: passwordForm.value.captchaKey,
+        captchaCode: passwordForm.value.captchaCode
       })
       ElMessage.success('密码修改成功，请重新登录')
       handleLogout()
     } catch (e) {
       logOperationWarn('修改密码')
-      ElMessage.error('密码修改失败')
+      ElMessage.error(e.msg || '密码修改失败')
+      passwordCaptchaRef.value?.refreshCaptcha()
     } finally {
       passwordLoading.value = false
     }
   }
 
   const resetPasswordForm = () => {
-    passwordForm.value = { currentPassword: '', newPassword: '', confirmPassword: '' }
+    passwordForm.value = { currentPassword: '', newPassword: '', confirmPassword: '', captchaKey: '', captchaCode: '' }
     passwordFormRef.value?.resetFields()
+    passwordCaptchaRef.value?.refreshCaptcha()
   }
 
   const handleLogout = async () => {
@@ -231,6 +253,7 @@ export function usePersonalCenter(request, updateUserState) {
     commentPage,
     commentPageSize,
     passwordFormRef,
+    passwordCaptchaRef,
     passwordLoading,
     logoutLoading,
     passwordForm,

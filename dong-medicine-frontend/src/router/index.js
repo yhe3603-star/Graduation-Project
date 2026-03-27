@@ -20,39 +20,51 @@ const routes = [
 
 const router = createRouter({ history: createWebHistory(), routes })
 
-let tokenValidationPromise = null
-let lastValidationTime = 0
-/** 必须与当前 token 一致才复用校验结果，避免登录换 token 后仍沿用旧 Promise 导致误判 */
-let lastValidatedTokenSnapshot = ''
-const VALIDATION_INTERVAL = 60 * 1000
+const VALIDATION_CACHE_TTL = 60 * 1000
+const validationCache = {
+  promise: null,
+  token: null,
+  timestamp: 0
+}
 
-async function validateToken() {
-  const userStore = useUserStore()
-  if (!userStore.token) return false
-
-  const now = Date.now()
-  const sameToken =
-    lastValidatedTokenSnapshot === userStore.token
-  if (
-    sameToken &&
-    now - lastValidationTime < VALIDATION_INTERVAL &&
-    tokenValidationPromise
-  ) {
-    return tokenValidationPromise
+function isTokenLocallyExpired(userStore) {
+  const token = userStore.token
+  if (!token) return true
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (!payload || !payload.exp) return true
+    return Date.now() >= payload.exp * 1000
+  } catch {
+    return true
   }
+}
 
-  lastValidationTime = now
-  lastValidatedTokenSnapshot = userStore.token
-  tokenValidationPromise = userStore
-    .validateToken()
-    .then((isValid) => {
-      if (!isValid) {
-        userStore.clearAuth()
-      }
-      return isValid
-    })
-
-  return tokenValidationPromise
+async function validateTokenWithCache(userStore) {
+  const now = Date.now()
+  const token = userStore.token
+  
+  if (!token) return false
+  
+  if (isTokenLocallyExpired(userStore)) {
+    userStore.clearAuth()
+    return false
+  }
+  
+  if (validationCache.token === token && 
+      validationCache.promise && 
+      now - validationCache.timestamp < VALIDATION_CACHE_TTL) {
+    return validationCache.promise
+  }
+  
+  validationCache.token = token
+  validationCache.timestamp = now
+  validationCache.promise = userStore.validateToken().then(isValid => {
+    if (!isValid) userStore.clearAuth()
+    return isValid
+  })
+  
+  return validationCache.promise
 }
 
 router.beforeEach(async (to, from, next) => {
@@ -62,19 +74,26 @@ router.beforeEach(async (to, from, next) => {
     userStore.initializeFromStorage()
   }
 
-  if (to.meta.requiresAuth) {
-    if (!userStore.token) {
-      return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
-    }
+  if (!to.meta.requiresAuth) {
+    return next()
+  }
 
-    const isValid = await validateToken()
-    if (!isValid) {
-      return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
-    }
+  if (!userStore.token) {
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
+  }
 
-    if (to.meta.requiresAdmin && !userStore.isAdmin) {
-      return next({ path: "/", query: { noPermission: "true" } })
-    }
+  if (isTokenLocallyExpired(userStore)) {
+    userStore.clearAuth()
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
+  }
+
+  const isValid = await validateTokenWithCache(userStore)
+  if (!isValid) {
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
+  }
+
+  if (to.meta.requiresAdmin && !userStore.isAdmin) {
+    return next({ path: "/", query: { noPermission: "true" } })
   }
 
   next()

@@ -120,17 +120,30 @@ public R<UserVO> login(@RequestBody LoginDTO dto) {
 
 ### 5. RateLimitAspect.java - 限流切面
 
-**功能**：实现接口限流功能。
+**功能**：实现接口限流功能，支持Redis降级。
 
 **实现方式**：
-- 使用Redis的increment操作实现计数器
-- 基于滑动窗口算法
-- 支持用户级别和IP级别限流
-- Redis不可用时自动降级（不限流）
+- **主要方式**：使用Redis的increment操作实现计数器，基于滑动窗口算法
+- **降级方式**：Redis不可用时自动降级到本地令牌桶算法
+- **支持级别**：用户级别和IP级别限流
 
 **限流Key生成规则**：
 - 已登录用户：`方法名:用户名`
 - 未登录用户：`方法名:IP地址`
+
+**本地令牌桶降级**：
+```java
+// LocalTokenBucket 内部类
+- 容量：100个令牌
+- 补充速率：每秒补充一次
+- Redis检查间隔：30秒
+```
+
+**降级策略**：
+1. Redis正常时使用Redis计数器限流
+2. Redis异常时自动切换到本地令牌桶
+3. 定期检查Redis是否恢复（30秒间隔）
+4. Redis恢复后自动切回Redis限流
 
 ### 6. OperationLogAspect.java - 操作日志切面
 
@@ -291,6 +304,22 @@ public R<UserVO> login(@RequestBody LoginDTO dto) {
 
 **功能**：为每个请求生成唯一ID，便于日志追踪。
 
+**实现方式**：
+- 使用UUID生成唯一请求ID
+- 将请求ID存入MDC（Mapped Diagnostic Context）
+- 在响应头中返回请求ID（`X-Request-Id`）
+
+**配置常量**：
+```java
+public static final String REQUEST_ID_HEADER = "X-Request-Id";
+public static final String REQUEST_ID_MDC_KEY = "requestId";
+```
+
+**使用场景**：
+- 日志追踪：通过requestId关联同一请求的所有日志
+- 问题排查：快速定位特定请求的处理过程
+- 响应关联：前端可通过响应头获取请求ID
+
 ### 18. RequestSizeFilter.java - 请求大小过滤器
 
 **功能**：限制请求体大小，防止大文件攻击。
@@ -344,4 +373,4 @@ public R<UserVO> login(@RequestBody LoginDTO dto) {
 
 ---
 
-**最后更新时间**：2026年3月25日
+**最后更新时间**：2026年3月27日

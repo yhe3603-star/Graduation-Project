@@ -1,250 +1,250 @@
-# 工具函数目录说明
+# Utils 工具函数目录
 
-## 文件夹结构
+本目录包含项目的所有工具函数模块。
 
-本目录包含项目中使用的工具函数，提供各种通用功能。
+## 目录结构
 
 ```
 utils/
-├── adminUtils.js   # 管理后台工具函数
-├── cache.js        # 缓存工具
-├── index.js        # 工具函数导出
-├── logger.js       # 日志工具
-├── media.js        # 媒体处理工具
-├── request.js      # 网络请求工具
-├── xss.js          # XSS防护工具
-└── README.md       # 工具函数说明文档
+├── index.js              # 通用工具函数入口
+├── request.js            # Axios HTTP请求封装
+├── xss.js                # XSS防护工具
+├── logger.js             # 日志工具
+├── media.js              # 媒体处理工具
+├── adminUtils.js         # 管理后台工具
+├── cache.js              # 缓存工具
+└── README.md             # 说明文档
 ```
 
-## 详细说明
+## 模块说明
 
-### 1. request.js - 网络请求工具
+### index.js - 通用工具函数
 
-**功能**：封装axios，提供统一的HTTP请求处理。
+**导出函数**:
 
-**配置**：
-| 配置项 | 值 | 说明 |
-|-------|-----|------|
-| baseURL | /api | API基础路径 |
-| timeout | 60000 | 请求超时时间 |
+| 函数 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| `formatTime(date, format)` | date: Date/string, format: string | string | 时间格式化 |
+| `extractData(response)` | response: object | any | 响应数据提取 |
+| `getRankClass(rank)` | rank: number | string | 获取排名样式类 |
+| `formatFileSize(bytes)` | bytes: number | string | 文件大小格式化 |
+| `truncate(str, length)` | str: string, length: number | string | 文本截断 |
+| `debounce(fn, delay)` | fn: Function, delay: number | Function | 防抖函数 |
+| `throttle(fn, delay)` | fn: Function, delay: number | Function | 节流函数 |
+| `deepClone(obj)` | obj: object | object | 深拷贝 |
+| `isEmpty(value)` | value: any | boolean | 空值判断 |
+| `isNotEmpty(value)` | value: any | boolean | 非空判断 |
+| `generateId()` | - | string | 生成唯一ID |
+| `sleep(ms)` | ms: number | Promise | 延迟函数 |
+| `retry(fn, times, delay)` | fn: Function, times: number, delay: number | Promise | 重试函数 |
 
-**请求拦截器功能**：
-- 自动添加Authorization头（Bearer Token）
-- 自动添加userId头
-- 请求数据XSS过滤
-- SQL注入检测
-- 请求去重（取消重复请求）
-
-**响应拦截器功能**：
-- 统一错误处理
-- Token自动刷新（401时）
-- 请求重试机制
-- 错误消息提示
-
-**重试配置**：
+**使用示例**:
 ```javascript
-const RETRY_CONFIG = {
-  maxRetries: 3,           // 最大重试次数
-  retryDelay: 1000,        // 基础延迟时间
-  retryableStatuses: [408, 429, 500, 502, 503, 504],
-  retryableMethods: ['get', 'head', 'options']
+import { formatTime, debounce, deepClone } from '@/utils'
+
+// 时间格式化
+formatTime(new Date(), 'YYYY-MM-DD HH:mm:ss')
+
+// 防抖
+const handleSearch = debounce((keyword) => {
+  console.log(keyword)
+}, 300)
+
+// 深拷贝
+const cloned = deepClone(originalObject)
+```
+
+---
+
+### request.js - Axios HTTP请求封装
+
+**核心功能**:
+- 请求/响应拦截器
+- Token 自动注入
+- Token 刷新机制（Promise缓存，避免竞态）
+- 请求取消（防重复提交）
+- 自动重试机制
+- XSS/SQL 注入防护
+- 统一错误处理
+
+**配置**:
+```javascript
+const request = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  timeout: 30000,
+  headers: { 'Content-Type': 'application/json' }
+})
+```
+
+**Token刷新机制**:
+```javascript
+let refreshPromise = null
+
+async function getOrRefreshToken() {
+  if (refreshPromise) {
+    return refreshPromise  // 多个401请求共享同一个刷新Promise
+  }
+  
+  refreshPromise = refreshToken()
+  try {
+    return await refreshPromise
+  } finally {
+    refreshPromise = null
+  }
 }
 ```
 
-**导出方法**：
-| 方法 | 说明 |
-|------|------|
-| `request.get(url, config)` | GET请求 |
-| `request.post(url, data, config)` | POST请求 |
-| `request.put(url, data, config)` | PUT请求 |
-| `request.delete(url, config)` | DELETE请求 |
-| `cancelAllRequests()` | 取消所有请求 |
-| `cancelRequestByUrl(url)` | 取消指定URL的请求 |
+**错误提示优化**:
+```javascript
+const errorMessages = {
+  400: "请求参数有误，请检查输入",
+  404: "请求的资源不存在",
+  429: "请求过于频繁，请稍后重试",
+  500: "服务器内部错误，请稍后重试",
+  // ...
+}
+```
 
-**Token刷新机制**：
-- 401响应时自动尝试刷新Token
-- 刷新成功后重试原请求
-- 刷新失败后清除认证信息并提示重新登录
-
-**使用示例**：
+**使用示例**:
 ```javascript
 import request from '@/utils/request'
 
 // GET请求
-const response = await request.get('/plants/list', {
-  params: { page: 1, size: 10 }
-})
+const data = await request.get('/plants/list', { params: { page: 1 } })
 
 // POST请求
-const result = await request.post('/user/login', {
-  username: 'admin',
-  password: 'password'
+const result = await request.post('/user/login', { username, password })
+
+// 上传文件
+const formData = new FormData()
+formData.append('file', file)
+await request.post('/upload/image', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
 })
 ```
-
-### 2. adminUtils.js - 管理后台工具函数
-
-**功能**：管理后台相关的工具函数和配置。
-
-**配置对象**：
-
-**TABLE_CONFIGS**：表格配置对象
-```javascript
-{
-  users: {
-    title: '用户',
-    showTitle: false,
-    columns: [
-      { prop: 'username', label: '用户名', minWidth: 120 },
-      { prop: 'role', label: '角色', type: 'tag' },
-      { prop: 'status', label: '状态', slotName: 'status', width: 80 },
-      { prop: 'createdAt', label: '创建时间', width: 160 }
-    ],
-    showAdd: false,
-    showEdit: false,
-    actionWidth: 250
-  },
-  // ... 其他表格配置
-}
-```
-
-**menuTitles**：菜单标题映射
-```javascript
-{
-  dashboard: '仪表盘',
-  users: '用户管理',
-  knowledge: '知识管理',
-  inheritors: '传承人管理',
-  plants: '植物管理',
-  qa: '问答管理',
-  resources: '资源管理',
-  quiz: '答题管理',
-  comments: '评论管理',
-  feedback: '反馈管理',
-  logs: '日志管理'
-}
-```
-
-**工具函数**：
-| 函数 | 参数 | 返回值 | 说明 |
-|------|------|-------|------|
-| `getLogModuleTagType(module)` | module: String | String | 获取日志模块标签类型 |
-| `getLogTypeTagType(type)` | type: String | String | 获取日志类型标签类型 |
-| `formatLogTime(time)` | time: String | String | 格式化日志时间 |
-| `formatFileSize(bytes)` | bytes: Number | String | 格式化文件大小 |
-| `getFileTypeTagType(type)` | type: String | String | 获取文件类型标签样式 |
-| `getFileTypeText(type)` | type: String | String | 获取文件类型显示文本 |
-| `getCorrectAnswerContent(quiz)` | quiz: Object | String | 获取正确答案内容 |
-
-### 3. media.js - 媒体处理工具
-
-**功能**：处理媒体文件相关的工具函数。
-
-**主要函数**：
-| 函数 | 参数 | 返回值 | 说明 |
-|------|------|-------|------|
-| `parseMediaList(mediaStr)` | mediaStr: String | Array | 解析媒体列表JSON字符串 |
-| `getMediaType(filename)` | filename: String | String | 根据文件名获取媒体类型 |
-| `formatFileSize(bytes)` | bytes: Number | String | 格式化文件大小 |
-| `getImageUrl(path)` | path: String | String | 获取图片完整URL |
-| `getVideoUrl(path)` | path: String | String | 获取视频完整URL |
-| `getDocumentUrl(path)` | path: String | String | 获取文档完整URL |
-
-**媒体类型判断**：
-```javascript
-const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
-const VIDEO_EXTENSIONS = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv']
-const DOCUMENT_EXTENSIONS = ['docx', 'doc', 'pdf', 'pptx', 'ppt', 'xlsx', 'xls', 'txt']
-```
-
-### 4. cache.js - 缓存工具
-
-**功能**：缓存管理工具，支持设置过期时间。
-
-**主要方法**：
-| 方法 | 参数 | 返回值 | 说明 |
-|------|------|-------|------|
-| `setCache(key, value, expire)` | key, value, expire(ms) | void | 设置缓存（支持过期时间） |
-| `getCache(key)` | key | any | 获取缓存 |
-| `removeCache(key)` | key | void | 移除缓存 |
-| `clearCache()` | - | void | 清除所有缓存 |
-| `setSessionCache(key, value)` | key, value | void | 设置会话缓存 |
-| `getSessionCache(key)` | key | any | 获取会话缓存 |
-
-### 5. logger.js - 日志工具
-
-**功能**：提供统一的日志记录功能。
-
-**主要方法**：
-| 方法 | 说明 |
-|------|------|
-| `log(...args)` | 普通日志 |
-| `logInfo(...args)` | 信息日志 |
-| `logWarn(...args)` | 警告日志 |
-| `logError(...args)` | 错误日志 |
-| `logDebug(...args)` | 调试日志 |
-| `logAuthWarn(...args)` | 认证警告日志 |
-| `logSecurityWarn(...args)` | 安全警告日志 |
-
-### 6. xss.js - XSS防护工具
-
-**功能**：防止XSS（跨站脚本）攻击和SQL注入。
-
-**主要方法**：
-| 方法 | 参数 | 返回值 | 说明 |
-|------|------|-------|------|
-| `sanitize(input)` | input: String | String | 对输入进行HTML转义 |
-| `containsXss(input)` | input: String | Boolean | 检测是否包含XSS攻击代码 |
-| `containsSqlInjection(input)` | input: String | Boolean | 检测是否包含SQL注入 |
-| `sanitizeForLog(input)` | input: String | String | 清理日志中的特殊字符 |
-
-**检测的危险模式**：
-- `<script>`标签
-- `javascript:`协议
-- 事件处理器（onclick, onerror等）
-- `eval()`函数
-- SQL注入关键字
-
-### 7. index.js - 工具函数导出
-
-**主要导出**：
-| 导出项 | 说明 |
-|-------|------|
-| `request` | axios请求实例 |
-| `extractPageData(res)` | 提取分页数据 |
-| `extractData(res)` | 提取普通数据 |
-| `logFetchError(context, error)` | 记录获取错误 |
-| `logOperationWarn(...args)` | 记录操作警告 |
-
-**使用方法**：
-```javascript
-import { request, extractPageData, logFetchError } from '@/utils'
-
-const response = await request.get('/api/plants')
-const { records, total } = extractPageData(response)
-```
-
-## 工具函数统计
-
-| 文件 | 导出数量 | 主要用途 |
-|------|---------|---------|
-| request.js | 2 | 网络请求 |
-| adminUtils.js | 12 | 管理后台配置和工具 |
-| media.js | 6 | 媒体处理 |
-| cache.js | 6 | 缓存管理 |
-| logger.js | 7 | 日志记录 |
-| xss.js | 4 | XSS防护 |
-| index.js | 4 | 数据提取和日志 |
-| **总计** | **41** | - |
-
-## 开发规范
-
-1. **命名规范**：函数名使用camelCase，文件名使用小写字母
-2. **功能单一**：每个工具函数应该只负责一个功能
-3. **参数验证**：对函数参数进行适当的验证
-4. **错误处理**：包含适当的错误处理逻辑
-5. **文档说明**：为每个函数添加详细的注释说明
 
 ---
 
-**最后更新时间**：2026年3月25日
+### xss.js - XSS防护工具
+
+**覆盖30+危险模式**:
+- script标签
+- javascript/vbscript协议
+- 事件处理器 (onclick, onerror等)
+- HTML实体编码
+- eval/expression函数
+- 危险标签 (iframe, object, embed等)
+
+**导出函数**:
+
+| 函数 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| `containsXss(input)` | input: string | boolean | 检测是否包含XSS |
+| `sanitize(input)` | input: string | string | 清理XSS代码 |
+| `sanitizeForLog(input)` | input: string | string | 日志专用清理 |
+| `containsSqlInjection(input)` | input: string | boolean | 检测SQL注入 |
+
+**使用示例**:
+```javascript
+import { containsXss, sanitize } from '@/utils/xss'
+
+// 检测XSS
+if (containsXss(userInput)) {
+  alert('输入包含非法字符')
+  return
+}
+
+// 清理XSS
+const cleanInput = sanitize(userInput)
+```
+
+---
+
+### logger.js - 日志工具
+
+**导出函数**:
+
+| 函数 | 参数 | 说明 |
+|------|------|------|
+| `logInfo(message, data)` | message: string, data: object | 信息日志 |
+| `logWarn(message, data)` | message: string, data: object | 警告日志 |
+| `logError(message, error)` | message: string, error: Error | 错误日志 |
+| `logAuthWarn(message, data)` | message: string, data: object | 认证警告 |
+| `logSecurityWarn(message, data)` | message: string, data: object | 安全警告 |
+
+**使用示例**:
+```javascript
+import { logInfo, logError } from '@/utils/logger'
+
+logInfo('用户登录成功', { userId: 1 })
+logError('请求失败', error)
+```
+
+---
+
+### media.js - 媒体处理工具
+
+**导出函数**:
+
+| 函数 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| `getFileIcon(filename)` | filename: string | string | 获取文件图标 |
+| `isImageFile(filename)` | filename: string | boolean | 判断是否图片 |
+| `isVideoFile(filename)` | filename: string | boolean | 判断是否视频 |
+| `isDocumentFile(filename)` | filename: string | boolean | 判断是否文档 |
+| `getMediaType(filename)` | filename: string | string | 获取媒体类型 |
+
+**支持的文件类型**:
+- 图片: jpg, jpeg, png, gif, webp, svg, bmp
+- 视频: mp4, avi, mov, wmv, flv, mkv
+- 文档: pdf, doc, docx, xls, xlsx, ppt, pptx, txt
+
+---
+
+### adminUtils.js - 管理后台工具
+
+**导出函数**:
+
+| 函数 | 说明 |
+|------|------|
+| `formatTableData(data)` | 格式化表格数据 |
+| `getStatusTag(status)` | 获取状态标签配置 |
+| `getLevelTag(level)` | 获取级别标签配置 |
+| `exportToExcel(data, filename)` | 导出Excel |
+
+---
+
+### cache.js - 缓存工具
+
+**导出函数**:
+
+| 函数 | 参数 | 说明 |
+|------|------|------|
+| `setCache(key, value, ttl)` | key: string, value: any, ttl: number | 设置缓存 |
+| `getCache(key)` | key: string | 获取缓存 |
+| `removeCache(key)` | key: string | 移除缓存 |
+| `clearCache()` | - | 清除所有缓存 |
+
+**使用示例**:
+```javascript
+import { setCache, getCache } from '@/utils/cache'
+
+// 设置缓存（10分钟过期）
+setCache('user-preferences', { theme: 'dark' }, 600000)
+
+// 获取缓存
+const prefs = getCache('user-preferences')
+```
+
+---
+
+## 开发规范
+
+1. **命名规范**: 函数使用小驼峰命名法
+2. **导出方式**: 使用命名导出 `export function xxx()`
+3. **类型注释**: 复杂函数添加JSDoc注释
+4. **单元测试**: 工具函数应有对应的测试用例
+
+---
+
+**最后更新时间**: 2026年3月27日

@@ -68,9 +68,10 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         if (!StringUtils.hasText(keyword)) {
             return list();
         }
+        String escapedKeyword = PageUtils.escapeLike(keyword);
         return list(new LambdaQueryWrapper<Knowledge>()
-                .like(Knowledge::getTitle, keyword)
-                .or().like(Knowledge::getContent, keyword)
+                .like(Knowledge::getTitle, escapedKeyword)
+                .or().like(Knowledge::getContent, escapedKeyword)
                 .orderByDesc(Knowledge::getPopularity));
     }
 
@@ -84,7 +85,8 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     public List<Knowledge> advancedSearch(String keyword, String therapy, String disease, String herb, String sortBy) {
         LambdaQueryWrapper<Knowledge> qw = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            qw.and(wrapper -> wrapper.like(Knowledge::getTitle, keyword).or().like(Knowledge::getContent, keyword));
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(wrapper -> wrapper.like(Knowledge::getTitle, escapedKeyword).or().like(Knowledge::getContent, escapedKeyword));
         }
         if (StringUtils.hasText(therapy)) {
             qw.eq(Knowledge::getTherapyCategory, therapy);
@@ -120,7 +122,8 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         Page<Knowledge> pageParam = PageUtils.getPage(page, size);
         LambdaQueryWrapper<Knowledge> qw = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            qw.and(wrapper -> wrapper.like(Knowledge::getTitle, keyword).or().like(Knowledge::getContent, keyword));
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(wrapper -> wrapper.like(Knowledge::getTitle, escapedKeyword).or().like(Knowledge::getContent, escapedKeyword));
         }
         if (StringUtils.hasText(therapy)) {
             qw.eq(Knowledge::getTherapyCategory, therapy);

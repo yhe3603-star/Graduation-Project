@@ -1,120 +1,165 @@
-# 路由配置目录说明
+# Router 路由配置目录
 
-## 文件夹结构
+本目录包含项目的 Vue Router 路由配置。
 
-本目录包含项目的路由配置。
+## 文件结构
 
 ```
 router/
-├── index.js         # 路由配置
-└── README.md        # 说明文档
+├── index.js              # 路由配置入口
+└── README.md             # 说明文档
 ```
 
-## 详细说明
+## 路由配置说明
 
-### index.js - 路由配置
+### index.js - 路由配置入口
 
-**功能**：定义应用的路由规则和导航守卫。
+**路由定义**:
 
-**路由列表**：
-| 路径 | 名称 | 组件 | 权限 | 说明 |
-|------|------|------|------|------|
-| / | Home | Home.vue | 公开 | 首页 |
-| /knowledge | Knowledge | Knowledge.vue | 公开 | 知识库 |
-| /inheritors | Inheritors | Inheritors.vue | 公开 | 传承人 |
-| /plants | Plants | Plants.vue | 公开 | 药材 |
-| /qa | Qa | Qa.vue | 公开 | 问答 |
-| /interact | Interact | Interact.vue | 公开 | 互动体验 |
-| /resources | Resources | Resources.vue | 公开 | 学习资源 |
-| /visual | Visual | Visual.vue | 公开 | 可视化 |
-| /personal | Personal | PersonalCenter.vue | 需认证 | 个人中心 |
-| /admin | Admin | Admin.vue | 需认证+管理员 | 管理后台 |
-| /about | About | About.vue | 公开 | 关于我们 |
-| /feedback | Feedback | Feedback.vue | 公开 | 意见反馈 |
-| /search | Search | GlobalSearch.vue | 公开 | 全局搜索 |
-| /:pathMatch(.*)* | NotFound | NotFound.vue | 公开 | 404页面 |
+| 路由路径 | 名称 | 组件 | 权限要求 |
+|---------|------|------|----------|
+| `/` | Home | Home.vue | 无 |
+| `/plants` | Plants | Plants.vue | 无 |
+| `/inheritors` | Inheritors | Inheritors.vue | 无 |
+| `/knowledge` | Knowledge | Knowledge.vue | 无 |
+| `/qa` | Qa | Qa.vue | 无 |
+| `/interact` | Interact | Interact.vue | 无 |
+| `/resources` | Resources | Resources.vue | 无 |
+| `/visual` | Visual | Visual.vue | 无 |
+| `/personal` | Personal | PersonalCenter.vue | 需登录 |
+| `/admin` | Admin | Admin.vue | 需登录 + 管理员权限 |
+| `/about` | About | About.vue | 无 |
+| `/feedback` | Feedback | Feedback.vue | 无 |
+| `/search` | Search | GlobalSearch.vue | 无 |
+| `/:pathMatch(.*)*` | NotFound | NotFound.vue | 无 |
 
-**路由元信息（meta）**：
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| requiresAuth | Boolean | 是否需要登录 |
-| requiresAdmin | Boolean | 是否需要管理员权限 |
+---
 
-**导航守卫功能**：
-1. **认证检查**：
-   - 检查Token是否存在
-   - 从sessionStorage恢复状态
-   - 验证Token有效性
+## 路由守卫
 
-2. **权限检查**：
-   - 需要登录的页面检查Token
-   - 需要管理员的页面检查角色
-   - 未授权时重定向到首页
+### Token验证缓存机制
 
-3. **Token验证优化**：
-   - 60秒内缓存验证结果
-   - 避免重复验证
-   - Token切换时重新验证
-
-**Token验证流程**：
 ```javascript
-async function validateToken() {
-  const userStore = useUserStore()
-  if (!userStore.token) return false
-
-  // 缓存检查（60秒内）
-  const now = Date.now()
-  if (sameToken && now - lastValidationTime < 60000) {
-    return tokenValidationPromise
-  }
-
-  // 服务端验证
-  return userStore.validateToken()
+const VALIDATION_CACHE_TTL = 60 * 1000  // 60秒缓存
+const validationCache = {
+  promise: null,
+  token: null,
+  timestamp: 0
 }
 ```
 
-**路由守卫逻辑**：
+### 本地Token过期检查
+
+```javascript
+function isTokenLocallyExpired(userStore) {
+  const token = userStore.token
+  if (!token) return true
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (!payload || !payload.exp) return true
+    return Date.now() >= payload.exp * 1000
+  } catch {
+    return true
+  }
+}
+```
+
+### Token验证（带缓存）
+
+```javascript
+async function validateTokenWithCache(userStore) {
+  const now = Date.now()
+  const token = userStore.token
+  
+  if (!token) return false
+  
+  // 本地过期检查
+  if (isTokenLocallyExpired(userStore)) {
+    userStore.clearAuth()
+    return false
+  }
+  
+  // 缓存命中
+  if (validationCache.token === token && 
+      validationCache.promise && 
+      now - validationCache.timestamp < VALIDATION_CACHE_TTL) {
+    return validationCache.promise
+  }
+  
+  // 发起验证请求
+  validationCache.token = token
+  validationCache.timestamp = now
+  validationCache.promise = userStore.validateToken().then(isValid => {
+    if (!isValid) userStore.clearAuth()
+    return isValid
+  })
+  
+  return validationCache.promise
+}
+```
+
+### 路由守卫逻辑
+
 ```javascript
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   
-  // 恢复状态
+  // 1. 初始化用户状态
   if (!userStore.token && sessionStorage.getItem('token')) {
     userStore.initializeFromStorage()
   }
 
-  // 认证检查
-  if (to.meta.requiresAuth) {
-    if (!userStore.token) {
-    return next({ path: '/', query: { redirect: to.fullPath, needLogin: 'true' } })
-    }
+  // 2. 检查是否需要认证
+  if (!to.meta.requiresAuth) {
+    return next()
+  }
 
-    const isValid = await validateToken()
-    if (!isValid) {
-    return next({ path: '/', query: { redirect: to.fullPath, needLogin: 'true' } })
-    }
+  // 3. 检查是否有token
+  if (!userStore.token) {
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
+  }
 
-    // 管理员检查
-    if (to.meta.requiresAdmin && !userStore.isAdmin) {
-    return next({ path: '/', query: { noPermission: 'true' } })
-    }
+  // 4. 本地Token过期检查
+  if (isTokenLocallyExpired(userStore)) {
+    userStore.clearAuth()
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
+  }
+
+  // 5. 服务端Token验证（带缓存）
+  const isValid = await validateTokenWithCache(userStore)
+  if (!isValid) {
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
+  }
+
+  // 6. 管理员权限验证
+  if (to.meta.requiresAdmin && !userStore.isAdmin) {
+    return next({ path: "/", query: { noPermission: "true" } })
   }
 
   next()
 })
 ```
 
-**重定向参数**：
-| 参数 | 说明 |
-|------|------|
-| redirect | 登录后跳转的目标路径 |
-| needLogin | 提示需要登录 |
-| noPermission | 提示没有权限 |
+---
 
-**懒加载配置**：
-- 所有路由组件使用动态导入（`import()`）
-- 支持代码分割和按需加载
+## 路由元信息
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `requiresAuth` | boolean | 是否需要登录 |
+| `requiresAdmin` | boolean | 是否需要管理员权限 |
+| `title` | string | 页面标题 |
 
 ---
 
-**最后更新时间**：2026年3月25日
+## 开发规范
+
+1. **路由命名**: 使用大驼峰命名法
+2. **懒加载**: 使用动态导入 `() => import('@/views/xxx.vue')`
+3. **权限控制**: 通过 `meta` 字段配置
+4. **重定向**: 登录后重定向使用 `query.redirect`
+
+---
+
+**最后更新时间**: 2026年3月27日

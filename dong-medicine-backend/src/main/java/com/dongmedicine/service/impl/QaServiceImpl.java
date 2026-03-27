@@ -50,9 +50,10 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
         if (!StringUtils.hasText(keyword)) {
             throw BusinessException.badRequest("搜索关键词不能为空");
         }
+        String escapedKeyword = PageUtils.escapeLike(keyword);
         return list(new LambdaQueryWrapper<Qa>()
-                .like(Qa::getQuestion, keyword)
-                .or().like(Qa::getAnswer, keyword)
+                .like(Qa::getQuestion, escapedKeyword)
+                .or().like(Qa::getAnswer, escapedKeyword)
                 .orderByDesc(Qa::getPopularity));
     }
 
@@ -61,10 +62,11 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
         if (!StringUtils.hasText(keyword)) {
             throw BusinessException.badRequest("搜索关键词不能为空");
         }
+        String escapedKeyword = PageUtils.escapeLike(keyword);
         Page<Qa> pageParam = PageUtils.getPage(page, size);
         LambdaQueryWrapper<Qa> qw = new LambdaQueryWrapper<Qa>()
-                .like(Qa::getQuestion, keyword)
-                .or().like(Qa::getAnswer, keyword)
+                .like(Qa::getQuestion, escapedKeyword)
+                .or().like(Qa::getAnswer, escapedKeyword)
                 .orderByDesc(Qa::getPopularity);
         return page(pageParam, qw);
     }

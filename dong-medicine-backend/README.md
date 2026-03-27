@@ -9,7 +9,10 @@
 - [项目结构](#项目结构)
 - [API 接口](#api-接口)
 - [实体类](#实体类)
+- [DTO 数据传输对象](#dto-数据传输对象)
 - [配置说明](#配置说明)
+- [安全机制](#安全机制)
+- [性能优化](#性能优化)
 - [快速开始](#快速开始)
 - [Docker 部署](#docker-部署)
 
@@ -23,11 +26,12 @@
 
 | 功能模块 | 说明 |
 |---------|------|
-| 用户系统 | 注册、登录、权限管理、Token 刷新 |
+| 用户系统 | 注册、登录、权限管理、Token 刷新、用户状态检查 |
+| 验证码 | 图形验证码生成与验证 |
 | 内容管理 | 植物、知识、传承人、资源、问答管理 |
 | 互动功能 | 评论、收藏、反馈 |
 | 游戏化学习 | 测验、植物识别游戏、排行榜 |
-| AI问答 | DeepSeek 智能问答 |
+| AI问答 | DeepSeek 智能问答，支持消息长度限制 |
 | 后台管理 | 数据统计、内容审核、日志管理 |
 | 文件上传 | 图片、视频、文档上传管理 |
 
@@ -42,9 +46,10 @@
 | MyBatis Plus | 3.5.9 | ORM框架 |
 | MySQL | 8.0+ | 数据库 |
 | Redis | 7.0+ | 分布式缓存 |
-| Caffeine | - | 本地缓存 |
-| JWT | 0.11.5 | Token认证 |
+| Caffeine | 3.1+ | 本地缓存 |
+| JWT (jjwt) | 0.11.5 | Token认证 |
 | SpringDoc | 2.2.0 | API文档 |
+| Lombok | 1.18.38 | 简化代码 |
 | Docker | - | 容器化部署 |
 
 ---
@@ -58,51 +63,163 @@ dong-medicine-backend/
 │   │
 │   ├── common/                          # 公共模块
 │   │   ├── constant/                    # 常量定义
+│   │   │   └── RoleConstants.java       # 角色常量 (USER, ADMIN)
+│   │   │
 │   │   ├── exception/                   # 异常处理
 │   │   │   ├── BusinessException.java        # 业务异常类
+│   │   │   ├── ErrorCode.java                # 错误码定义
 │   │   │   └── GlobalExceptionHandler.java  # 全局异常处理器
+│   │   │
 │   │   ├── util/                        # 工具类
-│   │   │   ├── XssUtils.java                # XSS防护工具
-│   │   │   └── IpUtils.java                 # IP获取工具
-│   │   ├── R.java                       # 统一响应封装
+│   │   │   ├── FileCleanupHelper.java        # 文件清理助手
+│   │   │   ├── FileTypeUtils.java            # 文件类型工具
+│   │   │   ├── PageUtils.java                # 分页工具 + LIKE转义
+│   │   │   ├── PasswordValidator.java        # 密码验证器
+│   │   │   ├── SensitiveDataUtils.java       # 敏感信息脱敏
+│   │   │   └── XssUtils.java                 # XSS防护工具
+│   │   │
+│   │   ├── R.java                       # 统一响应封装(含requestId)
 │   │   └── SecurityUtils.java           # 安全工具类
 │   │
 │   ├── config/                          # 配置模块
-│   │   ├── SecurityConfig.java          # Spring Security配置
-│   │   ├── JwtUtil.java                 # JWT工具类
+│   │   ├── health/                      # 健康检查
+│   │   │   ├── CacheHealthIndicator.java     # 缓存健康检查
+│   │   │   ├── DatabaseHealthIndicator.java  # 数据库健康检查
+│   │   │   └── RedisHealthIndicator.java     # Redis健康检查
+│   │   │
+│   │   ├── logging/                     # 日志配置
+│   │   │   └── SensitiveDataConverter.java   # 敏感数据转换器
+│   │   │
+│   │   ├── AdminDataInitializer.java    # 管理员数据初始化
+│   │   ├── AppProperties.java           # 应用属性配置
+│   │   ├── AsyncConfig.java             # 异步配置
+│   │   ├── CacheConfig.java             # 缓存配置 (Redis + Caffeine)
+│   │   ├── CustomUserDetails.java       # 用户详情实现
+│   │   ├── DeepSeekConfig.java          # DeepSeek AI 配置
+│   │   ├── FileUploadProperties.java    # 文件上传属性
 │   │   ├── JwtAuthenticationFilter.java # JWT认证过滤器
-│   │   ├── CacheConfig.java             # 缓存配置
-│   │   ├── CorsConfig.java              # 跨域配置
-│   │   ├── RateLimitAspect.java         # 限流切面
+│   │   ├── JwtSecretValidator.java      # JWT密钥验证器
+│   │   ├── JwtUtil.java                 # JWT工具类
+│   │   ├── LoggingAspect.java           # 日志切面
+│   │   ├── MybatisPlusConfig.java       # MyBatis Plus 配置
+│   │   ├── OpenApiConfig.java           # OpenAPI 配置
 │   │   ├── OperationLogAspect.java      # 操作日志切面
-│   │   └── OpenApiConfig.java           # API文档配置
+│   │   ├── RateLimit.java               # 限流注解
+│   │   ├── RateLimitAspect.java         # 限流切面 (含本地令牌桶降级)
+│   │   ├── RequestIdFilter.java         # 请求追踪ID过滤器
+│   │   ├── RequestSizeFilter.java       # 请求体大小限制过滤器
+│   │   ├── SecurityConfig.java          # Spring Security 配置
+│   │   ├── SecurityConfigValidator.java # 安全配置验证器
+│   │   ├── StartupInfoPrinter.java      # 启动信息打印
+│   │   ├── WebMvcConfig.java            # Web MVC 配置
+│   │   └── XssFilter.java               # XSS 过滤器
 │   │
-│   ├── controller/                      # 控制器层 (16个)
-│   │   ├── UserController.java          # 用户接口
-│   │   ├── AdminController.java         # 管理员接口
-│   │   ├── PlantController.java         # 药用植物接口
-│   │   ├── KnowledgeController.java     # 知识库接口
-│   │   ├── InheritorController.java     # 传承人接口
-│   │   ├── ResourceController.java      # 学习资源接口
+│   ├── controller/                      # 控制器层 (17个)
+│   │   ├── AdminController.java         # 管理后台接口
+│   │   ├── CaptchaController.java       # 验证码接口
+│   │   ├── ChatController.java          # AI聊天接口
 │   │   ├── CommentController.java       # 评论接口
 │   │   ├── FavoriteController.java      # 收藏接口
 │   │   ├── FeedbackController.java      # 反馈接口
-│   │   ├── QuizController.java          # 测验接口
+│   │   ├── FileUploadController.java    # 文件上传接口
+│   │   ├── InheritorController.java     # 传承人接口
+│   │   ├── KnowledgeController.java     # 知识库接口
+│   │   ├── LeaderboardController.java   # 排行榜接口
+│   │   ├── OperationLogController.java  # 操作日志接口
+│   │   ├── PlantController.java         # 药用植物接口
 │   │   ├── PlantGameController.java     # 植物游戏接口
 │   │   ├── QaController.java            # 常见问答接口
-│   │   ├── ChatController.java          # AI聊天接口
-│   │   ├── LeaderboardController.java   # 排行榜接口
-│   │   ├── FileUploadController.java    # 文件上传接口
-│   │   └── OperationLogController.java  # 操作日志接口
+│   │   ├── QuizController.java          # 测验接口
+│   │   ├── ResourceController.java      # 学习资源接口
+│   │   └── UserController.java          # 用户接口
 │   │
-│   ├── service/                         # 服务层接口
-│   │   └── impl/                        # 服务层实现
-│   │
-│   ├── mapper/                          # 数据访问层
+│   ├── dto/                             # 数据传输对象 (18个)
+│   │   ├── AnswerDTO.java               # 答案DTO
+│   │   ├── CaptchaDTO.java              # 验证码DTO
+│   │   ├── ChangePasswordDTO.java       # 修改密码DTO
+│   │   ├── ChatRequest.java             # AI聊天请求(含长度限制)
+│   │   ├── ChatResponse.java            # AI聊天响应
+│   │   ├── CommentAddDTO.java           # 添加评论DTO
+│   │   ├── CommentDTO.java              # 评论DTO
+│   │   ├── FeedbackDTO.java             # 反馈DTO
+│   │   ├── FeedbackReplyDTO.java        # 反馈回复DTO
+│   │   ├── FileUploadResult.java        # 文件上传结果
+│   │   ├── InheritorDTO.java            # 传承人DTO
+│   │   ├── KnowledgeDTO.java            # 知识DTO
+│   │   ├── LoginDTO.java                # 登录DTO
+│   │   ├── PlantDTO.java                # 植物DTO
+│   │   ├── PlantGameSubmitDTO.java      # 植物游戏提交DTO
+│   │   ├── QuizQuestionDTO.java         # 测验问题DTO
+│   │   ├── QuizSubmitDTO.java           # 测验提交DTO
+│   │   ├── RegisterDTO.java             # 注册DTO
+│   │   └── UserUpdateDTO.java           # 用户更新DTO
 │   │
 │   ├── entity/                          # 实体类 (13个)
+│   │   ├── Comment.java                 # 评论
+│   │   ├── Favorite.java                # 收藏
+│   │   ├── Feedback.java                # 反馈
+│   │   ├── Inheritor.java               # 传承人
+│   │   ├── Knowledge.java               # 知识
+│   │   ├── OperationLog.java            # 操作日志
+│   │   ├── Plant.java                   # 药用植物
+│   │   ├── PlantGameRecord.java         # 植物游戏记录
+│   │   ├── Qa.java                      # 常见问答
+│   │   ├── QuizQuestion.java            # 测验问题
+│   │   ├── QuizRecord.java              # 测验记录
+│   │   ├── Resource.java                # 学习资源
+│   │   └── User.java                    # 用户
 │   │
-│   └── dto/                             # 数据传输对象
+│   ├── mapper/                          # 数据访问层 (13个)
+│   │   ├── CommentMapper.java
+│   │   ├── FavoriteMapper.java
+│   │   ├── FeedbackMapper.java
+│   │   ├── InheritorMapper.java
+│   │   ├── KnowledgeMapper.java
+│   │   ├── OperationLogMapper.java
+│   │   ├── PlantGameRecordMapper.java
+│   │   ├── PlantMapper.java
+│   │   ├── QaMapper.java
+│   │   ├── QuizQuestionMapper.java
+│   │   ├── QuizRecordMapper.java
+│   │   ├── ResourceMapper.java
+│   │   └── UserMapper.java
+│   │
+│   ├── service/                         # 服务层
+│   │   ├── impl/                        # 服务实现 (15个)
+│   │   │   ├── AiChatServiceImpl.java        # AI聊天服务
+│   │   │   ├── CommentServiceImpl.java       # 评论服务
+│   │   │   ├── FavoriteServiceImpl.java      # 收藏服务
+│   │   │   ├── FeedbackServiceImpl.java      # 反馈服务
+│   │   │   ├── FileUploadServiceImpl.java    # 文件上传服务
+│   │   │   ├── InheritorServiceImpl.java     # 传承人服务
+│   │   │   ├── KnowledgeServiceImpl.java     # 知识服务
+│   │   │   ├── OperationLogServiceImpl.java  # 操作日志服务
+│   │   │   ├── PlantGameServiceImpl.java     # 植物游戏服务
+│   │   │   ├── PlantServiceImpl.java         # 植物服务
+│   │   │   ├── QaServiceImpl.java            # 问答服务
+│   │   │   ├── QuizServiceImpl.java          # 测验服务
+│   │   │   ├── ResourceServiceImpl.java      # 资源服务
+│   │   │   ├── TokenBlacklistServiceImpl.java # Token黑名单服务
+│   │   │   └── UserServiceImpl.java          # 用户服务
+│   │   │
+│   │   ├── AiChatService.java           # AI聊天服务接口
+│   │   ├── CaptchaService.java          # 验证码服务接口
+│   │   ├── CommentService.java          # 评论服务接口
+│   │   ├── FavoriteService.java         # 收藏服务接口
+│   │   ├── FeedbackService.java         # 反馈服务接口
+│   │   ├── FileUploadService.java       # 文件上传服务接口
+│   │   ├── InheritorService.java        # 传承人服务接口
+│   │   ├── KnowledgeService.java        # 知识服务接口
+│   │   ├── OperationLogService.java     # 操作日志服务接口
+│   │   ├── PlantGameService.java        # 植物游戏服务接口
+│   │   ├── PlantService.java            # 植物服务接口
+│   │   ├── QaService.java               # 问答服务接口
+│   │   ├── QuizService.java             # 测验服务接口
+│   │   ├── ResourceService.java         # 资源服务接口
+│   │   ├── TokenBlacklistService.java   # Token黑名单服务接口
+│   │   └── UserService.java             # 用户服务接口
+│   │
+│   └── DongMedicineBackendApplication.java  # 应用入口
 │
 ├── src/main/resources/
 │   ├── application.yml                  # 主配置文件
@@ -111,17 +228,37 @@ dong-medicine-backend/
 │   └── logback-spring.xml               # 日志配置
 │
 ├── sql/                                 # 数据库脚本
-│   └── dong_medicine.sql                # 完整数据库脚本
+│   ├── dong_medicine.sql                # 完整数据库脚本
+│   ├── fulltext_index.sql               # 全文索引脚本
+│   └── optimize_indexes.sql             # 索引优化脚本
 │
 ├── public/                              # 静态资源目录
-│   └── images/
-│       ├── plants/                      # 植物图片
-│       ├── knowledge/                   # 知识图片
-│       └── inheritors/                  # 传承人图片
+│   ├── images/                          # 图片资源
+│   │   ├── plants/                      # 植物图片 (70+张)
+│   │   ├── inheritors/                  # 传承人图片
+│   │   ├── knowledge/                   # 知识图片
+│   │   └── common/                      # 公共图片
+│   └── documents/                       # 文档资源
+│       ├── xlsx/                        # Excel文档
+│           ├── plants/
+│           ├── inheritors/
+│           ├── knowledge/
+│           └── resources/
+│       └── common/                      # 公共文档
 │
-├── Dockerfile                           # Docker构建文件
-├── pom.xml                              # Maven配置
-└── .dockerignore                        # Docker忽略文件
+├── test/                                # 测试目录
+│   └── java/com/dongmedicine/
+│       ├── common/                      # 公共模块测试
+│       ├── config/                      # 配置测试
+│       ├── controller/                  # 控制器测试
+│       └── service/                     # 服务测试
+│
+├── .dockerignore                        # Docker 忽略文件
+├── .gitignore                           # Git 忽略文件
+├── Dockerfile                           # Docker 构建文件
+├── mvnw                                 # Maven Wrapper (Unix)
+├── mvnw.cmd                             # Maven Wrapper (Windows)
+└── pom.xml                              # Maven 配置
 ```
 
 ---
@@ -139,6 +276,12 @@ dong-medicine-backend/
 | POST | `/logout` | 退出登录 | 需登录 |
 | GET | `/validate` | 验证Token | 公开 |
 | POST | `/refresh-token` | 刷新Token | 需登录 |
+
+### 验证码模块 `/api/captcha`
+
+| 方法 | 端点 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/image` | 获取图形验证码 | 公开 |
 
 ### 药用植物模块 `/api/plants`
 
@@ -225,6 +368,11 @@ dong-medicine-backend/
 | POST | `/` | 发送聊天消息(DeepSeek AI) | 公开 |
 | GET | `/stats` | 聊天统计 | ADMIN |
 
+**请求限制**：
+- 消息长度最大 2000 字符
+- 历史消息最多 20 条
+- 每秒最多 10 次请求
+
 ### 排行榜模块 `/api/leaderboard`
 
 | 方法 | 端点 | 说明 | 权限 |
@@ -250,7 +398,8 @@ dong-medicine-backend/
 
 | 模块 | 端点 | 功能 |
 |------|------|------|
-| 用户管理 | `GET/DELETE/PUT /users/*` | 用户列表、删除、角色更新 |
+| 仪表盘 | `GET /dashboard` | 数据统计概览 |
+| 用户管理 | `GET/DELETE/PUT /users/*` | 用户列表、删除、角色更新、封禁 |
 | 内容管理 | `CRUD /inheritors/*` | 传承人管理 |
 | | `CRUD /knowledge/*` | 知识管理 |
 | | `CRUD /plants/*` | 植物管理 |
@@ -272,6 +421,7 @@ dong-medicine-backend/
 | username | String | 用户名 |
 | passwordHash | String | 密码哈希(BCrypt) |
 | role | String | 角色(USER/ADMIN) |
+| status | Integer | 状态(0正常/1封禁) |
 | createdAt | LocalDateTime | 创建时间 |
 
 ### Plant - 药用植物
@@ -353,6 +503,52 @@ dong-medicine-backend/
 
 ---
 
+## DTO 数据传输对象
+
+### 登录/注册相关
+
+| DTO | 用途 | 主要字段 |
+|-----|------|----------|
+| LoginDTO | 登录请求 | username, password, captchaKey, captchaCode |
+| RegisterDTO | 注册请求 | username, password, confirmPassword, captchaKey, captchaCode |
+| CaptchaDTO | 验证码响应 | captchaKey, captchaImage |
+| ChangePasswordDTO | 修改密码 | currentPassword, newPassword, confirmPassword, captchaCode |
+
+### 内容相关
+
+| DTO | 用途 |
+|-----|------|
+| PlantDTO | 植物数据传输 |
+| KnowledgeDTO | 知识数据传输 |
+| InheritorDTO | 传承人数据传输 |
+
+### 互动相关
+
+| DTO | 用途 |
+|-----|------|
+| CommentDTO | 评论数据 |
+| CommentAddDTO | 添加评论请求 |
+| FeedbackDTO | 反馈数据 |
+| FeedbackReplyDTO | 反馈回复 |
+
+### 游戏相关
+
+| DTO | 用途 |
+|-----|------|
+| QuizQuestionDTO | 测验问题 |
+| QuizSubmitDTO | 提交答案 |
+| AnswerDTO | 答案数据 |
+| PlantGameSubmitDTO | 植物游戏提交 |
+
+### AI相关
+
+| DTO | 用途 |
+|-----|------|
+| ChatRequest | AI聊天请求(含消息长度限制) |
+| ChatResponse | AI聊天响应 |
+
+---
+
 ## 配置说明
 
 ### application.yml - 主配置
@@ -364,9 +560,23 @@ server:
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
-jwt:
-  expiration: ${JWT_EXPIRATION:86400000}  # 24小时
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:...}
+    jwt-expiration: ${JWT_EXPIRATION:86400000}
+    cors-allowed-origins:
+      - ${CORS_ORIGIN_1:http://localhost:5173}
+  cache:
+    enabled: true
+    max-size: 1000
+    expire-minutes: 60
+  request:
+    max-body-size: ${MAX_BODY_SIZE:10485760}
 
 management:
   endpoints:
@@ -435,6 +645,151 @@ logging:
 
 ---
 
+## 安全机制
+
+### 1. 认证与授权
+
+```java
+// JWT认证过滤器
+// - Token验证
+// - 用户状态检查（封禁用户无法访问）
+// - Token黑名单检查
+
+// JwtAuthenticationFilter.java
+if (user.isBanned()) {
+    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    response.getWriter().write("{\"code\":403,\"msg\":\"账号已被封禁\"}");
+    return;
+}
+```
+
+### 2. Token黑名单
+
+```java
+// TokenBlacklistServiceImpl.java
+// - Redis主存储
+// - Caffeine本地缓存降级
+// - 自动过期（2小时）
+
+private final Cache<String, Boolean> localBlacklist = Caffeine.newBuilder()
+    .maximumSize(10000)
+    .expireAfterWrite(2, TimeUnit.HOURS)
+    .build();
+```
+
+### 3. 密码安全
+
+```java
+// PasswordValidator.java
+// - 长度 8-50 位
+// - 必须包含字母和数字
+// - 不能包含空格
+// - BCrypt 加密存储
+```
+
+### 4. XSS 防护
+
+```java
+// XssUtils.java
+// 覆盖 30+ 危险模式：
+// - script标签
+// - javascript/vbscript协议
+// - 事件处理器 (onclick, onerror等)
+// - HTML实体编码
+// - eval/expression函数
+// - 危险标签 (iframe, object, embed等)
+```
+
+### 5. SQL 注入防护
+
+```java
+// PageUtils.java
+public static String escapeLike(String keyword) {
+    return keyword
+        .replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_");
+}
+
+// 所有LIKE查询前调用
+String escapedKeyword = PageUtils.escapeLike(keyword);
+wrapper.like(Entity::getField, escapedKeyword);
+```
+
+### 6. 请求限流
+
+```java
+// RateLimitAspect.java
+// - Redis计数器限流
+// - 本地令牌桶降级
+
+@RateLimit(value = 5, key = "login")  // 每分钟最多5次
+public Result<LoginVO> login(LoginDTO dto) { ... }
+
+// 本地令牌桶降级
+private static class LocalTokenBucket {
+    public synchronized boolean tryAcquire() { ... }
+}
+```
+
+### 7. 请求追踪
+
+```java
+// RequestIdFilter.java
+// - 每个请求分配唯一requestId
+// - 通过MDC传递给日志系统
+// - 响应头返回X-Request-ID
+
+MDC.put("requestId", requestId);
+response.setHeader("X-Request-ID", requestId);
+```
+
+### 8. 统一响应格式
+
+```java
+// R.java
+public class R<T> {
+    private int code;
+    private String msg;
+    private T data;
+    private String requestId;  // 请求追踪ID
+}
+```
+
+### 9. 敏感信息脱敏
+
+```java
+// SensitiveDataUtils.java
+// 自动脱敏：手机号、邮箱、身份证、银行卡、JWT Token、SQL参数
+```
+
+---
+
+## 性能优化
+
+### 1. 多级缓存
+
+```
+请求 → Caffeine本地缓存 → Redis分布式缓存 → MySQL数据库
+```
+
+### 2. 缓存配置
+
+```yaml
+app:
+  cache:
+    max-size: 1000           # 最大缓存数量
+    expire-minutes: 60       # 过期时间
+```
+
+### 3. 数据库优化
+
+- 全文索引支持中文分词
+- 组合索引优化常用查询
+- HikariCP 高性能连接池
+
+---
+
 ## 快速开始
 
 ### 环境要求
@@ -453,10 +808,13 @@ mysql -u root -p -e "CREATE DATABASE dong_medicine DEFAULT CHARACTER SET utf8mb4
 # 2. 导入数据
 mysql -u root -p dong_medicine < sql/dong_medicine.sql
 
-# 3. 启动 Redis
+# 3. 创建全文索引（可选）
+mysql -u root -p dong_medicine < sql/fulltext_index.sql
+
+# 4. 启动 Redis
 redis-server
 
-# 4. 启动后端服务
+# 5. 启动后端服务
 ./mvnw spring-boot:run
 
 # 或指定环境
@@ -502,48 +860,10 @@ docker-compose up -d --build
 
 ---
 
-## 安全机制
+## 日志示例
 
-### 密码安全
-
-```java
-// 注册时加密
-String hashedPassword = passwordEncoder.encode(rawPassword);
-
-// 登录时验证
-passwordEncoder.matches(rawPassword, user.getPasswordHash())
 ```
-
-### JWT 认证
-
-```java
-// 生成Token
-String token = Jwts.builder()
-    .setSubject(username)
-    .claim("userId", userId)
-    .claim("role", role)
-    .setIssuedAt(new Date())
-    .setExpiration(new Date(System.currentTimeMillis() + expiration))
-    .signWith(SignatureAlgorithm.HS512, secret)
-    .compact();
+2024-01-15 10:30:45.123 [a1b2c3d4e5f6g7h8] INFO  c.d.controller.UserController - 用户登录成功: userId=1
+2024-01-15 10:30:46.456 [a1b2c3d4e5f6g7h8] WARN  c.d.config.RateLimitAspect - 请求过于频繁: login:192.168.1.100
+2024-01-15 10:30:47.789 [b2c3d4e5f6g7h8i9] INFO  c.d.service.impl.AiChatServiceImpl - AI聊天请求: messageLength=50
 ```
-
-### 限流保护
-
-```java
-@RateLimit(value = 5, key = "login")  // 每分钟最多5次
-public Result<LoginVO> login(LoginDTO dto) { ... }
-```
-
----
-
-## 缓存策略
-
-| 缓存名称 | 说明 | 过期时间 |
-|---------|------|----------|
-| users | 用户信息 | 1小时 |
-| plants | 植物数据 | 1小时 |
-| knowledges | 知识数据 | 1小时 |
-| inheritors | 传承人数据 | 1小时 |
-| resources | 资源数据 | 1小时 |
-| quizQuestions | 测验题目 | 1小时 |

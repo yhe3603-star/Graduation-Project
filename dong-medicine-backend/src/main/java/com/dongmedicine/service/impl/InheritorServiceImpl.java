@@ -80,10 +80,11 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
         if (!StringUtils.hasText(keyword)) {
             throw BusinessException.badRequest("搜索关键词不能为空");
         }
+        String escapedKeyword = PageUtils.escapeLike(keyword);
         Page<Inheritor> pageParam = PageUtils.getPage(page, size);
         LambdaQueryWrapper<Inheritor> qw = new LambdaQueryWrapper<Inheritor>()
-                .like(Inheritor::getName, keyword)
-                .or().like(Inheritor::getSpecialties, keyword)
+                .like(Inheritor::getName, escapedKeyword)
+                .or().like(Inheritor::getSpecialties, escapedKeyword)
                 .orderByDesc(Inheritor::getExperienceYears);
         return page(pageParam, qw);
     }

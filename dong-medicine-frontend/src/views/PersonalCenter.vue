@@ -172,6 +172,13 @@
                   <el-form-item label="确认新密码" prop="confirmPassword">
                     <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password />
                   </el-form-item>
+                  <el-form-item label="验证码" prop="captchaCode">
+                    <CaptchaInput
+                      ref="passwordCaptchaRef"
+                      v-model="passwordForm.captchaCode"
+                      @update:captcha-key="passwordForm.captchaKey = $event"
+                    />
+                  </el-form-item>
                   <el-form-item>
                     <el-button type="primary" :loading="passwordLoading" @click="handleChangePassword">
 确认修改
@@ -210,6 +217,7 @@
 import { inject, watch } from 'vue'
 import { Lock, SwitchButton, User } from '@element-plus/icons-vue'
 import Pagination from '@/components/business/display/Pagination.vue'
+import CaptchaInput from '@/components/business/interact/CaptchaInput.vue'
 import { usePersonalCenter, actions, typeIconMap, typeTagMap, typeNameMap } from '@/composables/usePersonalCenter'
 
 const request = inject('request')
@@ -219,7 +227,7 @@ const {
   isLoggedIn, userName, isAdmin, pageLoading, activeTab, favoriteType,
   favorites, quizRecords, gameRecords, comments,
   favPage, favPageSize, quizPage, quizPageSize, commentPage, commentPageSize,
-  passwordFormRef, passwordLoading, logoutLoading, passwordForm, passwordRules,
+  passwordFormRef, passwordCaptchaRef, passwordLoading, logoutLoading, passwordForm, passwordRules,
   filteredFavorites, paginatedFavorites, allRecords, paginatedRecords, paginatedComments,
   goToDetail, handleChangePassword, resetPasswordForm, handleLogout,
   formatTime, getDifficultyName, getScoreClass

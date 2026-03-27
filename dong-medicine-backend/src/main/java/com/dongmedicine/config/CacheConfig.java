@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -26,7 +27,9 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 @Configuration
 @EnableCaching
@@ -36,6 +39,12 @@ public class CacheConfig {
 
     @Value("${app.cache.enabled:true}")
     private boolean cacheEnabled;
+    
+    @Value("${app.cache.max-size:1000}")
+    private int maxCacheSize;
+    
+    @Value("${app.cache.expire-minutes:60}")
+    private int defaultExpireMinutes;
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -109,10 +118,20 @@ public class CacheConfig {
     }
 
     private CacheManager createFallbackCacheManager() {
-        log.info("Using in-memory ConcurrentMapCacheManager as fallback");
-        return new ConcurrentMapCacheManager(
+        log.info("Using Caffeine cache manager as fallback with max size: {}", maxCacheSize);
+        
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.setCaffeine(Caffeine.newBuilder()
+                .maximumSize(maxCacheSize)
+                .expireAfterWrite(defaultExpireMinutes, TimeUnit.MINUTES)
+                .expireAfterAccess(defaultExpireMinutes, TimeUnit.MINUTES)
+                .recordStats());
+        
+        cacheManager.setCacheNames(java.util.Arrays.asList(
             "plants", "knowledges", "inheritors", "resources",
             "users", "quizQuestions", "searchResults", "hotData"
-        );
+        ));
+        
+        return cacheManager;
     }
 }

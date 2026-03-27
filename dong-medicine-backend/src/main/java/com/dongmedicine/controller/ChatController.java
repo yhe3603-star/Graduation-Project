@@ -10,8 +10,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -22,6 +25,9 @@ public class ChatController {
     private static final AtomicLong totalRequests = new AtomicLong(0);
     private static final AtomicLong successRequests = new AtomicLong(0);
     private static final AtomicLong failedRequests = new AtomicLong(0);
+
+    @Value("#{'${app.security.cors-allowed-origins:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}'.split(',')}")
+    private List<String> allowedOrigins;
 
     @Autowired
     private AiChatService aiChatService;
@@ -91,22 +97,37 @@ public class ChatController {
             return true;
         }
         
-        String allowedOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
-        if (allowedOrigins == null || allowedOrigins.isEmpty()) {
-            allowedOrigins = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173";
-        }
-        
-        String[] origins = allowedOrigins.split(",");
         String checkValue = origin != null ? origin : referer;
         
-        for (String allowed : origins) {
-            String trimmed = allowed.trim();
-            if (checkValue != null && checkValue.startsWith(trimmed)) {
-                return true;
-            }
+        if (checkValue == null) {
+            return true;
         }
         
-        return checkValue == null || checkValue.contains("localhost") || checkValue.contains("127.0.0.1");
+        try {
+            URI uri = new URI(checkValue);
+            String originHost = uri.getHost();
+            int originPort = uri.getPort();
+            String scheme = uri.getScheme();
+            String originBaseUrl = scheme + "://" + originHost + (originPort > 0 ? ":" + originPort : "");
+            
+            for (String allowed : allowedOrigins) {
+                String trimmed = allowed.trim();
+                if (originBaseUrl.equals(trimmed)) {
+                    return true;
+                }
+                if (originHost != null && trimmed.contains(originHost)) {
+                    return true;
+                }
+            }
+            
+            if (originHost != null && (originHost.equals("localhost") || originHost.equals("127.0.0.1"))) {
+                return true;
+            }
+        } catch (Exception e) {
+            log.debug("Origin解析失败: {}", checkValue);
+        }
+        
+        return false;
     }
 
     public record ChatStats(long totalRequests, long successRequests, long failedRequests) {}

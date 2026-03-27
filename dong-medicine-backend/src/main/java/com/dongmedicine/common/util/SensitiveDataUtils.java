@@ -22,6 +22,18 @@ public final class SensitiveDataUtils {
     private static final Pattern PHONE_PATTERN = Pattern.compile("(1[3-9]\\d{9})");
     private static final Pattern ID_CARD_PATTERN = Pattern.compile("([1-9]\\d{5}(18|19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx])");
     private static final Pattern BANK_CARD_PATTERN = Pattern.compile("(\\d{16,19})");
+    
+    private static final Pattern SQL_SENSITIVE_PATTERN = Pattern.compile(
+            "(?i)(password|passwd|pwd|secret|token|api[_-]?key)\\s*=\\s*['\"][^'\"]+['\"]|" +
+            "(?i)(password|passwd|pwd|secret|token|api[_-]?key)\\s*=\\s*[^\\s,;)]+|" +
+            "(?i)values\\s*\\([^)]*['\"][^'\"]+['\"][^)]*\\)",
+            Pattern.CASE_INSENSITIVE
+    );
+    
+    private static final Pattern JWT_PATTERN = Pattern.compile(
+            "eyJ[a-zA-Z0-9_-]*\\.eyJ[a-zA-Z0-9_-]*\\.[a-zA-Z0-9_-]*",
+            Pattern.CASE_INSENSITIVE
+    );
 
     private SensitiveDataUtils() {}
 
@@ -74,6 +86,17 @@ public final class SensitiveDataUtils {
                 m.group(1).substring(0, 6) + "********" + m.group(1).substring(14));
         result = BANK_CARD_PATTERN.matcher(result).replaceAll(m -> 
                 m.group(1).substring(0, 4) + "****" + m.group(1).substring(m.group(1).length() - 4));
+        result = SQL_SENSITIVE_PATTERN.matcher(result).replaceAll(m -> {
+            String matched = m.group();
+            return matched.replaceAll("['\"][^'\"]+['\"]", "'***'").replaceAll("=\\s*[^\\s,;)]+", "= ***");
+        });
+        result = JWT_PATTERN.matcher(result).replaceAll(m -> {
+            String token = m.group();
+            if (token.length() > 20) {
+                return token.substring(0, 10) + "..." + token.substring(token.length() - 10);
+            }
+            return "***";
+        });
         
         return result;
     }

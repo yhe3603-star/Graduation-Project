@@ -7,6 +7,9 @@ import java.util.Map;
 
 public class PageUtils {
 
+    private PageUtils() {
+    }
+
     /**
      * Create a standardized pagination object with bounds checking
      * @param page Current page number
@@ -18,6 +21,21 @@ public class PageUtils {
         int normalizedPage = Math.max(page != null ? page : 1, 1);
         int normalizedSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
         return new Page<>(normalizedPage, normalizedSize);
+    }
+
+    /**
+     * Escape special characters in LIKE query to prevent SQL injection
+     * @param keyword The keyword to escape
+     * @return Escaped keyword safe for LIKE queries
+     */
+    public static String escapeLike(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            return keyword;
+        }
+        return keyword
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     /**

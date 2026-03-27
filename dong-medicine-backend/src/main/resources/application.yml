@@ -45,6 +45,8 @@ app:
   cache:
     enabled: true
     default-expire-time: 3600000
+    max-size: 1000
+    expire-minutes: 60
   logging:
     performance-monitoring: true
     request-logging: true

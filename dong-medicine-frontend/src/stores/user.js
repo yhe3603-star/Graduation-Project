@@ -21,30 +21,26 @@ function decodeJwtPayload(token) {
   }
 }
 
-function isTokenExpired(token, useBuffer = true) {
-  if (!token) return true
+function getTokenExpiryTime(token) {
+  if (!token) return null
   const payload = decodeJwtPayload(token)
-  if (!payload || !payload.exp) return true
-  const expiryTime = payload.exp * 1000
-  if (!useBuffer) {
-    return Date.now() >= expiryTime
-  }
-  return Date.now() >= expiryTime - TOKEN_EXPIRY_BUFFER_MS
+  if (!payload || !payload.exp) return null
+  return payload.exp * 1000
 }
 
-/** 仅按 JWT exp 判断，用于服务端校验前；避免 5 分钟缓冲导致误判为过期 */
-function isJwtExpiredStrict(token) {
-  if (!token) return true
-  const payload = decodeJwtPayload(token)
-  if (!payload || !payload.exp) return true
-  return Date.now() >= payload.exp * 1000
+function isTokenExpired(token, options = {}) {
+  const { useBuffer = true, bufferMs = TOKEN_EXPIRY_BUFFER_MS } = options
+  const expiryTime = getTokenExpiryTime(token)
+  if (!expiryTime) return true
+  
+  const now = Date.now()
+  return useBuffer ? now >= expiryTime - bufferMs : now >= expiryTime
 }
 
 function getTokenRemainingTime(token) {
-  if (!token) return 0
-  const payload = decodeJwtPayload(token)
-  if (!payload || !payload.exp) return 0
-  return Math.max(0, payload.exp * 1000 - Date.now())
+  const expiryTime = getTokenExpiryTime(token)
+  if (!expiryTime) return 0
+  return Math.max(0, expiryTime - Date.now())
 }
 
 function safeSetItem(key, value) {
@@ -80,11 +76,11 @@ export const useUserStore = defineStore('user', () => {
   
   const isLoggedIn = computed(() => {
     if (!token.value) return false
-    return !isTokenExpired(token.value, false)
+    return !isTokenExpired(token.value, { useBuffer: false })
   })
   const userName = computed(() => username.value)
   const isAdmin = computed(() => {
-    if (!token.value || isTokenExpired(token.value, false)) return false
+    if (!token.value || isTokenExpired(token.value, { useBuffer: false })) return false
     const r = role.value
     return !!(r && r.toLowerCase() === 'admin')
   })
@@ -154,7 +150,7 @@ export const useUserStore = defineStore('user', () => {
       return false
     }
 
-    if (isJwtExpiredStrict(token.value)) {
+    if (isTokenExpired(token.value, { useBuffer: false })) {
       clearAuth()
       return false
     }
@@ -194,9 +190,9 @@ export const useUserStore = defineStore('user', () => {
   
   async function logout() {
     try {
-      await request.post('/user/logout')
+      await request.post('/user/logout', {}, { skipAuthRefresh: true })
     } catch (error) {
-      console.error('退出登录失败:', error)
+      console.debug('退出登录请求失败:', error)
     } finally {
       clearAuth()
     }
@@ -221,7 +217,7 @@ export const useUserStore = defineStore('user', () => {
     const storedUsername = safeGetItem('userName')
     const storedRole = safeGetItem('role')
     
-    if (storedToken && !isTokenExpired(storedToken, false)) {
+    if (storedToken && !isTokenExpired(storedToken, { useBuffer: false })) {
       token.value = storedToken
       userId.value = storedUserId || ''
       username.value = storedUsername || ''
