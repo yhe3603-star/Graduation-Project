@@ -93,12 +93,10 @@ file:
     allowed-image-extensions: jpg,jpeg,png,gif,bmp,webp
     allowed-video-extensions: mp4,avi,mov,wmv,flv,mkv
     allowed-document-extensions: pdf,docx,doc,xlsx,xls,pptx,ppt,txt
+  kkfileview:
+    url: ${KKFILEVIEW_URL:http://kkfileview:8012}
 
 deepseek:
   api-key: ${DEEPSEEK_API_KEY:}
   base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
   model: ${DEEPSEEK_MODEL:deepseek-chat}
-
-file:
-  kkfileview:
-    url: ${KKFILEVIEW_URL:http://kkfileview:8012}

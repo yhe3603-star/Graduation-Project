@@ -262,20 +262,7 @@ jobs:
           else
             echo "Backend container is not running. Deployment failed."
             # 检查详细日志
-            ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash -s' << 'SCRIPT'
-            cd /opt/dong-medicine
-            if docker compose version &> /dev/null; then
-                echo "Using docker compose..."
-                docker compose logs --tail=100 backend
-            elif command -v docker-compose &> /dev/null; then
-                echo "Using docker-compose..."
-                docker-compose logs --tail=100 backend
-            else
-                echo "Docker Compose not found, checking container status..."
-                docker ps -a
-                docker logs $(docker ps -q --filter name=dong-medicine-backend) 2>/dev/null || true
-            fi
-            SCRIPT
+            ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd /opt/dong-medicine && docker compose logs --tail=100 backend 2>/dev/null || docker-compose logs --tail=100 backend 2>/dev/null || docker logs dong-medicine-backend 2>/dev/null || echo 'No logs available'"
             exit 1
           fi
 
