@@ -10,6 +10,7 @@ export default defineConfig({
     },
   },
   build: {
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -19,6 +20,7 @@ export default defineConfig({
             if (id.includes("vue") || id.includes("vue-router") || id.includes("pinia")) return "vendor-vue";
             return "vendor-misc";
           }
+          return undefined;
         },
       },
     },

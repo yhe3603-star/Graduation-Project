@@ -23,11 +23,12 @@ RUN mkdir -p /root/.m2 && \
 
 # 复制pom.xml并下载依赖（利用Docker缓存）
 COPY pom.xml .
-RUN mvn dependency:go-offline -B -Dmaven.wagon.http.retryHandler.count=3 -Dmaven.wagon.http.retryHandler.retryIntervalSeconds=5
+RUN mvn dependency:go-offline -B -Dmaven.wagon.http.retryHandler.count=3 -Dmaven.wagon.http.retryHandler.retryIntervalSeconds=5 || true
 
-# 复制源代码并构建（完全跳过测试编译和执行）
+# 复制源代码并构建（完全跳过测试编译和执行，限制内存）
 COPY src ./src
-RUN mvn clean package -Dmaven.test.skip=true -B
+ENV MAVEN_OPTS="-Xmx512m"
+RUN mvn clean package -Dmaven.test.skip=true -B -T 1C
 
 # 运行阶段
 FROM eclipse-temurin:17-jre-alpine
