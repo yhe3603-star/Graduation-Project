@@ -254,4 +254,98 @@ Page<User> result = userMapper.selectPage(page, wrapper);
 
 ---
 
-**最后更新时间**：2026年3月27日
+## 已知限制
+
+| Mapper | 限制 | 影响 |
+|--------|------|------|
+| PlantMapper | 全文搜索依赖FULLTEXT索引 | 需要先创建索引 |
+| PlantMapper | 随机查询性能较低 | 大数据量时较慢 |
+| 所有Mapper | 不支持多租户 | SaaS场景需扩展 |
+| 所有Mapper | 不支持读写分离 | 高并发需扩展 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **性能优化**
+   - 添加查询缓存
+   - 优化随机查询算法
+   - 添加批量操作方法
+
+2. **功能增强**
+   - 添加逻辑删除支持
+   - 实现数据权限过滤
+   - 添加审计字段自动填充
+
+### 中期改进 (1-2月)
+
+1. **多数据源支持**
+   - 配置读写分离
+   - 支持动态数据源切换
+
+2. **监控集成**
+   - 添加SQL执行监控
+   - 慢查询分析
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| MyBatis-Plus | 3.5+ | ORM框架 |
+| MySQL Connector | 8.0+ | 数据库驱动 |
+
+---
+
+## 常见问题
+
+### 1. 如何添加自定义SQL？
+
+```java
+@Select("SELECT * FROM plants WHERE category = #{category} LIMIT #{limit}")
+List<Plant> selectByCategory(@Param("category") String category, @Param("limit") int limit);
+
+@Update("UPDATE plants SET view_count = view_count + 1 WHERE id = #{id}")
+void incrementViewCount(@Param("id") Integer id);
+```
+
+### 2. 如何使用XML映射文件？
+
+```xml
+<!-- resources/mapper/PlantMapper.xml -->
+<mapper namespace="com.dongmedicine.mapper.PlantMapper">
+    <select id="selectByCategory" resultType="Plant">
+        SELECT * FROM plants WHERE category = #{category}
+    </select>
+</mapper>
+```
+
+### 3. 如何实现批量插入？
+
+```java
+// 使用MyBatis-Plus提供的批量方法
+List<Plant> plants = Arrays.asList(plant1, plant2, plant3);
+plantMapper.insertBatch(plants);
+
+// 或使用Service层的saveBatch
+plantService.saveBatch(plants, 500);  // 每批500条
+```
+
+### 4. 如何处理复杂查询？
+
+```java
+// 使用QueryWrapper链式调用
+LambdaQueryWrapper<Plant> wrapper = new LambdaQueryWrapper<>();
+wrapper.like(StringUtils.hasText(keyword), Plant::getNameCn, keyword)
+       .eq(StringUtils.hasText(category), Plant::getCategory, category)
+       .orderByDesc(Plant::getViewCount)
+       .last("LIMIT 10");
+List<Plant> plants = plantMapper.selectList(wrapper);
+```
+
+---
+
+**最后更新时间**：2026年3月28日

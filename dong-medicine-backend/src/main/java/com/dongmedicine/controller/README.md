@@ -383,4 +383,288 @@ controller/
 
 ---
 
-**最后更新时间**：2026年3月27日
+## 控制器开发模板
+
+### 基础控制器模板
+
+```java
+@RestController
+@RequestMapping("/api/example")
+@Tag(name = "示例管理", description = "示例相关接口")
+@RequiredArgsConstructor
+@Slf4j
+public class ExampleController {
+
+    private final ExampleService exampleService;
+
+    @GetMapping("/list")
+    @Operation(summary = "获取列表")
+    public R<Map<String, Object>> list(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(required = false) String keyword) {
+        Page<Example> pageResult = exampleService.page(
+            PageUtils.getPage(page, size),
+            new LambdaQueryWrapper<Example>()
+                .like(StringUtils.hasText(keyword), Example::getName, keyword)
+        );
+        return R.ok(PageUtils.toMap(pageResult));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "获取详情")
+    public R<Example> getById(@PathVariable Long id) {
+        Example entity = exampleService.getById(id);
+        if (entity == null) {
+            return R.notFound("数据不存在");
+        }
+        return R.ok(entity);
+    }
+
+    @PostMapping
+    @Operation(summary = "新增")
+    @PreAuthorize("hasRole('ADMIN')")
+    public R<Void> save(@RequestBody @Valid ExampleDTO dto) {
+        exampleService.save(dto);
+        return R.ok("新增成功");
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "更新")
+    @PreAuthorize("hasRole('ADMIN')")
+    public R<Void> update(@PathVariable Long id, @RequestBody @Valid ExampleDTO dto) {
+        exampleService.update(id, dto);
+        return R.ok("更新成功");
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除")
+    @PreAuthorize("hasRole('ADMIN')")
+    public R<Void> delete(@PathVariable Long id) {
+        exampleService.removeById(id);
+        return R.ok("删除成功");
+    }
+}
+```
+
+---
+
+## API版本管理
+
+### 当前版本策略
+
+项目当前使用URL路径版本控制，所有API以`/api`为前缀。
+
+### 版本演进建议
+
+#### 方案一：URL路径版本（推荐）
+
+```java
+// V1版本
+@RestController
+@RequestMapping("/api/v1/plants")
+public class PlantControllerV1 {
+    // 原有接口
+}
+
+// V2版本（新增功能）
+@RestController
+@RequestMapping("/api/v2/plants")
+public class PlantControllerV2 {
+    // 增强接口
+}
+```
+
+#### 方案二：请求头版本
+
+```java
+@GetMapping(value = "/plants", headers = "X-API-Version=1")
+public R<List<Plant>> getPlantsV1() { }
+
+@GetMapping(value = "/plants", headers = "X-API-Version=2")
+public R<List<PlantVO>> getPlantsV2() { }
+```
+
+#### 方案三：参数版本
+
+```java
+@GetMapping(value = "/plants", params = "version=1")
+public R<List<Plant>> getPlantsV1() { }
+```
+
+### 版本兼容性规则
+
+| 变更类型 | 是否需要新版本 | 说明 |
+|---------|--------------|------|
+| 新增接口 | 否 | 向后兼容 |
+| 新增可选参数 | 否 | 向后兼容 |
+| 新增响应字段 | 否 | 向后兼容 |
+| 删除接口 | 是 | 破坏性变更 |
+| 修改参数类型 | 是 | 破坏性变更 |
+| 删除响应字段 | 是 | 破坏性变更 |
+| 修改业务逻辑 | 视情况 | 可能影响客户端 |
+
+---
+
+## 已知限制
+
+| 控制器 | 限制 | 影响 |
+|--------|------|------|
+| FileUploadController | 单文件最大100MB | 大文件需分片上传 |
+| ChatController | 依赖DeepSeek服务 | 服务不可用时无法使用 |
+| QuizController | 题目随机算法简单 | 可能出现重复题目 |
+| LeaderboardController | 不支持实时更新 | 排行榜有延迟 |
+| CommentController | 不支持楼中楼 | 无法嵌套回复 |
+| FavoriteController | 不支持批量操作 | 批量收藏需多次请求 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **API文档增强**
+   - 添加更多示例
+   - 添加错误码说明
+   - 添加请求/响应示例
+
+2. **参数验证增强**
+   - 添加自定义验证注解
+   - 优化错误提示信息
+
+3. **接口优化**
+   - 添加批量操作接口
+   - 优化分页性能
+
+### 中期改进 (1-2月)
+
+1. **API版本管理**
+   - 实现版本路由
+   - 添加版本废弃机制
+   - 版本迁移指南
+
+2. **性能优化**
+   - 接口响应缓存
+   - 批量查询优化
+   - 异步处理
+
+3. **功能增强**
+   - GraphQL支持
+   - WebSocket实时推送
+   - 接口幂等性
+
+### 长期规划 (3-6月)
+
+1. **微服务拆分**
+   - 服务边界划分
+   - API网关
+   - 服务间通信
+
+2. **国际化支持**
+   - 多语言响应
+   - 时区处理
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Spring Boot | 3.2+ | 框架基础 |
+| Spring Security | 6.2+ | 权限控制 |
+| SpringDoc OpenAPI | 2.3+ | API文档 |
+| MyBatis-Plus | 3.5+ | 数据访问 |
+| Hibernate Validator | 8.x | 参数验证 |
+
+---
+
+## 常见问题
+
+### 1. 如何添加新的接口？
+
+```java
+// 1. 在Controller中添加方法
+@GetMapping("/new-endpoint")
+@Operation(summary = "新接口说明")
+public R<NewResponse> newEndpoint(@RequestParam String param) {
+    return R.ok(service.newMethod(param));
+}
+
+// 2. 在Service中添加方法
+public NewResponse newMethod(String param) {
+    // 业务逻辑
+}
+
+// 3. 添加权限控制（如需要）
+@PreAuthorize("hasRole('ADMIN')")
+```
+
+### 2. 如何处理文件下载？
+
+```java
+@GetMapping("/download/{id}")
+public void download(@PathVariable Long id, HttpServletResponse response) {
+    Resource resource = resourceService.getResource(id);
+    response.setContentType("application/octet-stream");
+    response.setHeader("Content-Disposition", 
+        "attachment; filename=" + resource.getFilename());
+    try (InputStream is = resource.getInputStream();
+         OutputStream os = response.getOutputStream()) {
+        IOUtils.copy(is, os);
+    }
+}
+```
+
+### 3. 如何实现接口幂等性？
+
+```java
+@PostMapping
+@Idempotent(key = "#dto.id", expireTime = 5, timeUnit = TimeUnit.SECONDS)
+public R<Void> create(@RequestBody ExampleDTO dto) {
+    // 业务逻辑
+}
+```
+
+### 4. 如何处理异步请求？
+
+```java
+@PostMapping("/async")
+@Async
+public CompletableFuture<R<Void>> asyncOperation(@RequestBody ExampleDTO dto) {
+    return CompletableFuture.supplyAsync(() -> {
+        service.process(dto);
+        return R.ok();
+    });
+}
+```
+
+### 5. 如何添加接口缓存？
+
+```java
+@GetMapping("/{id}")
+@Cacheable(value = "plants", key = "#id")
+public R<Plant> getById(@PathVariable Long id) {
+    return R.ok(plantService.getById(id));
+}
+
+@PutMapping("/{id}")
+@CacheEvict(value = "plants", key = "#id")
+public R<Void> update(@PathVariable Long id, @RequestBody PlantDTO dto) {
+    plantService.update(id, dto);
+    return R.ok();
+}
+```
+
+### 6. 如何统一处理异常？
+
+```java
+// 已由GlobalExceptionHandler处理
+// 只需在业务中抛出BusinessException
+if (entity == null) {
+    throw new BusinessException(ErrorCode.NOT_FOUND);
+}
+```
+
+---
+
+**最后更新时间**：2026年3月28日

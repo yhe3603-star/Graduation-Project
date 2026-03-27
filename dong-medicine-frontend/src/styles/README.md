@@ -175,4 +175,120 @@ styles/
 
 ---
 
-**最后更新时间**: 2026年3月27日
+## 已知限制
+
+| 限制 | 影响 |
+|------|------|
+| 不支持CSS Modules | 样式隔离依赖scoped |
+| 不支持暗色主题 | 无深色模式切换 |
+| 不支持RTL | 不适配从右到左语言 |
+| 无响应式断点变量 | 媒体查询硬编码 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **主题系统**
+   - 添加暗色主题
+   - 实现主题切换
+   - 添加主题持久化
+
+2. **响应式优化**
+   - 定义断点变量
+   - 优化移动端适配
+
+### 中期改进 (1-2月)
+
+1. **CSS架构**
+   - 采用CSS Modules
+   - 实现原子化CSS
+   - 添加样式lint
+
+2. **国际化支持**
+   - 支持RTL布局
+   - 多语言字体适配
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| PostCSS | 8.x | CSS处理 |
+| Autoprefixer | 10.x | 自动前缀 |
+
+---
+
+## 常见问题
+
+### 1. 如何使用CSS变量？
+
+```css
+/* 定义变量 */
+:root {
+  --my-color: #1A5276;
+}
+
+/* 使用变量 */
+.my-element {
+  color: var(--my-color);
+  background: var(--color-primary, #1A5276);  /* 带默认值 */
+}
+```
+
+### 2. 如何覆盖Element Plus样式？
+
+```css
+/* 使用:deep()穿透 */
+:deep(.el-button) {
+  --el-button-bg-color: var(--dong-indigo);
+}
+
+/* 或使用全局样式 */
+.el-button--primary {
+  background-color: var(--dong-indigo);
+}
+```
+
+### 3. 如何实现响应式布局？
+
+```css
+/* 使用媒体查询 */
+.container {
+  padding: var(--space-md);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--space-sm);
+  }
+}
+
+/* 使用CSS Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-lg);
+}
+```
+
+### 4. 如何添加动画？
+
+```css
+/* 定义动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 使用动画 */
+.fade-enter {
+  animation: fadeIn 0.3s ease;
+}
+```
+
+---
+
+**最后更新时间**：2026年3月28日

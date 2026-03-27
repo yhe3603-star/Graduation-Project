@@ -344,6 +344,211 @@ wrapper.like("name", safeKeyword);
 4. **安全规范**：所有用户输入都应经过XssUtils处理
 5. **敏感数据**：日志中不应输出敏感数据，应使用SensitiveDataUtils脱敏
 
+### 工具类模板
+
+```java
+public final class MyUtils {
+    
+    private MyUtils() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+    
+    public static String doSomething(String input) {
+        if (input == null || input.isEmpty()) {
+            return "";
+        }
+        return input.trim();
+    }
+}
+```
+
+### 异常处理最佳实践
+
+```java
+// 推荐：使用ErrorCode枚举
+if (user == null) {
+    throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+}
+
+// 推荐：自定义错误消息
+if (passwordInvalid) {
+    throw new BusinessException(ErrorCode.PASSWORD_ERROR, "密码必须包含字母和数字");
+}
+
+// 不推荐：直接抛出RuntimeException
+throw new RuntimeException("用户不存在");  // 无法被正确处理
+```
+
+### 响应封装最佳实践
+
+```java
+// 成功响应
+@GetMapping("/user/{id}")
+public R<User> getUser(@PathVariable Long id) {
+    User user = userService.getById(id);
+    if (user == null) {
+        return R.notFound("用户不存在");
+    }
+    return R.ok(user);
+}
+
+// 分页响应
+@GetMapping("/users")
+public R<Map<String, Object>> getUsers(@RequestParam(defaultValue = "1") Integer page,
+                                        @RequestParam(defaultValue = "20") Integer size) {
+    Page<User> pageResult = userService.page(PageUtils.getPage(page, size));
+    return R.ok(PageUtils.toMap(pageResult));
+}
+
+// 操作响应
+@PostMapping("/user")
+public R<Void> createUser(@RequestBody @Valid UserDTO dto) {
+    userService.save(dto);
+    return R.ok("创建成功");
+}
+```
+
 ---
 
-**最后更新时间**：2026年3月27日
+## 已知限制
+
+| 工具类 | 限制 | 影响 |
+|--------|------|------|
+| R.java | requestId依赖MDC | 未配置RequestIdFilter时为空 |
+| SecurityUtils | 依赖Spring Security | 非Security环境无法使用 |
+| PageUtils | 最大页码100 | 超大分页需特殊处理 |
+| PasswordValidator | 不支持自定义规则 | 特殊密码策略需扩展 |
+| SensitiveDataUtils | 仅支持中文场景 | 国际化需扩展敏感词库 |
+| XssUtils | 可能误判合法输入 | 富文本场景需特殊处理 |
+| FileTypeUtils | 基于扩展名判断 | 伪造扩展名可能绕过 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **FileTypeUtils**
+   - 添加文件头魔数检测
+   - 支持更多文件类型
+
+2. **XssUtils**
+   - 添加白名单配置
+   - 支持富文本策略
+
+3. **ErrorCode**
+   - 添加更多业务错误码
+   - 支持国际化消息
+
+### 中期改进 (1-2月)
+
+1. **性能优化**
+   - 添加缓存机制
+   - 优化正则表达式
+
+2. **功能增强**
+   - 添加IP地址工具类
+   - 添加日期时间工具类
+   - 添加加密解密工具类
+
+3. **测试覆盖**
+   - 编写单元测试
+   - 添加边界测试
+
+### 长期规划 (3-6月)
+
+1. **模块化**
+   - 抽取为独立模块
+   - 支持独立版本管理
+
+2. **监控集成**
+   - 添加性能监控
+   - 异常统计分析
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Spring Boot | 3.2+ | 框架基础 |
+| Spring Security | 6.2+ | 安全工具类 |
+| MyBatis-Plus | 3.5+ | 分页工具 |
+| SLF4J | 2.0+ | 日志脱敏 |
+| Jackson | 2.15+ | JSON处理 |
+
+---
+
+## 常见问题
+
+### 1. 如何添加自定义错误码？
+
+```java
+// 在ErrorCode.java中添加
+public enum ErrorCode {
+    // 现有错误码...
+    
+    // 自定义错误码 (4000-4999为业务自定义区间)
+    CUSTOM_ERROR(4001, "自定义错误"),
+    PLANT_NOT_FOUND(4002, "药用植物不存在"),
+    THERAPY_NOT_FOUND(4003, "疗法不存在");
+    
+    // ...
+}
+```
+
+### 2. 如何扩展敏感字段列表？
+
+```java
+// 在SensitiveDataUtils中添加
+private static final Set<String> SENSITIVE_FIELDS = Set.of(
+    // 现有字段...
+    "customSensitiveField",  // 添加自定义字段
+    "medicalRecord"
+);
+```
+
+### 3. 如何自定义密码验证规则？
+
+```java
+// 创建自定义验证器
+public class CustomPasswordValidator {
+    
+    public static ValidationResult validate(String password) {
+        // 自定义验证逻辑
+        if (password == null || password.length() < 10) {
+            return new ValidationResult(false, "密码长度至少10位", 0);
+        }
+        // 更多规则...
+        return new ValidationResult(true, "密码有效", 4);
+    }
+}
+```
+
+### 4. 如何处理全局异常中的自定义异常？
+
+```java
+// 在GlobalExceptionHandler.java中添加
+@ExceptionHandler(MyCustomException.class)
+public R<Void> handleMyCustomException(MyCustomException e) {
+    log.error("自定义异常: {}", e.getMessage());
+    return R.error(e.getCode(), e.getMessage());
+}
+```
+
+### 5. 如何在日志中安全输出用户数据？
+
+```java
+import static com.dongmedicine.common.util.SensitiveDataUtils.mask;
+
+// 安全日志输出
+log.info("用户登录: username={}, phone={}", 
+    mask("username", username),
+    mask("phone", phone)
+);
+// 输出: 用户登录: username=张**, phone=138****1234
+```
+
+---
+
+**最后更新时间**：2026年3月28日

@@ -313,4 +313,168 @@ entity/
 
 ---
 
-**最后更新时间**：2026年3月27日
+## 已知限制
+
+| 实体 | 限制 | 影响 |
+|------|------|------|
+| User | 不支持OAuth2 | 第三方登录需扩展 |
+| Plant | 图片字段为JSON字符串 | 需要手动解析 |
+| QuizQuestion | 选项字段为JSON字符串 | 需要手动解析 |
+| 所有实体 | 不支持软删除 | 删除数据会物理删除 |
+| 所有实体 | 不支持多租户 | SaaS场景需扩展 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **字段优化**
+   - 添加逻辑删除字段
+   - 添加审计字段（创建人、更新人）
+   - 实现JSON字段自动转换
+
+2. **验证增强**
+   - 添加字段验证注解
+   - 实现字段默认值
+
+### 中期改进 (1-2月)
+
+1. **功能增强**
+   - 添加乐观锁支持
+   - 实现数据权限过滤
+   - 添加数据加密字段
+
+2. **性能优化**
+   - 添加字段懒加载
+   - 实现字段缓存
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Lombok | 1.18+ | 自动生成代码 |
+| MyBatis-Plus | 3.5+ | ORM框架 |
+| Jackson | 2.15+ | JSON序列化 |
+| Jakarta Validation | 3.0+ | 字段验证 |
+
+---
+
+## 常见问题
+
+### 1. 如何添加新实体？
+
+```java
+@Data
+@TableName("new_table")
+public class NewEntity {
+    
+    @TableId(type = IdType.AUTO)
+    private Integer id;
+    
+    @NotBlank
+    @TableField("name")
+    private String name;
+    
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+    
+    @TableLogic
+    private Boolean deleted;
+}
+```
+
+### 2. 如何处理JSON字段？
+
+```java
+@Data
+public class Plant {
+    
+    @TableField("images")
+    @JsonIgnore
+    private String imagesJson;
+    
+    @TableField(exist = false)
+    private List<String> images;
+    
+    public List<String> getImages() {
+        if (images == null && imagesJson != null) {
+            images = JSON.parseArray(imagesJson, String.class);
+        }
+        return images;
+    }
+    
+    public void setImages(List<String> images) {
+        this.images = images;
+        this.imagesJson = images != null ? JSON.toJSONString(images) : null;
+    }
+}
+```
+
+### 3. 如何实现软删除？
+
+```java
+@Data
+@TableName("plants")
+public class Plant {
+    
+    @TableLogic
+    @TableField("is_deleted")
+    private Boolean deleted;
+    
+    @TableField(value = "deleted_at", fill = FieldFill.UPDATE)
+    private LocalDateTime deletedAt;
+}
+
+// 配置MyBatis-Plus
+@Configuration
+public class MybatisPlusConfig {
+    
+    @Bean
+    public ISqlInjector sqlInjector() {
+        return new LogicSqlInjector();
+    }
+}
+```
+
+### 4. 如何添加审计字段？
+
+```java
+@Data
+public class BaseEntity {
+    
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+    
+    @TableField(fill = FieldFill.INSERT)
+    private Integer createdBy;
+    
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updatedAt;
+    
+    @TableField(fill = FieldFill.UPDATE)
+    private Integer updatedBy;
+}
+
+@Component
+public class MyMetaObjectHandler implements MetaObjectHandler {
+    
+    @Override
+    public void insertFill(MetaObject metaObject) {
+        this.strictInsertFill(metaObject, "createdAt", LocalDateTime.class, LocalDateTime.now());
+        this.strictInsertFill(metaObject, "createdBy", Integer.class, getCurrentUserId());
+    }
+    
+    @Override
+    public void updateFill(MetaObject metaObject) {
+        this.strictUpdateFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
+        this.strictUpdateFill(metaObject, "updatedBy", Integer.class, getCurrentUserId());
+    }
+}
+```
+
+---
+
+**最后更新时间**：2026年3月28日

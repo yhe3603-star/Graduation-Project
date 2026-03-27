@@ -318,4 +318,435 @@ public class PlantController {
 
 ---
 
-**最后更新时间**：2026年3月27日
+## 事务管理详解
+
+### 事务注解使用
+
+```java
+@Service
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+    
+    @Transactional(rollbackFor = Exception.class)
+    public void createUser(UserDTO dto) {
+        User user = new User();
+        BeanUtils.copyProperties(dto, user);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        save(user);
+        
+        if (dto.getRoles() != null) {
+            userRoleMapper.insertBatch(user.getId(), dto.getRoles());
+        }
+    }
+}
+```
+
+### 事务传播行为
+
+| 传播行为 | 说明 | 使用场景 |
+|---------|------|---------|
+| `REQUIRED`（默认） | 有事务则加入，无则新建 | 大部分场景 |
+| `REQUIRES_NEW` | 总是新建事务 | 独立日志记录 |
+| `SUPPORTS` | 有事务则加入，无则非事务执行 | 查询操作 |
+| `NOT_SUPPORTED` | 非事务执行 | 不需要事务的操作 |
+| `MANDATORY` | 必须在事务中调用 | 强制事务 |
+| `NEVER` | 必须非事务调用 | 禁止事务 |
+| `NESTED` | 嵌套事务 | 部分回滚 |
+
+### 事务示例
+
+#### 1. 基本事务
+
+```java
+@Transactional(rollbackFor = Exception.class)
+public void deletePlant(Integer id) {
+    Plant plant = getById(id);
+    if (plant == null) {
+        throw new BusinessException(ErrorCode.NOT_FOUND);
+    }
+    
+    removeById(id);
+    favoriteMapper.deleteByPlantId(id);
+    commentMapper.deleteByPlantId(id);
+}
+```
+
+#### 2. 嵌套事务
+
+```java
+@Service
+public class OrderServiceImpl {
+    
+    @Autowired
+    private InventoryService inventoryService;
+    
+    @Autowired
+    private PaymentService paymentService;
+    
+    @Transactional
+    public void createOrder(OrderDTO dto) {
+        Order order = saveOrder(dto);
+        
+        try {
+            inventoryService.deductStock(order);
+        } catch (Exception e) {
+            throw new BusinessException("库存扣减失败");
+        }
+        
+        paymentService.processPayment(order);
+    }
+}
+
+@Service
+public class InventoryServiceImpl {
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void deductStock(Order order) {
+        // 独立事务，失败不影响外部事务
+    }
+}
+```
+
+#### 3. 只读事务
+
+```java
+@Transactional(readOnly = true)
+public Page<Plant> searchPlants(String keyword, Integer page, Integer size) {
+    LambdaQueryWrapper<Plant> wrapper = new LambdaQueryWrapper<>();
+    wrapper.like(Plant::getName, keyword)
+           .or()
+           .like(Plant::getAlias, keyword);
+    return page(new Page<>(page, size), wrapper);
+}
+```
+
+#### 4. 超时设置
+
+```java
+@Transactional(timeout = 30)  // 30秒超时
+public void longRunningOperation() {
+    // 长时间运行的操作
+}
+```
+
+### 事务注意事项
+
+```java
+// 错误示例：同类方法调用，事务不生效
+@Service
+public class UserServiceImpl {
+    
+    public void methodA() {
+        methodB();  // 事务不生效
+    }
+    
+    @Transactional
+    public void methodB() {
+        // ...
+    }
+}
+
+// 正确示例：通过注入自身调用
+@Service
+public class UserServiceImpl {
+    
+    @Autowired
+    private UserService self;
+    
+    public void methodA() {
+        self.methodB();  // 事务生效
+    }
+    
+    @Transactional
+    public void methodB() {
+        // ...
+    }
+}
+```
+
+---
+
+## 缓存使用详解
+
+### 缓存注解
+
+| 注解 | 说明 |
+|------|------|
+| `@Cacheable` | 查询时使用缓存 |
+| `@CachePut` | 更新缓存 |
+| `@CacheEvict` | 删除缓存 |
+| `@Caching` | 组合多个缓存操作 |
+
+### 缓存示例
+
+#### 1. 查询缓存
+
+```java
+@Cacheable(value = "plants", key = "#id")
+public Plant getById(Integer id) {
+    return plantMapper.selectById(id);
+}
+
+@Cacheable(value = "plants", key = "'list:' + #page + ':' + #size")
+public Page<Plant> page(Integer page, Integer size) {
+    return page(new Page<>(page, size), null);
+}
+```
+
+#### 2. 更新缓存
+
+```java
+@CachePut(value = "plants", key = "#id")
+@CacheEvict(value = "plants", key = "'list:*'")
+public Plant update(Integer id, PlantDTO dto) {
+    Plant plant = getById(id);
+    BeanUtils.copyProperties(dto, plant);
+    updateById(plant);
+    return plant;
+}
+```
+
+#### 3. 删除缓存
+
+```java
+@CacheEvict(value = "plants", key = "#id")
+public void delete(Integer id) {
+    removeById(id);
+}
+
+@CacheEvict(value = "plants", allEntries = true)
+public void clearAllCache() {
+    // 清除所有plants缓存
+}
+```
+
+#### 4. 组合缓存
+
+```java
+@Caching(
+    evict = {
+        @CacheEvict(value = "plants", key = "#id"),
+        @CacheEvict(value = "plantDetail", key = "#id")
+    }
+)
+public void deleteWithCache(Integer id) {
+    removeById(id);
+}
+```
+
+---
+
+## 已知限制
+
+| 服务 | 限制 | 影响 |
+|------|------|------|
+| UserService | 不支持OAuth2 | 第三方登录需扩展 |
+| PlantService | 搜索不支持模糊匹配拼音 | 拼音搜索需扩展 |
+| QuizService | 题目随机算法简单 | 可能出现重复 |
+| FileUploadService | 单文件最大100MB | 大文件需分片 |
+| AiChatService | 依赖DeepSeek服务 | 服务不可用时无法使用 |
+| FavoriteService | 不支持批量操作 | 批量收藏需多次请求 |
+| CommentService | 不支持楼中楼 | 无法嵌套回复 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **缓存优化**
+   - 实现多级缓存
+   - 添加缓存预热
+   - 优化缓存命中率
+
+2. **事务优化**
+   - 添加事务监控
+   - 优化事务边界
+   - 实现分布式事务
+
+3. **性能优化**
+   - 添加批量操作
+   - 优化查询性能
+   - 实现异步处理
+
+### 中期改进 (1-2月)
+
+1. **功能增强**
+   - 添加拼音搜索
+   - 实现批量收藏
+   - 支持嵌套评论
+
+2. **可观测性**
+   - 添加服务监控
+   - 实现链路追踪
+   - 性能统计分析
+
+3. **测试覆盖**
+   - 编写单元测试
+   - 添加集成测试
+   - 性能测试
+
+### 长期规划 (3-6月)
+
+1. **微服务拆分**
+   - 服务边界划分
+   - 独立部署
+   - 服务治理
+
+2. **分布式支持**
+   - 分布式事务
+   - 分布式缓存
+   - 消息队列
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Spring Boot | 3.2+ | 框架基础 |
+| MyBatis-Plus | 3.5+ | ORM框架 |
+| Spring Data Redis | 3.2+ | 缓存 |
+| Spring TX | 6.1+ | 事务管理 |
+
+---
+
+## 常见问题
+
+### 1. 事务不生效怎么办？
+
+```java
+// 检查以下几点：
+// 1. 方法是否为public
+// 2. 是否通过代理调用（不是this调用）
+// 3. 异常是否被捕获（需要抛出RuntimeException）
+// 4. 是否配置了事务管理器
+
+@Service
+public class MyServiceImpl {
+    
+    @Transactional(rollbackFor = Exception.class)
+    public void myMethod() {
+        try {
+            // 业务逻辑
+        } catch (Exception e) {
+            throw new BusinessException(e);  // 必须抛出才能回滚
+        }
+    }
+}
+```
+
+### 2. 如何处理并发问题？
+
+```java
+@Service
+public class PlantServiceImpl {
+    
+    @Transactional
+    public void incrementViewCount(Integer id) {
+        // 使用乐观锁
+        Plant plant = getById(id);
+        plant.setViewCount(plant.getViewCount() + 1);
+        updateById(plant);
+    }
+    
+    // 或使用Redis原子操作
+    public void incrementViewCountAsync(Integer id) {
+        String key = "plant:view:" + id;
+        redisTemplate.opsForValue().increment(key);
+    }
+}
+```
+
+### 3. 如何实现软删除？
+
+```java
+@Service
+public class PlantServiceImpl {
+    
+    @Override
+    public void delete(Integer id) {
+        Plant plant = getById(id);
+        plant.setDeleted(true);
+        plant.setDeletedAt(LocalDateTime.now());
+        updateById(plant);
+    }
+    
+    // MyBatis-Plus配置
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
+        return interceptor;
+    }
+}
+
+// Entity配置
+@TableLogic
+private Boolean deleted;
+```
+
+### 4. 如何实现批量操作？
+
+```java
+@Service
+public class PlantServiceImpl {
+    
+    @Transactional
+    public void batchInsert(List<PlantDTO> dtos) {
+        List<Plant> plants = dtos.stream()
+            .map(dto -> {
+                Plant plant = new Plant();
+                BeanUtils.copyProperties(dto, plant);
+                return plant;
+            })
+            .collect(Collectors.toList());
+        saveBatch(plants, 500);  // 每批500条
+    }
+    
+    @Transactional
+    public void batchDelete(List<Integer> ids) {
+        removeByIds(ids);
+    }
+}
+```
+
+### 5. 如何实现异步处理？
+
+```java
+@Service
+public class PlantServiceImpl {
+    
+    @Async
+    @Transactional
+    public CompletableFuture<Void> processAsync(Integer id) {
+        Plant plant = getById(id);
+        // 耗时操作
+        processPlant(plant);
+        return CompletableFuture.completedFuture(null);
+    }
+}
+```
+
+### 6. 如何处理大文件上传？
+
+```java
+@Service
+public class FileUploadServiceImpl {
+    
+    public String uploadLargeFile(MultipartFile file) {
+        String tempPath = saveTempFile(file);
+        
+        // 分片上传到OSS
+        String url = ossService.uploadByChunk(tempPath);
+        
+        // 清理临时文件
+        cleanupTempFile(tempPath);
+        
+        return url;
+    }
+}
+```
+
+---
+
+**最后更新时间**：2026年3月28日

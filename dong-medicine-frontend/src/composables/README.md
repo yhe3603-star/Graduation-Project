@@ -305,6 +305,91 @@ export function useErrorHandler() {
 
 ---
 
+## 组合使用示例
+
+### 多个Composable组合使用
+
+```vue
+<template>
+  <div class="quiz-page">
+    <div v-if="error">{{ errorMessage }}</div>
+    <div v-else-if="loading">加载中...</div>
+    <div v-else>
+      <QuizSection
+        :questions="questions"
+        :current-index="currentIndex"
+        :score="score"
+        @submit="submitAnswer"
+        @next="nextQuestion"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { onMounted } from 'vue'
+import { useQuiz } from '@/composables/useQuiz'
+import { useErrorHandler } from '@/composables/useErrorHandler'
+import { useDebounce } from '@/composables/useDebounce'
+
+const {
+  questions,
+  currentIndex,
+  score,
+  loadQuestions,
+  submitAnswer,
+  nextQuestion
+} = useQuiz()
+
+const { error, errorMessage, handleError } = useErrorHandler()
+
+const { debouncedFn: debouncedSubmit } = useDebounce(submitAnswer, 300)
+
+onMounted(async () => {
+  try {
+    await loadQuestions(10)
+  } catch (err) {
+    handleError(err)
+  }
+})
+</script>
+```
+
+### 在Composable中调用其他Composable
+
+```javascript
+import { ref } from 'vue'
+import { useErrorHandler } from './useErrorHandler'
+import { useDebounce } from './useDebounce'
+
+export function useSearch(apiPath) {
+  const { error, handleError } = useErrorHandler()
+  const results = ref([])
+  const loading = ref(false)
+  
+  const { debouncedFn: debouncedSearch } = useDebounce(async (keyword) => {
+    loading.value = true
+    try {
+      const response = await request.get(apiPath, { params: { keyword } })
+      results.value = response.data
+    } catch (err) {
+      handleError(err)
+    } finally {
+      loading.value = false
+    }
+  }, 500)
+  
+  return {
+    results,
+    loading,
+    error,
+    search: debouncedSearch
+  }
+}
+```
+
+---
+
 ## 开发规范
 
 1. **命名规范**: 函数以 `use` 开头，使用大驼峰命名法
@@ -312,6 +397,170 @@ export function useErrorHandler() {
 3. **组合使用**: 可以在组合式函数中调用其他组合式函数
 4. **文档注释**: 添加JSDoc注释说明用途和参数
 
+### JSDoc注释规范
+
+```javascript
+/**
+ * 答题逻辑组合式函数
+ * @param {Object} options - 配置选项
+ * @param {number} options.questionCount - 题目数量，默认10
+ * @param {number} options.timeLimit - 时间限制（秒），默认0表示不限时
+ * @returns {Object} 答题相关的状态和方法
+ * @example
+ * const { questions, score, loadQuestions } = useQuiz({ questionCount: 20 })
+ */
+export function useQuiz(options = {}) {
+  // ...
+}
+```
+
 ---
 
-**最后更新时间**: 2026年3月27日
+## 已知限制
+
+| Composable | 限制 | 影响 |
+|------------|------|------|
+| useQuiz | 不支持题目分类筛选 | 无法按类型答题 |
+| usePlantGame | 图片预加载未实现 | 可能影响游戏流畅度 |
+| useMedia | 不支持音频预览 | 音频文件无法预览 |
+| useFavorite | 未实现本地缓存 | 每次都需请求API |
+| useDebounce | 不支持立即执行模式 | 某些场景需要立即执行 |
+| useAdminData | 不支持批量操作 | 批量删除需多次请求 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **useQuiz**
+   - 添加题目分类筛选
+   - 实现答题历史记录
+   - 添加错题本功能
+
+2. **useFavorite**
+   - 实现本地缓存
+   - 添加收藏夹分类
+
+3. **useMedia**
+   - 添加音频预览支持
+   - 实现媒体文件缓存
+
+### 中期改进 (1-2月)
+
+1. **TypeScript支持**
+   - 添加类型定义文件
+   - 提供更好的IDE支持
+
+2. **测试覆盖**
+   - 编写单元测试
+   - 添加集成测试
+
+3. **性能优化**
+   - 实现请求缓存
+   - 添加请求取消功能
+
+### 长期规划 (3-6月)
+
+1. **插件化架构**
+   - 支持自定义Composable
+   - 提供插件注册机制
+
+2. **状态持久化**
+   - 支持多种存储后端
+   - 实现状态同步
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Vue | 3.4+ | 响应式系统 |
+| Vue Router | 4.2+ | 路由（部分函数） |
+| Pinia | 2.3+ | 状态管理（部分函数） |
+| Axios | 1.6+ | HTTP请求 |
+
+---
+
+## 常见问题
+
+### 1. 如何在Composable中使用路由？
+
+```javascript
+import { useRouter } from 'vue-router'
+
+export function useMyComposable() {
+  const router = useRouter()
+  
+  const navigate = (path) => {
+    router.push(path)
+  }
+  
+  return { navigate }
+}
+```
+
+### 2. 如何在Composable中使用Pinia Store？
+
+```javascript
+import { useUserStore } from '@/stores/user'
+
+export function useMyComposable() {
+  const userStore = useUserStore()
+  
+  const doSomething = () => {
+    if (userStore.isLoggedIn) {
+      // ...
+    }
+  }
+  
+  return { doSomething }
+}
+```
+
+### 3. 如何处理Composable中的错误？
+
+```javascript
+export function useMyComposable() {
+  const error = ref(null)
+  
+  const fetchData = async () => {
+    try {
+      // API调用
+    } catch (err) {
+      error.value = err
+      console.error('请求失败:', err)
+    }
+  }
+  
+  return { error, fetchData }
+}
+```
+
+### 4. 如何实现Composable的清理逻辑？
+
+```javascript
+import { onUnmounted } from 'vue'
+
+export function useMyComposable() {
+  const timer = ref(null)
+  
+  const startTimer = () => {
+    timer.value = setInterval(() => {}, 1000)
+  }
+  
+  // 组件卸载时清理
+  onUnmounted(() => {
+    if (timer.value) {
+      clearInterval(timer.value)
+    }
+  })
+  
+  return { startTimer }
+}
+```
+
+---
+
+**最后更新时间**: 2026年3月28日

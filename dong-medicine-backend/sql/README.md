@@ -410,4 +410,376 @@ OPTIMIZE TABLE plants, knowledge, inheritors, comments, favorites, feedback, qa,
 
 ---
 
-**最后更新时间**：2026年3月23日
+## 数据库优化建议
+
+### 1. 查询优化
+
+#### 使用EXPLAIN分析查询
+
+```sql
+EXPLAIN SELECT * FROM plants WHERE category = '清热药';
+```
+
+**关注指标**：
+- `type`：ALL（全表扫描）需要优化
+- `key`：使用的索引
+- `rows`：预估扫描行数
+- `Extra`：额外信息（Using filesort、Using temporary需要优化）
+
+#### 优化建议
+
+```sql
+-- 避免SELECT *
+SELECT id, name, category FROM plants WHERE category = '清热药';
+
+-- 使用LIMIT限制结果
+SELECT * FROM plants ORDER BY view_count DESC LIMIT 10;
+
+-- 避免在WHERE子句中使用函数
+-- 不推荐
+SELECT * FROM plants WHERE YEAR(created_at) = 2024;
+-- 推荐
+SELECT * FROM plants WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01';
+
+-- 使用JOIN代替子查询
+-- 不推荐
+SELECT * FROM plants WHERE id IN (SELECT plant_id FROM favorites WHERE user_id = 1);
+-- 推荐
+SELECT p.* FROM plants p 
+INNER JOIN favorites f ON p.id = f.target_id 
+WHERE f.user_id = 1 AND f.target_type = 'plant';
+```
+
+### 2. 索引优化
+
+#### 索引设计原则
+
+| 原则 | 说明 |
+|------|------|
+| 最左前缀 | 复合索引从左到右匹配 |
+| 选择性高 | 选择区分度高的列 |
+| 避免冗余 | 不创建已有索引覆盖的索引 |
+| 适度索引 | 索引不是越多越好 |
+
+#### 创建复合索引
+
+```sql
+-- 根据查询模式创建复合索引
+CREATE INDEX idx_plants_category_usage ON plants(category, usage_way);
+CREATE INDEX idx_comments_target ON comments(target_type, target_id);
+CREATE INDEX idx_favorites_user_target ON favorites(user_id, target_type, target_id);
+```
+
+#### 索引维护
+
+```sql
+-- 查看索引使用情况
+SELECT * FROM sys.schema_index_statistics 
+WHERE table_schema = 'dong_medicine';
+
+-- 删除未使用的索引
+DROP INDEX idx_unused ON table_name;
+```
+
+### 3. 表结构优化
+
+#### 字段类型选择
+
+| 数据类型 | 推荐使用场景 |
+|---------|-------------|
+| TINYINT | 状态、标志位 |
+| INT | ID、计数器 |
+| BIGINT | 大数值ID |
+| VARCHAR | 可变长度字符串 |
+| TEXT | 长文本（少用） |
+| DATETIME | 时间戳 |
+| DECIMAL | 精确数值（金额） |
+
+#### 分区表设计
+
+```sql
+-- 按时间分区（适用于日志表）
+ALTER TABLE operation_log 
+PARTITION BY RANGE (YEAR(created_at)) (
+    PARTITION p2023 VALUES LESS THAN (2024),
+    PARTITION p2024 VALUES LESS THAN (2025),
+    PARTITION p2025 VALUES LESS THAN (2026),
+    PARTITION pmax VALUES LESS THAN MAXVALUE
+);
+```
+
+### 4. 连接池配置
+
+```yaml
+spring:
+  datasource:
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+```
+
+### 5. 慢查询优化
+
+#### 开启慢查询日志
+
+```sql
+-- 查看慢查询配置
+SHOW VARIABLES LIKE 'slow_query%';
+SHOW VARIABLES LIKE 'long_query_time';
+
+-- 开启慢查询日志
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 2;  -- 超过2秒记录
+```
+
+#### 分析慢查询
+
+```sql
+-- 查看慢查询数量
+SHOW GLOBAL STATUS LIKE 'Slow_queries';
+
+-- 使用mysqldumpslow分析
+-- mysqldumpslow -s t -t 10 /var/log/mysql/mysql-slow.log
+```
+
+### 6. 缓存策略
+
+#### 查询缓存
+
+```sql
+-- 使用SQL_CACHE提示（MySQL 8.0已移除）
+SELECT SQL_CACHE * FROM plants WHERE id = 1;
+
+-- 应用层缓存更有效
+-- 使用Redis缓存热点数据
+```
+
+#### 缓存更新策略
+
+```java
+// Cache-Aside模式
+public Plant getPlant(Integer id) {
+    Plant plant = redisTemplate.opsForValue().get("plant:" + id);
+    if (plant == null) {
+        plant = plantMapper.selectById(id);
+        redisTemplate.opsForValue().set("plant:" + id, plant, 6, TimeUnit.HOURS);
+    }
+    return plant;
+}
+```
+
+---
+
+## 数据迁移指南
+
+### 1. 导出数据
+
+```bash
+# 导出整个数据库
+mysqldump -u root -p dong_medicine > backup.sql
+
+# 仅导出表结构
+mysqldump -u root -p --no-data dong_medicine > schema.sql
+
+# 仅导出数据
+mysqldump -u root -p --no-create-info dong_medicine > data.sql
+
+# 导出特定表
+mysqldump -u root -p dong_medicine plants knowledge > tables.sql
+```
+
+### 2. 导入数据
+
+```bash
+# 导入SQL文件
+mysql -u root -p dong_medicine < backup.sql
+
+# 使用source命令
+mysql> USE dong_medicine;
+mysql> SOURCE /path/to/backup.sql;
+```
+
+### 3. 数据迁移脚本
+
+```sql
+-- 批量插入数据
+INSERT INTO plants (name, category, description, created_at)
+VALUES 
+    ('钩藤', '清热药', '清热平肝，息风止痉', NOW()),
+    ('透骨草', '祛风湿药', '祛风除湿，舒筋活血', NOW());
+
+-- 从其他表迁移数据
+INSERT INTO new_plants (name, category)
+SELECT name, category FROM old_plants WHERE status = 'active';
+
+-- 批量更新
+UPDATE plants SET view_count = 0 WHERE view_count IS NULL;
+```
+
+---
+
+## 性能监控SQL
+
+### 1. 查看表状态
+
+```sql
+-- 查看所有表状态
+SHOW TABLE STATUS FROM dong_medicine;
+
+-- 查看表大小
+SELECT 
+    table_name,
+    ROUND(data_length / 1024 / 1024, 2) AS data_size_mb,
+    ROUND(index_length / 1024 / 1024, 2) AS index_size_mb,
+    table_rows
+FROM information_schema.tables
+WHERE table_schema = 'dong_medicine'
+ORDER BY data_length DESC;
+```
+
+### 2. 查看锁信息
+
+```sql
+-- 查看当前锁
+SHOW OPEN TABLES WHERE In_use > 0;
+
+-- 查看InnoDB锁
+SELECT * FROM information_schema.INNODB_LOCKS;
+SELECT * FROM information_schema.INNODB_LOCK_WAITS;
+```
+
+### 3. 查看连接信息
+
+```sql
+-- 查看当前连接
+SHOW PROCESSLIST;
+
+-- 查看连接数
+SHOW STATUS LIKE 'Threads_connected';
+SHOW STATUS LIKE 'Max_used_connections';
+```
+
+### 4. 查看缓冲池状态
+
+```sql
+-- InnoDB缓冲池状态
+SHOW STATUS LIKE 'Innodb_buffer_pool%';
+
+-- 缓冲池命中率
+SELECT 
+    (1 - (Innodb_buffer_pool_reads / Innodb_buffer_pool_read_requests)) * 100 
+    AS buffer_pool_hit_rate
+FROM (
+    SELECT variable_value AS Innodb_buffer_pool_reads
+    FROM information_schema.global_status
+    WHERE variable_name = 'Innodb_buffer_pool_reads'
+) r,
+(
+    SELECT variable_value AS Innodb_buffer_pool_read_requests
+    FROM information_schema.global_status
+    WHERE variable_name = 'Innodb_buffer_pool_read_requests'
+) rr;
+```
+
+---
+
+## 常见问题
+
+### 1. 如何解决死锁问题？
+
+```sql
+-- 查看死锁信息
+SHOW ENGINE INNODB STATUS;
+
+-- 解决方案
+-- 1. 减小事务范围
+-- 2. 按相同顺序访问表
+-- 3. 添加适当索引
+-- 4. 降低隔离级别
+```
+
+### 2. 如何处理大表？
+
+```sql
+-- 分批删除
+DELETE FROM operation_log WHERE created_at < '2023-01-01' LIMIT 1000;
+
+-- 使用分区
+ALTER TABLE operation_log PARTITION BY RANGE (YEAR(created_at)) (...);
+
+-- 归档历史数据
+CREATE TABLE operation_log_archive AS 
+SELECT * FROM operation_log WHERE created_at < '2023-01-01';
+```
+
+### 3. 如何优化COUNT查询？
+
+```sql
+-- 使用近似值
+EXPLAIN SELECT COUNT(*) FROM plants;
+
+-- 使用缓存计数
+-- 在应用层维护计数器
+
+-- 使用覆盖索引
+CREATE INDEX idx_count ON plants(category);
+SELECT COUNT(*) FROM plants WHERE category = '清热药';
+```
+
+### 4. 如何处理字符集问题？
+
+```sql
+-- 查看字符集
+SHOW VARIABLES LIKE 'character%';
+SHOW CREATE TABLE plants;
+
+-- 修改字符集
+ALTER TABLE plants CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- 修改字段字符集
+ALTER TABLE plants MODIFY description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **索引优化**
+   - 分析慢查询日志
+   - 添加缺失索引
+   - 删除冗余索引
+
+2. **查询优化**
+   - 优化复杂查询
+   - 添加查询缓存
+   - 使用批量操作
+
+### 中期改进 (1-2月)
+
+1. **分区表**
+   - 日志表按时间分区
+   - 历史数据归档
+
+2. **读写分离**
+   - 配置主从复制
+   - 读写分离中间件
+
+### 长期规划 (3-6月)
+
+1. **分布式数据库**
+   - 分库分表
+   - 数据中间件
+
+2. **数据仓库**
+   - 数据同步
+   - 数据分析
+
+---
+
+**最后更新时间**：2026年3月28日

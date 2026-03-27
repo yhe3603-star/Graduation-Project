@@ -306,4 +306,117 @@ dto/
 
 ---
 
-**最后更新时间**：2026年3月27日
+## 已知限制
+
+| DTO | 限制 | 影响 |
+|-----|------|------|
+| LoginDTO | 不支持验证码 | 无法防止暴力破解 |
+| RegisterDTO | 不支持邮箱验证 | 无法验证邮箱真实性 |
+| PlantDTO | 图片字段为JSON字符串 | 前端需额外解析 |
+| ChatRequest | 不支持流式响应 | AI对话体验不佳 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **验证增强**
+   - 添加验证码支持
+   - 实现邮箱验证
+   - 添加手机号验证
+
+2. **字段优化**
+   - 图片字段改为List类型
+   - 添加字段默认值
+
+### 中期改进 (1-2月)
+
+1. **文档生成**
+   - 集成Swagger注解
+   - 自动生成API文档
+
+2. **类型安全**
+   - 添加TypeScript类型定义
+   - 实现前后端类型共享
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Lombok | 1.18+ | 自动生成代码 |
+| Jakarta Validation | 3.0+ | 参数验证 |
+| Jackson | 2.15+ | JSON序列化 |
+
+---
+
+## 常见问题
+
+### 1. 如何添加新的DTO？
+
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class NewDTO {
+    
+    @NotBlank(message = "名称不能为空")
+    @Size(max = 100, message = "名称长度不能超过100")
+    private String name;
+    
+    @Size(max = 500, message = "描述长度不能超过500")
+    private String description;
+    
+    public static NewDTO fromEntity(Entity entity) {
+        return NewDTO.builder()
+            .name(entity.getName())
+            .description(entity.getDescription())
+            .build();
+    }
+}
+```
+
+### 2. 如何处理DTO与Entity的转换？
+
+```java
+// DTO转Entity
+Entity entity = new Entity();
+BeanUtils.copyProperties(dto, entity);
+
+// Entity转DTO
+DTO dto = DTO.fromEntity(entity);
+
+// 使用MapStruct（推荐）
+@Mapper
+public interface PlantMapper {
+    PlantDTO toDto(Plant plant);
+    Plant toEntity(PlantDTO dto);
+}
+```
+
+### 3. 如何添加自定义验证？
+
+```java
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = PhoneValidator.class)
+public @interface Phone {
+    String message() default "手机号格式不正确";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+}
+
+public class PhoneValidator implements ConstraintValidator<Phone, String> {
+    @Override
+    public boolean isValid(String value, ConstraintValidatorContext context) {
+        return value == null || value.matches("^1[3-9]\\d{9}$");
+    }
+}
+```
+
+---
+
+**最后更新时间**：2026年3月28日

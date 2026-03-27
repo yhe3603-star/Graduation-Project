@@ -867,3 +867,7 @@ docker-compose up -d --build
 2024-01-15 10:30:46.456 [a1b2c3d4e5f6g7h8] WARN  c.d.config.RateLimitAspect - 请求过于频繁: login:192.168.1.100
 2024-01-15 10:30:47.789 [b2c3d4e5f6g7h8i9] INFO  c.d.service.impl.AiChatServiceImpl - AI聊天请求: messageLength=50
 ```
+
+---
+
+**最后更新时间**：2026年3月28日

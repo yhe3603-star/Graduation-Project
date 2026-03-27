@@ -136,4 +136,139 @@ if (userStore.isAdmin) {
 
 ---
 
-**最后更新时间**: 2026年3月27日
+## 已知限制
+
+| 限制 | 影响 |
+|------|------|
+| 仅sessionStorage持久化 | 关闭浏览器后状态丢失 |
+| 不支持状态快照 | 无法实现时间旅行调试 |
+| 不支持模块动态注册 | 所有Store需预先定义 |
+| Token验证缓存60秒 | 登出后可能短暂有效 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **状态持久化**
+   - 支持localStorage持久化
+   - 实现选择性持久化
+   - 添加状态加密
+
+2. **调试增强**
+   - 集成Pinia DevTools
+   - 添加状态日志
+
+### 中期改进 (1-2月)
+
+1. **功能增强**
+   - 实现状态快照
+   - 添加撤销/重做功能
+   - 支持模块热更新
+
+2. **性能优化**
+   - 实现状态懒加载
+   - 优化大型状态对象
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Pinia | 2.3+ | 状态管理 |
+| Vue | 3.4+ | 响应式系统 |
+
+---
+
+## 常见问题
+
+### 1. 如何创建新的Store？
+
+```javascript
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+
+export const useDataStore = defineStore('data', () => {
+  // 状态
+  const items = ref([])
+  const loading = ref(false)
+  
+  // 计算属性
+  const itemCount = computed(() => items.value.length)
+  
+  // 方法
+  async function fetchItems() {
+    loading.value = true
+    try {
+      const res = await api.getItems()
+      items.value = res.data
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  function addItem(item) {
+    items.value.push(item)
+  }
+  
+  return {
+    items,
+    loading,
+    itemCount,
+    fetchItems,
+    addItem
+  }
+})
+```
+
+### 2. 如何在组件外使用Store？
+
+```javascript
+// 在普通JS文件中使用
+import { useUserStore } from '@/stores/user'
+
+// 需要在Pinia实例创建后使用
+export function checkAuth() {
+  const userStore = useUserStore()
+  return userStore.isLoggedIn
+}
+```
+
+### 3. 如何实现状态持久化？
+
+```javascript
+import { defineStore } from 'pinia'
+
+export const useUserStore = defineStore('user', {
+  state: () => ({
+    token: null,
+    username: null
+  }),
+  
+  persist: {
+    storage: sessionStorage,
+    paths: ['token', 'username']  // 只持久化这些字段
+  }
+})
+```
+
+### 4. 如何重置Store状态？
+
+```javascript
+const userStore = useUserStore()
+
+// 重置为初始状态
+userStore.$reset()
+
+// 或批量更新状态
+userStore.$patch({
+  token: null,
+  username: null
+})
+```
+
+---
+
+**最后更新时间**：2026年3月28日

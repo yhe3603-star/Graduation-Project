@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
-  <rect fill="#1a1a1a" width="400" height="300"/>
-  <polygon points="160,100 260,150 160,200" fill="#fff" opacity="0.8"/>
-  <text x="50%" y="85%" fill="#fff" text-anchor="middle" dy=".3em" font-size="16" font-family="Arial, sans-serif">视频封面</text>
-</svg>

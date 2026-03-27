@@ -220,11 +220,117 @@ import { AdminDashboard } from '@/components/business/admin'
 | dialogs/ | 5 | 前台详情 |
 | **总计** | **48** | - |
 
-## 依赖关系
+## 已知限制
 
-- **外部依赖**：Element Plus、Vue 3
-- **内部依赖**：基础组件、Composables、Utils、Stores
+| 组件 | 限制 | 影响 |
+|------|------|------|
+| ImageUploader | 单文件最大100MB | 大图片需压缩 |
+| VideoUploader | 不支持断点续传 | 网络中断需重新上传 |
+| DocumentPreview | 依赖kkFileView服务 | 服务不可用时无法预览 |
+| PlantGame | 题目随机算法简单 | 可能出现重复题目 |
+| QuizSection | 不支持题目分类筛选 | 无法按类型答题 |
+| CommentSection | 不支持楼中楼 | 无法嵌套回复 |
+| ChartCard | ECharts实例未自动销毁 | 频繁切换可能内存泄漏 |
 
 ---
 
-**最后更新时间**：2026年3月27日
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **上传组件优化**
+   - 添加断点续传支持
+   - 实现图片压缩功能
+   - 添加上传进度显示
+
+2. **交互组件增强**
+   - 添加题目分类筛选
+   - 实现评论楼中楼
+   - 添加表情支持
+
+3. **展示组件优化**
+   - 实现虚拟滚动
+   - 添加骨架屏加载
+   - 优化图表性能
+
+### 中期改进 (1-2月)
+
+1. **组件库化**
+   - 抽取为独立npm包
+   - 添加TypeScript类型
+   - 编写单元测试
+
+2. **国际化支持**
+   - 添加多语言支持
+   - 实现RTL布局
+
+3. **无障碍支持**
+   - 添加ARIA属性
+   - 支持键盘导航
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Vue | 3.4+ | 组件框架 |
+| Element Plus | 2.4+ | UI组件库 |
+| ECharts | 5.4+ | 图表组件 |
+| Pinia | 2.3+ | 状态管理 |
+
+---
+
+## 常见问题
+
+### 1. 如何添加新的业务组件？
+
+```vue
+<template>
+  <div class="my-component">
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useUserStore } from '@/stores/user'
+
+const props = defineProps({
+  modelValue: { type: Boolean, default: false }
+})
+
+const emit = defineEmits(['update:modelValue'])
+const userStore = useUserStore()
+</script>
+```
+
+### 2. 如何在组件中使用Composables？
+
+```vue
+<script setup>
+import { useErrorHandler } from '@/composables/useErrorHandler'
+import { useDebounce } from '@/composables/useDebounce'
+
+const { error, handleError } = useErrorHandler()
+const { debouncedFn } = useDebounce(search, 300)
+</script>
+```
+
+### 3. 如何处理组件间通信？
+
+```javascript
+// 方式1：通过Props和Events
+<ChildComponent :data="data" @update="handleUpdate" />
+
+// 方式2：通过Pinia Store
+const store = useDataStore()
+store.setData(data)
+
+// 方式3：通过Provide/Inject
+provide('sharedData', data)
+const sharedData = inject('sharedData')
+```
+
+---
+
+**最后更新时间**：2026年3月28日

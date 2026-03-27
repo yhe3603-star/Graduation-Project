@@ -371,6 +371,320 @@ public static final String REQUEST_ID_MDC_KEY = "requestId";
 4. **切面规范**：使用`@Aspect`注解，定义清晰的切点
 5. **过滤器规范**：实现`Filter`接口，使用`@Component`注解
 
+### 配置类模板
+
+```java
+@Configuration
+@EnableConfigurationProperties(MyProperties.class)
+public class MyConfig {
+    
+    @Bean
+    public MyBean myBean(MyProperties properties) {
+        return new MyBean(properties);
+    }
+}
+
+@ConfigurationProperties(prefix = "app.my")
+public class MyProperties {
+    private String property1;
+    private int property2 = 10;
+    // getters and setters
+}
+```
+
+### 切面类模板
+
+```java
+@Aspect
+@Component
+@Slf4j
+public class MyAspect {
+    
+    @Pointcut("@annotation(com.dongmedicine.config.MyAnnotation)")
+    public void myPointcut() {}
+    
+    @Around("myPointcut()")
+    public Object around(ProceedingJoinPoint point) throws Throwable {
+        long startTime = System.currentTimeMillis();
+        try {
+            Object result = point.proceed();
+            return result;
+        } finally {
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("执行耗时: {}ms", duration);
+        }
+    }
+}
+```
+
 ---
 
-**最后更新时间**：2026年3月27日
+## 性能优化建议
+
+### 1. JWT令牌优化
+
+```yaml
+app:
+  security:
+    jwt-expiration: 86400000  # 24小时
+    jwt-refresh-threshold-minutes: 30  # 过期前30分钟自动刷新
+    jwt-refresh-grace-days: 7  # 刷新宽限期
+```
+
+**优化建议**：
+- 令牌过期时间不宜过长（建议24小时内）
+- 启用自动刷新机制，减少用户重新登录
+- 使用Redis缓存已撤销的令牌
+
+### 2. 缓存策略优化
+
+| 缓存区域 | 默认TTL | 优化建议 |
+|---------|--------|---------|
+| plants | 6小时 | 热门数据可延长至12小时 |
+| knowledges | 6小时 | 高频访问延长至24小时 |
+| users | 30分钟 | 敏感数据保持短TTL |
+| searchResults | 5分钟 | 根据访问频率调整 |
+
+**缓存预热建议**：
+```java
+@PostConstruct
+public void warmUpCache() {
+    // 应用启动时预热热门数据
+    plantService.getHotPlants();
+    knowledgeService.getHotKnowledges();
+}
+```
+
+### 3. 限流配置优化
+
+```java
+// 登录接口：严格限流
+@RateLimit(value = 5, key = "login")
+
+// 查询接口：适度限流
+@RateLimit(value = 50, key = "query")
+
+// 上传接口：宽松限流
+@RateLimit(value = 10, key = "upload")
+```
+
+### 4. 异步任务优化
+
+```yaml
+spring:
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 20
+        queue-capacity: 100
+        thread-name-prefix: async-
+```
+
+### 5. 数据库连接池优化
+
+```yaml
+spring:
+  datasource:
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+```
+
+---
+
+## 已知限制
+
+| 配置项 | 限制 | 影响 |
+|--------|------|------|
+| JwtUtil | 令牌刷新依赖Redis | Redis不可用时无法刷新 |
+| RateLimitAspect | 本地令牌桶容量100 | 高并发时可能不够 |
+| XssFilter | 不处理文件上传 | 文件内容需单独处理 |
+| CacheConfig | 内存缓存无过期 | 长时间运行可能OOM |
+| RequestSizeFilter | 默认限制10MB | 大文件需单独处理 |
+| SecurityConfig | 不支持OAuth2 | 第三方登录需扩展 |
+
+---
+
+## 未来改进建议
+
+### 短期改进 (1-2周)
+
+1. **安全增强**
+   - 添加IP白名单功能
+   - 实现请求签名验证
+   - 添加设备指纹识别
+
+2. **限流优化**
+   - 支持分布式限流
+   - 添加限流统计面板
+   - 实现动态限流配置
+
+3. **缓存优化**
+   - 实现多级缓存
+   - 添加缓存监控
+   - 支持缓存预热
+
+### 中期改进 (1-2月)
+
+1. **OAuth2支持**
+   - 集成第三方登录
+   - 实现单点登录
+   - 支持多因素认证
+
+2. **可观测性**
+   - 集成分布式追踪
+   - 添加性能监控
+   - 实现告警机制
+
+3. **配置管理**
+   - 支持动态配置
+   - 集成配置中心
+   - 实现配置版本管理
+
+### 长期规划 (3-6月)
+
+1. **微服务架构**
+   - 服务拆分
+   - 网关配置
+   - 服务发现
+
+2. **云原生支持**
+   - Kubernetes配置
+   - 容器化部署
+   - 自动扩缩容
+
+---
+
+## 依赖要求
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Spring Boot | 3.2+ | 框架基础 |
+| Spring Security | 6.2+ | 安全框架 |
+| Spring Data Redis | 3.2+ | 缓存 |
+| SpringDoc OpenAPI | 2.3+ | API文档 |
+| MyBatis-Plus | 3.5+ | ORM框架 |
+| JJWT | 0.12+ | JWT处理 |
+| Bucket4j | 8.x | 本地限流 |
+
+---
+
+## 常见问题
+
+### 1. JWT令牌过期如何处理？
+
+```java
+// 前端处理
+if (response.code === 401) {
+    // 清除本地token
+    localStorage.removeItem('token')
+    // 跳转登录页
+    router.push('/login')
+}
+
+// 后端处理
+// JwtAuthenticationFilter会自动刷新即将过期的令牌
+// 响应头中会返回新令牌：X-New-Token
+```
+
+### 2. 如何自定义限流策略？
+
+```java
+// 创建自定义限流注解
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface CustomRateLimit {
+    int value() default 10;
+    String key() default "";
+    TimeUnit unit() default TimeUnit.SECONDS;
+}
+
+// 在切面中处理
+@Around("@annotation(customRateLimit)")
+public Object around(ProceedingJoinPoint point, CustomRateLimit customRateLimit) {
+    // 自定义限流逻辑
+}
+```
+
+### 3. 如何添加新的缓存区域？
+
+```java
+// 在CacheConfig中添加
+@Bean
+public CacheManager cacheManager(RedisConnectionFactory factory) {
+    Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+    
+    // 添加新的缓存区域
+    cacheConfigurations.put("myCache", 
+        RedisCacheConfiguration.defaultCacheConfig()
+            .entryTtl(Duration.ofHours(1)));
+    
+    return RedisCacheManager.builder(factory)
+        .withInitialCacheConfigurations(cacheConfigurations)
+        .build();
+}
+```
+
+### 4. 如何配置CORS？
+
+```java
+// 在SecurityConfig中配置
+@Bean
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+    configuration.setAllowedMethods(Arrays.asList("*"));
+    configuration.setAllowedHeaders(Arrays.asList("*"));
+    configuration.setAllowCredentials(true);
+    
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
+}
+```
+
+### 5. 如何添加自定义健康检查？
+
+```java
+@Component
+public class MyHealthIndicator implements HealthIndicator {
+    
+    @Override
+    public Health health() {
+        // 检查逻辑
+        boolean healthy = checkMyService();
+        if (healthy) {
+            return Health.up()
+                .withDetail("service", "my-service")
+                .build();
+        }
+        return Health.down()
+            .withDetail("error", "Service unavailable")
+            .build();
+    }
+}
+```
+
+### 6. 如何禁用某些安全检查？
+
+```java
+// 仅用于开发环境
+@Configuration
+@Profile("dev")
+public class DevSecurityConfig {
+    
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+            .requestMatchers("/h2-console/**");
+    }
+}
+```
+
+---
+
+**最后更新时间**：2026年3月28日
