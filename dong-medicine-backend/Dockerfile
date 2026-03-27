@@ -25,9 +25,9 @@ RUN mkdir -p /root/.m2 && \
 COPY pom.xml .
 RUN mvn dependency:go-offline -B -Dmaven.wagon.http.retryHandler.count=3 -Dmaven.wagon.http.retryHandler.retryIntervalSeconds=5
 
-# 复制源代码并构建
+# 复制源代码并构建（完全跳过测试编译和执行）
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -Dmaven.test.skip=true -B
 
 # 运行阶段
 FROM eclipse-temurin:17-jre-alpine
