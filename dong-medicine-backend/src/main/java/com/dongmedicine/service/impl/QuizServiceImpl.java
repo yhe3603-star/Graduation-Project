@@ -29,6 +29,18 @@ public class QuizServiceImpl implements QuizService {
     private static final int DEFAULT_QUESTION_COUNT = 10;
     private static final int SCORE_PER_QUESTION = 10;
 
+    private static final Map<String, Integer> DIFFICULTY_CONFIG = Map.of(
+        "easy", 10,
+        "medium", 20,
+        "hard", 30
+    );
+
+    private static final Map<String, Integer> DIFFICULTY_SCORE = Map.of(
+        "easy", 10,
+        "medium", 15,
+        "hard", 20
+    );
+
     @Value("${app.quiz.question-count:10}")
     private int questionCount;
 
@@ -45,6 +57,13 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
+    public List<QuizQuestionDTO> getRandomQuestionsByDifficulty(String difficulty) {
+        int count = DIFFICULTY_CONFIG.getOrDefault(difficulty, DEFAULT_QUESTION_COUNT);
+        List<QuizQuestion> questions = questionMapper.selectRandomQuestionsByDifficulty(difficulty, count);
+        return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
     public Integer submit(Integer userId, List<AnswerDTO> answers) {
         if (userId == null || answers == null || answers.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "用户ID和答案不能为空");
@@ -57,6 +76,26 @@ public class QuizServiceImpl implements QuizService {
         record.setScore(score);
         record.setTotalQuestions(answers.size());
         record.setCorrectAnswers(score / SCORE_PER_QUESTION);
+        record.setCreateTime(LocalDateTime.now());
+        recordMapper.insert(record);
+
+        return score;
+    }
+
+    @Override
+    public Integer submitByDifficulty(Integer userId, List<AnswerDTO> answers, String difficulty) {
+        if (userId == null || answers == null || answers.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "用户ID和答案不能为空");
+        }
+
+        int score = calculateScoreByDifficulty(answers, difficulty);
+        int scorePerQuestion = DIFFICULTY_SCORE.getOrDefault(difficulty, SCORE_PER_QUESTION);
+
+        QuizRecord record = new QuizRecord();
+        record.setUserId(userId);
+        record.setScore(score);
+        record.setTotalQuestions(answers.size());
+        record.setCorrectAnswers(score / scorePerQuestion);
         record.setCreateTime(LocalDateTime.now());
         recordMapper.insert(record);
 
@@ -90,6 +129,40 @@ public class QuizServiceImpl implements QuizService {
             QuizQuestion q = questionMap.get(dto.getQuestionId());
             if (q != null && q.getAnswer().equals(dto.getAnswer())) {
                 score += SCORE_PER_QUESTION;
+            }
+        }
+        return score;
+    }
+
+    @Override
+    public Integer calculateScoreByDifficulty(List<AnswerDTO> answers, String difficulty) {
+        if (answers == null || answers.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "答案不能为空");
+        }
+
+        int scorePerQuestion = DIFFICULTY_SCORE.getOrDefault(difficulty, SCORE_PER_QUESTION);
+
+        List<Integer> questionIds = answers.stream()
+                .map(AnswerDTO::getQuestionId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (questionIds.isEmpty()) {
+            return 0;
+        }
+
+        List<QuizQuestion> questions = questionMapper.selectBatchIds(questionIds);
+        Map<Integer, QuizQuestion> questionMap = questions.stream()
+                .collect(Collectors.toMap(QuizQuestion::getId, Function.identity()));
+
+        int score = 0;
+        for (AnswerDTO dto : answers) {
+            if (dto.getQuestionId() == null || !StringUtils.hasText(dto.getAnswer())) {
+                continue;
+            }
+            QuizQuestion q = questionMap.get(dto.getQuestionId());
+            if (q != null && q.getAnswer().equals(dto.getAnswer())) {
+                score += scorePerQuestion;
             }
         }
         return score;

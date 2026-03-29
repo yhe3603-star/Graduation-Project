@@ -13,4 +13,7 @@ public interface QuizQuestionMapper extends BaseMapper<QuizQuestion> {
 
     @Select("SELECT * FROM quiz_questions WHERE id >= (SELECT FLOOR(RAND() * (SELECT MAX(id) FROM quiz_questions)) + 1) LIMIT #{limit}")
     List<QuizQuestion> selectRandomQuestions(@Param("limit") int limit);
+
+    @Select("SELECT * FROM quiz_questions WHERE difficulty = #{difficulty} AND id >= (SELECT FLOOR(RAND() * (SELECT MAX(id) FROM quiz_questions WHERE difficulty = #{difficulty})) + 1) LIMIT #{limit}")
+    List<QuizQuestion> selectRandomQuestionsByDifficulty(@Param("difficulty") String difficulty, @Param("limit") int limit);
 }

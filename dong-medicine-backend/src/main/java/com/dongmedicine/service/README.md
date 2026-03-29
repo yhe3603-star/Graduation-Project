@@ -36,6 +36,7 @@ service/
 ├── FileUploadService.java        # 文件上传服务接口
 ├── TokenBlacklistService.java    # Token黑名单服务接口
 ├── OperationLogService.java      # 操作日志服务接口
+├── CaptchaService.java           # 验证码服务类
 └── README.md                     # 说明文档
 ```
 
@@ -749,4 +750,4 @@ public class FileUploadServiceImpl {
 
 ---
 
-**最后更新时间**：2026年3月28日
+**最后更新时间**：2026年3月29日

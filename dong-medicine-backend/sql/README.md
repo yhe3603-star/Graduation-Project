@@ -782,4 +782,4 @@ ALTER TABLE plants MODIFY description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4
 
 ---
 
-**最后更新时间**：2026年3月28日
+**最后更新时间**：2026年3月30日

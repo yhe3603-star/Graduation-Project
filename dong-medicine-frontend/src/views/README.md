@@ -1,152 +1,400 @@
-# Views 页面组件目录
+# 页面组件目录说明
 
-本目录包含项目的所有页面级组件，每个页面对应一个路由。
+## 文件夹结构
 
-## 目录结构
+本目录包含项目的所有页面组件，每个页面对应一个路由。
 
 ```
 views/
-├── Home.vue              # 首页
-├── Plants.vue            # 药用植物页面
-├── Inheritors.vue        # 传承人页面
-├── Knowledge.vue         # 知识库页面
-├── Qa.vue                # 问答社区页面
-├── Resources.vue         # 学习资源页面
-├── Interact.vue          # 互动专区页面
-├── Visual.vue            # 数据可视化页面
-├── PersonalCenter.vue    # 个人中心页面
-├── Admin.vue             # 管理后台页面
-├── About.vue             # 关于页面
-├── Feedback.vue          # 意见反馈页面
-├── GlobalSearch.vue      # 全局搜索页面
-└── NotFound.vue          # 404页面
+├── Home.vue             # 首页
+├── Plants.vue           # 药用植物页面
+├── Inheritors.vue       # 传承人页面
+├── Knowledge.vue        # 知识库页面
+├── Qa.vue               # 问答社区页面
+├── Resources.vue        # 学习资源页面
+├── Interact.vue         # 互动专区页面
+├── Visual.vue           # 数据可视化页面
+├── PersonalCenter.vue   # 个人中心页面（需登录）
+├── Admin.vue            # 管理后台页面（需管理员权限）
+├── About.vue            # 关于页面
+├── Feedback.vue         # 意见反馈页面
+├── GlobalSearch.vue     # 全局搜索页面
+├── NotFound.vue         # 404页面
+└── README.md            # 说明文档
 ```
 
-## 页面说明
+---
 
-### Home.vue - 首页
+## 详细说明
+
+### 1. Home.vue - 首页
 
 **路由**: `/`
 
-**功能**:
-- 平台核心功能入口展示
-- 统计数据概览（植物数、传承人数、知识条目数）
-- 传承人风采轮播展示
-- 快速导航卡片
-- AI智能问答入口
+**功能描述**:
+- 展示平台核心功能入口和统计数据
+- 显示传承人风采轮播
+- 提供快速导航卡片
+- 集成AI智能问答入口
+
+**核心代码解析**:
+
+```vue
+<script setup>
+import { computed, inject, onMounted, ref } from 'vue'
+import { quickEntries, coreModules, extendModules, getLevelClass, createHeroStats } from '@/config/homeConfig'
+
+const request = inject('request')
+const stats = ref({ plants: 21, formulas: 12, inheritors: 10, therapies: 6 })
+const featuredInheritors = ref([])
+
+// 计算属性：生成首页统计数据
+const heroStats = computed(() => createHeroStats(stats.value))
+
+// 页面加载时获取数据
+onMounted(async () => {
+  try {
+    // 并行请求植物和传承人数据
+    const [pRes, iRes] = await Promise.all([
+      request.get('/plants/list', { params: { page: 1, size: 1 }, skipAuthRefresh: true }),
+      request.get('/inheritors/list', { params: { page: 1, size: 5 }, skipAuthRefresh: true })
+    ])
+    stats.value.plants = pRes.data?.total || 0
+    stats.value.inheritors = iRes.data?.total || 0
+    featuredInheritors.value = iRes.data?.records?.slice(0, 4) || []
+  } catch (e) {
+    console.error('首页数据加载失败:', e)
+  }
+})
+</script>
+```
 
 **依赖组件**:
 - `AiChatCard.vue` - AI对话卡片
 - `CardGrid.vue` - 卡片网格
 - `UpdateLogCard.vue` - 更新日志
 
+**数据流**:
+```
+onMounted → 并行请求(/plants/list, /inheritors/list) → 更新stats和featuredInheritors → 页面渲染
+```
+
 ---
 
-### Plants.vue - 药用植物页面
+### 2. Plants.vue - 药用植物页面
 
 **路由**: `/plants`
 
-**功能**:
+**功能描述**:
 - 药用植物列表展示（卡片网格布局）
-- 分类筛选（按药材分类）
-- 用法方式筛选
-- 关键词搜索
+- 分类筛选（根茎类、全草类、藤本类等）
+- 用法方式筛选（内服、外用、药浴）
+- 关键词搜索（支持名称、功效、侗语名）
 - 植物详情查看（对话框）
 - 收藏功能
+
+**核心代码解析**:
+
+```vue
+<script setup>
+import { computed, inject, onMounted, ref, watch } from "vue"
+import { useRoute } from "vue-router"
+import { useDebounceFn } from "@/composables/useDebounce"
+import { useUserStore } from "@/stores/user"
+
+const route = useRoute()
+const request = inject("request")
+const userStore = useUserStore()
+const isLoggedIn = computed(() => userStore.isLoggedIn)
+
+// 分页参数
+const currentPage = ref(1)
+const pageSize = ref(12)
+const totalItems = ref(0)
+
+// 筛选参数
+const keyword = ref("")
+const catFilter = ref("")
+const useFilter = ref("")
+
+// 筛选配置
+const filterConfig = [
+  { key: "category", label: "类型", options: [
+    { label: "全部", value: "" },
+    { label: "根茎类", value: "根茎类" },
+    { label: "全草类", value: "全草类" },
+    { label: "藤本类", value: "藤本类" },
+    { label: "叶类", value: "叶类" },
+    { label: "花类", value: "花类" },
+    { label: "皮类", value: "皮类" },
+    { label: "菌类", value: "菌类" }
+  ]},
+  { key: "usage", label: "用法", type: "success", options: [
+    { label: "全部", value: "" },
+    { label: "内服", value: "内服" },
+    { label: "外用", value: "外用" },
+    { label: "药浴", value: "药浴" }
+  ]}
+]
+
+// 防抖搜索
+const debouncedSearch = useDebounceFn(() => {
+  currentPage.value = 1
+  loadPlantsData()
+}, 300)
+
+// 加载数据
+const loadPlantsData = async () => {
+  pageLoading.value = true
+  try {
+    // 并行请求：分页数据 + 统计数据
+    const [pageRes, allRes] = await Promise.all([
+      request.get("/plants/list", {
+        params: {
+          page: currentPage.value,
+          size: pageSize.value,
+          keyword: keyword.value,
+          category: catFilter.value,
+          usageWay: useFilter.value
+        }
+      }),
+      request.get("/plants/list", { params: { page: 1, size: 9999 } })
+    ])
+    
+    allPlants.value = pageRes.data?.records || []
+    totalItems.value = pageRes.data?.total || 0
+    allPlantsForStats.value = allRes.data?.records || []
+    
+    // 加载用户收藏
+    if (isLoggedIn.value) {
+      const favRes = await request.get("/favorites/my")
+      favorites.value = favRes.data || []
+    }
+  } finally {
+    pageLoading.value = false
+  }
+}
+
+onMounted(loadPlantsData)
+</script>
+```
+
+**API调用**:
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/plants/list` | GET | 获取植物列表 |
+| `/plants/{id}/view` | POST | 增加浏览次数 |
+| `/favorites/my` | GET | 获取我的收藏 |
+| `/favorites/plant/{id}` | POST/DELETE | 添加/取消收藏 |
 
 **依赖组件**:
 - `CardGrid.vue` - 卡片网格
 - `SearchFilter.vue` - 搜索过滤
 - `PlantDetailDialog.vue` - 植物详情对话框
 - `Pagination.vue` - 分页
+- `PageSidebar.vue` - 侧边栏
+- `UpdateLogCard.vue` - 更新日志
 
 ---
 
-### Inheritors.vue - 传承人页面
+### 3. Inheritors.vue - 传承人页面
 
 **路由**: `/inheritors`
 
-**功能**:
+**功能描述**:
 - 传承人列表展示
 - 按级别筛选（国家级/省级/市级/县级）
+- 按排序方式查看（按姓名、从业年限、热度）
 - 关键词搜索
 - 传承人详情查看
 - 收藏功能
 
-**依赖组件**:
-- `CardGrid.vue` - 卡片网格
-- `SearchFilter.vue` - 搜索过滤
-- `InheritorDetailDialog.vue` - 传承人详情对话框
-- `Pagination.vue` - 分页
+**核心代码解析**:
+
+```vue
+<script setup>
+// 级别筛选配置
+const levelOptions = [
+  { label: "全部级别", value: "" },
+  { label: "国家级", value: "国家级" },
+  { label: "省级", value: "省级" },
+  { label: "市级", value: "市级" },
+  { label: "县级", value: "县级" }
+]
+
+// 排序配置
+const sortByOptions = [
+  { label: "按姓名", value: "name" },
+  { label: "按从业年限", value: "experience" },
+  { label: "按热度", value: "popularity" }
+]
+
+// 加载传承人数据
+const loadInheritorsData = async () => {
+  const res = await request.get("/inheritors/list", {
+    params: {
+      page: currentPage.value,
+      size: pageSize.value,
+      level: levelFilter.value,
+      sortBy: sortBy.value
+    }
+  })
+  allInheritors.value = res.data?.records || []
+  totalItems.value = res.data?.total || 0
+}
+</script>
+```
+
+**API调用**:
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/inheritors/list` | GET | 获取传承人列表 |
+| `/inheritors/{id}` | GET | 获取传承人详情 |
+| `/inheritors/{id}/view` | POST | 增加浏览次数 |
 
 ---
 
-### Knowledge.vue - 知识库页面
+### 4. Knowledge.vue - 知识库页面
 
 **路由**: `/knowledge`
 
-**功能**:
+**功能描述**:
 - 知识条目列表展示
-- 分类筛选（疗法分类、疾病分类）
+- 分类筛选（疗法分类、疾病分类、药材分类）
 - 关键词搜索
 - 知识详情查看
 - 收藏功能
 
-**依赖组件**:
-- `CardGrid.vue` - 卡片网格
-- `SearchFilter.vue` - 搜索过滤
-- `KnowledgeDetailDialog.vue` - 知识详情对话框
-- `PageSidebar.vue` - 侧边栏
+**核心代码解析**:
+
+```vue
+<script setup>
+// 筛选配置
+const filterConfig = [
+  { key: "therapy", label: "疗法", options: [
+    { label: "全部", value: "" },
+    { label: "药浴疗法", value: "药浴疗法" },
+    { label: "艾灸疗法", value: "艾灸疗法" },
+    { label: "推拿疗法", value: "推拿疗法" }
+  ]},
+  { key: "disease", label: "疾病", type: "success", options: [
+    { label: "全部", value: "" },
+    { label: "风湿骨痛", value: "风湿骨痛" },
+    { label: "妇科疾病", value: "妇科疾病" },
+    { label: "儿科疾病", value: "儿科疾病" }
+  ]},
+  { key: "herb", label: "药材", type: "warning", options: [
+    { label: "全部", value: "" },
+    { label: "根茎类", value: "根茎类" },
+    { label: "全草类", value: "全草类" },
+    { label: "叶类", value: "叶类" },
+    { label: "花类", value: "花类" },
+    { label: "果实种子类", value: "果实种子类" }
+  ]}
+]
+
+// 加载知识数据
+const loadKnowledgeData = async () => {
+  const res = await request.get("/knowledge/list", {
+    params: {
+      page: currentPage.value,
+      size: pageSize.value,
+      keyword: keyword.value,
+      therapy: therapyFilter.value,
+      disease: diseaseFilter.value,
+      herb: herbFilter.value
+    }
+  })
+  allKnowledge.value = res.data?.records || []
+  totalItems.value = res.data?.total || 0
+}
+</script>
+```
+
+**API调用**:
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/knowledge/list` | GET | 获取知识列表 |
+| `/knowledge/{id}` | GET | 获取知识详情 |
+| `/knowledge/{id}/view` | POST | 增加浏览次数 |
+| `/favorites/knowledge/{id}` | POST/DELETE | 添加/取消收藏 |
 
 ---
 
-### Qa.vue - 问答社区页面
-
-**路由**: `/qa`
-
-**功能**:
-- 常见问答列表
-- 分类筛选
-- 关键词搜索
-- 问答详情查看
-
-**依赖组件**:
-- `CardGrid.vue` - 卡片网格
-- `SearchFilter.vue` - 搜索过滤
-- `Pagination.vue` - 分页
-
----
-
-### Resources.vue - 学习资源页面
-
-**路由**: `/resources`
-
-**功能**:
-- 学习资源列表展示
-- 分类筛选（视频/文档/图片）
-- 文件类型筛选
-- 资源预览（视频播放、文档预览）
-- 资源下载
-- 收藏功能
-
-**依赖组件**:
-- `CardGrid.vue` - 卡片网格
-- `SearchFilter.vue` - 搜索过滤
-- `ResourceDetailDialog.vue` - 资源详情对话框
-- `VideoPlayer.vue` - 视频播放
-- `DocumentPreview.vue` - 文档预览
-
----
-
-### Interact.vue - 互动专区页面
+### 5. Interact.vue - 互动专区页面
 
 **路由**: `/interact`
 
-**功能**:
-- 趣味答题模块
-- 植物识别游戏
-- 评论交流
+**功能描述**:
+- 趣味答题模块（支持难度选择、计时、评分）
+- 植物识别游戏（根据图片识别药材名称）
+- 评论交流（支持回复、点赞）
 - 排行榜展示
+
+**核心代码解析**:
+
+```vue
+<script setup>
+import { useQuiz } from "@/composables/useQuiz"
+import { usePlantGame } from "@/composables/usePlantGame"
+import { useComments } from "@/composables/useInteraction"
+
+const request = inject("request")
+const isLoggedIn = inject("isLoggedIn")
+
+// 答题功能
+const {
+  isQuizStarted, selectedQuestions, userAnswers, currentQuestion,
+  quizFinished, finalScore, correctCount, selectedDifficulty,
+  startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz
+} = useQuiz(request, isLoggedIn)
+
+// 植物游戏功能
+const {
+  difficulty, currentPlant, options, answered, selectedAnswer,
+  gameScore, streak, gameFinished, correctAnswers, totalQuestions,
+  setDifficulty, checkAnswer, resetGame, submitGameScore
+} = usePlantGame(request, isLoggedIn)
+
+// 评论功能
+const {
+  comments, loadComments, handleCommentPost
+} = useComments(request, isLoggedIn)
+
+// 提交答题结果
+const handleQuizSubmit = async () => {
+  await submitQuiz()
+  sidebarRef.value?.refreshLeaderboard()
+}
+
+// 提交游戏结果
+const handleGameSubmit = async () => {
+  await submitGameScore()
+  sidebarRef.value?.refreshLeaderboard()
+}
+
+onMounted(async () => {
+  await loadPlants()
+  if (isLoggedIn.value) {
+    await loadQuizRecords()
+    await loadGameRecords()
+  }
+  await loadComments()
+})
+</script>
+```
+
+**API调用**:
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/quiz/questions` | GET | 获取随机题目 |
+| `/quiz/submit` | POST | 提交答案 |
+| `/quiz/records` | GET | 获取答题记录 |
+| `/plant-game/submit` | POST | 提交游戏结果 |
+| `/plant-game/records` | GET | 获取游戏记录 |
+| `/comments/list/{type}/{id}` | GET | 获取评论列表 |
+| `/comments` | POST | 发表评论 |
+| `/leaderboard/combined` | GET | 获取综合排行榜 |
 
 **依赖组件**:
 - `QuizSection.vue` - 答题组件
@@ -156,48 +404,164 @@ views/
 
 ---
 
-### Visual.vue - 数据可视化页面
+### 6. Resources.vue - 学习资源页面
 
-**路由**: `/visual`
+**路由**: `/resources`
 
-**功能**:
-- 药方频次统计图表
-- 疗法分类统计
-- 传承人分布地图
-- 平台数据趋势
+**功能描述**:
+- 学习资源列表展示
+- 分类筛选（视频/文档/图片）
+- 文件类型筛选
+- 资源预览（视频播放、文档预览）
+- 资源下载
+- 收藏功能
 
-**依赖组件**:
-- `ChartCard.vue` - 图表卡片（ECharts）
+**核心代码解析**:
+
+```vue
+<script setup>
+// 文件类型配置
+const fileTypes = [
+  { type: "video", name: "视频", extensions: ["mp4", "avi", "mov", "wmv", "flv", "mkv"] },
+  { type: "document", name: "文档", extensions: ["docx", "doc", "pdf", "pptx", "ppt", "xlsx", "xls", "txt"] },
+  { type: "image", name: "图片", extensions: ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"] }
+]
+
+// 加载资源数据
+const loadResourcesData = async () => {
+  const res = await request.get("/resources/list", {
+    params: {
+      page: currentPage.value,
+      size: pageSize.value,
+      category: categoryFilter.value,
+      keyword: keyword.value,
+      fileType: fileTypeFilter.value
+    }
+  })
+  allResources.value = res.data?.records || []
+  totalItems.value = res.data?.total || 0
+}
+
+// 下载资源
+const downloadResource = (resource) => {
+  window.open(`/api/resources/download/${resource.id}`)
+}
+</script>
+```
+
+**API调用**:
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/resources/list` | GET | 获取资源列表 |
+| `/resources/hot` | GET | 获取热门资源 |
+| `/resources/{id}` | GET | 获取资源详情 |
+| `/resources/download/{id}` | GET | 下载资源文件 |
 
 ---
 
-### PersonalCenter.vue - 个人中心页面
+### 7. PersonalCenter.vue - 个人中心页面
 
 **路由**: `/personal` (需登录)
 
-**功能**:
+**功能描述**:
 - 用户信息展示与修改
 - 我的收藏管理
 - 答题记录查看
+- 游戏记录查看
 - 评论历史查看
 - 密码修改
 
-**依赖组件**:
-- `usePersonalCenter.js` - 个人中心逻辑
+**核心代码解析**:
+
+```vue
+<script setup>
+import { useUserStore } from "@/stores/user"
+import { usePersonalCenter } from "@/composables/usePersonalCenter"
+
+const userStore = useUserStore()
+const {
+  userInfo, favorites, quizRecords, gameRecords, comments,
+  activeTab, loading,
+  fetchUserInfo, fetchFavorites, fetchQuizRecords, fetchGameRecords, fetchComments,
+  changePassword
+} = usePersonalCenter()
+
+onMounted(async () => {
+  await fetchUserInfo()
+  await fetchFavorites()
+  await fetchQuizRecords()
+  await fetchGameRecords()
+  await fetchComments()
+})
+</script>
+```
+
+**API调用**:
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/user/me` | GET | 获取用户信息 |
+| `/favorites/my` | GET | 获取我的收藏 |
+| `/quiz/records` | GET | 获取答题记录 |
+| `/plant-game/records` | GET | 获取游戏记录 |
+| `/comments/my` | GET | 获取我的评论 |
+| `/user/change-password` | POST | 修改密码 |
 
 ---
 
-### Admin.vue - 管理后台页面
+### 8. Admin.vue - 管理后台页面
 
 **路由**: `/admin` (需管理员权限)
 
-**功能**:
+**功能描述**:
 - 数据统计仪表盘
 - 用户管理（列表、封禁、角色分配）
 - 内容管理（植物、知识、传承人、资源、问答）
 - 评论审核
 - 反馈处理
 - 操作日志查看
+
+**核心代码解析**:
+
+```vue
+<script setup>
+import { useAdminData } from "@/composables/useAdminData"
+
+const {
+  activeModule, loading, tableData, pagination, dialogVisible, currentData,
+  loadUsers, loadPlants, loadKnowledge, loadInheritors, loadResources, loadQa,
+  loadComments, loadFeedback, loadLogs,
+  handleAdd, handleEdit, handleDelete, handleSave
+} = useAdminData()
+
+// 统计数据
+const stats = ref({
+  users: 0, knowledge: 0, inheritors: 0, plants: 0,
+  qa: 0, resources: 0, quiz: 0, comments: 0, feedback: 0
+})
+
+// 加载统计数据
+const loadStats = async () => {
+  const res = await request.get("/admin/stats")
+  stats.value = res.data || {}
+}
+
+onMounted(loadStats)
+</script>
+```
+
+**API调用**:
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/admin/stats` | GET | 获取统计数据 |
+| `/admin/users` | GET | 获取用户列表 |
+| `/admin/users/{id}/ban` | PUT | 封禁用户 |
+| `/admin/users/{id}/unban` | PUT | 解封用户 |
+| `/admin/plants` | GET/POST/PUT/DELETE | 植物管理 |
+| `/admin/knowledge` | GET/POST/PUT/DELETE | 知识管理 |
+| `/admin/inheritors` | GET/POST/PUT/DELETE | 传承人管理 |
+| `/admin/comments/{id}/approve` | PUT | 审核通过评论 |
+| `/admin/comments/{id}/reject` | PUT | 拒绝评论 |
+| `/admin/feedback/{id}/reply` | PUT | 回复反馈 |
 
 **依赖组件**:
 - `AdminDashboard.vue` - 仪表盘
@@ -208,11 +572,11 @@ views/
 
 ---
 
-### About.vue - 关于页面
+### 9. About.vue - 关于页面
 
 **路由**: `/about`
 
-**功能**:
+**功能描述**:
 - 选题背景介绍
 - 平台特色说明
 - 功能模块介绍
@@ -220,250 +584,155 @@ views/
 
 ---
 
-### Feedback.vue - 意见反馈页面
+### 10. Feedback.vue - 意见反馈页面
 
 **路由**: `/feedback`
 
-**功能**:
+**功能描述**:
 - 反馈表单提交
-- 反馈类型选择
+- 反馈类型选择（功能建议、问题反馈、其他）
 - 反馈记录查看
+
+**API调用**:
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/feedback` | POST | 提交反馈 |
+| `/feedback/my` | GET | 获取我的反馈 |
 
 ---
 
-### GlobalSearch.vue - 全局搜索页面
+### 11. GlobalSearch.vue - 全局搜索页面
 
 **路由**: `/search`
 
-**功能**:
-- 跨模块统一搜索
+**功能描述**:
+- 跨模块统一搜索（植物、知识、传承人、问答、资源）
 - 搜索结果分类展示
 - 搜索历史记录
 
+**核心代码解析**:
+
+```vue
+<script setup>
+const searchKeyword = ref("")
+const searchResults = ref({
+  plants: [], knowledge: [], inheritors: [], qa: [], resources: []
+})
+
+// 全局搜索
+const globalSearch = async () => {
+  if (!searchKeyword.value.trim()) return
+  
+  const [plants, knowledge, inheritors, qa, resources] = await Promise.all([
+    request.get('/plants/search', { params: { keyword: searchKeyword.value, size: 5 } }),
+    request.get('/knowledge/search', { params: { keyword: searchKeyword.value, size: 5 } }),
+    request.get('/inheritors/search', { params: { keyword: searchKeyword.value, size: 5 } }),
+    request.get('/qa/search', { params: { keyword: searchKeyword.value, size: 5 } }),
+    request.get('/resources/search', { params: { keyword: searchKeyword.value, size: 5 } })
+  ])
+  
+  searchResults.value = {
+    plants: plants.data?.records || [],
+    knowledge: knowledge.data?.records || [],
+    inheritors: inheritors.data?.records || [],
+    qa: qa.data?.records || [],
+    resources: resources.data?.records || []
+  }
+}
+</script>
+```
+
 ---
 
-### NotFound.vue - 404页面
+### 12. NotFound.vue - 404页面
 
 **路由**: `/:pathMatch(.*)*`
 
-**功能**:
+**功能描述**:
 - 404错误提示
 - 返回首页链接
 
 ---
 
-## 页面开发模板
+## 页面权限配置
 
-### 基础页面模板
+| 页面 | 路由 | 权限要求 |
+|------|------|----------|
+| Home.vue | `/` | 无 |
+| Plants.vue | `/plants` | 无 |
+| Inheritors.vue | `/inheritors` | 无 |
+| Knowledge.vue | `/knowledge` | 无 |
+| Qa.vue | `/qa` | 无 |
+| Resources.vue | `/resources` | 无 |
+| Interact.vue | `/interact` | 无 |
+| Visual.vue | `/visual` | 无 |
+| PersonalCenter.vue | `/personal` | 需登录 |
+| Admin.vue | `/admin` | 需登录 + 管理员权限 |
+| About.vue | `/about` | 无 |
+| Feedback.vue | `/feedback` | 无 |
+| GlobalSearch.vue | `/search` | 无 |
+| NotFound.vue | `/:pathMatch(.*)*` | 无 |
+
+---
+
+## 开发规范
+
+### 1. 页面结构规范
 
 ```vue
 <template>
-  <div class="page-container">
+  <div class="page-name">
+    <!-- 页面头部 -->
     <div class="page-header">
-      <h1>{{ pageTitle }}</h1>
+      <h1>页面标题</h1>
     </div>
     
+    <!-- 页面主体 -->
     <div class="page-content">
-      <SearchFilter
-        v-model:keyword="searchParams.keyword"
-        :filters="filters"
-        @search="handleSearch"
-      />
-      
-      <CardGrid
-        :data="dataList"
-        :loading="loading"
-        :columns="3"
-      >
-        <template #card="{ item }">
-          <ItemCard :data="item" @click="handleItemClick(item)" />
-        </template>
-      </CardGrid>
-      
-      <Pagination
-        :current="pagination.page"
-        :total="pagination.total"
-        :page-size="pagination.size"
-        @change="handlePageChange"
-      />
+      <!-- 内容 -->
     </div>
-    
-    <DetailDialog
-      v-model="dialogVisible"
-      :data="currentItem"
-    />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { useDebounce } from '@/composables/useDebounce'
+// 1. 导入
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 
-const router = useRouter()
-const userStore = useUserStore()
+// 2. 注入和状态
+const route = useRoute()
+const request = inject('request')
 
+// 3. 响应式数据
 const loading = ref(false)
 const dataList = ref([])
-const dialogVisible = ref(false)
-const currentItem = ref(null)
 
-const searchParams = reactive({
-  keyword: '',
-  category: '',
-  page: 1,
-  size: 20
-})
+// 4. 方法
+const fetchData = async () => { /* ... */ }
 
-const pagination = reactive({
-  page: 1,
-  total: 0,
-  size: 20
-})
-
-const { debouncedFn: debouncedSearch } = useDebounce(fetchData, 300)
-
-const handleSearch = () => {
-  searchParams.page = 1
-  debouncedSearch()
-}
-
-const handlePageChange = (page) => {
-  searchParams.page = page
-  fetchData()
-}
-
-const handleItemClick = (item) => {
-  currentItem.value = item
-  dialogVisible.value = true
-}
-
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const res = await api.getList(searchParams)
-    dataList.value = res.data.records
-    pagination.total = res.data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchData()
-})
+// 5. 生命周期
+onMounted(fetchData)
 </script>
 
 <style scoped>
-.page-container {
-  padding: 20px;
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.page-content {
-  min-height: 500px;
+.page-name {
+  /* 样式 */
 }
 </style>
 ```
 
----
+### 2. 命名规范
 
-## 页面权限配置
+- 页面文件使用大驼峰命名法
+- CSS类名使用小写连字符命名法
+- 变量使用小驼峰命名法
 
-### 路由守卫配置
+### 3. 性能优化
 
-```javascript
-const routes = [
-  {
-    path: '/personal',
-    component: () => import('@/views/PersonalCenter.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/admin',
-    component: () => import('@/views/Admin.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true }
-  }
-]
-
-router.beforeEach((to, from, next) => {
-  const userStore = useUserStore()
-  
-  if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-    next({ path: '/', query: { redirect: to.fullPath } })
-  } else if (to.meta.requiresAdmin && !userStore.isAdmin) {
-    next('/403')
-  } else {
-    next()
-  }
-})
-```
-
----
-
-## 已知限制
-
-| 页面 | 限制 | 影响 |
-|------|------|------|
-| Plants.vue | 不支持拼音搜索 | 无法用拼音查找药材 |
-| Inheritors.vue | 无地图展示 | 无法查看传承人分布 |
-| Knowledge.vue | 无版本历史 | 无法查看修改记录 |
-| Interact.vue | 答题无分类 | 无法按类型答题 |
-| Visual.vue | 数据非实时 | 图表数据有延迟 |
-| Admin.vue | 无批量导入 | 大量数据需逐条添加 |
-| PersonalCenter.vue | 无数据导出 | 无法导出个人数据 |
-
----
-
-## 未来改进建议
-
-### 短期改进 (1-2周)
-
-1. **搜索功能增强**
-   - 添加拼音搜索支持
-   - 实现搜索建议
-   - 添加搜索历史
-
-2. **交互优化**
-   - 添加骨架屏加载
-   - 实现无限滚动
-   - 添加快捷键支持
-
-3. **性能优化**
-   - 页面懒加载
-   - 图片懒加载
-   - 组件缓存
-
-### 中期改进 (1-2月)
-
-1. **功能增强**
-   - 数据导出功能
-   - 批量操作支持
-   - 高级筛选
-
-2. **用户体验**
-   - 主题切换
-   - 国际化支持
-   - 无障碍访问
-
-3. **移动端适配**
-   - 响应式优化
-   - 触摸手势
-   - PWA支持
-
-### 长期规划 (3-6月)
-
-1. **微前端架构**
-   - 模块独立部署
-   - 动态加载
-
-2. **SSR支持**
-   - 服务端渲染
-   - SEO优化
+- 使用 `v-if` 和 `v-show` 合理控制渲染
+- 使用 `computed` 缓存计算结果
+- 使用 `useDebounceFn` 处理频繁操作
+- 使用 `v-loading` 显示加载状态
 
 ---
 
@@ -479,122 +748,4 @@ router.beforeEach((to, from, next) => {
 
 ---
 
-## 常见问题
-
-### 1. 如何添加新页面？
-
-```javascript
-// 1. 创建页面组件
-// views/NewPage.vue
-
-// 2. 添加路由
-const routes = [
-  {
-    path: '/new-page',
-    name: 'NewPage',
-    component: () => import('@/views/NewPage.vue')
-  }
-]
-
-// 3. 添加导航
-// 在AppHeader.vue中添加菜单项
-```
-
-### 2. 如何实现页面缓存？
-
-```vue
-<template>
-  <router-view v-slot="{ Component }">
-    <keep-alive :include="['Plants', 'Knowledge']">
-      <component :is="Component" />
-    </keep-alive>
-  </router-view>
-</template>
-```
-
-### 3. 如何处理页面加载状态？
-
-```vue
-<script setup>
-import { ref } from 'vue'
-import { useLoading } from '@/composables/useLoading'
-
-const { loading, withLoading } = useLoading()
-
-const fetchData = withLoading(async () => {
-  // 异步操作
-})
-</script>
-
-<template>
-  <el-skeleton v-if="loading" :rows="5" animated />
-  <div v-else>
-    <!-- 内容 -->
-  </div>
-</template>
-```
-
-### 4. 如何实现页面间通信？
-
-```javascript
-// 方式1：通过Pinia Store
-const useDataStore = defineStore('data', {
-  state: () => ({ items: [] }),
-  actions: {
-    setItems(items) { this.items = items }
-  }
-})
-
-// 方式2：通过路由参数
-router.push({ path: '/detail', query: { id: 1 } })
-
-// 方式3：通过事件总线
-import { useEventBus } from '@/composables/useEventBus'
-const bus = useEventBus()
-bus.emit('data-updated', data)
-```
-
-### 5. 如何处理页面错误？
-
-```vue
-<script setup>
-import { onErrorCaptured, ref } from 'vue'
-
-const error = ref(null)
-
-onErrorCaptured((err) => {
-  error.value = err
-  return false  // 阻止错误继续传播
-})
-</script>
-
-<template>
-  <ErrorBoundary v-if="error" :error="error" />
-  <slot v-else />
-</template>
-```
-
-### 6. 如何优化页面性能？
-
-```vue
-<script setup>
-// 1. 组件懒加载
-const HeavyComponent = defineAsyncComponent(() => 
-  import('@/components/HeavyComponent.vue')
-)
-
-// 2. 数据分页加载
-const loadMore = async () => {
-  if (loading.value || !hasMore.value) return
-  page.value++
-  await fetchData()
-}
-
-// 3. 虚拟滚动
-import VirtualList from '@/components/base/VirtualList.vue'
-</script>
-```
-
----
-
-**最后更新时间**: 2026年3月28日
+**最后更新时间**：2026年3月30日

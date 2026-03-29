@@ -8,10 +8,10 @@ export const quickEntries = [
 ]
 
 export const coreModules = [
-  { title: '知识库', desc: '系统整理侗医药理论知识，包含病因病机、诊断方法、治疗原则等内容', path: '/knowledge', count: '120+ 条目', bgColor: 'linear-gradient(135deg, #1A5276, var(--dong-indigo-dark))', icon: Document },
+  { title: '知识库', desc: '系统整理侗医药理论知识，包含病因病机、诊断方法、治疗原则等内容', path: '/knowledge', count: '50+ 条目', bgColor: 'linear-gradient(135deg, #1A5276, var(--dong-indigo-dark))', icon: Document },
   { title: '传承人', desc: '记录各级非遗传承人档案，展示传承谱系与技艺特色', path: '/inheritors', count: '10+ 位', bgColor: 'linear-gradient(135deg, #28B463, var(--dong-jade-dark))', icon: User },
   { title: '药用图鉴', desc: '收录黔东南道地药材，配以精美图片与详细功效说明', path: '/plants', count: '50+ 种', bgColor: 'linear-gradient(135deg, var(--dong-gold-light), #e8930c)', icon: Picture },
-  { title: '问答社区', desc: '互动问答平台，解答侗医药相关问题', path: '/qa', count: '100+ 问题', bgColor: 'linear-gradient(135deg, #667eea, #764ba2)', icon: ChatDotRound }
+  { title: '问答社区', desc: '互动问答平台，解答侗医药相关问题', path: '/qa', count: '60+ 问题', bgColor: 'linear-gradient(135deg, #667eea, #764ba2)', icon: ChatDotRound }
 ]
 
 export const extendModules = [

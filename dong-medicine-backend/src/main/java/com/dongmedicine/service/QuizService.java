@@ -9,8 +9,11 @@ import java.util.List;
 
 public interface QuizService {
     List<QuizQuestionDTO> getRandomQuestions();
+    List<QuizQuestionDTO> getRandomQuestionsByDifficulty(String difficulty);
     Integer submit(Integer userId, List<AnswerDTO> answers);
+    Integer submitByDifficulty(Integer userId, List<AnswerDTO> answers, String difficulty);
     Integer calculateScore(List<AnswerDTO> answers);
+    Integer calculateScoreByDifficulty(List<AnswerDTO> answers, String difficulty);
     List<QuizRecord> getUserRecords(Integer userId);
 
     void deleteQuestion(Integer questionId);

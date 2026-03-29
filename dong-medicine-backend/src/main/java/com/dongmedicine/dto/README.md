@@ -9,6 +9,8 @@ dto/
 ├── LoginDTO.java             # 登录请求DTO
 ├── RegisterDTO.java          # 注册请求DTO
 ├── UserUpdateDTO.java        # 用户更新DTO
+├── ChangePasswordDTO.java    # 修改密码DTO
+├── CaptchaDTO.java           # 验证码响应DTO
 ├── PlantDTO.java             # 药材DTO
 ├── KnowledgeDTO.java         # 知识DTO
 ├── InheritorDTO.java         # 传承人DTO
@@ -21,6 +23,7 @@ dto/
 ├── PlantGameSubmitDTO.java   # 植物游戏提交DTO
 ├── AnswerDTO.java            # 答案DTO
 ├── ChatRequest.java          # AI对话请求DTO
+├── ChatResponse.java         # AI对话响应DTO
 ├── FileUploadResult.java     # 文件上传结果DTO
 └── README.md                 # 说明文档
 ```
@@ -419,4 +422,4 @@ public class PhoneValidator implements ConstraintValidator<Phone, String> {
 
 ---
 
-**最后更新时间**：2026年3月28日
+**最后更新时间**：2026年3月29日

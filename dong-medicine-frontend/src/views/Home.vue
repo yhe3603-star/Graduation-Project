@@ -182,7 +182,7 @@ import { quickEntries, coreModules, extendModules, getLevelClass, createHeroStat
 import { extractPageData, logFetchError } from "@/utils";
 
 const request = inject('request')
-const stats = ref({ plants: 21, formulas: 10, inheritors: 10, therapies: 5 })
+const stats = ref({ plants: 21, formulas: 12, inheritors: 10, therapies: 6 })
 const featuredInheritors = ref([])
 
 const heroStats = computed(() => createHeroStats(stats.value))

@@ -41,12 +41,14 @@
               :correct="correctCount"
               :formatted-time="quizFormattedTime"
               :is-low-time="quizIsLowTime"
+              :selected-difficulty="selectedDifficulty"
               @start="startNewQuiz"
               @prev="prevQuestion"
               @next="nextQuestion"
               @submit="handleQuizSubmit"
               @retry="resetQuiz"
               @share="shareQuizResult"
+              @select-difficulty="setQuizDifficulty"
             />
           </el-tab-pane>
 
@@ -69,7 +71,7 @@
               :selected-difficulty="difficulty"
               :formatted-time="gameFormattedTime"
               :is-low-time="gameIsLowTime"
-              @select-difficulty="setDifficulty"
+              @select-difficulty="setGameDifficulty"
               @answer="checkAnswer"
               @end-game="handleGameSubmit"
               @favorite="favoriteCurrentPlant"
@@ -121,15 +123,15 @@ const activeTab = ref("quiz");
 const sidebarRef = ref(null);
 
 const {
-  isQuizStarted, selectedQuestions, userAnswers, currentQuestion, quizFinished, finalScore, correctCount, quizLoading, submitting, quizRecords,
+  isQuizStarted, selectedQuestions, userAnswers, currentQuestion, quizFinished, finalScore, correctCount, quizLoading, submitting, quizRecords, selectedDifficulty,
   formattedTime: quizFormattedTime, isLowTime: quizIsLowTime,
-  startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz, shareQuizResult, loadQuizRecords, bestScore,
+  setDifficulty: setQuizDifficulty, startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz, shareQuizResult, loadQuizRecords, bestScore,
 } = useQuiz(request, isLoggedIn);
 
 const {
   difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, submittingGame, gameRecords,
   formattedTime: gameFormattedTime, isLowTime: gameIsLowTime,
-  setDifficulty, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore,
+  setDifficulty: setGameDifficulty, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore,
 } = usePlantGame(request, isLoggedIn);
 
 const { comments, commentLoading, loadComments, handleCommentPost, currentPage, pageSize, totalItems, handlePageChange, handleSizeChange } = useComments(request, isLoggedIn);

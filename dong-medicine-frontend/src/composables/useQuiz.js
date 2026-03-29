@@ -14,6 +14,13 @@ export const useQuiz = (request, isLoggedIn) => {
   const quizLoading = ref(false)
   const submitting = ref(false)
   const quizRecords = ref([])
+  const selectedDifficulty = ref('easy')
+
+  const difficultyConfig = {
+    easy: { label: '初级', icon: '🌱', count: 10, scorePerQuestion: 10, time: 3 },
+    medium: { label: '中级', icon: '🌿', count: 20, scorePerQuestion: 15, time: 6 },
+    hard: { label: '高级', icon: '🌳', count: 30, scorePerQuestion: 20, time: 10 }
+  }
 
   const { formattedTime, isRunning, isExpired, isLowTime, start: startTimer, stop: stopTimer, reset: resetTimer } = useCountdown(3)
 
@@ -28,16 +35,21 @@ export const useQuiz = (request, isLoggedIn) => {
     await submitQuiz(true)
   }
 
+  const setDifficulty = (level) => {
+    selectedDifficulty.value = level
+  }
+
   const startNewQuiz = async () => {
     quizLoading.value = true
     try {
-      const res = await request.get('/quiz/questions')
+      const config = difficultyConfig[selectedDifficulty.value]
+      const res = await request.get('/quiz/questions', { params: { difficulty: selectedDifficulty.value } })
       selectedQuestions.value = res?.data?.data || res?.data || []
       userAnswers.value = new Array(selectedQuestions.value.length).fill('')
       currentQuestion.value = 0
       isQuizStarted.value = true
       quizFinished.value = false
-      resetTimer(3)
+      resetTimer(config.time)
       startTimer()
     } catch (e) {
       logFetchError('答题题目', e)
@@ -71,7 +83,7 @@ export const useQuiz = (request, isLoggedIn) => {
     submitting.value = true
     try {
       const answers = selectedQuestions.value.map((q, i) => ({ questionId: q.id, answer: userAnswers.value[i] || '' }))
-      const res = await request.post('/quiz/submit', { answers })
+      const res = await request.post('/quiz/submit', { answers }, { params: { difficulty: selectedDifficulty.value } })
       const data = res?.data?.data || res?.data || {}
       finalScore.value = data.score || 0
       correctCount.value = data.correct || 0
@@ -118,8 +130,8 @@ export const useQuiz = (request, isLoggedIn) => {
   })
 
   return {
-    isQuizStarted, selectedQuestions, userAnswers, currentQuestion, quizFinished, finalScore, correctCount, quizLoading, submitting, quizRecords,
+    isQuizStarted, selectedQuestions, userAnswers, currentQuestion, quizFinished, finalScore, correctCount, quizLoading, submitting, quizRecords, selectedDifficulty, difficultyConfig,
     formattedTime, isRunning, isExpired, isLowTime,
-    startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz, shareQuizResult, loadQuizRecords, bestScore,
+    setDifficulty, startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz, shareQuizResult, loadQuizRecords, bestScore,
   }
 }
