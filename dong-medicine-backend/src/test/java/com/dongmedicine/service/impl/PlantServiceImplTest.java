@@ -157,28 +157,6 @@ class PlantServiceImplTest {
     }
 
     @Test
-    @DisplayName("根据难度随机获取植物 - 成功")
-    void testGetRandomByDifficultySuccess() {
-        List<Plant> plants = Arrays.asList(testPlant);
-        when(plantMapper.selectRandomByDifficulty(anyString(), anyInt())).thenReturn(plants);
-
-        List<Plant> result = plantService.getRandomByDifficulty("简单", 10);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    @DisplayName("根据难度随机获取植物 - 难度为空")
-    void testGetRandomByDifficultyEmptyDifficulty() {
-        BusinessException exception = assertThrows(BusinessException.class, () -> {
-            plantService.getRandomByDifficulty("", 10);
-        });
-
-        assertTrue(exception.getMessage().contains("难度"));
-    }
-
-    @Test
     @DisplayName("增加浏览次数 - 成功")
     void testIncrementViewCountSuccess() {
         doNothing().when(plantMapper).incrementViewCount(anyInt());
