@@ -27,11 +27,6 @@
       <el-descriptions-item label="用法">
         {{ plant?.usageWay }}
       </el-descriptions-item>
-      <el-descriptions-item label="难度">
-        <el-tag :type="getDifficultyTagType(plant?.difficulty)">
-          {{ getDifficultyText(plant?.difficulty) }}
-        </el-tag>
-      </el-descriptions-item>
       <el-descriptions-item label="生长环境">
         {{ plant?.habitat }}
       </el-descriptions-item>
@@ -94,7 +89,7 @@
 </template>
 
 <script setup>
-import { formatTime, getDifficultyTagType, getDifficultyText } from '@/utils/adminUtils'
+import { formatTime } from '@/utils/adminUtils'
 import MediaDisplay from '@/components/business/media/MediaDisplay.vue'
 
 defineProps({

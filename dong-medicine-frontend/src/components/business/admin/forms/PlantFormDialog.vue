@@ -86,35 +86,14 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="难度">
-            <el-select
-              v-model="form.difficulty"
-              style="width: 100%"
-              placeholder="请选择难度"
-            >
-              <el-option
-                label="初级"
-                value="beginner"
-              />
-              <el-option
-                label="中级"
-                value="intermediate"
-              />
-              <el-option
-                label="高级"
-                value="advanced"
-              />
-            </el-select>
+          <el-form-item label="生境">
+            <el-input
+              v-model="form.habitat"
+              placeholder="请输入生长环境"
+            />
           </el-form-item>
         </el-col>
       </el-row>
-      
-      <el-form-item label="生境">
-        <el-input
-          v-model="form.habitat"
-          placeholder="请输入生长环境"
-        />
-      </el-form-item>
       
       <el-form-item label="功效">
         <el-input
@@ -231,7 +210,7 @@ const {
 
 const getDefaultForm = () => ({ 
   id: null, nameCn: "", nameDong: "", scientificName: "", category: "", usageWay: "内服", 
-  difficulty: "beginner", habitat: "", efficacy: "", story: "", images: [], 
+  habitat: "", efficacy: "", story: "", images: [], 
   videos: [], documents: [], distribution: "", updateLog: "" 
 })
 

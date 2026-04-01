@@ -111,8 +111,7 @@ export const TABLE_CONFIGS = {
     columns: [
       { prop: 'scientificName', label: '学名', minWidth: 120 },
       { prop: 'category', label: '分类', width: 80 },
-      { prop: 'usageWay', label: '用法', width: 70 },
-      { prop: 'difficulty', label: '难度', type: 'tag', width: 70 }
+      { prop: 'usageWay', label: '用法', width: 70 }
     ]
   },
   qa: {

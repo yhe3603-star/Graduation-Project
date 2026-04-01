@@ -27,7 +27,6 @@ public class Plant {
     private String videos;
     private String documents;
     private String distribution;
-    private String difficulty;
     private String updateLog;
     private LocalDateTime createdAt;
     private Integer viewCount, favoriteCount, popularity;
