@@ -149,15 +149,12 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     }
 
     @Override
-    public List<Plant> getRandomByDifficulty(String difficulty, int limit) {
-        if (!StringUtils.hasText(difficulty)) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR, "难度不能为空");
-        }
+    public List<Plant> getRandomPlants(int limit) {
         if (limit < MIN_PAGE_SIZE || limit > MAX_PAGE_SIZE) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, 
                     String.format("限制数量必须在%d-%d之间", MIN_PAGE_SIZE, MAX_PAGE_SIZE));
         }
-        return plantMapper.selectRandomByDifficulty(difficulty, limit);
+        return plantMapper.selectRandomPlants(limit);
     }
 
     @Override

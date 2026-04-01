@@ -57,10 +57,9 @@ public class PlantController {
 
     @GetMapping("/random")
     public R<List<Plant>> random(
-            @RequestParam @NotBlank(message = "难度不能为空") String difficulty,
-            @RequestParam(defaultValue = "10") @Min(value = 1, message = "数量不能小于1")
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "数量不能小于1")
             @Max(value = 100, message = "数量不能大于100") Integer limit) {
-        return R.ok(service.getRandomByDifficulty(difficulty, limit));
+        return R.ok(service.getRandomPlants(limit));
     }
 
     @PostMapping("/{id}/view")

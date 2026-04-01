@@ -66,7 +66,7 @@
               :finished="gameFinished"
               :game-started="gameStarted"
               :submitting="submittingGame"
-              :loading="loadingPlants"
+              :plants-loaded="plantsLoaded"
               :correct="correctAnswers"
               :total="totalQuestions"
               :is-logged-in="isLoggedIn"
@@ -132,7 +132,7 @@ const {
 } = useQuiz(request, isLoggedIn);
 
 const {
-  difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, gameStarted, submittingGame, gameRecords, loadingPlants,
+  difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, gameStarted, submittingGame, gameRecords, plantsLoaded,
   formattedTime: gameFormattedTime, isLowTime: gameIsLowTime,
   selectDifficulty: setGameDifficulty, startGame: startPlantGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore,
 } = usePlantGame(request, isLoggedIn);

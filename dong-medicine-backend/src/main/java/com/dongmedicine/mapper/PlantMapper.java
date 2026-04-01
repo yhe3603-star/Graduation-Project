@@ -18,8 +18,8 @@ public interface PlantMapper extends BaseMapper<Plant> {
     @Update("UPDATE plants SET favorite_count = IFNULL(favorite_count, 0) + #{delta} WHERE id = #{id}")
     void incrementFavoriteCount(Integer id, int delta);
 
-    @Select("SELECT * FROM plants WHERE difficulty = #{difficulty} AND id >= (SELECT FLOOR(RAND() * (SELECT MAX(id) FROM plants WHERE difficulty = #{difficulty})) + 1) LIMIT #{limit}")
-    List<Plant> selectRandomByDifficulty(@Param("difficulty") String difficulty, @Param("limit") int limit);
+    @Select("SELECT * FROM plants WHERE id >= (SELECT FLOOR(RAND() * (SELECT MAX(id) FROM plants)) + 1) LIMIT #{limit}")
+    List<Plant> selectRandomPlants(@Param("limit") int limit);
 
     @Select("SELECT * FROM plants WHERE MATCH(name_cn, name_dong, efficacy, story) AGAINST(#{keyword} IN NATURAL LANGUAGE MODE) ORDER BY id DESC LIMIT #{limit}")
     List<Plant> searchByFullText(@Param("keyword") String keyword, @Param("limit") int limit);

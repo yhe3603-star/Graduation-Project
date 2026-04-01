@@ -80,14 +80,13 @@ public interface PlantService extends IService<Plant> {
     Plant getDetailWithStory(Integer id);
 
     /**
-     * 根据难度随机获取植物
+     * 随机获取植物
      * 
-     * @param difficulty 难度级别
      * @param limit 返回数量（1-100）
      * @return 随机植物列表
-     * @throws com.dongmedicine.common.exception.BusinessException 当难度为空或限制数量超出范围时抛出
+     * @throws com.dongmedicine.common.exception.BusinessException 当限制数量超出范围时抛出
      */
-    List<Plant> getRandomByDifficulty(String difficulty, int limit);
+    List<Plant> getRandomPlants(int limit);
 
     /**
      * 增加浏览次数

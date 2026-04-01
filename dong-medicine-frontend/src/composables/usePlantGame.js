@@ -18,7 +18,7 @@ export const usePlantGame = (request, isLoggedIn) => {
   const gameStarted = ref(false)
   const submittingGame = ref(false)
   const gameRecords = ref([])
-  const loadingPlants = ref(false)
+  const plantsLoaded = ref(false)
   let nextPlantTimer = null
 
   const { formattedTime, isRunning, isExpired, isLowTime, start: startTimer, stop: stopTimer, reset: resetTimer } = useCountdown(3)
@@ -40,35 +40,30 @@ export const usePlantGame = (request, isLoggedIn) => {
     hard: 20
   }
 
+  const OPTION_COUNT = {
+    easy: 3,
+    medium: 4,
+    hard: 5
+  }
+
   const loadPlants = async () => {
     try {
-      const res = await request.get('/plants/list')
+      const res = await request.get('/plants/random?limit=50')
       plantsForGame.value = res?.data?.data || res?.data || []
+      plantsLoaded.value = plantsForGame.value.length > 0
     } catch {
       ElMessage.error('加载植物数据失败')
+      plantsLoaded.value = false
     }
   }
 
-  const loadPlantsByDifficulty = async (level) => {
-    loadingPlants.value = true
-    try {
-      const res = await request.get(`/plants/random?difficulty=${level}&limit=20`)
-      plantsForGame.value = res?.data?.data || res?.data || []
-    } catch {
-      await loadPlants()
-    } finally {
-      loadingPlants.value = false
-    }
-  }
-
-  const selectDifficulty = async (level) => {
+  const selectDifficulty = (level) => {
     difficulty.value = level
-    await loadPlantsByDifficulty(level)
   }
 
   const startGame = () => {
     if (plantsForGame.value.length === 0) {
-      ElMessage.warning('该难度下暂无植物数据')
+      ElMessage.warning('暂无植物数据，请稍后再试')
       return
     }
     gameStarted.value = true
@@ -97,8 +92,8 @@ export const usePlantGame = (request, isLoggedIn) => {
     if (!currentPlant.value) return
     const correctName = currentPlant.value.nameCn
     const otherPlants = plantsForGame.value.filter(p => p.nameCn !== correctName)
-    const optionCount = difficulty.value === 'easy' ? 2 : difficulty.value === 'medium' ? 3 : 4
-    const shuffled = otherPlants.sort(() => Math.random() - 0.5).slice(0, optionCount)
+    const optionCount = OPTION_COUNT[difficulty.value] || 3
+    const shuffled = otherPlants.sort(() => Math.random() - 0.5).slice(0, optionCount - 1)
     const allOptions = [correctName, ...shuffled.map(p => p.nameCn)]
     options.value = allOptions.sort(() => Math.random() - 0.5)
   }
@@ -197,7 +192,7 @@ export const usePlantGame = (request, isLoggedIn) => {
   })
 
   return {
-    difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, gameStarted, submittingGame, gameRecords, loadingPlants,
+    difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, gameStarted, submittingGame, gameRecords, plantsLoaded,
     formattedTime, isRunning, isExpired, isLowTime,
     loadPlants, selectDifficulty, startGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, totalGameScore,
   }

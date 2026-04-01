@@ -25,7 +25,7 @@
           :key="d.value"
           class="difficulty-card"
           :class="{ active: selectedDifficulty === d.value }"
-          @click="selectDifficulty(d.value)"
+          @click="handleSelectDifficulty(d.value)"
         >
           <div class="diff-icon">
             {{ d.icon }}
@@ -45,7 +45,7 @@
         type="primary"
         size="large"
         class="start-btn"
-        :loading="loading"
+        :disabled="!plantsLoaded"
         @click="$emit('start')"
       >
         <el-icon><VideoPlay /></el-icon>
@@ -187,7 +187,7 @@ const props = defineProps({
   finished: Boolean,
   gameStarted: Boolean,
   submitting: Boolean,
-  loading: Boolean,
+  plantsLoaded: Boolean,
   correct: { type: Number, default: 0 },
   total: { type: Number, default: 0 },
   isLoggedIn: Boolean,
@@ -216,7 +216,7 @@ const difficultyText = computed(() => {
   return d ? d.label : '初级';
 });
 
-const selectDifficulty = (level) => emit("selectDifficulty", level);
+const handleSelectDifficulty = (level) => emit("selectDifficulty", level);
 const checkAnswer = (opt) => emit("answer", opt);
 </script>
 
@@ -236,6 +236,7 @@ const checkAnswer = (opt) => emit("answer", opt);
 .diff-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
 .diff-score { font-size: 12px; color: var(--dong-green); font-weight: 600; }
 .start-btn { padding: 14px 40px; font-size: 16px; border-radius: 12px; }
+.start-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .game-content { max-width: 500px; margin: 0 auto; }
 .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .game-score { display: flex; align-items: baseline; gap: 8px; }
