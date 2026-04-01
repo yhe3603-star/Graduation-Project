@@ -15,8 +15,10 @@ export const usePlantGame = (request, isLoggedIn) => {
   const totalQuestions = ref(0)
   const correctAnswers = ref(0)
   const gameFinished = ref(false)
+  const gameStarted = ref(false)
   const submittingGame = ref(false)
   const gameRecords = ref([])
+  const loadingPlants = ref(false)
   let nextPlantTimer = null
 
   const { formattedTime, isRunning, isExpired, isLowTime, start: startTimer, stop: stopTimer, reset: resetTimer } = useCountdown(3)
@@ -48,25 +50,28 @@ export const usePlantGame = (request, isLoggedIn) => {
   }
 
   const loadPlantsByDifficulty = async (level) => {
+    loadingPlants.value = true
     try {
       const res = await request.get(`/plants/random?difficulty=${level}&limit=20`)
       plantsForGame.value = res?.data?.data || res?.data || []
     } catch {
       await loadPlants()
+    } finally {
+      loadingPlants.value = false
     }
   }
 
-  const setDifficulty = async (level) => {
+  const selectDifficulty = async (level) => {
     difficulty.value = level
     await loadPlantsByDifficulty(level)
-    if (plantsForGame.value.length > 0) {
-      startNewGame()
-    } else {
-      ElMessage.warning('该难度下暂无植物数据')
-    }
   }
 
-  const startNewGame = () => {
+  const startGame = () => {
+    if (plantsForGame.value.length === 0) {
+      ElMessage.warning('该难度下暂无植物数据')
+      return
+    }
+    gameStarted.value = true
     gameScore.value = 0
     streak.value = 0
     totalQuestions.value = 0
@@ -153,6 +158,7 @@ export const usePlantGame = (request, isLoggedIn) => {
     totalQuestions.value = 0
     correctAnswers.value = 0
     gameFinished.value = false
+    gameStarted.value = false
     answered.value = false
     selectedAnswer.value = ''
   }
@@ -191,8 +197,8 @@ export const usePlantGame = (request, isLoggedIn) => {
   })
 
   return {
-    difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, submittingGame, gameRecords,
+    difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, gameStarted, submittingGame, gameRecords, loadingPlants,
     formattedTime, isRunning, isExpired, isLowTime,
-    loadPlants, setDifficulty, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, totalGameScore,
+    loadPlants, selectDifficulty, startGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, totalGameScore,
   }
 }

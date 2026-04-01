@@ -64,7 +64,9 @@
               :answered="answered"
               :selected-answer="selectedAnswer"
               :finished="gameFinished"
+              :game-started="gameStarted"
               :submitting="submittingGame"
+              :loading="loadingPlants"
               :correct="correctAnswers"
               :total="totalQuestions"
               :is-logged-in="isLoggedIn"
@@ -72,6 +74,7 @@
               :formatted-time="gameFormattedTime"
               :is-low-time="gameIsLowTime"
               @select-difficulty="setGameDifficulty"
+              @start="startPlantGame"
               @answer="checkAnswer"
               @end-game="handleGameSubmit"
               @favorite="favoriteCurrentPlant"
@@ -129,9 +132,9 @@ const {
 } = useQuiz(request, isLoggedIn);
 
 const {
-  difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, submittingGame, gameRecords,
+  difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, gameStarted, submittingGame, gameRecords, loadingPlants,
   formattedTime: gameFormattedTime, isLowTime: gameIsLowTime,
-  setDifficulty: setGameDifficulty, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore,
+  setDifficulty: setGameDifficulty, startGame: startPlantGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore,
 } = usePlantGame(request, isLoggedIn);
 
 const { comments, commentLoading, loadComments, handleCommentPost, currentPage, pageSize, totalItems, handlePageChange, handleSizeChange } = useComments(request, isLoggedIn);

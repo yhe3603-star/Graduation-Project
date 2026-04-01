@@ -1,7 +1,7 @@
 <template>
   <div class="game-section">
     <div
-      v-if="!currentPlant && !finished"
+      v-if="!gameStarted && !finished"
       class="game-intro"
     >
       <div class="intro-icon">
@@ -20,9 +20,9 @@
         </div>
       </div>
       <div class="difficulty-select">
-        <div 
-          v-for="d in difficulties" 
-          :key="d.value" 
+        <div
+          v-for="d in difficulties"
+          :key="d.value"
           class="difficulty-card"
           :class="{ active: selectedDifficulty === d.value }"
           @click="selectDifficulty(d.value)"
@@ -41,10 +41,20 @@
           </div>
         </div>
       </div>
+      <el-button
+        type="primary"
+        size="large"
+        class="start-btn"
+        :loading="loading"
+        @click="$emit('start')"
+      >
+        <el-icon><VideoPlay /></el-icon>
+        开始游戏
+      </el-button>
     </div>
 
     <div
-      v-if="currentPlant && !finished"
+      v-if="gameStarted && !finished"
       class="game-content"
     >
       <div class="game-header">
@@ -95,12 +105,12 @@
           这是什么植物？
         </h3>
         <div class="game-options">
-          <el-button 
-            v-for="(opt, i) in options" 
-            :key="i" 
-            :disabled="answered" 
+          <el-button
+            v-for="(opt, i) in options"
+            :key="i"
+            :disabled="answered"
             class="game-opt-btn"
-            :class="{ 
+            :class="{
               correct: answered && opt === currentPlant.nameCn,
               wrong: answered && opt === selectedAnswer && opt !== currentPlant.nameCn
             }"
@@ -164,7 +174,7 @@
 
 <script setup>
 import { computed } from "vue";
-import { Clock, Star, TrendCharts, Check, RefreshRight } from "@element-plus/icons-vue";
+import { Clock, Star, TrendCharts, Check, RefreshRight, VideoPlay } from "@element-plus/icons-vue";
 import { getFirstImage } from "@/utils";
 
 const props = defineProps({
@@ -175,7 +185,9 @@ const props = defineProps({
   answered: Boolean,
   selectedAnswer: String,
   finished: Boolean,
+  gameStarted: Boolean,
   submitting: Boolean,
+  loading: Boolean,
   correct: { type: Number, default: 0 },
   total: { type: Number, default: 0 },
   isLoggedIn: Boolean,
@@ -184,7 +196,7 @@ const props = defineProps({
   isLowTime: Boolean
 });
 
-const emit = defineEmits(["selectDifficulty", "answer", "endGame", "favorite", "restart"]);
+const emit = defineEmits(["selectDifficulty", "start", "answer", "endGame", "favorite", "restart"]);
 
 const difficulties = [
   { value: 'easy', label: '初级', icon: '🌱', desc: '3个选项', score: 10 },
@@ -215,7 +227,7 @@ const checkAnswer = (opt) => emit("answer", opt);
 .game-intro p { font-size: 14px; color: #666; margin: 0 0 24px 0; }
 .intro-rules { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; }
 .rule-item { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #666; }
-.difficulty-select { display: flex; justify-content: center; gap: 16px; margin-top: 24px; }
+.difficulty-select { display: flex; justify-content: center; gap: 16px; margin-bottom: 32px; }
 .difficulty-card { width: 140px; padding: 20px; background: #f8fafb; border: 2px solid #e8f4f8; border-radius: 12px; cursor: pointer; transition: all 0.3s; }
 .difficulty-card:hover { border-color: var(--dong-blue); }
 .difficulty-card.active { background: linear-gradient(135deg, rgba(26, 82, 118, 0.1), rgba(40, 180, 99, 0.1)); border-color: var(--dong-blue); }
@@ -223,6 +235,7 @@ const checkAnswer = (opt) => emit("answer", opt);
 .diff-name { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 4px; }
 .diff-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
 .diff-score { font-size: 12px; color: var(--dong-green); font-weight: 600; }
+.start-btn { padding: 14px 40px; font-size: 16px; border-radius: 12px; }
 .game-content { max-width: 500px; margin: 0 auto; }
 .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .game-score { display: flex; align-items: baseline; gap: 8px; }
