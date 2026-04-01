@@ -435,7 +435,7 @@ docker-compose logs -f
 
 #### 3. 访问服务
 
-- **前端**: http://localhost
+- **前端**: http://localhost:3000
 - **后端 API**: http://localhost:8080/api/
 - **Swagger 文档**: http://localhost:8080/swagger-ui/
 - **健康检查**: http://localhost:8080/actuator/health

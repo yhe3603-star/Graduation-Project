@@ -12,10 +12,16 @@
       </div>
     </template>
     <div
-      ref="chartRef"
-      class="chart-container"
-      :style="{ height: height + 'px' }"
-    />
+      v-loading="loading"
+      element-loading-text="加载中..."
+      element-loading-background="rgba(255, 255, 255, 0.8)"
+    >
+      <div
+        ref="chartRef"
+        class="chart-container"
+        :style="{ height: height + 'px' }"
+      />
+    </div>
   </el-card>
 </template>
 
@@ -26,7 +32,8 @@ import * as echarts from "echarts"
 const props = defineProps({
   title: String,
   height: { type: Number, default: 300 },
-  option: { type: Object, required: true }
+  option: { type: Object, required: true },
+  loading: { type: Boolean, default: false }
 })
 
 const chartRef = ref(null)
@@ -58,8 +65,44 @@ defineExpose({ resize: resizeChart, chart })
 </script>
 
 <style scoped>
-.chart-card { border-radius: 16px; border: none; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
-.chart-header { display: flex; justify-content: space-between; align-items: center; }
-.chart-title { font-size: 16px; font-weight: 600; color: var(--dong-blue); }
-.chart-container { width: 100%; }
+.chart-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dong-blue);
+  position: relative;
+  padding-left: 12px;
+}
+
+.chart-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(180deg, var(--dong-blue), var(--dong-indigo-dark));
+  border-radius: 2px;
+}
+
+.chart-container {
+  width: 100%;
+}
 </style>

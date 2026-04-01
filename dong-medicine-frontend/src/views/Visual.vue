@@ -5,9 +5,7 @@
   >
     <div class="module-header">
       <h1>数据可视化</h1>
-      <p class="subtitle">
-        地域分布可视化 · 使用频次统计 · 传承人分布
-      </p>
+      <p class="subtitle">地域分布可视化 · 使用频次统计 · 传承人分布</p>
       <el-button
         type="primary"
         size="small"
@@ -21,50 +19,38 @@
 
     <div class="visual-dashboard">
       <div class="stats-row">
-        <div
+        <StatCard
           v-for="(stat, i) in statsCards"
           :key="i"
-          class="stat-card"
-        >
-          <div
-            class="stat-icon"
-            :style="{ background: stat.color }"
-          >
-            <el-icon :size="24">
-              <component :is="stat.icon" />
-            </el-icon>
-          </div>
-          <div class="stat-info">
-            <span class="stat-value">{{ stat.value }}</span>
-            <span class="stat-label">{{ stat.label }}</span>
-          </div>
-        </div>
+          :icon="stat.icon"
+          :label="stat.label"
+          :value="stat.value"
+          :color="stat.color"
+        />
       </div>
 
       <div class="charts-row">
         <ChartCard
           title="药方使用频次统计"
           :option="freqChartOption"
-          :height="280"
+          :height="300"
+          :loading="chartLoading"
         >
           <template #actions>
             <el-radio-group
               v-model="freqChartType"
               size="small"
             >
-              <el-radio-button value="bar">
-                柱状图
-              </el-radio-button>
-              <el-radio-button value="line">
-                折线图
-              </el-radio-button>
+              <el-radio-button value="bar">柱状图</el-radio-button>
+              <el-radio-button value="line">折线图</el-radio-button>
             </el-radio-group>
           </template>
         </ChartCard>
         <ChartCard
           title="疗法分类占比"
           :option="pieChartOption"
-          :height="280"
+          :height="300"
+          :loading="chartLoading"
         />
       </div>
 
@@ -72,12 +58,14 @@
         <ChartCard
           title="传承人等级分布"
           :option="inheritorChartOption"
-          :height="280"
+          :height="300"
+          :loading="chartLoading"
         />
         <ChartCard
           title="药用植物分类统计"
           :option="plantChartOption"
-          :height="280"
+          :height="300"
+          :loading="chartLoading"
         />
       </div>
 
@@ -85,7 +73,8 @@
         <ChartCard
           title="药用植物地域分布"
           :option="regionChartOption"
-          :height="320"
+          :height="340"
+          :loading="chartLoading"
         >
           <template #actions>
             <el-select
@@ -93,13 +82,14 @@
               placeholder="选择地区"
               size="small"
               style="width: 120px;"
+              clearable
             >
               <el-option
                 label="全部地区"
                 value=""
               />
               <el-option
-                v-for="r in regions"
+                v-for="r in regionList"
                 :key="r"
                 :label="r"
                 :value="r"
@@ -111,9 +101,10 @@
 
       <div class="charts-row full-width">
         <ChartCard
-          title="药方/疗法使用热度"
-          :option="knowledgePopularityOption"
-          :height="320"
+          title="药方/疗法热度排行"
+          :option="popularityChartOption"
+          :height="340"
+          :loading="chartLoading"
         />
       </div>
 
@@ -121,12 +112,14 @@
         <ChartCard
           title="问答分类热度"
           :option="qaChartOption"
-          :height="280"
+          :height="300"
+          :loading="chartLoading"
         />
         <ChartCard
-          title="用户活跃趋势"
-          :option="userChartOption"
-          :height="280"
+          title="平台访问趋势"
+          :option="trendChartOption"
+          :height="300"
+          :loading="chartLoading"
         />
       </div>
     </div>
@@ -138,34 +131,21 @@ import { computed, inject, onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { ChatDotRound, DataAnalysis, Document, Picture, Refresh, User } from "@element-plus/icons-vue";
 import ChartCard from "@/components/business/display/ChartCard.vue";
-import { extractPageData, logFetchError } from "@/utils";
+import StatCard from "@/components/business/display/StatCard.vue";
+import { useVisualData } from "@/composables/useVisualData";
+import {
+  GRADIENT_COLORS, baseTooltip, baseGrid, baseXAxis, baseYAxis,
+  createBarSeries, createMultiColorBarSeries, createLineSeries, createPieSeries, createRadarSeries
+} from "@/utils/chartConfig";
+import "./Visual.css";
 
 const request = inject("request");
+const { loading: chartLoading, stats, chartData, regionList, fetchData } = useVisualData(request);
 
 const pageLoading = ref(false);
 const refreshing = ref(false);
-const stats = ref({ plants: 0, knowledge: 0, inheritors: 0, qa: 0, resources: 0 });
 const freqChartType = ref("bar");
 const selectedRegion = ref("");
-const regions = ref(["贵州", "湖南", "广西", "云南"]);
-
-const chartData = ref({ therapyCategories: [], inheritorLevels: [], plantCategories: [], qaCategories: [], plantDistribution: [], knowledgePopularity: [] });
-
-const knowledgePopularityOption = computed(() => {
-  const data = chartData.value.knowledgePopularity.length > 0 ? chartData.value.knowledgePopularity : [
-    { name: '鼻炎方', value: 120 },
-    { name: '药浴方', value: 95 },
-    { name: '跌打方', value: 88 },
-    { name: '艾灸疗法', value: 75 },
-    { name: '推拿疗法', value: 62 }
-  ];
-  return {
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    xAxis: { type: 'category', data: data.map(d => d.name), axisLabel: { rotate: 30 } },
-    yAxis: { type: 'value' },
-    series: [{ type: 'bar', data: data.map(d => d.value), itemStyle: { color: '#1A5276' } }]
-  };
-});
 
 const statsCards = computed(() => [
   { icon: Picture, label: "药用植物", value: stats.value.plants, color: "linear-gradient(135deg, var(--dong-blue), var(--dong-indigo-dark))" },
@@ -175,143 +155,132 @@ const statsCards = computed(() => [
   { icon: DataAnalysis, label: "学习资源", value: stats.value.resources, color: "linear-gradient(135deg, #e74c3c, #c0392b)" }
 ]);
 
-const freqChartOption = computed(() => ({
-  tooltip: { trigger: "axis" },
-  xAxis: { type: "category", data: ["鼻炎方", "药浴方", "跌打方", "妇科方", "儿科方", "风湿方"] },
-  yAxis: { type: "value" },
-  series: [{ type: freqChartType.value, data: [120, 95, 88, 75, 62, 55], itemStyle: { color: "#1A5276" }, areaStyle: freqChartType.value === "line" ? { color: "rgba(26, 82, 118, 0.2)" } : undefined }]
-}));
-
-const pieChartOption = computed(() => {
-  const data = chartData.value.therapyCategories.length > 0 ? chartData.value.therapyCategories : [
-    { value: 35, name: "药浴疗法", itemStyle: { color: "#1A5276" } },
-    { value: 25, name: "艾灸疗法", itemStyle: { color: "#28B463" } },
-    { value: 20, name: "推拿疗法", itemStyle: { color: "var(--dong-gold-light)" } },
-    { value: 12, name: "熏蒸疗法", itemStyle: { color: "#667eea" } },
-    { value: 8, name: "其他", itemStyle: { color: "#e74c3c" } }
-  ];
-  return { tooltip: { trigger: "item" }, legend: { bottom: 10 }, series: [{ type: "pie", radius: ["40%", "70%"], data }] };
+const createBarChart = (names, data, gradient, bottom = '8%', rotate = 0) => ({
+  tooltip: { ...baseTooltip, trigger: "axis", axisPointer: { type: 'shadow' } },
+  grid: { ...baseGrid, bottom },
+  xAxis: { ...baseXAxis, data: names, axisLabel: { ...baseXAxis.axisLabel, rotate } },
+  yAxis: baseYAxis,
+  series: [createBarSeries(data, gradient)]
 });
+
+const freqChartOption = computed(() => {
+  const names = chartData.value.formulaNames.length ? chartData.value.formulaNames : ['暂无数据'];
+  const data = chartData.value.formulaFreq.length ? chartData.value.formulaFreq : [0];
+  const isBar = freqChartType.value === 'bar';
+  return {
+    tooltip: { ...baseTooltip, trigger: "axis" },
+    grid: { ...baseGrid, bottom: '12%' },
+    xAxis: { ...baseXAxis, data: names, axisLabel: { color: '#666', fontSize: 11, rotate: 30 } },
+    yAxis: baseYAxis,
+    series: [{
+      type: freqChartType.value,
+      data,
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 8,
+      itemStyle: {
+        color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: GRADIENT_COLORS.blue.start }, { offset: 1, color: GRADIENT_COLORS.blue.end }] },
+        borderRadius: isBar ? [6, 6, 0, 0] : 0
+      },
+      areaStyle: isBar ? undefined : { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(26, 82, 118, 0.4)' }, { offset: 1, color: 'rgba(26, 82, 118, 0.05)' }] } },
+      animationDuration: 1500,
+      animationEasing: 'cubicOut'
+    }]
+  };
+});
+
+const pieChartOption = computed(() => ({
+  tooltip: { ...baseTooltip, trigger: "item", formatter: '{b}: {c} ({d}%)' },
+  legend: { bottom: 10, itemWidth: 12, itemHeight: 12, textStyle: { color: '#666' } },
+  series: [createPieSeries(chartData.value.therapyCategories.length ? chartData.value.therapyCategories : [{ value: 1, name: '暂无数据', itemStyle: { color: '#e0e0e0' } }])]
+}));
 
 const inheritorChartOption = computed(() => {
-  const data = chartData.value.inheritorLevels.length > 0 ? chartData.value.inheritorLevels : [2, 4, 8, 12];
+  const data = chartData.value.inheritorLevels.length ? chartData.value.inheritorLevels : [0, 0, 0, 0];
+  const categories = ["国家级", "省级", "市级", "县级"];
+  const colors = [GRADIENT_COLORS.gold, GRADIENT_COLORS.green, GRADIENT_COLORS.blue, GRADIENT_COLORS.purple];
   return {
-    tooltip: { trigger: "axis" },
-    xAxis: { type: "category", data: ["国家级", "省级", "市级", "县级"] },
-    yAxis: { type: "value" },
-    series: [{ type: "bar", data, itemStyle: { color: (params) => ["var(--dong-gold-light)", "#28B463", "#3498db", "#9b59b6"][params.dataIndex] } }]
+    tooltip: { ...baseTooltip, trigger: "axis", axisPointer: { type: 'shadow' } },
+    grid: baseGrid,
+    xAxis: { ...baseXAxis, data: categories },
+    yAxis: baseYAxis,
+    series: [{
+      type: "bar",
+      data: data.map((v, i) => ({ value: v, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: colors[i].start }, { offset: 1, color: colors[i].end }] }, borderRadius: [6, 6, 0, 0] } })),
+      barWidth: '50%',
+      animationDuration: 1500,
+      animationEasing: 'cubicOut'
+    }]
   };
 });
 
-const plantChartOption = computed(() => {
-  const data = chartData.value.plantCategories.length > 0 ? chartData.value.plantCategories : [18, 15, 10, 8, 6];
+const plantChartOption = computed(() => createBarChart(
+  chartData.value.plantCategoryNames.length ? chartData.value.plantCategoryNames : ['暂无数据'],
+  chartData.value.plantCategories.length ? chartData.value.plantCategories : [0],
+  GRADIENT_COLORS.green, '12%', 30
+));
+
+const regionChartOption = computed(() => {
+  const filtered = selectedRegion.value ? chartData.value.plantDistribution.filter(d => d.name === selectedRegion.value) : chartData.value.plantDistribution;
+  const names = filtered.length ? filtered.map(d => d.name) : ['暂无数据'];
+  const data = filtered.length ? filtered.map(d => d.value) : [0];
   return {
-    tooltip: { trigger: "axis" },
-    xAxis: { type: "category", data: ["根茎类", "全草类", "花叶类", "果实类", "皮类"], axisLabel: { rotate: 30 } },
-    yAxis: { type: "value" },
-    series: [{ type: "bar", data, itemStyle: { color: "#28B463" } }]
+    tooltip: { ...baseTooltip, trigger: "axis", axisPointer: { type: 'shadow' } },
+    grid: { ...baseGrid, bottom: '10%' },
+    xAxis: { ...baseXAxis, data: names, axisLabel: { color: '#666', fontSize: 11, interval: 0, rotate: names.length > 6 ? 30 : 0 } },
+    yAxis: baseYAxis,
+    series: [createBarSeries(data, GRADIENT_COLORS.teal, '40%')]
   };
 });
 
-const regionChartOption = computed(() => ({
-  tooltip: { trigger: "axis" },
-  xAxis: { type: "category", data: regions.value },
-  yAxis: { type: "value" },
-  series: [{ type: "bar", data: [25, 18, 15, 10], itemStyle: { color: "#1A5276" } }]
-}));
+const popularityChartOption = computed(() => {
+  const data = chartData.value.knowledgePopularity.length ? chartData.value.knowledgePopularity : [{ name: '暂无数据', value: 0 }];
+  return {
+    tooltip: { ...baseTooltip, trigger: "axis", axisPointer: { type: 'shadow' } },
+    grid: { ...baseGrid, bottom: '15%' },
+    xAxis: { ...baseXAxis, data: data.map(d => d.name), axisLabel: { rotate: 30, color: '#666', fontSize: 10, interval: 0 } },
+    yAxis: baseYAxis,
+    series: [createMultiColorBarSeries(data)]
+  };
+});
 
 const qaChartOption = computed(() => {
-  const data = chartData.value.qaCategories.length > 0 ? chartData.value.qaCategories : [85, 72, 68, 55];
+  const values = chartData.value.qaCategories.length ? chartData.value.qaCategories : [0, 0, 0, 0];
+  const names = chartData.value.qaCategoryNames.length ? chartData.value.qaCategoryNames : ['暂无数据', '暂无数据', '暂无数据', '暂无数据'];
+  const maxVal = Math.max(...values, 100);
   return {
-    tooltip: { trigger: "axis" },
-    radar: { indicator: [{ name: "侗药常识", max: 100 }, { name: "侗医疗法", max: 100 }, { name: "文化背景", max: 100 }, { name: "用法用量", max: 100 }] },
-    series: [{ type: "radar", data: [{ value: data, name: "热度", areaStyle: { color: "rgba(26, 82, 118, 0.3)" } }] }]
+    tooltip: baseTooltip,
+    radar: {
+      indicator: names.map(name => ({ name, max: maxVal })),
+      center: ['50%', '50%'],
+      radius: '65%',
+      axisName: { color: '#666', fontSize: 11 },
+      splitArea: { areaStyle: { color: ['rgba(26, 82, 118, 0.02)', 'rgba(26, 82, 118, 0.05)', 'rgba(26, 82, 118, 0.08)', 'rgba(26, 82, 118, 0.11)'] } },
+      axisLine: { lineStyle: { color: '#e0e0e0' } },
+      splitLine: { lineStyle: { color: '#e0e0e0' } }
+    },
+    series: [createRadarSeries(values, GRADIENT_COLORS.blue)]
   };
 });
 
-const userChartOption = computed(() => ({
-  tooltip: { trigger: "axis" },
-  xAxis: { type: "category", data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"] },
-  yAxis: { type: "value" },
-  series: [{ type: "line", data: [120, 132, 101, 134, 90, 230, 210], smooth: true, itemStyle: { color: "#28B463" }, areaStyle: { color: "rgba(40, 180, 99, 0.2)" } }]
-}));
-
-const fetchData = async () => {
-  try {
-    const [pRes, kRes, iRes, qRes, rRes] = await Promise.all([
-      request.get("/plants/list", { params: { page: 1, size: 100 } }).catch(() => ({})),
-      request.get("/knowledge/list", { params: { page: 1, size: 100 } }).catch(() => ({})),
-      request.get("/inheritors/list", { params: { page: 1, size: 100 } }).catch(() => ({})),
-      request.get("/qa/list", { params: { page: 1, size: 100 } }).catch(() => ({})),
-      request.get("/resources/list", { params: { page: 1, size: 100 } }).catch(() => ({ }))
-    ]);
-
-    const plantsData = extractPageData(pRes);
-    const knowledgeData = extractPageData(kRes);
-    const inheritorsData = extractPageData(iRes);
-    const qaData = extractPageData(qRes);
-    const resourcesData = extractPageData(rRes);
-
-    const plants = plantsData.records;
-    const knowledge = knowledgeData.records;
-    const inheritors = inheritorsData.records;
-    const qa = qaData.records;
-
-    stats.value = { plants: plantsData.total, knowledge: knowledgeData.total, inheritors: inheritorsData.total, qa: qaData.total, resources: resourcesData.total };
-
-    const therapyMap = {};
-    knowledge.forEach(k => { const cat = k.therapyCategory || '其他'; therapyMap[cat] = (therapyMap[cat] || 0) + 1; });
-    const colors = ["#1A5276", "#28B463", "var(--dong-gold-light)", "#667eea", "#e74c3c"];
-    chartData.value.therapyCategories = Object.entries(therapyMap).map(([name, value], i) => ({ value, name, itemStyle: { color: colors[i % colors.length] } }));
-
-    const levelMap = { '国家级': 0, '省级': 0, '市级': 0, '县级': 0 };
-    inheritors.forEach(i => { if (levelMap[i.level] !== undefined) levelMap[i.level]++; });
-    chartData.value.inheritorLevels = Object.values(levelMap);
-
-    const categoryMap = {};
-    plants.forEach(p => { const cat = p.category || '其他'; categoryMap[cat] = (categoryMap[cat] || 0) + 1; });
-    chartData.value.plantCategories = Object.values(categoryMap);
-
-    const qaCatMap = {};
-    qa.forEach(q => { const cat = q.category || '其他'; qaCatMap[cat] = (qaCatMap[cat] || 0) + 1; });
-    chartData.value.qaCategories = Object.values(qaCatMap);
-
-    // 处理植物地域分布数据
-    const distributionMap = {};
-    plants.forEach(p => {
-      const dist = p.distribution || '未知';
-      distributionMap[dist] = (distributionMap[dist] || 0) + 1;
-    });
-    chartData.value.plantDistribution = Object.entries(distributionMap)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
-
-    // 处理药方/疗法使用热度数据
-    const popularityMap = {};
-    knowledge.forEach(k => {
-      const name = k.title || '未知';
-      const popularity = k.popularity || 0;
-      if (popularity > 0) {
-        popularityMap[name] = popularity;
-      }
-    });
-    chartData.value.knowledgePopularity = Object.entries(popularityMap)
-      .map(([name, value]) => ({ name: name.substring(0, 15), value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
-  } catch (e) {
-    logFetchError('可视化数据', e);
-  }
-};
+const trendChartOption = computed(() => {
+  const dates = chartData.value.userTrendDates.length ? chartData.value.userTrendDates : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  const data = chartData.value.userTrend.length ? chartData.value.userTrend : [0, 0, 0, 0, 0, 0, 0];
+  return {
+    tooltip: { ...baseTooltip, trigger: "axis" },
+    grid: baseGrid,
+    xAxis: { ...baseXAxis, data: dates, boundaryGap: false },
+    yAxis: baseYAxis,
+    series: [createLineSeries(data, GRADIENT_COLORS.green)]
+  };
+});
 
 const refreshData = async () => {
   refreshing.value = true;
   try {
     await fetchData();
     ElMessage.success("数据已刷新");
-  } catch (e) {
-    logFetchError('刷新数据', e);
+  } catch {
     ElMessage.error("刷新失败");
   } finally {
     refreshing.value = false;
@@ -323,67 +292,3 @@ onMounted(async () => {
   try { await fetchData(); } finally { pageLoading.value = false; }
 });
 </script>
-
-<style scoped>
-.visual-dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xl);
-}
-
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-lg);
-}
-
-.stat-card {
-  background: var(--text-inverse);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-  display: flex;
-  align-items: center;
-  gap: var(--space-lg);
-  box-shadow: var(--shadow-xs);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-inverse);
-}
-
-.stat-value {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-}
-
-.stat-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
-}
-
-.charts-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-xl);
-}
-
-.charts-row.full-width {
-  grid-template-columns: 1fr;
-}
-
-@media (max-width: 1024px) {
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .charts-row {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

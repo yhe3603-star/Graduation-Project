@@ -61,7 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/plants/**", "/api/knowledge/**", "/api/inheritors/**",
                                 "/api/qa/**", "/api/resources/list", "/api/resources/hot", "/api/resources/search",
-                                "/api/comments/**", "/api/leaderboard/**", "/api/documents/**").permitAll()
+                                "/api/comments/**", "/api/leaderboard/**", "/api/documents/**", "/api/stats/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/plants/random").permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/plants/*/view", "/api/knowledge/*/view", "/api/inheritors/*/view",

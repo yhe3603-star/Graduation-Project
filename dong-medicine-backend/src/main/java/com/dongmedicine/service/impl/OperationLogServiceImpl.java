@@ -8,6 +8,7 @@ import com.dongmedicine.service.OperationLogService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, OperationLog> implements OperationLogService {
@@ -39,5 +40,10 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
     @Override
     public void clearAll() {
         remove(new QueryWrapper<>());
+    }
+    
+    @Override
+    public List<Map<String, Object>> getTrendLast7Days() {
+        return baseMapper.selectTrendLast7Days();
     }
 }
