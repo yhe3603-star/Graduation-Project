@@ -197,9 +197,9 @@ const props = defineProps({
 const emit = defineEmits(["start", "prev", "next", "submit", "retry", "share", "selectDifficulty"]);
 
 const difficulties = [
-  { value: 'easy', label: '初级', icon: '🌱', count: 10, score: 10 },
-  { value: 'medium', label: '中级', icon: '🌿', count: 20, score: 15 },
-  { value: 'hard', label: '高级', icon: '🌳', count: 30, score: 20 },
+  { value: 'easy', label: '初级', icon: '📝', count: 10, score: 10 },
+  { value: 'medium', label: '中级', icon: '💡', count: 20, score: 15 },
+  { value: 'hard', label: '高级', icon: '🏆', count: 30, score: 20 },
 ];
 
 const getScoreLevel = (score) => score >= 90 ? 0 : score >= 70 ? 1 : score >= 60 ? 2 : 3;
