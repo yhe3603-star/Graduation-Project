@@ -411,7 +411,7 @@ JWT_EXPIRATION=86400000                   # Token有效期(毫秒)
 
 # 服务端口
 BACKEND_PORT=8080                         # 后端端口
-FRONTEND_PORT=80                          # 前端端口
+FRONTEND_PORT=3000                       # 前端端口
 
 # CORS配置
 CORS_ALLOWED_ORIGIN=http://your-domain.com
