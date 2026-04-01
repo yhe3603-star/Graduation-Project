@@ -105,7 +105,11 @@ export function useVisualData(request) {
       chartData.value.plantCategoryNames = categoryEntries.map(([name]) => name);
       chartData.value.plantCategories = categoryEntries.map(([, value]) => value);
 
-      const qaMap = countBy(qa, 'category');
+      const qaMap = {};
+      qa.forEach(q => {
+        const cat = q.category || '其他';
+        qaMap[cat] = (qaMap[cat] || 0) + (q.popularity || 0);
+      });
       const qaEntries = Object.entries(qaMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
       chartData.value.qaCategoryNames = qaEntries.map(([name]) => name);
       chartData.value.qaCategories = qaEntries.map(([, value]) => value);
