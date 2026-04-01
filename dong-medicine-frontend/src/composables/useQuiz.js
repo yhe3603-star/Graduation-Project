@@ -17,9 +17,9 @@ export const useQuiz = (request, isLoggedIn) => {
   const selectedDifficulty = ref('easy')
 
   const difficultyConfig = {
-    easy: { label: '初级', icon: '🌱', count: 10, scorePerQuestion: 10, time: 3 },
-    medium: { label: '中级', icon: '🌿', count: 20, scorePerQuestion: 15, time: 6 },
-    hard: { label: '高级', icon: '🌳', count: 30, scorePerQuestion: 20, time: 10 }
+    easy: { label: '初级', icon: '🌱', count: 10, scorePerQuestion: 10, time: 5 },
+    medium: { label: '中级', icon: '🌿', count: 20, scorePerQuestion: 15, time: 5 },
+    hard: { label: '高级', icon: '🌳', count: 30, scorePerQuestion: 20, time: 5 }
   }
 
   const { formattedTime, isRunning, isExpired, isLowTime, start: startTimer, stop: stopTimer, reset: resetTimer } = useCountdown(3)
