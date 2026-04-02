@@ -17,7 +17,7 @@
           @filter="handleFilter"
         />
 
-        <SkeletonGrid
+        <SkeletonGridImage
           v-if="pageLoading"
           :count="12"
         />
@@ -103,7 +103,7 @@ import Pagination from "@/components/business/display/Pagination.vue";
 import PlantDetailDialog from "@/components/business/dialogs/PlantDetailDialog.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
-import SkeletonGrid from "@/components/common/SkeletonGrid.vue";
+import SkeletonGridImage from "@/components/common/SkeletonGridImage.vue";
 import { extractPageData, extractData, logFetchError } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";

@@ -17,7 +17,7 @@
           @filter="handleFilter"
         />
 
-        <SkeletonCards
+        <SkeletonGridCard
           v-if="pageLoading"
           :count="12"
         />
@@ -121,7 +121,7 @@ import InheritorDetailDialog from "@/components/business/dialogs/InheritorDetail
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
-import SkeletonCards from "@/components/common/SkeletonCards.vue";
+import SkeletonGridCard from "@/components/common/SkeletonGridCard.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
 import { extractPageData, extractData } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";

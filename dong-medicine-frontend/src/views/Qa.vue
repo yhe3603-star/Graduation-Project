@@ -17,7 +17,7 @@
           @filter="handleFilter"
         />
 
-        <SkeletonQa
+        <SkeletonListQa
           v-if="pageLoading"
           :count="6"
         />
@@ -118,7 +118,7 @@ import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import QuizDetailDialog from "@/components/business/dialogs/QuizDetailDialog.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
-import SkeletonQa from "@/components/common/SkeletonQa.vue";
+import SkeletonListQa from "@/components/common/SkeletonListQa.vue";
 import AiChatCard from "@/components/business/display/AiChatCard.vue";
 import { extractPageData, extractData } from "@/utils";
 import { useDebounceFn } from "@/composables/useDebounce";
