@@ -1,391 +1,214 @@
-# Components 组件目录
+# 组件目录 (components)
 
-本目录包含项目的所有可复用组件。
+本目录存放所有可复用的Vue组件，按照功能和用途进行分类组织。
 
-## 目录结构
+## 📁 目录结构
 
 ```
 components/
-├── base/                     # 基础组件
-│   ├── ErrorBoundary.vue     # 错误边界
-│   ├── VirtualList.vue       # 虚拟列表
-│   └── index.js
-│
-├── common/                   # 通用组件
-│   └── SkeletonGrid.vue      # 骨架屏网格
-│
-├── business/                 # 业务组件
-│   ├── layout/               # 布局组件
-│   │   ├── AppHeader.vue     # 应用头部
-│   │   └── AppFooter.vue     # 应用底部
-│   │
-│   ├── display/              # 展示组件
-│   │   ├── AiChatCard.vue    # AI对话卡片
-│   │   ├── CardGrid.vue      # 卡片网格
-│   │   ├── ChartCard.vue     # 图表卡片
-│   │   ├── PageSidebar.vue   # 页面侧边栏
-│   │   ├── Pagination.vue    # 分页组件
-│   │   ├── SearchFilter.vue  # 搜索过滤
-│   │   ├── UpdateLogCard.vue # 更新日志卡片
-│   │   ├── UpdateLogDialog.vue
-│   │   └── index.js
-│   │
-│   ├── interact/             # 交互组件
-│   │   ├── CaptchaInput.vue  # 验证码输入
-│   │   ├── CommentSection.vue# 评论组件
-│   │   ├── InteractSidebar.vue
-│   │   ├── PlantGame.vue     # 植物游戏
-│   │   ├── QuizSection.vue   # 答题组件
-│   │   └── index.js
-│   │
-│   ├── media/                # 媒体组件
-│   │   ├── DocumentList.vue  # 文档列表
-│   │   ├── DocumentPreview.vue
-│   │   ├── ImageCarousel.vue # 图片轮播
-│   │   ├── MediaDisplay.vue  # 媒体展示
-│   │   ├── VideoPlayer.vue   # 视频播放
-│   │   └── index.js
-│   │
-│   ├── upload/               # 上传组件
-│   │   ├── DocumentUploader.vue
-│   │   ├── FileUploader.vue  # 通用上传
-│   │   ├── ImageUploader.vue # 图片上传
-│   │   ├── VideoUploader.vue # 视频上传
-│   │   └── index.js
-│   │
-│   ├── dialogs/              # 详情对话框
-│   │   ├── InheritorDetailDialog.vue
-│   │   ├── KnowledgeDetailDialog.vue
-│   │   ├── PlantDetailDialog.vue
-│   │   ├── QuizDetailDialog.vue
-│   │   └── ResourceDetailDialog.vue
-│   │
-│   └── admin/                # 管理后台组件
-│       ├── AdminDashboard.vue
-│       ├── AdminDataTable.vue
-│       ├── AdminSidebar.vue
-│       ├── dialogs/          # 管理对话框
-│       └── forms/            # 管理表单
-│
-└── README.md
+├── base/              # 基础组件
+├── business/          # 业务组件
+│   ├── admin/         # 管理后台组件
+│   │   ├── dialogs/   # 后台详情对话框
+│   │   └── forms/     # 后台表单对话框
+│   ├── dialogs/       # 前台详情对话框
+│   ├── display/       # 展示组件
+│   ├── interact/      # 交互组件
+│   ├── layout/        # 布局组件
+│   ├── media/         # 媒体组件
+│   └── upload/        # 上传组件
+└── common/            # 通用组件
 ```
 
-## 组件分类说明
+## 📦 组件分类说明
 
-### base/ - 基础组件
+### 1. base/ - 基础组件
 
-| 组件 | 用途 |
-|------|------|
-| ErrorBoundary.vue | 错误边界，捕获子组件错误 |
-| VirtualList.vue | 虚拟列表，优化大数据列表性能 |
+基础组件是最底层的组件，不包含业务逻辑，可跨项目复用。
 
-### common/ - 通用组件
+| 文件名 | 功能说明 | 使用场景 |
+|--------|----------|----------|
+| `ErrorBoundary.vue` | 错误边界组件 | 捕获子组件错误，防止整个应用崩溃 |
+| `VirtualList.vue` | 虚拟滚动列表 | 处理大量数据的性能优化渲染 |
 
-| 组件 | 用途 |
-|------|------|
-| SkeletonGrid.vue | 骨架屏，数据加载时显示占位符 |
-
-### business/layout/ - 布局组件
-
-| 组件 | 用途 |
-|------|------|
-| AppHeader.vue | 应用头部，导航栏、登录状态、搜索入口 |
-| AppFooter.vue | 应用底部，版权信息、友情链接 |
-
-### business/display/ - 展示组件
-
-| 组件 | 用途 |
-|------|------|
-| AiChatCard.vue | AI对话卡片，集成智能问答 |
-| CardGrid.vue | 卡片网格，通用卡片列表展示 |
-| ChartCard.vue | 图表卡片，封装ECharts图表 |
-| PageSidebar.vue | 页面侧边栏，展示统计和热门内容 |
-| Pagination.vue | 分页组件 |
-| SearchFilter.vue | 搜索过滤组件 |
-| UpdateLogCard.vue | 更新日志卡片 |
-| UpdateLogDialog.vue | 更新日志对话框 |
-
-### business/interact/ - 交互组件
-
-| 组件 | 用途 |
-|------|------|
-| CaptchaInput.vue | 验证码输入组件 |
-| CommentSection.vue | 评论组件，支持发表评论、回复 |
-| InteractSidebar.vue | 互动侧边栏，展示排行榜和统计 |
-| PlantGame.vue | 植物识别游戏 |
-| QuizSection.vue | 趣味答题组件 |
-
-### business/media/ - 媒体组件
-
-| 组件 | 用途 |
-|------|------|
-| DocumentList.vue | 文档列表组件 |
-| DocumentPreview.vue | 文档预览组件 |
-| ImageCarousel.vue | 图片轮播组件 |
-| MediaDisplay.vue | 媒体展示组件 |
-| VideoPlayer.vue | 视频播放组件 |
-
-### business/upload/ - 上传组件
-
-| 组件 | 用途 |
-|------|------|
-| DocumentUploader.vue | 文档上传组件 |
-| FileUploader.vue | 通用文件上传组件 |
-| ImageUploader.vue | 图片上传组件 |
-| VideoUploader.vue | 视频上传组件 |
-
-### business/dialogs/ - 详情对话框
-
-| 组件 | 用途 |
-|------|------|
-| PlantDetailDialog.vue | 植物详情对话框 |
-| KnowledgeDetailDialog.vue | 知识详情对话框 |
-| InheritorDetailDialog.vue | 传承人详情对话框 |
-| ResourceDetailDialog.vue | 资源详情对话框 |
-| QuizDetailDialog.vue | 答题详情对话框 |
-
-### business/admin/ - 管理后台组件
-
-| 组件 | 用途 |
-|------|------|
-| AdminDashboard.vue | 管理仪表盘 |
-| AdminDataTable.vue | 数据表格 |
-| AdminSidebar.vue | 管理侧边栏 |
-
----
-
-## 使用示例
-
-### 基础组件使用
-
+**使用示例:**
 ```vue
 <template>
-  <ErrorBoundary @error="handleError">
-    <VirtualList :items="dataList" :item-height="80">
-      <template #default="{ item }">
-        <div class="list-item">{{ item.name }}</div>
-      </template>
-    </VirtualList>
+  <ErrorBoundary>
+    <YourComponent />
   </ErrorBoundary>
 </template>
-
-<script setup>
-import { ErrorBoundary, VirtualList } from '@/components/base'
-
-const handleError = (error) => {
-  console.error('组件错误:', error)
-}
-</script>
 ```
 
-### 业务组件使用
+### 2. business/ - 业务组件
 
+业务组件包含特定业务逻辑，与项目功能紧密相关。
+
+#### 2.1 admin/ - 管理后台组件
+
+管理后台专用的组件，用于后台数据管理。
+
+**dialogs/ - 详情对话框**
+| 文件名 | 功能说明 |
+|--------|----------|
+| `CommentDetailDialog.vue` | 评论详情查看 |
+| `FeedbackDetailDialog.vue` | 反馈详情查看 |
+| `InheritorDetailDialog.vue` | 传承人详情查看 |
+| `KnowledgeDetailDialog.vue` | 知识详情查看 |
+| `LogDetailDialog.vue` | 操作日志详情查看 |
+| `PlantDetailDialog.vue` | 植物详情查看 |
+| `QaDetailDialog.vue` | 问答详情查看 |
+| `QuizDetailDialog.vue` | 答题详情查看 |
+| `ResourceDetailDialog.vue` | 资源详情查看 |
+| `UserDetailDialog.vue` | 用户详情查看 |
+
+**forms/ - 表单对话框**
+| 文件名 | 功能说明 |
+|--------|----------|
+| `InheritorFormDialog.vue` | 传承人信息编辑表单 |
+| `KnowledgeFormDialog.vue` | 知识信息编辑表单 |
+| `PlantFormDialog.vue` | 植物信息编辑表单 |
+| `QaFormDialog.vue` | 问答信息编辑表单 |
+| `QuizFormDialog.vue` | 答题题目编辑表单 |
+| `ResourceFormDialog.vue` | 资源信息编辑表单 |
+
+**其他组件:**
+| 文件名 | 功能说明 |
+|--------|----------|
+| `AdminDashboard.vue` | 管理员控制台面板 |
+| `AdminDataTable.vue` | 通用数据表格组件 |
+| `AdminSidebar.vue` | 管理后台侧边栏导航 |
+
+#### 2.2 dialogs/ - 前台详情对话框
+
+前台用户查看详情的对话框组件。
+
+| 文件名 | 功能说明 |
+|--------|----------|
+| `InheritorDetailDialog.vue` | 传承人详情弹窗 |
+| `KnowledgeDetailDialog.vue` | 知识详情弹窗 |
+| `PlantDetailDialog.vue` | 植物详情弹窗 |
+| `QuizDetailDialog.vue` | 答题详情弹窗 |
+| `ResourceDetailDialog.vue` | 资源详情弹窗 |
+
+#### 2.3 display/ - 展示组件
+
+用于展示内容和数据的组件。
+
+| 文件名 | 功能说明 | 使用场景 |
+|--------|----------|----------|
+| `AiChatCard.vue` | AI聊天卡片 | AI智能助手对话界面 |
+| `CardGrid.vue` | 卡片网格布局 | 以网格形式展示卡片列表 |
+| `ChartCard.vue` | 图表卡片 | 数据可视化图表容器 |
+| `PageSidebar.vue` | 页面侧边栏 | 页面辅助导航和信息展示 |
+| `Pagination.vue` | 分页组件 | 数据分页导航 |
+| `SearchFilter.vue` | 搜索过滤器 | 搜索框和筛选选项 |
+| `StatCard.vue` | 统计卡片 | 展示关键统计指标 |
+| `UpdateLogCard.vue` | 更新日志卡片 | 展示系统更新历史 |
+| `UpdateLogDialog.vue` | 更新日志弹窗 | 查看详细更新日志 |
+
+#### 2.4 interact/ - 交互组件
+
+用户交互功能组件。
+
+| 文件名 | 功能说明 | 使用场景 |
+|--------|----------|----------|
+| `CaptchaInput.vue` | 验证码输入 | 登录/注册表单验证码 |
+| `CommentSection.vue` | 评论区域 | 用户评论互动 |
+| `InteractSidebar.vue` | 互动侧边栏 | 文化互动页面侧边栏 |
+| `PlantGame.vue` | 植物识别游戏 | 植物图片识别小游戏 |
+| `QuizSection.vue` | 趣味答题 | 答题互动功能 |
+
+#### 2.5 layout/ - 布局组件
+
+页面布局相关组件。
+
+| 文件名 | 功能说明 |
+|--------|----------|
+| `AppFooter.vue` | 应用页脚 |
+| `AppHeader.vue` | 应用页头 |
+
+#### 2.6 media/ - 媒体组件
+
+媒体资源展示组件。
+
+| 文件名 | 功能说明 | 使用场景 |
+|--------|----------|----------|
+| `DocumentList.vue` | 文档列表 | 展示文档资源列表 |
+| `DocumentPreview.vue` | 文档预览 | 在线预览文档内容 |
+| `ImageCarousel.vue` | 图片轮播 | 图片集轮播展示 |
+| `MediaDisplay.vue` | 媒体展示 | 统一展示各类媒体资源 |
+| `VideoPlayer.vue` | 视频播放器 | 在线视频播放 |
+
+#### 2.7 upload/ - 上传组件
+
+文件上传相关组件。
+
+| 文件名 | 功能说明 | 支持格式 |
+|--------|----------|----------|
+| `DocumentUploader.vue` | 文档上传 | PDF, Word, PPT等 |
+| `FileUploader.vue` | 通用文件上传 | 所有类型文件 |
+| `ImageUploader.vue` | 图片上传 | JPG, PNG, GIF等 |
+| `VideoUploader.vue` | 视频上传 | MP4, AVI等 |
+
+### 3. common/ - 通用组件
+
+通用组件是项目中多处使用的功能性组件。
+
+| 文件名 | 功能说明 | 使用场景 |
+|--------|----------|----------|
+| `PageLoading.vue` | 页面加载动画 | 路由切换时显示加载状态 |
+| `SkeletonGridCard.vue` | 卡片骨架屏 | 知识库/传承人页面加载占位 |
+| `SkeletonGridImage.vue` | 图片骨架屏 | 药用植物页面加载占位 |
+| `SkeletonListQa.vue` | 问答骨架屏 | 问答页面加载占位 |
+| `SkeletonListResource.vue` | 资源骨架屏 | 学习资源页面加载占位 |
+
+## 🎯 组件使用规范
+
+### 命名规范
+- 组件文件使用**大驼峰命名法** (PascalCase)
+- 组件名称应具有描述性，能体现组件功能
+
+### 组件结构
 ```vue
 <template>
-  <CardGrid
-    :data="plants"
-    :loading="loading"
-    :columns="3"
-    @item-click="handleItemClick"
-  >
-    <template #card="{ item }">
-      <PlantCard :plant="item" />
-    </template>
-  </CardGrid>
-  
-  <Pagination
-    :current="page"
-    :total="total"
-    :page-size="pageSize"
-    @change="handlePageChange"
-  />
+  <!-- 模板内容 -->
 </template>
 
 <script setup>
-import { CardGrid, Pagination } from '@/components/business/display'
-</script>
-```
-
-### 对话框组件使用
-
-```vue
-<template>
-  <el-button @click="showDetail">查看详情</el-button>
-  
-  <PlantDetailDialog
-    v-model="dialogVisible"
-    :plant-id="currentPlantId"
-    @favorite="handleFavorite"
-  />
-</template>
-
-<script setup>
-import { ref } from 'vue'
-import PlantDetailDialog from '@/components/business/dialogs/PlantDetailDialog.vue'
-
-const dialogVisible = ref(false)
-const currentPlantId = ref(null)
-
-const showDetail = () => {
-  currentPlantId.value = 1
-  dialogVisible.value = true
-}
-</script>
-```
-
----
-
-## 组件依赖关系
-
-```
-页面组件 (views/)
-    │
-    ├── 布局组件
-    │   ├── AppHeader.vue
-    │   └── AppFooter.vue
-    │
-    ├── 展示组件
-    │   ├── CardGrid.vue ──┬── PlantDetailDialog.vue
-    │   ├── ChartCard.vue   │
-    │   └── PageSidebar.vue ┘
-    │
-    ├── 交互组件
-    │   ├── QuizSection.vue ──── QuizDetailDialog.vue
-    │   ├── PlantGame.vue
-    │   └── CommentSection.vue
-    │
-    ├── 媒体组件
-    │   ├── ImageCarousel.vue
-    │   ├── VideoPlayer.vue
-    │   └── DocumentPreview.vue
-    │
-    └── 上传组件
-        ├── ImageUploader.vue
-        ├── VideoUploader.vue
-        └── DocumentUploader.vue
-```
-
----
-
-## 开发规范
-
-1. **命名规范**: 组件使用大驼峰命名法
-2. **单文件组件**: 每个组件一个 `.vue` 文件
-3. **Props验证**: 使用 `defineProps` 定义并验证 props
-4. **事件命名**: 使用小驼峰命名法，如 `onItemClick`
-5. **样式作用域**: 使用 `<style scoped>` 避免样式污染
-
-### 组件模板结构
-
-```vue
-<template>
-  <div class="component-name">
-  </div>
-</template>
-
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-
-const props = defineProps({
-  modelValue: { type: Boolean, default: false },
-  data: { type: Object, required: true }
-})
-
-const emit = defineEmits(['update:modelValue', 'submit'])
-
-const loading = ref(false)
-const userStore = useUserStore()
+// 脚本内容
 </script>
 
 <style scoped>
-.component-name {
-}
+/* 样式内容 */
 </style>
 ```
 
----
+### Props定义
+```javascript
+const props = defineProps({
+  title: {
+    type: String,
+    required: true
+  },
+  visible: {
+    type: Boolean,
+    default: false
+  }
+})
+```
 
-## 已知限制
+### Events定义
+```javascript
+const emit = defineEmits(['update', 'close'])
 
-| 组件 | 限制 | 影响 |
-|------|------|------|
-| VirtualList.vue | 不支持动态高度的列表项 | 需要预先知道每项高度 |
-| ImageCarousel.vue | 大图加载时无渐进式显示 | 可能影响用户体验 |
-| DocumentPreview.vue | 依赖kkFileView服务 | 服务不可用时无法预览 |
-| VideoPlayer.vue | 不支持HLS流媒体 | 无法播放直播流 |
-| FileUploader.vue | 单文件最大100MB | 大文件需分片上传 |
-| ChartCard.vue | ECharts实例未自动销毁 | 频繁切换可能内存泄漏 |
+const handleClose = () => {
+  emit('close')
+}
+```
 
----
+## 📚 扩展阅读
 
-## 未来改进建议
-
-### 短期改进 (1-2周)
-
-1. **VirtualList.vue**
-   - 添加动态高度支持
-   - 实现滚动位置记忆
-
-2. **ImageCarousel.vue**
-   - 添加图片懒加载
-   - 实现渐进式加载效果
-
-3. **ChartCard.vue**
-   - 添加ECharts实例自动销毁
-   - 实现响应式图表大小
-
-### 中期改进 (1-2月)
-
-1. **组件库化**
-   - 抽取为独立npm包
-   - 添加TypeScript类型定义
-   - 编写单元测试
-
-2. **性能优化**
-   - 实现组件级代码分割
-   - 添加组件预加载
-   - 优化大列表渲染
-
-3. **功能增强**
-   - 添加国际化支持
-   - 实现主题切换
-   - 添加无障碍支持
-
-### 长期规划 (3-6月)
-
-1. **微前端支持**
-   - 组件独立部署
-   - 跨项目复用
-
-2. **设计系统**
-   - 统一设计规范
-   - 组件文档站点
-   - 设计稿自动生成
-
----
-
-## 依赖要求
-
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-| Vue | 3.4+ | 组件框架 |
-| Element Plus | 2.4+ | UI组件库 |
-| ECharts | 5.4+ | 图表组件 |
-| Vue Router | 4.2+ | 路由（部分组件） |
-| Pinia | 2.3+ | 状态管理（部分组件） |
-
----
-
-## 测试覆盖
-
-| 组件类型 | 测试文件 | 覆盖率 |
-|----------|----------|--------|
-| 基础组件 | `__tests__/base/` | 待补充 |
-| 业务组件 | `__tests__/business/` | 待补充 |
-| 工具函数 | `__tests__/utils/` | 已覆盖 |
-
----
-
-**最后更新时间**：2026年3月30日
+- [Vue 3 组件基础](https://cn.vuejs.org/guide/essentials/component-basics.html)
+- [Vue 3 组件注册](https://cn.vuejs.org/guide/components/registration.html)
+- [Vue 3 Props](https://cn.vuejs.org/guide/components/props.html)

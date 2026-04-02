@@ -1,274 +1,129 @@
-# Stores 状态管理目录
+# 状态管理目录 (stores)
 
-本目录包含项目的 Pinia 状态管理模块。
+本目录存放Pinia状态管理模块，用于管理应用的全局状态。
 
-## 目录结构
+## 📖 什么是状态管理？
 
-```
-stores/
-├── index.js              # Pinia 实例配置
-├── user.js               # 用户状态管理
-└── README.md             # 说明文档
-```
+状态管理是一种集中管理应用数据的方式。当多个组件需要共享同一份数据时，使用状态管理可以：
+- 避免组件间复杂的props传递
+- 实现数据的集中管理
+- 方便数据的持久化和恢复
+- 提供统一的数据修改方式
 
-## 模块说明
+## 📁 文件列表
 
-### index.js - Pinia 实例配置
+| 文件名 | 功能说明 |
+|--------|----------|
+| `user.js` | 用户状态管理模块 |
+| `index.js` | 状态管理统一导出入口 |
 
-**用途**: 创建并导出 Pinia 实例
-
-```javascript
-import { createPinia } from 'pinia'
-
-const pinia = createPinia()
-
-export default pinia
-```
-
----
+## 📦 详细说明
 
 ### user.js - 用户状态管理
 
-**状态**:
+管理用户登录状态、用户信息、权限等。
 
-| 状态 | 类型 | 说明 |
-|------|------|------|
-| `token` | string | 用户认证令牌 |
-| `userId` | string | 用户 ID |
-| `username` | string | 用户名 |
-| `role` | string | 用户角色 (USER/ADMIN) |
-| `userInfo` | object | 用户详细信息 |
+**状态 (State):**
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| `isLoggedIn` | Boolean | 是否已登录 |
+| `userId` | Number | 用户ID |
+| `userName` | String | 用户名 |
+| `userRole` | String | 用户角色 |
+| `token` | String | 登录令牌 |
+| `avatar` | String | 用户头像URL |
 
-**计算属性**:
+**操作 (Actions):**
+| 方法名 | 功能说明 |
+|--------|----------|
+| `initialize()` | 初始化用户状态（从本地存储恢复） |
+| `login(userData)` | 登录，设置用户信息 |
+| `logout()` | 登出，清除用户信息 |
+| `updateProfile(data)` | 更新用户信息 |
+| `setToken(token)` | 设置登录令牌 |
 
-| 属性 | 说明 |
-|------|------|
-| `isLoggedIn` | 登录状态（检查token是否存在且未过期） |
-| `isAdmin` | 是否管理员（检查角色是否为ADMIN） |
-| `userName` | 用户名（计算属性） |
-
-**方法**:
-
-| 方法 | 参数 | 说明 |
-|------|------|------|
-| `setAuth(data)` | data: object | 设置认证信息 |
-| `clearAuth()` | - | 清除认证信息 |
-| `login(credentials)` | credentials: object | 用户登录 |
-| `logout()` | - | 用户登出 |
-| `validateToken()` | - | 验证 Token 有效性 |
-| `changePassword(data)` | data: object | 修改密码 |
-| `fetchUserInfo()` | - | 获取用户信息 |
-| `initializeFromStorage()` | - | 从 sessionStorage 初始化状态 |
-
-**Token过期判断**:
-
-```javascript
-// 统一的Token过期判断函数
-function isTokenExpired(token, options = {}) {
-  const { useBuffer = true, bufferMs = 5 * 60 * 1000 } = options
-  const expiryTime = getTokenExpiryTime(token)
-  if (!expiryTime) return true
-  
-  const now = Date.now()
-  return useBuffer ? now >= expiryTime - bufferMs : now >= expiryTime
-}
-
-// 获取Token过期时间
-function getTokenExpiryTime(token) {
-  if (!token) return null
-  const payload = decodeJwtPayload(token)
-  if (!payload || !payload.exp) return null
-  return payload.exp * 1000
-}
-
-// 解码JWT Payload
-function decodeJwtPayload(token) {
-  try {
-    const base64Url = token.split('.')[1]
-    if (!base64Url) return null
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    )
-    return JSON.parse(jsonPayload)
-  } catch {
-    return null
-  }
-}
-```
-
-**使用示例**:
-
-```javascript
+**使用示例:**
+```vue
+<script setup>
 import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
-// 在组件中使用
 const userStore = useUserStore()
 
-// 检查登录状态
-if (userStore.isLoggedIn) {
-  console.log('当前用户:', userStore.username)
+// 获取响应式状态
+const { isLoggedIn, userName, userRole } = storeToRefs(userStore)
+
+// 调用操作方法
+const handleLogin = (userData) => {
+  userStore.login(userData)
 }
 
-// 登录
-await userStore.login({ username, password })
-
-// 登出
-userStore.logout()
-
-// 检查管理员权限
-if (userStore.isAdmin) {
-  // 显示管理功能
+const handleLogout = () => {
+  userStore.logout()
 }
+</script>
+
+<template>
+  <div v-if="isLoggedIn">
+    欢迎，{{ userName }}
+    <button @click="handleLogout">退出登录</button>
+  </div>
+  <div v-else>
+    <button @click="showLogin = true">登录</button>
+  </div>
+</template>
 ```
 
----
+## 🎯 使用规范
 
-## 开发规范
-
-1. **命名规范**: Store 文件使用小驼峰命名法
-2. **导出方式**: 使用 `defineStore` 定义，默认导出
-3. **状态持久化**: 敏感状态存储在 sessionStorage
-4. **类型安全**: 使用 TypeScript 或 JSDoc 注释
-
----
-
-## 已知限制
-
-| 限制 | 影响 |
-|------|------|
-| 仅sessionStorage持久化 | 关闭浏览器后状态丢失 |
-| 不支持状态快照 | 无法实现时间旅行调试 |
-| 不支持模块动态注册 | 所有Store需预先定义 |
-| Token验证缓存60秒 | 登出后可能短暂有效 |
-
----
-
-## 未来改进建议
-
-### 短期改进 (1-2周)
-
-1. **状态持久化**
-   - 支持localStorage持久化
-   - 实现选择性持久化
-   - 添加状态加密
-
-2. **调试增强**
-   - 集成Pinia DevTools
-   - 添加状态日志
-
-### 中期改进 (1-2月)
-
-1. **功能增强**
-   - 实现状态快照
-   - 添加撤销/重做功能
-   - 支持模块热更新
-
-2. **性能优化**
-   - 实现状态懒加载
-   - 优化大型状态对象
-
----
-
-## 依赖要求
-
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-| Pinia | 2.3+ | 状态管理 |
-| Vue | 3.4+ | 响应式系统 |
-
----
-
-## 常见问题
-
-### 1. 如何创建新的Store？
-
+### 定义Store
 ```javascript
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-export const useDataStore = defineStore('data', () => {
+export const useMyStore = defineStore('myStore', () => {
   // 状态
-  const items = ref([])
-  const loading = ref(false)
+  const count = ref(0)
   
   // 计算属性
-  const itemCount = computed(() => items.value.length)
+  const doubleCount = computed(() => count.value * 2)
   
-  // 方法
-  async function fetchItems() {
-    loading.value = true
-    try {
-      const res = await api.getItems()
-      items.value = res.data
-    } finally {
-      loading.value = false
-    }
-  }
-  
-  function addItem(item) {
-    items.value.push(item)
+  // 操作方法
+  const increment = () => {
+    count.value++
   }
   
   return {
-    items,
-    loading,
-    itemCount,
-    fetchItems,
-    addItem
+    count,
+    doubleCount,
+    increment
   }
 })
 ```
 
-### 2. 如何在组件外使用Store？
+### 在组件中使用
+```vue
+<script setup>
+import { useMyStore } from '@/stores/myStore'
+import { storeToRefs } from 'pinia'
 
-```javascript
-// 在普通JS文件中使用
-import { useUserStore } from '@/stores/user'
+const myStore = useMyStore()
 
-// 需要在Pinia实例创建后使用
-export function checkAuth() {
-  const userStore = useUserStore()
-  return userStore.isLoggedIn
-}
+// 使用 storeToRefs 解构保持响应式
+const { count, doubleCount } = storeToRefs(myStore)
+
+// 方法可以直接解构
+const { increment } = myStore
+</script>
 ```
 
-### 3. 如何实现状态持久化？
+### 最佳实践
+1. **单一职责**: 每个Store只管理一个领域的状态
+2. **命名规范**: Store文件使用小驼峰命名，导出函数使用 `useXxxStore`
+3. **类型安全**: 使用TypeScript定义状态类型
+4. **持久化**: 敏感数据需要持久化到本地存储
 
-```javascript
-import { defineStore } from 'pinia'
+## 📚 扩展阅读
 
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    token: null,
-    username: null
-  }),
-  
-  persist: {
-    storage: sessionStorage,
-    paths: ['token', 'username']  // 只持久化这些字段
-  }
-})
-```
-
-### 4. 如何重置Store状态？
-
-```javascript
-const userStore = useUserStore()
-
-// 重置为初始状态
-userStore.$reset()
-
-// 或批量更新状态
-userStore.$patch({
-  token: null,
-  username: null
-})
-```
-
----
-
-**最后更新时间**：2026年3月30日
+- [Pinia 官方文档](https://pinia.vuejs.org/zh/)
+- [Vue 3 状态管理](https://cn.vuejs.org/guide/scaling-up/state-management.html)

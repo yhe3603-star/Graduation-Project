@@ -1,294 +1,188 @@
-# Styles 样式文件目录
+# 样式文件目录 (styles)
 
-本目录包含项目的全局样式文件。
+本目录存放全局样式文件，包括CSS变量、基础样式、组件样式等。
 
-## 目录结构
+## 📁 文件列表
 
-```
-styles/
-├── index.css             # 样式入口文件
-├── variables.css         # CSS 变量定义
-├── base.css              # 基础样式
-├── components.css        # 组件样式
-├── pages.css             # 页面样式
-├── common.css            # 通用样式
-├── home.css              # 首页专用样式
-├── media-common.css      # 媒体相关通用样式
-├── dialog-common.css     # 对话框通用样式
-└── README.md             # 说明文档
-```
+| 文件名 | 功能说明 |
+|--------|----------|
+| `index.css` | 样式入口文件，统一导入所有样式 |
+| `variables.css` | CSS变量定义文件 |
+| `base.css` | 基础样式文件 |
+| `common.css` | 通用样式文件 |
+| `components.css` | 组件样式文件 |
+| `pages.css` | 页面样式文件 |
+| `home.css` | 首页样式文件 |
+| `Visual.css` | 数据可视化页面样式 |
+| `dialog-common.css` | 对话框通用样式 |
+| `media-common.css` | 媒体组件通用样式 |
 
-## 样式文件说明
+## 📦 详细说明
 
-### variables.css - CSS 变量定义
+### 1. variables.css - CSS变量定义
 
-**用途**: 定义全局 CSS 变量，构建设计系统
+定义全局CSS变量，包括颜色、字体、间距等。
 
-**品牌色（侗族文化特色）**:
+**主要变量:**
 ```css
 :root {
-  --dong-indigo: #1A5276;        /* 靛蓝 - 主色调 */
-  --dong-jade: #28B463;          /* 青绿 - 辅助色 */
-  --dong-gold: #c9a227;          /* 金铜 - 强调色 */
-}
-```
-
-**功能色**:
-```css
-:root {
-  --color-primary: #1A5276;      /* 主色 */
-  --color-success: #28B463;      /* 成功 */
-  --color-warning: #f5a623;      /* 警告 */
-  --color-danger: #e74c3c;       /* 危险 */
-  --color-info: #3498db;         /* 信息 */
-}
-```
-
-**间距系统**:
-```css
-:root {
+  /* 主题色 */
+  --primary-color: #1A5276;
+  --secondary-color: #28B463;
+  
+  /* 文字颜色 */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  
+  /* 背景色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  
+  /* 边框 */
+  --border-color: #e0e0e0;
+  --border-radius: 8px;
+  
+  /* 间距 */
   --space-xs: 4px;
   --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 24px;
-  --space-2xl: 32px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  
+  /* 字体 */
+  --font-family: 'Microsoft YaHei', sans-serif;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
 }
 ```
 
-**圆角系统**:
-```css
-:root {
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-}
-```
+### 2. base.css - 基础样式
 
-**阴影系统**:
-```css
-:root {
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.15);
-}
-```
+定义HTML元素的基础样式。
 
----
-
-### base.css - 基础样式
-
-**用途**: 重置样式、排版、通用布局
-
-**包含内容**:
-- CSS Reset
+**主要内容:**
+- 重置样式 (Reset CSS)
+- 盒模型设置
 - 字体设置
-- 全局盒模型
+- 链接样式
 - 滚动条样式
-- 选中文本样式
 
----
+### 3. common.css - 通用样式
 
-### components.css - 组件样式
+定义通用的CSS类。
 
-**用途**: 组件通用样式
+**主要类名:**
+```css
+/* 布局 */
+.flex { display: flex; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
 
-**包含组件**:
+/* 文字 */
+.text-center { text-align: center; }
+.text-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 间距 */
+.mt-sm { margin-top: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.p-lg { padding: var(--space-lg); }
+```
+
+### 4. components.css - 组件样式
+
+定义全局组件的样式。
+
+**主要组件:**
 - 卡片样式
 - 按钮样式
 - 表单样式
 - 标签样式
-- 分页样式
 
----
+### 5. pages.css - 页面样式
 
-### pages.css - 页面样式
+定义页面级别的通用样式。
 
-**用途**: 各页面通用样式
-
-**包含内容**:
+**主要样式:**
 - 页面容器
-- 页面标题
-- 页面布局
-- 响应式适配
+- 模块头部
+- 内容区域
 
----
+### 6. home.css - 首页样式
 
-### common.css - 通用样式
+首页专用样式。
 
-**用途**: 通用工具类样式
-
-**包含内容**:
-- 文本工具类
-- 间距工具类
-- 显示工具类
-- 动画工具类
-
----
-
-### home.css - 首页专用样式
-
-**用途**: 首页特定样式
-
-**包含内容**:
-- 首页布局
+**主要内容:**
+- Hero区域
 - 统计卡片
-- 导航卡片
-- 轮播样式
+- 导航入口
+- 特色模块
 
----
+### 7. Visual.css - 数据可视化样式
 
-### media-common.css - 媒体相关通用样式
+数据可视化页面专用样式。
 
-**用途**: 媒体组件通用样式
+**主要内容:**
+- 图表容器
+- 统计卡片
+- 数据表格
 
-**包含内容**:
+### 8. dialog-common.css - 对话框样式
+
+对话框组件通用样式。
+
+**主要内容:**
+- 对话框容器
+- 标题区域
+- 内容区域
+- 底部按钮
+
+### 9. media-common.css - 媒体样式
+
+媒体组件通用样式。
+
+**主要内容:**
 - 图片容器
 - 视频播放器
 - 文档预览
-- 媒体列表
 
----
+## 🎯 使用规范
 
-### dialog-common.css - 对话框通用样式
-
-**用途**: 对话框组件通用样式
-
-**包含内容**:
-- 对话框容器
-- 对话框头部
-- 对话框内容
-- 对话框底部
-- 对话框动画
-
----
-
-## 开发规范
-
-1. **命名规范**: 使用小写字母，多个单词用连字符连接
-2. **变量使用**: 优先使用 CSS 变量
-3. **响应式**: 使用媒体查询适配不同屏幕
-4. **命名空间**: 组件样式使用 `.dm-` 前缀
-
----
-
-## 已知限制
-
-| 限制 | 影响 |
-|------|------|
-| 不支持CSS Modules | 样式隔离依赖scoped |
-| 不支持暗色主题 | 无深色模式切换 |
-| 不支持RTL | 不适配从右到左语言 |
-| 无响应式断点变量 | 媒体查询硬编码 |
-
----
-
-## 未来改进建议
-
-### 短期改进 (1-2周)
-
-1. **主题系统**
-   - 添加暗色主题
-   - 实现主题切换
-   - 添加主题持久化
-
-2. **响应式优化**
-   - 定义断点变量
-   - 优化移动端适配
-
-### 中期改进 (1-2月)
-
-1. **CSS架构**
-   - 采用CSS Modules
-   - 实现原子化CSS
-   - 添加样式lint
-
-2. **国际化支持**
-   - 支持RTL布局
-   - 多语言字体适配
-
----
-
-## 依赖要求
-
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-| PostCSS | 8.x | CSS处理 |
-| Autoprefixer | 10.x | 自动前缀 |
-
----
-
-## 常见问题
-
-### 1. 如何使用CSS变量？
-
+### 导入顺序
 ```css
-/* 定义变量 */
-:root {
-  --my-color: #1A5276;
-}
-
-/* 使用变量 */
-.my-element {
-  color: var(--my-color);
-  background: var(--color-primary, #1A5276);  /* 带默认值 */
-}
+/* 在 index.css 中按顺序导入 */
+@import './variables.css';  /* 1. 变量定义 */
+@import './base.css';       /* 2. 基础样式 */
+@import './common.css';     /* 3. 通用样式 */
+@import './components.css'; /* 4. 组件样式 */
+@import './pages.css';      /* 5. 页面样式 */
 ```
 
-### 2. 如何覆盖Element Plus样式？
-
+### 使用CSS变量
 ```css
-/* 使用:deep()穿透 */
-:deep(.el-button) {
-  --el-button-bg-color: var(--dong-indigo);
-}
-
-/* 或使用全局样式 */
-.el-button--primary {
-  background-color: var(--dong-indigo);
-}
-```
-
-### 3. 如何实现响应式布局？
-
-```css
-/* 使用媒体查询 */
-.container {
+.my-component {
+  color: var(--text-primary);
+  background: var(--bg-primary);
   padding: var(--space-md);
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: var(--space-sm);
-  }
-}
-
-/* 使用CSS Grid */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--space-lg);
+  border-radius: var(--border-radius);
 }
 ```
 
-### 4. 如何添加动画？
+### 命名规范
+- **类名**: 使用小写字母和连字符，如 `.card-container`
+- **变量**: 使用小写字母和连字符，如 `--primary-color`
+- **BEM命名**: 块__元素--修饰符，如 `.card__title--large`
 
-```css
-/* 定义动画 */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+### 最佳实践
+1. **使用变量**: 尽量使用CSS变量，便于主题切换
+2. **避免嵌套**: CSS选择器嵌套不超过3层
+3. **模块化**: 每个页面/组件的样式独立管理
+4. **响应式**: 使用媒体查询适配不同屏幕
 
-/* 使用动画 */
-.fade-enter {
-  animation: fadeIn 0.3s ease;
-}
-```
+## 📚 扩展阅读
 
----
-
-**最后更新时间**：2026年3月30日
+- [CSS 变量](https://developer.mozilla.org/zh-CN/docs/Web/CSS/Using_CSS_custom_properties)
+- [BEM 命名规范](https://getbem.com/)
+- [CSS 最佳实践](https://developer.mozilla.org/zh-CN/docs/Web/Guide/CSS/Writing_efficient_CSS)

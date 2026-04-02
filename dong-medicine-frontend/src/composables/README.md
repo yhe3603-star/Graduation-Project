@@ -1,566 +1,231 @@
-# Composables 组合式函数目录
+# 组合式函数目录 (composables)
 
-本目录包含项目的所有组合式函数（Composables），用于复用组件逻辑。
+本目录存放Vue 3的组合式函数（Composables），用于封装和复用有状态的逻辑。
 
-## 目录结构
+## 📖 什么是组合式函数？
 
-```
-composables/
-├── index.js              # 导出入口
-├── useAdminData.js       # 管理后台数据
-├── useQuiz.js            # 答题逻辑
-├── usePlantGame.js       # 植物游戏逻辑
-├── useInteraction.js     # 交互功能
-├── useFavorite.js        # 收藏功能
-├── useMedia.js           # 媒体处理
-├── usePersonalCenter.js  # 个人中心功能
-├── useFormDialog.js      # 表单对话框
-├── useUpdateLog.js       # 更新日志
-├── useDebounce.js        # 防抖函数
-└── useErrorHandler.js    # 错误处理
-```
+组合式函数是Vue 3引入的一种代码组织方式，它允许我们将组件中可复用的逻辑提取出来，形成独立的函数。这些函数可以：
+- 封装响应式状态
+- 提供可复用的逻辑
+- 组合多个功能
+- 简化组件代码
 
-## 组合式函数说明
+## 📁 文件列表
 
-### useAdminData.js - 管理后台数据
+| 文件名 | 功能说明 | 主要导出 |
+|--------|----------|----------|
+| `useAdminData.js` | 管理后台数据处理 | `useAdminData`, `useAdminDialogs`, `useAdminActions` |
+| `useDebounce.js` | 防抖处理 | `useDebounceFn` |
+| `useErrorHandler.js` | 错误处理 | `useErrorHandler` |
+| `useFavorite.js` | 收藏功能 | `useFavorite` |
+| `useFormDialog.js` | 表单对话框管理 | `useFormDialog` |
+| `useInteraction.js` | 交互功能 | `useCountdown`, `useComments`, `usePagination`, `useFilter`, `useStats` |
+| `useMedia.js` | 媒体处理 | `useMedia` |
+| `usePersonalCenter.js` | 个人中心功能 | `usePersonalCenter` |
+| `usePlantGame.js` | 植物识别游戏 | `usePlantGame` |
+| `useQuiz.js` | 趣味答题功能 | `useQuiz` |
+| `useUpdateLog.js` | 更新日志功能 | `useUpdateLog` |
+| `useVisualData.js` | 可视化数据 | `useVisualData` |
 
-**用途**: 管理后台数据管理，包含数据获取、对话框管理、CRUD操作
+## 📦 详细说明
 
-**导出**:
+### 1. useAdminData.js
+
+管理后台数据处理的核心组合式函数。
+
+**导出函数:**
+- `useAdminData(entityType, request)` - 处理管理后台的数据请求
+- `useAdminDialogs()` - 管理对话框状态
+- `useAdminActions(request, entityType)` - 处理增删改查操作
+
+**使用示例:**
 ```javascript
-export function useAdminData(apiPath, options) {
-  // 状态
-  const data = ref([])
-  const loading = ref(false)
-  const dialogVisible = ref(false)
-  const currentItem = ref(null)
-  
-  // 方法
-  const fetchData = async () => { ... }
-  const handleAdd = () => { ... }
-  const handleEdit = (item) => { ... }
-  const handleDelete = async (id) => { ... }
-  const handleSave = async (formData) => { ... }
-  
-  return {
-    data, loading, dialogVisible, currentItem,
-    fetchData, handleAdd, handleEdit, handleDelete, handleSave
-  }
-}
+import { useAdminData } from '@/composables/useAdminData'
+
+const { dataList, loading, fetchData, deleteItem } = useAdminData('plants', request)
 ```
 
-**使用示例**:
+### 2. useDebounce.js
+
+防抖处理函数，用于优化频繁触发的事件。
+
+**导出函数:**
+- `useDebounceFn(fn, delay)` - 创建防抖函数
+
+**使用示例:**
 ```javascript
-import { useAdminData } from '@/composables'
+import { useDebounceFn } from '@/composables/useDebounce'
 
-const { data, loading, fetchData, handleDelete } = useAdminData('/admin/plants')
+const debouncedSearch = useDebounceFn((keyword) => {
+  // 搜索逻辑
+}, 300)
 ```
 
----
+### 3. useInteraction.js
 
-### useQuiz.js - 答题逻辑
+交互功能的组合式函数集合。
 
-**用途**: 趣味答题功能，题目加载、答案提交、计时、评分
+**导出函数:**
+- `useCountdown(seconds)` - 倒计时功能
+- `useComments(request, targetType, targetId)` - 评论功能
+- `usePagination(defaultPageSize)` - 分页功能
+- `useFilter(defaultFilters)` - 筛选功能
+- `useStats(request)` - 统计数据
 
-**导出**:
+**使用示例:**
 ```javascript
-export function useQuiz() {
-  const questions = ref([])
-  const currentIndex = ref(0)
-  const score = ref(0)
-  const answers = ref([])
-  const timeLeft = ref(0)
-  const isFinished = ref(false)
-  
-  const loadQuestions = async (count) => { ... }
-  const submitAnswer = (answer) => { ... }
-  const nextQuestion = () => { ... }
-  const resetQuiz = () => { ... }
-  
-  return {
-    questions, currentIndex, score, answers, timeLeft, isFinished,
-    loadQuestions, submitAnswer, nextQuestion, resetQuiz
-  }
-}
+import { useCountdown, usePagination } from '@/composables/useInteraction'
+
+// 倒计时
+const { formattedTime, start, stop, isExpired } = useCountdown(60)
+
+// 分页
+const { currentPage, pageSize, total, changePage } = usePagination(10)
 ```
 
----
+### 4. usePlantGame.js
 
-### usePlantGame.js - 植物游戏逻辑
+植物识别游戏的核心逻辑。
 
-**用途**: 植物识别游戏，难度设置、答题逻辑、分数计算
+**功能:**
+- 游戏状态管理
+- 难度选择
+- 答题逻辑
+- 分数计算
+- 连胜奖励
 
-**导出**:
+**使用示例:**
 ```javascript
-export function usePlantGame() {
-  const currentPlant = ref(null)
-  const options = ref([])
-  const score = ref(0)
-  const difficulty = ref('medium')
-  const streak = ref(0)
-  
-  const startGame = async () => { ... }
-  const checkAnswer = (selectedId) => { ... }
-  const nextRound = () => { ... }
-  
-  return {
-    currentPlant, options, score, difficulty, streak,
-    startGame, checkAnswer, nextRound
-  }
-}
-```
-
----
-
-### useInteraction.js - 交互功能
-
-**用途**: 交互功能，包含倒计时、评论、分页、过滤、统计
-
-**导出**:
-```javascript
-export function useInteraction() {
-  const comments = ref([])
-  const page = ref(1)
-  const pageSize = ref(10)
-  const total = ref(0)
-  
-  const fetchComments = async (targetType, targetId) => { ... }
-  const addComment = async (content) => { ... }
-  const replyComment = async (commentId, content) => { ... }
-  
-  return {
-    comments, page, pageSize, total,
-    fetchComments, addComment, replyComment
-  }
-}
-```
-
----
-
-### useFavorite.js - 收藏功能
-
-**用途**: 收藏状态管理、收藏/取消收藏操作
-
-**导出**:
-```javascript
-export function useFavorite() {
-  const favorites = ref([])
-  const loading = ref(false)
-  
-  const checkFavorited = async (targetType, targetId) => { ... }
-  const toggleFavorite = async (targetType, targetId) => { ... }
-  const fetchFavorites = async () => { ... }
-  
-  return {
-    favorites, loading,
-    checkFavorited, toggleFavorite, fetchFavorites
-  }
-}
-```
-
----
-
-### useMedia.js - 媒体处理
-
-**用途**: 文档预览、媒体显示
-
-**导出**:
-```javascript
-export function useMedia() {
-  const previewUrl = ref('')
-  const previewVisible = ref(false)
-  const mediaType = ref('')
-  
-  const previewDocument = (url) => { ... }
-  const previewVideo = (url) => { ... }
-  const previewImage = (url) => { ... }
-  const closePreview = () => { ... }
-  
-  return {
-    previewUrl, previewVisible, mediaType,
-    previewDocument, previewVideo, previewImage, closePreview
-  }
-}
-```
-
----
-
-### usePersonalCenter.js - 个人中心功能
-
-**用途**: 用户信息、收藏管理、密码修改
-
-**导出**:
-```javascript
-export function usePersonalCenter() {
-  const userInfo = ref(null)
-  const favorites = ref([])
-  const records = ref([])
-  
-  const fetchUserInfo = async () => { ... }
-  const updateUserInfo = async (data) => { ... }
-  const changePassword = async (data) => { ... }
-  const fetchFavorites = async () => { ... }
-  const fetchRecords = async () => { ... }
-  
-  return {
-    userInfo, favorites, records,
-    fetchUserInfo, updateUserInfo, changePassword, fetchFavorites, fetchRecords
-  }
-}
-```
-
----
-
-### useFormDialog.js - 表单对话框
-
-**用途**: 表单对话框通用逻辑
-
-**导出**:
-```javascript
-export function useFormDialog(initialData = {}) {
-  const visible = ref(false)
-  const formData = ref({ ...initialData })
-  const loading = ref(false)
-  
-  const open = (data = null) => { ... }
-  const close = () => { ... }
-  const reset = () => { ... }
-  const submit = async (apiPath) => { ... }
-  
-  return {
-    visible, formData, loading,
-    open, close, reset, submit
-  }
-}
-```
-
----
-
-### useUpdateLog.js - 更新日志
-
-**用途**: 更新日志解析与管理
-
-**导出**:
-```javascript
-export function useUpdateLog() {
-  const logs = ref([])
-  const loading = ref(false)
-  
-  const fetchLogs = async () => { ... }
-  const parseLog = (content) => { ... }
-  
-  return {
-    logs, loading,
-    fetchLogs, parseLog
-  }
-}
-```
-
----
-
-### useDebounce.js - 防抖函数
-
-**用途**: 防抖处理
-
-**导出**:
-```javascript
-export function useDebounce(fn, delay = 300) {
-  const timer = ref(null)
-  
-  const debouncedFn = (...args) => {
-    if (timer.value) clearTimeout(timer.value)
-    timer.value = setTimeout(() => fn(...args), delay)
-  }
-  
-  const cancel = () => {
-    if (timer.value) clearTimeout(timer.value)
-  }
-  
-  return { debouncedFn, cancel }
-}
-```
-
----
-
-### useErrorHandler.js - 错误处理
-
-**用途**: 统一错误处理
-
-**导出**:
-```javascript
-export function useErrorHandler() {
-  const error = ref(null)
-  const errorMessage = ref('')
-  
-  const handleError = (err) => { ... }
-  const clearError = () => { ... }
-  const showError = (message) => { ... }
-  
-  return {
-    error, errorMessage,
-    handleError, clearError, showError
-  }
-}
-```
-
----
-
-## 组合使用示例
-
-### 多个Composable组合使用
-
-```vue
-<template>
-  <div class="quiz-page">
-    <div v-if="error">{{ errorMessage }}</div>
-    <div v-else-if="loading">加载中...</div>
-    <div v-else>
-      <QuizSection
-        :questions="questions"
-        :current-index="currentIndex"
-        :score="score"
-        @submit="submitAnswer"
-        @next="nextQuestion"
-      />
-    </div>
-  </div>
-</template>
-
-<script setup>
-import { onMounted } from 'vue'
-import { useQuiz } from '@/composables/useQuiz'
-import { useErrorHandler } from '@/composables/useErrorHandler'
-import { useDebounce } from '@/composables/useDebounce'
+import { usePlantGame } from '@/composables/usePlantGame'
 
 const {
-  questions,
-  currentIndex,
-  score,
-  loadQuestions,
-  submitAnswer,
-  nextQuestion
-} = useQuiz()
-
-const { error, errorMessage, handleError } = useErrorHandler()
-
-const { debouncedFn: debouncedSubmit } = useDebounce(submitAnswer, 300)
-
-onMounted(async () => {
-  try {
-    await loadQuestions(10)
-  } catch (err) {
-    handleError(err)
-  }
-})
-</script>
+  currentPlant, options, score, streak,
+  selectDifficulty, checkAnswer, resetGame
+} = usePlantGame(request, isLoggedIn)
 ```
 
-### 在Composable中调用其他Composable
+### 5. useQuiz.js
 
+趣味答题功能的核心逻辑。
+
+**功能:**
+- 答题状态管理
+- 题目加载
+- 答案提交
+- 分数计算
+- 计时器
+
+**使用示例:**
 ```javascript
-import { ref } from 'vue'
-import { useErrorHandler } from './useErrorHandler'
-import { useDebounce } from './useDebounce'
+import { useQuiz } from '@/composables/useQuiz'
 
-export function useSearch(apiPath) {
-  const { error, handleError } = useErrorHandler()
-  const results = ref([])
-  const loading = ref(false)
-  
-  const { debouncedFn: debouncedSearch } = useDebounce(async (keyword) => {
-    loading.value = true
-    try {
-      const response = await request.get(apiPath, { params: { keyword } })
-      results.value = response.data
-    } catch (err) {
-      handleError(err)
-    } finally {
-      loading.value = false
-    }
-  }, 500)
-  
-  return {
-    results,
-    loading,
-    error,
-    search: debouncedSearch
-  }
-}
+const {
+  selectedQuestions, currentQuestion, userAnswers,
+  finalScore, startNewQuiz, submitQuiz, resetQuiz
+} = useQuiz(request, isLoggedIn)
 ```
 
----
+### 6. useVisualData.js
 
-## 开发规范
+数据可视化页面的数据处理。
 
-1. **命名规范**: 函数以 `use` 开头，使用大驼峰命名法
-2. **返回值**: 返回响应式状态和方法
-3. **组合使用**: 可以在组合式函数中调用其他组合式函数
-4. **文档注释**: 添加JSDoc注释说明用途和参数
+**功能:**
+- 获取各类统计数据
+- 处理图表数据
+- 数据格式转换
 
-### JSDoc注释规范
-
+**使用示例:**
 ```javascript
-/**
- * 答题逻辑组合式函数
- * @param {Object} options - 配置选项
- * @param {number} options.questionCount - 题目数量，默认10
- * @param {number} options.timeLimit - 时间限制（秒），默认0表示不限时
- * @returns {Object} 答题相关的状态和方法
- * @example
- * const { questions, score, loadQuestions } = useQuiz({ questionCount: 20 })
- */
-export function useQuiz(options = {}) {
-  // ...
-}
+import { useVisualData } from '@/composables/useVisualData'
+
+const {
+  chartData, loading,
+  provinceData, categoryData, trendData
+} = useVisualData(request)
 ```
 
----
+### 7. useFavorite.js
 
-## 已知限制
+收藏功能管理。
 
-| Composable | 限制 | 影响 |
-|------------|------|------|
-| useQuiz | 不支持题目分类筛选 | 无法按类型答题 |
-| usePlantGame | 图片预加载未实现 | 可能影响游戏流畅度 |
-| useMedia | 不支持音频预览 | 音频文件无法预览 |
-| useFavorite | 未实现本地缓存 | 每次都需请求API |
-| useDebounce | 不支持立即执行模式 | 某些场景需要立即执行 |
-| useAdminData | 不支持批量操作 | 批量删除需多次请求 |
+**功能:**
+- 添加/取消收藏
+- 检查收藏状态
+- 获取收藏列表
 
----
-
-## 未来改进建议
-
-### 短期改进 (1-2周)
-
-1. **useQuiz**
-   - 添加题目分类筛选
-   - 实现答题历史记录
-   - 添加错题本功能
-
-2. **useFavorite**
-   - 实现本地缓存
-   - 添加收藏夹分类
-
-3. **useMedia**
-   - 添加音频预览支持
-   - 实现媒体文件缓存
-
-### 中期改进 (1-2月)
-
-1. **TypeScript支持**
-   - 添加类型定义文件
-   - 提供更好的IDE支持
-
-2. **测试覆盖**
-   - 编写单元测试
-   - 添加集成测试
-
-3. **性能优化**
-   - 实现请求缓存
-   - 添加请求取消功能
-
-### 长期规划 (3-6月)
-
-1. **插件化架构**
-   - 支持自定义Composable
-   - 提供插件注册机制
-
-2. **状态持久化**
-   - 支持多种存储后端
-   - 实现状态同步
-
----
-
-## 依赖要求
-
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-| Vue | 3.4+ | 响应式系统 |
-| Vue Router | 4.2+ | 路由（部分函数） |
-| Pinia | 2.3+ | 状态管理（部分函数） |
-| Axios | 1.6+ | HTTP请求 |
-
----
-
-## 常见问题
-
-### 1. 如何在Composable中使用路由？
-
+**使用示例:**
 ```javascript
-import { useRouter } from 'vue-router'
+import { useFavorite } from '@/composables/useFavorite'
 
-export function useMyComposable() {
-  const router = useRouter()
-  
-  const navigate = (path) => {
-    router.push(path)
-  }
-  
-  return { navigate }
-}
+const {
+  isFavorited, favoriteList,
+  toggleFavorite, fetchFavorites
+} = useFavorite(request, isLoggedIn)
 ```
 
-### 2. 如何在Composable中使用Pinia Store？
+### 8. useMedia.js
 
+媒体资源处理。
+
+**功能:**
+- 媒体类型判断
+- 媒体预览
+- 媒体下载
+
+**使用示例:**
 ```javascript
-import { useUserStore } from '@/stores/user'
+import { useMedia } from '@/composables/useMedia'
 
-export function useMyComposable() {
-  const userStore = useUserStore()
-  
-  const doSomething = () => {
-    if (userStore.isLoggedIn) {
-      // ...
-    }
-  }
-  
-  return { doSomething }
-}
+const {
+  getMediaType, previewMedia, downloadMedia
+} = useMedia()
 ```
 
-### 3. 如何处理Composable中的错误？
+## 🎯 使用规范
 
+### 命名规范
+- 组合式函数以 `use` 开头，如 `useCountdown`
+- 文件名与函数名一致
+
+### 函数结构
 ```javascript
-export function useMyComposable() {
-  const error = ref(null)
-  
-  const fetchData = async () => {
-    try {
-      // API调用
-    } catch (err) {
-      error.value = err
-      console.error('请求失败:', err)
-    }
-  }
-  
-  return { error, fetchData }
-}
-```
+import { ref, computed, onMounted } from 'vue'
 
-### 4. 如何实现Composable的清理逻辑？
-
-```javascript
-import { onUnmounted } from 'vue'
-
-export function useMyComposable() {
-  const timer = ref(null)
+export function useMyFeature(param) {
+  // 响应式状态
+  const state = ref(null)
   
-  const startTimer = () => {
-    timer.value = setInterval(() => {}, 1000)
-  }
-  
-  // 组件卸载时清理
-  onUnmounted(() => {
-    if (timer.value) {
-      clearInterval(timer.value)
-    }
+  // 计算属性
+  const computedValue = computed(() => {
+    return state.value * 2
   })
   
-  return { startTimer }
+  // 方法
+  const doSomething = () => {
+    state.value = 'new value'
+  }
+  
+  // 生命周期
+  onMounted(() => {
+    // 初始化逻辑
+  })
+  
+  // 返回需要暴露的内容
+  return {
+    state,
+    computedValue,
+    doSomething
+  }
 }
 ```
 
----
+### 最佳实践
+1. **单一职责**: 每个组合式函数只负责一个功能
+2. **参数验证**: 对传入参数进行验证
+3. **返回值**: 返回响应式引用和方法
+4. **命名清晰**: 函数和变量名要有意义
 
-**最后更新时间**: 2026年3月30日
+## 📚 扩展阅读
+
+- [Vue 3 组合式函数](https://cn.vuejs.org/guide/reusability/composables.html)
+- [Vue 3 响应式 API](https://cn.vuejs.org/api/reactivity-core.html)
