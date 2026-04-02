@@ -3,6 +3,8 @@
     class="dong-app"
     :class="{ 'admin-layout': isAdminPage }"
   >
+    <PageLoading :visible="pageLoading" />
+    
     <AppHeader
       v-if="!isAdminPage && !isNotFoundPage"
       :is-logged-in="isLoggedIn"
@@ -149,6 +151,7 @@ import AppHeader from "@/components/business/layout/AppHeader.vue"
 import AppFooter from "@/components/business/layout/AppFooter.vue"
 import ErrorBoundary from "@/components/base/ErrorBoundary.vue"
 import CaptchaInput from "@/components/business/interact/CaptchaInput.vue"
+import PageLoading from "@/components/common/PageLoading.vue"
 import request from "@/utils/request"
 import { useUserStore } from "@/stores/user"
 import { logFetchError } from "@/utils"
@@ -167,6 +170,19 @@ onMounted(() => {
   userStore.initialize()
 })
 
+router.beforeEach((to, from, next) => {
+  if (to.path !== from.path) {
+    pageLoading.value = true
+  }
+  next()
+})
+
+router.afterEach(() => {
+  setTimeout(() => {
+    pageLoading.value = false
+  }, 100)
+})
+
 watch(() => userStore.isLoggedIn, (newVal) => {
   if (!newVal && route.meta.requiresAuth) {
     router.push("/")
@@ -180,6 +196,7 @@ provide("updateUserState", () => userStore.initialize())
 
 const showLoginDialog = ref(false)
 const showRegisterDialog = ref(false)
+const pageLoading = ref(false)
 
 provide("showLoginDialog", () => { showLoginDialog.value = true })
 
