@@ -137,7 +137,7 @@ import {
   GRADIENT_COLORS, baseTooltip, baseGrid, baseXAxis, baseYAxis,
   createBarSeries, createMultiColorBarSeries, createLineSeries, createPieSeries, createRadarSeries
 } from "@/utils/chartConfig";
-import "./Visual.css";
+import "@/styles/Visual.css";
 
 const request = inject("request");
 const { loading: chartLoading, stats, chartData, regionList, fetchData } = useVisualData(request);
