@@ -15,7 +15,7 @@
           @filter="handleFilter"
         />
 
-        <SkeletonGrid
+        <SkeletonList
           v-if="pageLoading"
           :count="6"
         />
@@ -91,7 +91,7 @@ import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import ResourceDetailDialog from "@/components/business/dialogs/ResourceDetailDialog.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
-import SkeletonGrid from "@/components/common/SkeletonGrid.vue";
+import SkeletonList from "@/components/common/SkeletonList.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
 import { extractPageData, extractData } from "@/utils";
 import { parseMediaList } from "@/utils/media";
