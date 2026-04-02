@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="pageLoading" class="personal-center module-page">
+  <div class="personal-center module-page">
     <div class="module-header">
       <h1>个人中心</h1>
       <p class="subtitle">

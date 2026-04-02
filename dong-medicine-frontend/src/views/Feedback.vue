@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="feedback-page module-page"
-  >
+  <div class="feedback-page module-page">
     <div class="module-header">
       <h1>意见反馈</h1>
       <p class="subtitle">

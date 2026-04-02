@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="visual-page module-page"
-  >
+  <div class="visual-page module-page">
     <div class="module-header">
       <h1>数据可视化</h1>
       <p class="subtitle">地域分布可视化 · 使用频次统计 · 传承人分布</p>

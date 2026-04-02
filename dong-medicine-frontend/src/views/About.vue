@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="about-page module-page"
-  >
+  <div class="about-page module-page">
     <div class="about-hero">
       <div class="hero-bg" />
       <div class="hero-content">

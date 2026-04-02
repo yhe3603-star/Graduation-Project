@@ -1,9 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="interact-page module-page"
-    element-loading-text="加载中..."
-  >
+  <div class="interact-page module-page">
     <div class="module-header">
       <h1>文化互动专区</h1>
       <p class="subtitle">
