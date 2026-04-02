@@ -5,6 +5,8 @@
 ## 目录
 
 - [项目概述](#项目概述)
+- [新手入门指南](#新手入门指南)
+- [Spring Boot 基础概念](#spring-boot-基础概念)
 - [技术栈](#技术栈)
 - [项目结构](#项目结构)
 - [API 接口](#api-接口)
@@ -15,6 +17,7 @@
 - [性能优化](#性能优化)
 - [快速开始](#快速开始)
 - [Docker 部署](#docker-部署)
+- [常见问题](#常见问题)
 
 ---
 
@@ -37,20 +40,516 @@
 
 ---
 
+## 新手入门指南
+
+### 我应该从哪里开始？
+
+如果你是第一次接触后端开发，建议按照以下顺序学习：
+
+```
+第1步：学习 Java 基础 → 了解面向对象编程
+第2步：学习 Spring Boot 基础 → 阅读"Spring Boot 基础概念"
+第3步：理解项目架构 → 阅读"项目结构"
+第4步：搭建开发环境 → 按照"快速开始"操作
+第5步：运行项目 → 启动后端服务
+第6步：阅读代码 → 从简单模块开始，逐步深入
+```
+
+### 学习路线图
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        后端学习路线图                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  基础阶段:                                                       │
+│  Java基础 → 面向对象 → 集合框架 → 异常处理                         │
+│                                                                 │
+│  框架阶段:                                                       │
+│  Spring Boot基础 → Spring Security → MyBatis Plus                │
+│                                                                 │
+│  数据库阶段:                                                     │
+│  SQL基础 → MySQL使用 → 数据库设计 → 索引优化                       │
+│                                                                 │
+│  进阶阶段:                                                       │
+│  Redis缓存 → JWT认证 → RESTful API → 项目实战                     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 推荐学习资源
+
+| 学习内容 | 推荐资源 | 链接 |
+|---------|---------|------|
+| Java 基础 | 菜鸟教程 | https://www.runoob.com/java/ |
+| Spring Boot | Spring 官方指南 | https://spring.io/guides |
+| MyBatis Plus | MyBatis Plus 官方文档 | https://baomidou.com/ |
+| MySQL | MySQL 教程 | https://www.runoob.com/mysql/mysql-tutorial.html |
+
+---
+
+## Spring Boot 基础概念
+
+### 什么是 Spring Boot？
+
+Spring Boot 是一个用于简化 Spring 应用开发的框架。它提供了：
+- **自动配置**：根据依赖自动配置 Spring 应用
+- **起步依赖**：一个依赖包含多个相关依赖
+- **内嵌服务器**：内置 Tomcat，无需部署 WAR 文件
+- **生产就绪**：提供健康检查、指标监控等功能
+
+**通俗理解**：Spring Boot 就像是一个"预制好的房子框架"，它已经帮你搭好了地基、墙壁、屋顶，你只需要往里面放家具（业务代码）就行了。
+
+### 项目结构层次
+
+本项目采用经典的三层架构：
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        三层架构示意图                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    Controller 层                         │   │
+│  │                    （控制器层）                           │   │
+│  │  ┌─────────────────────────────────────────────────┐    │   │
+│  │  │  职责：接收HTTP请求，调用Service，返回响应        │    │   │
+│  │  │  注解：@RestController, @GetMapping, @PostMapping│    │   │
+│  │  │  示例：UserController, PlantController           │    │   │
+│  │  └─────────────────────────────────────────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                     Service 层                          │   │
+│  │                    （服务层）                            │   │
+│  │  ┌─────────────────────────────────────────────────┐    │   │
+│  │  │  职责：处理业务逻辑，调用Mapper                    │    │   │
+│  │  │  注解：@Service                                  │    │   │
+│  │  │  示例：UserService, PlantService                 │    │   │
+│  │  └─────────────────────────────────────────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                     Mapper 层                           │   │
+│  │                   （数据访问层）                          │   │
+│  │  ┌─────────────────────────────────────────────────┐    │   │
+│  │  │  职责：与数据库交互，执行SQL语句                   │    │   │
+│  │  │  注解：@Mapper                                   │    │   │
+│  │  │  示例：UserMapper, PlantMapper                   │    │   │
+│  │  └─────────────────────────────────────────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    数据库 (MySQL)                        │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 常用注解说明
+
+#### 1. 控制器注解
+
+```java
+// @RestController - 标记这是一个控制器类
+// 相当于 @Controller + @ResponseBody，方法返回值自动转为JSON
+@RestController
+@RequestMapping("/api/users")  // 设置这个控制器的基础路径
+public class UserController {
+    
+    // @GetMapping - 处理GET请求
+    // 访问路径：GET /api/users/list
+    @GetMapping("/list")
+    public R<List<User>> list() {
+        return R.ok(userService.list());
+    }
+    
+    // @PostMapping - 处理POST请求
+    // 访问路径：POST /api/users/add
+    @PostMapping("/add")
+    public R<String> add(@RequestBody UserDTO dto) {
+        userService.add(dto);
+        return R.ok("添加成功");
+    }
+    
+    // @PutMapping - 处理PUT请求（更新）
+    @PutMapping("/update")
+    public R<String> update(@RequestBody UserDTO dto) {
+        userService.update(dto);
+        return R.ok("更新成功");
+    }
+    
+    // @DeleteMapping - 处理DELETE请求
+    // {id} 是路径变量
+    @DeleteMapping("/{id}")
+    public R<String> delete(@PathVariable Integer id) {
+        userService.delete(id);
+        return R.ok("删除成功");
+    }
+}
+```
+
+#### 2. 参数注解
+
+```java
+@RestController
+@RequestMapping("/api/example")
+public class ExampleController {
+    
+    // @PathVariable - 获取URL路径中的变量
+    // 访问：GET /api/example/user/123
+    @GetMapping("/user/{id}")
+    public R<User> getById(@PathVariable Integer id) {
+        // id = 123
+        return R.ok(userService.getById(id));
+    }
+    
+    // @RequestParam - 获取URL查询参数
+    // 访问：GET /api/example/search?keyword=张三&page=1
+    @GetMapping("/search")
+    public R<List<User>> search(
+        @RequestParam String keyword,           // 必需参数
+        @RequestParam(defaultValue = "1") int page,  // 有默认值
+        @RequestParam(required = false) Integer size  // 可选参数
+    ) {
+        return R.ok(userService.search(keyword, page, size));
+    }
+    
+    // @RequestBody - 获取请求体中的JSON数据
+    // 前端发送：POST /api/example/add
+    // Body: {"name": "张三", "age": 25}
+    @PostMapping("/add")
+    public R<String> add(@RequestBody UserDTO dto) {
+        // dto.getName() = "张三"
+        // dto.getAge() = 25
+        return R.ok("添加成功");
+    }
+}
+```
+
+#### 3. 服务层注解
+
+```java
+// @Service - 标记这是一个服务类
+@Service
+// @RequiredArgsConstructor - Lombok注解，生成构造函数
+// 用于依赖注入，替代@Autowired
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+    
+    // 通过构造函数注入Mapper
+    private final UserMapper userMapper;
+    
+    // @Transactional - 开启事务
+    // 方法执行成功自动提交，抛出异常自动回滚
+    @Transactional
+    public void addUser(UserDTO dto) {
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        userMapper.insert(user);
+        // 如果这里抛出异常，上面的insert会回滚
+    }
+}
+```
+
+#### 4. 数据访问注解
+
+```java
+// @Mapper - 标记这是一个MyBatis Mapper接口
+@Mapper
+public interface UserMapper {
+    
+    // MyBatis Plus 提供的基础方法，无需写SQL：
+    // - insert(entity) 插入
+    // - deleteById(id) 根据ID删除
+    // - updateById(entity) 根据ID更新
+    // - selectById(id) 根据ID查询
+    // - selectList(wrapper) 条件查询列表
+    // - selectPage(page, wrapper) 分页查询
+    
+    // 自定义SQL查询
+    @Select("SELECT * FROM users WHERE username = #{username}")
+    User findByUsername(@Param("username") String username);
+    
+    // 自定义更新
+    @Update("UPDATE users SET status = #{status} WHERE id = #{id}")
+    int updateStatus(@Param("id") Integer id, @Param("status") Integer status);
+}
+```
+
+### 实体类 (Entity)
+
+实体类对应数据库中的表：
+
+```java
+// @Data - Lombok注解，自动生成getter/setter/toString等方法
+@Data
+// @TableName - 指定对应的数据库表名
+@TableName("users")
+public class User {
+    
+    // @TableId - 标记主键
+    // type = IdType.AUTO 表示自增
+    @TableId(type = IdType.AUTO)
+    private Integer id;
+    
+    // 普通字段，对应数据库的username列
+    private String username;
+    
+    // @TableField - 字段映射配置
+    // fill = FieldFill.INSERT 表示插入时自动填充
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+    
+    // @TableLogic - 逻辑删除字段
+    // 删除时不是真删除，而是把这个字段设为1
+    @TableLogic
+    private Integer deleted;
+    
+    // @Version - 乐观锁版本号
+    @Version
+    private Integer version;
+}
+```
+
+### DTO (数据传输对象)
+
+DTO用于接收前端传递的数据：
+
+```java
+@Data
+public class UserDTO {
+    
+    // @NotBlank - 字符串不能为空
+    @NotBlank(message = "用户名不能为空")
+    // @Size - 限制长度
+    @Size(min = 2, max = 20, message = "用户名长度为2-20个字符")
+    private String username;
+    
+    // @Pattern - 正则表达式验证
+    @Pattern(regexp = "^[a-zA-Z0-9]{8,20}$", message = "密码必须是8-20位字母数字")
+    private String password;
+    
+    // @Email - 邮箱格式验证
+    @Email(message = "邮箱格式不正确")
+    private String email;
+    
+    // @Min, @Max - 数字范围验证
+    @Min(value = 0, message = "年龄不能小于0")
+    @Max(value = 150, message = "年龄不能大于150")
+    private Integer age;
+}
+```
+
+### 统一响应格式
+
+所有API返回统一的JSON格式：
+
+```java
+// R.java - 统一响应封装类
+@Data
+public class R<T> {
+    private int code;        // 状态码：200成功，其他失败
+    private String msg;      // 消息
+    private T data;          // 数据
+    private String requestId; // 请求追踪ID
+    
+    // 成功响应
+    public static <T> R<T> ok(T data) {
+        R<T> r = new R<>();
+        r.setCode(200);
+        r.setMsg("success");
+        r.setData(data);
+        return r;
+    }
+    
+    // 失败响应
+    public static <T> R<T> fail(String msg) {
+        R<T> r = new R<>();
+        r.setCode(500);
+        r.setMsg(msg);
+        return r;
+    }
+}
+```
+
+**使用示例：**
+
+```java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    
+    @GetMapping("/{id}")
+    public R<User> getById(@PathVariable Integer id) {
+        User user = userService.getById(id);
+        if (user == null) {
+            return R.fail("用户不存在");
+        }
+        return R.ok(user);
+    }
+}
+```
+
+**返回结果：**
+
+```json
+// 成功
+{
+    "code": 200,
+    "msg": "success",
+    "data": {
+        "id": 1,
+        "username": "张三"
+    },
+    "requestId": "abc123"
+}
+
+// 失败
+{
+    "code": 500,
+    "msg": "用户不存在",
+    "data": null,
+    "requestId": "abc123"
+}
+```
+
+### 异常处理
+
+使用全局异常处理器统一处理异常：
+
+```java
+// @RestControllerAdvice - 全局异常处理器
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    
+    // 处理业务异常
+    @ExceptionHandler(BusinessException.class)
+    public R<String> handleBusinessException(BusinessException e) {
+        return R.fail(e.getMessage());
+    }
+    
+    // 处理参数校验异常
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public R<String> handleValidException(MethodArgumentNotValidException e) {
+        // 获取第一个错误信息
+        String message = e.getBindingResult().getFieldError().getDefaultMessage();
+        return R.fail(message);
+    }
+    
+    // 处理其他异常
+    @ExceptionHandler(Exception.class)
+    public R<String> handleException(Exception e) {
+        log.error("系统异常", e);
+        return R.fail("系统繁忙，请稍后重试");
+    }
+}
+```
+
+### 配置文件
+
+Spring Boot 使用 `application.yml` 作为配置文件：
+
+```yaml
+# application.yml - 主配置文件
+
+# 服务器配置
+server:
+  port: 8080  # 服务端口
+
+# Spring配置
+spring:
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/dong_medicine
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 100MB      # 单个文件最大大小
+      max-request-size: 100MB   # 总请求最大大小
+
+# MyBatis Plus配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 打印SQL日志
+  global-config:
+    db-config:
+      logic-delete-field: deleted  # 逻辑删除字段
+
+# 日志配置
+logging:
+  level:
+    com.dongmedicine: DEBUG  # 项目日志级别
+```
+
+### MyBatis Plus 查询
+
+MyBatis Plus 提供了强大的查询构造器：
+
+```java
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+    
+    private final UserMapper userMapper;
+    
+    // 条件查询
+    public List<User> search(String keyword, Integer status) {
+        // LambdaQueryWrapper - 使用Lambda表达式构造查询条件
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        
+        // like - 模糊查询
+        wrapper.like(StringUtils.hasText(keyword), User::getUsername, keyword);
+        // eq - 等于
+        wrapper.eq(status != null, User::getStatus, status);
+        // orderByDesc - 降序排序
+        wrapper.orderByDesc(User::getCreatedAt);
+        
+        return userMapper.selectList(wrapper);
+    }
+    
+    // 分页查询
+    public Page<User> page(int pageNum, int pageSize, String keyword) {
+        Page<User> page = new Page<>(pageNum, pageSize);
+        
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StringUtils.hasText(keyword), User::getUsername, keyword);
+        
+        return userMapper.selectPage(page, wrapper);
+    }
+}
+```
+
+---
+
 ## 技术栈
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| Spring Boot | 3.1.12 | 基础框架 |
-| Spring Security | - | 安全认证 |
-| MyBatis Plus | 3.5.9 | ORM框架 |
-| MySQL | 8.0+ | 数据库 |
-| Redis | 7.0+ | 分布式缓存 |
-| Caffeine | 3.1+ | 本地缓存 |
-| JWT (jjwt) | 0.11.5 | Token认证 |
-| SpringDoc | 2.2.0 | API文档 |
-| Lombok | 1.18.38 | 简化代码 |
-| Docker | - | 容器化部署 |
+| 技术 | 版本 | 用途 | 通俗解释 |
+|------|------|------|----------|
+| Spring Boot | 3.1.12 | 基础框架 | 快速构建后端应用 |
+| Spring Security | - | 安全框架 | 处理用户登录权限 |
+| MyBatis Plus | 3.5.9 | ORM 框架 | 操作数据库 |
+| MySQL | 8.0+ | 数据库 | 存储数据 |
+| Redis | 7.0+ | 缓存数据库 | 快速存取临时数据 |
+| Caffeine | 3.1+ | 本地缓存 | 内存中的快速缓存 |
+| JWT (jjwt) | 0.11.5 | Token 认证 | 用户身份认证 |
+| SpringDoc | 2.2.0 | API 文档 | 自动生成API文档 |
+| Lombok | 1.18.38 | 简化代码 | 自动生成getter/setter |
+| Docker | - | 容器化 | 打包部署 |
 
 ---
 
@@ -66,159 +565,40 @@ dong-medicine-backend/
 │   │   │   └── RoleConstants.java       # 角色常量 (USER, ADMIN)
 │   │   │
 │   │   ├── exception/                   # 异常处理
-│   │   │   ├── BusinessException.java        # 业务异常类
-│   │   │   ├── ErrorCode.java                # 错误码定义
-│   │   │   └── GlobalExceptionHandler.java  # 全局异常处理器
+│   │   │   ├── BusinessException.java      # 业务异常类
+│   │   │   ├── ErrorCode.java              # 错误码定义
+│   │   │   └── GlobalExceptionHandler.java # 全局异常处理器
 │   │   │
 │   │   ├── util/                        # 工具类
-│   │   │   ├── FileCleanupHelper.java        # 文件清理助手
-│   │   │   ├── FileTypeUtils.java            # 文件类型工具
-│   │   │   ├── PageUtils.java                # 分页工具 + LIKE转义
-│   │   │   ├── PasswordValidator.java        # 密码验证器
-│   │   │   ├── SensitiveDataUtils.java       # 敏感信息脱敏
-│   │   │   └── XssUtils.java                 # XSS防护工具
+│   │   │   ├── FileCleanupHelper.java      # 文件清理助手
+│   │   │   ├── FileTypeUtils.java          # 文件类型工具
+│   │   │   ├── PageUtils.java              # 分页工具
+│   │   │   ├── PasswordValidator.java      # 密码验证器
+│   │   │   ├── SensitiveDataUtils.java     # 敏感信息脱敏
+│   │   │   └── XssUtils.java               # XSS防护工具
 │   │   │
-│   │   ├── R.java                       # 统一响应封装(含requestId)
+│   │   ├── R.java                       # 统一响应封装
 │   │   └── SecurityUtils.java           # 安全工具类
 │   │
 │   ├── config/                          # 配置模块
 │   │   ├── health/                      # 健康检查
-│   │   │   ├── CacheHealthIndicator.java     # 缓存健康检查
-│   │   │   ├── DatabaseHealthIndicator.java  # 数据库健康检查
-│   │   │   └── RedisHealthIndicator.java     # Redis健康检查
-│   │   │
 │   │   ├── logging/                     # 日志配置
-│   │   │   └── SensitiveDataConverter.java   # 敏感数据转换器
-│   │   │
-│   │   ├── AdminDataInitializer.java    # 管理员数据初始化
-│   │   ├── AppProperties.java           # 应用属性配置
-│   │   ├── AsyncConfig.java             # 异步配置
-│   │   ├── CacheConfig.java             # 缓存配置 (Redis + Caffeine)
-│   │   ├── CustomUserDetails.java       # 用户详情实现
-│   │   ├── DeepSeekConfig.java          # DeepSeek AI 配置
-│   │   ├── FileUploadProperties.java    # 文件上传属性
-│   │   ├── JwtAuthenticationFilter.java # JWT认证过滤器
-│   │   ├── JwtSecretValidator.java      # JWT密钥验证器
-│   │   ├── JwtUtil.java                 # JWT工具类
-│   │   ├── LoggingAspect.java           # 日志切面
-│   │   ├── MybatisPlusConfig.java       # MyBatis Plus 配置
-│   │   ├── OpenApiConfig.java           # OpenAPI 配置
-│   │   ├── OperationLogAspect.java      # 操作日志切面
-│   │   ├── RateLimit.java               # 限流注解
-│   │   ├── RateLimitAspect.java         # 限流切面 (含本地令牌桶降级)
-│   │   ├── RequestIdFilter.java         # 请求追踪ID过滤器
-│   │   ├── RequestSizeFilter.java       # 请求体大小限制过滤器
 │   │   ├── SecurityConfig.java          # Spring Security 配置
-│   │   ├── SecurityConfigValidator.java # 安全配置验证器
-│   │   ├── StartupInfoPrinter.java      # 启动信息打印
-│   │   ├── WebMvcConfig.java            # Web MVC 配置
-│   │   └── XssFilter.java               # XSS 过滤器
+│   │   ├── JwtUtil.java                 # JWT 工具类
+│   │   ├── CacheConfig.java             # 缓存配置
+│   │   └── ...                          # 其他配置类
 │   │
 │   ├── controller/                      # 控制器层 (17个)
-│   │   ├── AdminController.java         # 管理后台接口
-│   │   ├── CaptchaController.java       # 验证码接口
-│   │   ├── ChatController.java          # AI聊天接口
-│   │   ├── CommentController.java       # 评论接口
-│   │   ├── FavoriteController.java      # 收藏接口
-│   │   ├── FeedbackController.java      # 反馈接口
-│   │   ├── FileUploadController.java    # 文件上传接口
-│   │   ├── InheritorController.java     # 传承人接口
-│   │   ├── KnowledgeController.java     # 知识库接口
-│   │   ├── LeaderboardController.java   # 排行榜接口
-│   │   ├── OperationLogController.java  # 操作日志接口
-│   │   ├── PlantController.java         # 药用植物接口
-│   │   ├── PlantGameController.java     # 植物游戏接口
-│   │   ├── QaController.java            # 常见问答接口
-│   │   ├── QuizController.java          # 测验接口
-│   │   ├── ResourceController.java      # 学习资源接口
-│   │   └── UserController.java          # 用户接口
+│   │   ├── UserController.java          # 用户接口
+│   │   ├── PlantController.java         # 植物接口
+│   │   └── ...                          # 其他控制器
 │   │
 │   ├── dto/                             # 数据传输对象 (18个)
-│   │   ├── AnswerDTO.java               # 答案DTO
-│   │   ├── CaptchaDTO.java              # 验证码DTO
-│   │   ├── ChangePasswordDTO.java       # 修改密码DTO
-│   │   ├── ChatRequest.java             # AI聊天请求(含长度限制)
-│   │   ├── ChatResponse.java            # AI聊天响应
-│   │   ├── CommentAddDTO.java           # 添加评论DTO
-│   │   ├── CommentDTO.java              # 评论DTO
-│   │   ├── FeedbackDTO.java             # 反馈DTO
-│   │   ├── FeedbackReplyDTO.java        # 反馈回复DTO
-│   │   ├── FileUploadResult.java        # 文件上传结果
-│   │   ├── InheritorDTO.java            # 传承人DTO
-│   │   ├── KnowledgeDTO.java            # 知识DTO
-│   │   ├── LoginDTO.java                # 登录DTO
-│   │   ├── PlantDTO.java                # 植物DTO
-│   │   ├── PlantGameSubmitDTO.java      # 植物游戏提交DTO
-│   │   ├── QuizQuestionDTO.java         # 测验问题DTO
-│   │   ├── QuizSubmitDTO.java           # 测验提交DTO
-│   │   ├── RegisterDTO.java             # 注册DTO
-│   │   └── UserUpdateDTO.java           # 用户更新DTO
-│   │
 │   ├── entity/                          # 实体类 (13个)
-│   │   ├── Comment.java                 # 评论
-│   │   ├── Favorite.java                # 收藏
-│   │   ├── Feedback.java                # 反馈
-│   │   ├── Inheritor.java               # 传承人
-│   │   ├── Knowledge.java               # 知识
-│   │   ├── OperationLog.java            # 操作日志
-│   │   ├── Plant.java                   # 药用植物
-│   │   ├── PlantGameRecord.java         # 植物游戏记录
-│   │   ├── Qa.java                      # 常见问答
-│   │   ├── QuizQuestion.java            # 测验问题
-│   │   ├── QuizRecord.java              # 测验记录
-│   │   ├── Resource.java                # 学习资源
-│   │   └── User.java                    # 用户
-│   │
 │   ├── mapper/                          # 数据访问层 (13个)
-│   │   ├── CommentMapper.java
-│   │   ├── FavoriteMapper.java
-│   │   ├── FeedbackMapper.java
-│   │   ├── InheritorMapper.java
-│   │   ├── KnowledgeMapper.java
-│   │   ├── OperationLogMapper.java
-│   │   ├── PlantGameRecordMapper.java
-│   │   ├── PlantMapper.java
-│   │   ├── QaMapper.java
-│   │   ├── QuizQuestionMapper.java
-│   │   ├── QuizRecordMapper.java
-│   │   ├── ResourceMapper.java
-│   │   └── UserMapper.java
-│   │
 │   ├── service/                         # 服务层
 │   │   ├── impl/                        # 服务实现 (15个)
-│   │   │   ├── AiChatServiceImpl.java        # AI聊天服务
-│   │   │   ├── CommentServiceImpl.java       # 评论服务
-│   │   │   ├── FavoriteServiceImpl.java      # 收藏服务
-│   │   │   ├── FeedbackServiceImpl.java      # 反馈服务
-│   │   │   ├── FileUploadServiceImpl.java    # 文件上传服务
-│   │   │   ├── InheritorServiceImpl.java     # 传承人服务
-│   │   │   ├── KnowledgeServiceImpl.java     # 知识服务
-│   │   │   ├── OperationLogServiceImpl.java  # 操作日志服务
-│   │   │   ├── PlantGameServiceImpl.java     # 植物游戏服务
-│   │   │   ├── PlantServiceImpl.java         # 植物服务
-│   │   │   ├── QaServiceImpl.java            # 问答服务
-│   │   │   ├── QuizServiceImpl.java          # 测验服务
-│   │   │   ├── ResourceServiceImpl.java      # 资源服务
-│   │   │   ├── TokenBlacklistServiceImpl.java # Token黑名单服务
-│   │   │   └── UserServiceImpl.java          # 用户服务
-│   │   │
-│   │   ├── AiChatService.java           # AI聊天服务接口
-│   │   ├── CaptchaService.java          # 验证码服务接口
-│   │   ├── CommentService.java          # 评论服务接口
-│   │   ├── FavoriteService.java         # 收藏服务接口
-│   │   ├── FeedbackService.java         # 反馈服务接口
-│   │   ├── FileUploadService.java       # 文件上传服务接口
-│   │   ├── InheritorService.java        # 传承人服务接口
-│   │   ├── KnowledgeService.java        # 知识服务接口
-│   │   ├── OperationLogService.java     # 操作日志服务接口
-│   │   ├── PlantGameService.java        # 植物游戏服务接口
-│   │   ├── PlantService.java            # 植物服务接口
-│   │   ├── QaService.java               # 问答服务接口
-│   │   ├── QuizService.java             # 测验服务接口
-│   │   ├── ResourceService.java         # 资源服务接口
-│   │   ├── TokenBlacklistService.java   # Token黑名单服务接口
-│   │   └── UserService.java             # 用户服务接口
-│   │
+│   │   └── *Service.java                # 服务接口
 │   └── DongMedicineBackendApplication.java  # 应用入口
 │
 ├── src/main/resources/
@@ -239,27 +619,23 @@ dong-medicine-backend/
 │   │   ├── knowledge/                   # 知识图片
 │   │   └── common/                      # 公共图片
 │   └── documents/                       # 文档资源
-│       ├── xlsx/                        # Excel文档
-│           ├── plants/
-│           ├── inheritors/
-│           ├── knowledge/
-│           └── resources/
-│       └── common/                      # 公共文档
 │
 ├── test/                                # 测试目录
-│   └── java/com/dongmedicine/
-│       ├── common/                      # 公共模块测试
-│       ├── config/                      # 配置测试
-│       ├── controller/                  # 控制器测试
-│       └── service/                     # 服务测试
-│
-├── .dockerignore                        # Docker 忽略文件
-├── .gitignore                           # Git 忽略文件
 ├── Dockerfile                           # Docker 构建文件
-├── mvnw                                 # Maven Wrapper (Unix)
-├── mvnw.cmd                             # Maven Wrapper (Windows)
 └── pom.xml                              # Maven 配置
 ```
+
+### 目录职责说明
+
+| 目录 | 职责 | 通俗解释 |
+|------|------|----------|
+| `controller/` | 控制器层 | 接收HTTP请求，返回响应 |
+| `service/` | 服务层 | 处理业务逻辑 |
+| `mapper/` | 数据访问层 | 操作数据库 |
+| `entity/` | 实体类 | 对应数据库表 |
+| `dto/` | 数据传输对象 | 接收前端数据 |
+| `config/` | 配置类 | 各种配置 |
+| `common/` | 公共模块 | 工具类、常量、异常处理 |
 
 ---
 
@@ -302,8 +678,6 @@ dong-medicine-backend/
 | GET | `/search` | 高级搜索(支持疗法/疾病分类) | 公开 |
 | GET | `/{id}` | 知识详情 | 公开 |
 | POST | `/{id}/view` | 增加浏览次数 | 公开 |
-| POST | `/favorite/{id}` | 收藏知识 | 需登录 |
-| POST | `/feedback` | 提交反馈 | 公开 |
 
 ### 传承人模块 `/api/inheritors`
 
@@ -732,37 +1106,6 @@ private static class LocalTokenBucket {
 }
 ```
 
-### 7. 请求追踪
-
-```java
-// RequestIdFilter.java
-// - 每个请求分配唯一requestId
-// - 通过MDC传递给日志系统
-// - 响应头返回X-Request-ID
-
-MDC.put("requestId", requestId);
-response.setHeader("X-Request-ID", requestId);
-```
-
-### 8. 统一响应格式
-
-```java
-// R.java
-public class R<T> {
-    private int code;
-    private String msg;
-    private T data;
-    private String requestId;  // 请求追踪ID
-}
-```
-
-### 9. 敏感信息脱敏
-
-```java
-// SensitiveDataUtils.java
-// 自动脱敏：手机号、邮箱、身份证、银行卡、JWT Token、SQL参数
-```
-
 ---
 
 ## 性能优化
@@ -771,6 +1114,7 @@ public class R<T> {
 
 ```
 请求 → Caffeine本地缓存 → Redis分布式缓存 → MySQL数据库
+         (毫秒级)            (毫秒级)          (秒级)
 ```
 
 ### 2. 缓存配置
@@ -860,14 +1204,75 @@ docker-compose up -d --build
 
 ---
 
-## 日志示例
+## 常见问题
 
+### 1. 后端启动失败 - 数据库连接错误
+
+**错误信息**：`Communications link failure`
+
+**解决方案**：
+- 检查MySQL是否启动
+- 检查数据库连接配置是否正确
+- 检查数据库是否存在
+
+```bash
+# 检查MySQL状态
+mysql -u root -p -e "SHOW DATABASES;"
 ```
-2024-01-15 10:30:45.123 [a1b2c3d4e5f6g7h8] INFO  c.d.controller.UserController - 用户登录成功: userId=1
-2024-01-15 10:30:46.456 [a1b2c3d4e5f6g7h8] WARN  c.d.config.RateLimitAspect - 请求过于频繁: login:192.168.1.100
-2024-01-15 10:30:47.789 [b2c3d4e5f6g7h8i9] INFO  c.d.service.impl.AiChatServiceImpl - AI聊天请求: messageLength=50
+
+### 2. Redis 连接失败
+
+**错误信息**：`Unable to connect to Redis`
+
+**解决方案**：
+- 检查Redis是否启动
+- 检查Redis配置是否正确
+
+```bash
+# 检查Redis状态
+redis-cli ping
+# 应该返回 PONG
 ```
+
+### 3. JWT 密钥验证失败
+
+**原因**：生产环境 JWT 密钥要求较高
+
+**要求**：
+- 至少 64 个字符
+- 包含大写字母、小写字母、数字、特殊字符
+- 不能包含 "secret" 等常见单词
+
+### 4. 端口被占用
+
+**错误信息**：`Port 8080 already in use`
+
+**解决方案**：
+
+```bash
+# Windows - 查找占用端口的进程
+netstat -ano | findstr :8080
+
+# 结束进程
+taskkill /PID <进程ID> /F
+
+# Linux/Mac
+lsof -i :8080
+kill -9 <PID>
+```
+
+### 5. 文件上传失败
+
+**可能原因**：
+1. 文件大小超过限制
+2. 文件类型不支持
+3. 磁盘空间不足
+
+**解决方案**：
+- 图片限制：10MB
+- 视频限制：100MB
+- 文档限制：50MB
 
 ---
 
-**最后更新时间**：2026年3月30日
+**最后更新时间**：2026年4月3日

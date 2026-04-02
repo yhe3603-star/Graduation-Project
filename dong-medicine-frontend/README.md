@@ -5,6 +5,8 @@
 ## 目录
 
 - [项目概述](#项目概述)
+- [新手入门指南](#新手入门指南)
+- [Vue 3 基础概念](#vue-3-基础概念)
 - [技术栈](#技术栈)
 - [项目结构](#项目结构)
 - [页面组件](#页面组件)
@@ -17,6 +19,7 @@
 - [样式系统](#样式系统)
 - [快速开始](#快速开始)
 - [Docker 部署](#docker-部署)
+- [常见问题](#常见问题)
 
 ---
 
@@ -36,18 +39,607 @@
 
 ---
 
+## 新手入门指南
+
+### 我应该从哪里开始？
+
+如果你是第一次接触前端开发，建议按照以下顺序学习：
+
+```
+第1步：学习 HTML/CSS 基础 → 了解网页结构和样式
+第2步：学习 JavaScript 基础 → 了解网页交互逻辑
+第3步：学习 Vue 3 基础 → 阅读"Vue 3 基础概念"
+第4步：理解项目结构 → 阅读"项目结构"
+第5步：运行项目 → 按照"快速开始"操作
+第6步：阅读代码 → 从简单组件开始，逐步深入
+```
+
+### 学习路线图
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        前端学习路线图                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  基础阶段:                                                       │
+│  HTML → CSS → JavaScript → ES6+语法                             │
+│                                                                 │
+│  框架阶段:                                                       │
+│  Vue 3基础 → Vue Router → Pinia → 组件开发                       │
+│                                                                 │
+│  工具阶段:                                                       │
+│  Vite → Element Plus → ECharts → Axios                          │
+│                                                                 │
+│  实战阶段:                                                       │
+│  本项目代码阅读 → 修改组件 → 开发新功能                            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 推荐学习资源
+
+| 学习内容 | 推荐资源 | 链接 |
+|---------|---------|------|
+| HTML/CSS | 菜鸟教程 | https://www.runoob.com/html/html-tutorial.html |
+| JavaScript | MDN Web Docs | https://developer.mozilla.org/zh-CN/docs/Web/JavaScript |
+| Vue 3 | Vue.js 官方中文教程 | https://cn.vuejs.org/tutorial/ |
+| Element Plus | Element Plus 文档 | https://element-plus.org/zh-CN/ |
+
+---
+
+## Vue 3 基础概念
+
+### 什么是 Vue？
+
+Vue 是一个用于构建用户界面的 JavaScript 框架。它基于标准 HTML、CSS 和 JavaScript 构建，并提供了一套声明式的、组件化的编程模型。
+
+**通俗理解**：Vue 就像是一个"智能模板"，你可以告诉它"这里显示用户名"，当用户名变化时，它会自动更新显示。
+
+### Vue 应用的基本结构
+
+一个 Vue 应用由两部分组成：
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Vue 应用结构                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. 模板 (Template) - 页面结构                                   │
+│     ┌─────────────────────────────────────────────────────┐    │
+│     │  <template>                                         │    │
+│     │    <div class="greeting">                           │    │
+│     │      <h1>{{ message }}</h1>                         │    │
+│     │      <button @click="count++">点击了{{ count }}次</button>│
+│     │    </div>                                           │    │
+│     │  </template>                                        │    │
+│     └─────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  2. 脚本 (Script) - 逻辑代码                                     │
+│     ┌─────────────────────────────────────────────────────┐    │
+│     │  <script setup>                                     │    │
+│     │    import { ref } from 'vue'                        │    │
+│     │                                                     │    │
+│     │    const message = ref('你好，Vue!')                 │    │
+│     │    const count = ref(0)                             │    │
+│     │  </script>                                          │    │
+│     └─────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  3. 样式 (Style) - 页面样式（可选）                               │
+│     ┌─────────────────────────────────────────────────────┐    │
+│     │  <style scoped>                                     │    │
+│     │    .greeting {                                      │    │
+│     │      color: blue;                                   │    │
+│     │    }                                                │    │
+│     │  </style>                                           │    │
+│     └─────────────────────────────────────────────────────┘    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 响应式数据 (ref 和 reactive)
+
+Vue 的核心特性是**响应式系统** - 当数据变化时，页面自动更新。
+
+#### ref - 用于基本类型
+
+```vue
+<template>
+  <div>
+    <p>用户名: {{ username }}</p>
+    <button @click="changeName">修改名字</button>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+// ref 用于创建响应式数据
+// 基本类型（字符串、数字、布尔值）使用 ref
+const username = ref('张三')
+
+// 修改 ref 的值需要使用 .value
+const changeName = () => {
+  username.value = '李四'  // 页面会自动更新显示"李四"
+}
+</script>
+```
+
+**为什么需要 .value？**
+- ref 把数据包装成一个对象，`.value` 是这个对象中存储实际值的属性
+- Vue 通过这个包装对象来追踪数据变化
+
+#### reactive - 用于对象类型
+
+```vue
+<template>
+  <div>
+    <p>姓名: {{ user.name }}</p>
+    <p>年龄: {{ user.age }}</p>
+    <button @click="user.age++">长大一岁</button>
+  </div>
+</template>
+
+<script setup>
+import { reactive } from 'vue'
+
+// reactive 用于创建响应式对象
+// 对象类型使用 reactive，不需要 .value
+const user = reactive({
+  name: '张三',
+  age: 25
+})
+
+// 直接修改对象属性，页面会自动更新
+// user.age++ 就可以，不需要 user.value.age++
+</script>
+```
+
+### 计算属性 (computed)
+
+计算属性是根据其他数据计算得出的值，会自动缓存结果。
+
+```vue
+<template>
+  <div>
+    <p>姓: <input v-model="firstName"></p>
+    <p>名: <input v-model="lastName"></p>
+    <p>全名: {{ fullName }}</p>
+    <!-- fullName 会自动根据 firstName 和 lastName 计算 -->
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+
+const firstName = ref('张')
+const lastName = ref('三')
+
+// 计算属性 - 自动计算，有缓存
+// 只有 firstName 或 lastName 变化时才会重新计算
+const fullName = computed(() => {
+  return firstName.value + lastName.value
+})
+</script>
+```
+
+### 事件处理 (@click, @submit 等)
+
+使用 `@` 符号绑定事件：
+
+```vue
+<template>
+  <div>
+    <!-- 点击事件 -->
+    <button @click="handleClick">点击我</button>
+    
+    <!-- 传递参数 -->
+    <button @click="handleDelete(1)">删除ID为1的项目</button>
+    
+    <!-- 访问事件对象 -->
+    <button @click="handleEvent($event)">获取事件对象</button>
+    
+    <!-- 表单提交 -->
+    <form @submit.prevent="handleSubmit">
+      <input v-model="inputValue">
+      <button type="submit">提交</button>
+    </form>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const inputValue = ref('')
+
+const handleClick = () => {
+  alert('按钮被点击了！')
+}
+
+const handleDelete = (id) => {
+  console.log('删除项目:', id)
+}
+
+const handleEvent = (event) => {
+  console.log('事件对象:', event.target)
+}
+
+const handleSubmit = () => {
+  console.log('提交的数据:', inputValue.value)
+  // .prevent 修饰符阻止了表单默认提交行为
+}
+</script>
+```
+
+### 条件渲染 (v-if, v-show)
+
+根据条件显示或隐藏元素：
+
+```vue
+<template>
+  <div>
+    <!-- v-if: 条件为false时，元素不渲染到DOM中 -->
+    <div v-if="isLoggedIn">
+      欢迎回来，{{ username }}！
+    </div>
+    <div v-else>
+      请先登录
+    </div>
+    
+    <!-- v-show: 条件为false时，元素仍在DOM中，只是display:none -->
+    <div v-show="hasNotification">
+      你有新消息！
+    </div>
+    
+    <!-- v-else-if -->
+    <div v-if="score >= 90">优秀</div>
+    <div v-else-if="score >= 60">及格</div>
+    <div v-else>不及格</div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const isLoggedIn = ref(false)
+const username = ref('张三')
+const hasNotification = ref(true)
+const score = ref(85)
+</script>
+```
+
+**v-if 和 v-show 的区别：**
+- `v-if` 是"真正的"条件渲染，条件为false时元素不存在于DOM中
+- `v-show` 只是切换 CSS `display` 属性，元素始终存在于DOM中
+- 频繁切换用 `v-show`，条件很少改变用 `v-if`
+
+### 列表渲染 (v-for)
+
+循环渲染列表：
+
+```vue
+<template>
+  <div>
+    <!-- 遍历数组 -->
+    <ul>
+      <li v-for="item in items" :key="item.id">
+        {{ item.name }} - ¥{{ item.price }}
+      </li>
+    </ul>
+    
+    <!-- 遍历对象 -->
+    <div v-for="(value, key) in userInfo" :key="key">
+      {{ key }}: {{ value }}
+    </div>
+    
+    <!-- 遍历数字 -->
+    <span v-for="n in 5" :key="n">{{ n }}</span>
+    <!-- 输出: 1 2 3 4 5 -->
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const items = ref([
+  { id: 1, name: '苹果', price: 5 },
+  { id: 2, name: '香蕉', price: 3 },
+  { id: 3, name: '橙子', price: 4 }
+])
+
+const userInfo = {
+  name: '张三',
+  age: 25,
+  city: '北京'
+}
+</script>
+```
+
+**为什么需要 :key？**
+- `key` 帮助 Vue 识别列表中的每个元素，以便高效更新
+- 通常使用数据的唯一标识（如 id）作为 key
+- 不要使用索引 index 作为 key（除非列表不会重新排序）
+
+### 双向绑定 (v-model)
+
+`v-model` 实现表单元素的双向数据绑定：
+
+```vue
+<template>
+  <div>
+    <!-- 文本输入框 -->
+    <input v-model="username" placeholder="请输入用户名">
+    <p>你输入的是: {{ username }}</p>
+    
+    <!-- 多行文本 -->
+    <textarea v-model="content"></textarea>
+    
+    <!-- 复选框 -->
+    <input type="checkbox" v-model="agreed">
+    <label>同意条款</label>
+    
+    <!-- 单选按钮 -->
+    <input type="radio" v-model="gender" value="male"> 男
+    <input type="radio" v-model="gender" value="female"> 女
+    
+    <!-- 下拉选择 -->
+    <select v-model="selectedCity">
+      <option value="">请选择城市</option>
+      <option value="beijing">北京</option>
+      <option value="shanghai">上海</option>
+    </select>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const username = ref('')
+const content = ref('')
+const agreed = ref(false)
+const gender = ref('male')
+const selectedCity = ref('')
+</script>
+```
+
+### 组件基础
+
+组件是可复用的 Vue 实例。
+
+#### 定义组件
+
+```vue
+<!-- UserCard.vue - 用户卡片组件 -->
+<template>
+  <div class="user-card">
+    <img :src="avatar" :alt="name">
+    <h3>{{ name }}</h3>
+    <p>{{ bio }}</p>
+    <button @click="handleClick">关注</button>
+  </div>
+</template>
+
+<script setup>
+// 定义组件接收的属性（父组件传递的数据）
+const props = defineProps({
+  name: {
+    type: String,
+    required: true
+  },
+  avatar: {
+    type: String,
+    default: '/default-avatar.png'
+  },
+  bio: {
+    type: String,
+    default: '这个人很懒，什么都没写...'
+  }
+})
+
+// 定义组件发出的事件（通知父组件）
+const emit = defineEmits(['follow'])
+
+const handleClick = () => {
+  emit('follow', props.name)  // 发出 follow 事件，传递用户名
+}
+</script>
+
+<style scoped>
+.user-card {
+  border: 1px solid #ddd;
+  padding: 16px;
+  border-radius: 8px;
+}
+</style>
+```
+
+#### 使用组件
+
+```vue
+<template>
+  <div>
+    <!-- 使用 UserCard 组件 -->
+    <UserCard 
+      name="张三" 
+      avatar="/avatars/zhangsan.jpg"
+      bio="前端开发工程师"
+      @follow="handleFollow"
+    />
+    
+    <!-- 传递动态数据 -->
+    <UserCard 
+      :name="userName" 
+      :avatar="userAvatar"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import UserCard from './components/UserCard.vue'
+
+const userName = ref('李四')
+const userAvatar = ref('/avatars/lisi.jpg')
+
+const handleFollow = (name) => {
+  alert(`你关注了 ${name}`)
+}
+</script>
+```
+
+### 组件通信
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        组件通信方式                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  父组件 → 子组件: Props                                         │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  父组件:                                                   │  │
+│  │    <ChildComponent :message="parentData" />              │  │
+│  │                                                           │  │
+│  │  子组件:                                                   │  │
+│  │    const props = defineProps(['message'])                 │  │
+│  │    // 使用: {{ props.message }}                           │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  子组件 → 父组件: Emit                                          │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  子组件:                                                   │  │
+│  │    const emit = defineEmits(['update'])                   │  │
+│  │    emit('update', newValue)                               │  │
+│  │                                                           │  │
+│  │  父组件:                                                   │  │
+│  │    <ChildComponent @update="handleUpdate" />              │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  跨组件: Pinia 状态管理                                         │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  // stores/user.js                                        │  │
+│  │  const useUserStore = defineStore('user', () => {        │  │
+│  │    const username = ref('')                               │  │
+│  │    return { username }                                    │  │
+│  │  })                                                       │  │
+│  │                                                           │  │
+│  │  // 任意组件中使用                                         │  │
+│  │  const userStore = useUserStore()                         │  │
+│  │  console.log(userStore.username)                          │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 生命周期钩子
+
+生命周期钩子是组件在不同阶段执行的函数：
+
+```vue
+<script setup>
+import { ref, onMounted, onUpdated, onUnmounted } from 'vue'
+
+const data = ref([])
+
+// 组件挂载完成后执行（DOM已生成）
+onMounted(() => {
+  console.log('组件已挂载，可以访问DOM')
+  // 通常在这里发起API请求
+  fetchData()
+})
+
+// 组件更新后执行
+onUpdated(() => {
+  console.log('组件已更新')
+})
+
+// 组件卸载前执行
+onUnmounted(() => {
+  console.log('组件即将卸载')
+  // 清理定时器、事件监听等
+})
+
+const fetchData = async () => {
+  // 获取数据...
+}
+</script>
+```
+
+**常用生命周期钩子：**
+
+| 钩子 | 执行时机 | 常见用途 |
+|------|----------|----------|
+| `onMounted` | 组件挂载完成 | 发起API请求、操作DOM |
+| `onUpdated` | 组件更新完成 | 响应数据变化 |
+| `onUnmounted` | 组件卸载 | 清理定时器、取消订阅 |
+| `onBeforeMount` | 挂载之前 | 很少使用 |
+| `onBeforeUpdate` | 更新之前 | 很少使用 |
+
+### 组合式函数 (Composables)
+
+组合式函数是 Vue 3 中复用逻辑的方式：
+
+```javascript
+// composables/useCounter.js
+import { ref } from 'vue'
+
+// 定义一个可复用的计数器逻辑
+export function useCounter(initialValue = 0) {
+  const count = ref(initialValue)
+  
+  const increment = () => {
+    count.value++
+  }
+  
+  const decrement = () => {
+    count.value--
+  }
+  
+  const reset = () => {
+    count.value = initialValue
+  }
+  
+  // 返回需要暴露的数据和方法
+  return {
+    count,
+    increment,
+    decrement,
+    reset
+  }
+}
+```
+
+```vue
+<!-- 使用组合式函数 -->
+<template>
+  <div>
+    <p>计数: {{ count }}</p>
+    <button @click="increment">+1</button>
+    <button @click="decrement">-1</button>
+    <button @click="reset">重置</button>
+  </div>
+</template>
+
+<script setup>
+import { useCounter } from '@/composables/useCounter'
+
+// 使用组合式函数，获取计数器逻辑
+const { count, increment, decrement, reset } = useCounter(10)
+</script>
+```
+
+---
+
 ## 技术栈
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| Vue | 3.4+ | 前端框架，使用 Composition API |
-| Vite | 5.0+ | 构建工具，开发服务器 |
-| Vue Router | 4.2+ | 路由管理，支持路由守卫 |
-| Pinia | 2.3+ | 状态管理 |
-| Element Plus | 2.4+ | UI 组件库 |
-| Axios | 1.6+ | HTTP 请求客户端 |
-| ECharts | 5.4+ | 数据可视化图表 |
-| Vitest | 1.0+ | 单元测试框架 |
+| 技术 | 版本 | 用途 | 通俗解释 |
+|------|------|------|----------|
+| Vue | 3.4+ | 前端框架 | 构建网页应用的核心工具 |
+| Vite | 5.0+ | 构建工具 | 打包和运行代码的工具 |
+| Vue Router | 4.2+ | 路由管理 | 控制页面跳转 |
+| Pinia | 2.3+ | 状态管理 | 组件间共享数据 |
+| Element Plus | 2.4+ | UI 组件库 | 提供现成的按钮、表格等组件 |
+| Axios | 1.6+ | HTTP 请求 | 与后端通信 |
+| ECharts | 5.4+ | 图表库 | 绘制数据可视化图表 |
+| Vitest | 1.0+ | 测试框架 | 测试代码 |
 
 ---
 
@@ -85,7 +677,11 @@ dong-medicine-frontend/
 │   │   │   └── index.js
 │   │   │
 │   │   ├── common/                      # 通用组件
-│   │   │   └── SkeletonGrid.vue         # 骨架屏网格
+│   │   │   ├── PageLoading.vue          # 页面加载动画
+│   │   │   ├── SkeletonGridCard.vue     # 卡片骨架屏
+│   │   │   ├── SkeletonGridImage.vue    # 图片骨架屏
+│   │   │   ├── SkeletonListQa.vue       # 问答骨架屏
+│   │   │   └── SkeletonListResource.vue # 资源骨架屏
 │   │   │
 │   │   └── business/                    # 业务组件
 │   │       │
@@ -136,25 +732,7 @@ dong-medicine-frontend/
 │   │       │
 │   │       └── admin/                   # 管理后台组件
 │   │           ├── dialogs/             # 管理对话框
-│   │           │   ├── CommentDetailDialog.vue
-│   │           │   ├── FeedbackDetailDialog.vue
-│   │           │   ├── InheritorDetailDialog.vue
-│   │           │   ├── KnowledgeDetailDialog.vue
-│   │           │   ├── LogDetailDialog.vue
-│   │           │   ├── PlantDetailDialog.vue
-│   │           │   ├── QaDetailDialog.vue
-│   │           │   ├── QuizDetailDialog.vue
-│   │           │   ├── ResourceDetailDialog.vue
-│   │           │   └── UserDetailDialog.vue
-│   │           │
 │   │           ├── forms/               # 管理表单
-│   │           │   ├── InheritorFormDialog.vue
-│   │           │   ├── KnowledgeFormDialog.vue
-│   │           │   ├── PlantFormDialog.vue
-│   │           │   ├── QaFormDialog.vue
-│   │           │   ├── QuizFormDialog.vue
-│   │           │   └── ResourceFormDialog.vue
-│   │           │
 │   │           ├── AdminDashboard.vue   # 管理仪表盘
 │   │           ├── AdminDataTable.vue   # 数据表格
 │   │           └── AdminSidebar.vue     # 管理侧边栏
@@ -171,7 +749,8 @@ dong-medicine-frontend/
 │   │   ├── usePersonalCenter.js         # 个人中心
 │   │   ├── usePlantGame.js              # 植物游戏
 │   │   ├── useQuiz.js                   # 答题逻辑
-│   │   └── useUpdateLog.js              # 更新日志
+│   │   ├── useUpdateLog.js              # 更新日志
+│   │   └── useVisualData.js             # 可视化数据
 │   │
 │   ├── router/                          # 路由配置
 │   │   └── index.js                     # 路由定义 + 守卫
@@ -219,6 +798,19 @@ dong-medicine-frontend/
 ├── nginx.conf                           # Nginx 配置
 └── default.conf                         # Nginx 默认配置
 ```
+
+### 目录职责说明
+
+| 目录 | 职责 | 通俗解释 |
+|------|------|----------|
+| `views/` | 页面组件 | 对应一个个网页，如首页、植物页等 |
+| `components/` | 可复用组件 | 可在多个页面中复用的UI组件 |
+| `composables/` | 组合式函数 | 可复用的逻辑代码 |
+| `stores/` | 状态管理 | 存储全局共享的数据 |
+| `router/` | 路由配置 | 控制URL和页面的对应关系 |
+| `utils/` | 工具函数 | 通用的小函数 |
+| `styles/` | 样式文件 | CSS样式 |
+| `config/` | 配置文件 | 可配置的数据 |
 
 ---
 
@@ -311,32 +903,6 @@ dong-medicine-frontend/
 | AdminDashboard.vue | 管理仪表盘，数据概览 |
 | AdminDataTable.vue | 数据表格组件，通用 CRUD 表格 |
 | AdminSidebar.vue | 管理侧边栏导航 |
-
-### 管理后台对话框 (admin/dialogs/)
-
-| 组件 | 用途 |
-|------|------|
-| UserDetailDialog.vue | 用户详情对话框 |
-| PlantDetailDialog.vue | 植物详情对话框 |
-| KnowledgeDetailDialog.vue | 知识详情对话框 |
-| InheritorDetailDialog.vue | 传承人详情对话框 |
-| ResourceDetailDialog.vue | 资源详情对话框 |
-| QaDetailDialog.vue | 问答详情对话框 |
-| QuizDetailDialog.vue | 题目详情对话框 |
-| CommentDetailDialog.vue | 评论详情对话框 |
-| FeedbackDetailDialog.vue | 反馈详情对话框 |
-| LogDetailDialog.vue | 日志详情对话框 |
-
-### 管理后台表单 (admin/forms/)
-
-| 组件 | 用途 |
-|------|------|
-| PlantFormDialog.vue | 药材表单对话框 |
-| KnowledgeFormDialog.vue | 知识表单对话框 |
-| InheritorFormDialog.vue | 传承人表单对话框 |
-| ResourceFormDialog.vue | 资源表单对话框 |
-| QaFormDialog.vue | 问答表单对话框 |
-| QuizFormDialog.vue | 题目表单对话框 |
 
 ---
 
@@ -431,22 +997,6 @@ router.beforeEach(async (to, from, next) => {
 | `changePassword()` | 修改密码 |
 | `fetchUserInfo()` | 获取用户信息 |
 
-### Token过期判断
-
-```javascript
-// stores/user.js
-
-// 统一的Token过期判断函数
-function isTokenExpired(token, options = {}) {
-  const { useBuffer = true, bufferMs = 5 * 60 * 1000 } = options
-  const expiryTime = getTokenExpiryTime(token)
-  if (!expiryTime) return true
-  
-  const now = Date.now()
-  return useBuffer ? now >= expiryTime - bufferMs : now >= expiryTime
-}
-```
-
 ---
 
 ## 工具函数
@@ -470,8 +1020,7 @@ function isTokenExpired(token, options = {}) {
 
 ### Axios 封装 (utils/request.js)
 
-```javascript
-// 核心功能
+核心功能：
 - 请求/响应拦截器
 - Token 自动注入
 - Token 刷新机制（Promise缓存，避免竞态）
@@ -480,141 +1029,25 @@ function isTokenExpired(token, options = {}) {
 - XSS/SQL 注入防护
 - 统一错误处理
 
-// Token刷新机制
-let refreshPromise = null
-
-async function getOrRefreshToken() {
-  if (refreshPromise) {
-    return refreshPromise  // 多个401请求共享同一个刷新Promise
-  }
-  
-  refreshPromise = refreshToken()
-  try {
-    return await refreshPromise
-  } finally {
-    refreshPromise = null
-  }
-}
-```
-
-### 错误提示优化
-
-```javascript
-// 根据HTTP状态码提供友好提示
-const errorMessages = {
-  400: "请求参数有误，请检查输入",
-  404: "请求的资源不存在",
-  429: "请求过于频繁，请稍后重试",
-  500: "服务器内部错误，请稍后重试",
-  // ...
-}
-```
-
-### 缓存工具 (utils/cache.js)
-
-| 函数 | 描述 |
-|------|------|
-| `setCache()` | 设置缓存 |
-| `getCache()` | 获取缓存 |
-| `removeCache()` | 移除缓存 |
-| `clearCache()` | 清除所有缓存 |
-
-### 媒体工具 (utils/media.js)
-
-| 函数 | 描述 |
-|------|------|
-| `getFileIcon()` | 获取文件图标 |
-| `isImageFile()` | 判断是否图片 |
-| `isVideoFile()` | 判断是否视频 |
-| `isDocumentFile()` | 判断是否文档 |
-
-### 日志工具 (utils/logger.js)
-
-| 函数 | 描述 |
-|------|------|
-| `logInfo()` | 信息日志 |
-| `logWarn()` | 警告日志 |
-| `logError()` | 错误日志 |
-| `logAuthWarn()` | 认证警告 |
-| `logSecurityWarn()` | 安全警告 |
-
 ---
 
 ## 安全机制
 
 ### XSS 防护 (utils/xss.js)
 
-```javascript
-// 覆盖 30+ 危险模式
-const XSS_PATTERNS = [
-  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-  /<script[^>]*\/>/gi,
-  /javascript\s*:/gi,
-  /vbscript\s*:/gi,
-  /on\w+\s*=/gi,           // 事件处理器（含空格）
-  /on\w+=/gi,              // 事件处理器（无空格）
-  /&#x?[0-9a-f]+;?/gi,     // HTML实体编码
-  /eval\s*\(/gi,
-  /expression\s*\(/gi,
-  /<iframe/gi,
-  /<object/gi,
-  /<embed/gi,
-  // ... 更多模式
-]
-
-// 检测XSS
-export function containsXss(input) {
-  return XSS_PATTERNS.some(pattern => pattern.test(input))
-}
-
-// 清理XSS
-export function sanitize(input) {
-  let result = input
-  XSS_PATTERNS.forEach(pattern => {
-    result = result.replace(pattern, '')
-  })
-  return result
-}
-```
-
-### SQL注入防护
-
-```javascript
-// 检测SQL注入模式
-const SQL_INJECTION_PATTERNS = [
-  /('|")\s*(OR|AND)\s*('|")/i,
-  /UNION\s+SELECT/i,
-  /;\s*(DROP|DELETE|UPDATE|INSERT)/i,
-  // ...
-]
-
-export function containsSqlInjection(input) {
-  return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(input))
-}
-```
+覆盖 30+ 危险模式：
+- script标签
+- javascript/vbscript协议
+- 事件处理器 (onclick, onerror等)
+- HTML实体编码
+- eval/expression函数
+- 危险标签 (iframe, object, embed等)
 
 ### 密码验证规则
 
-```javascript
-// 统一密码规则（与后端一致）
-const passwordRules = [
-  { required: true, message: '请输入密码' },
-  { min: 8, max: 50, message: '密码长度为8-50位' },
-  { 
-    validator: (rule, value, callback) => {
-      if (!/[a-zA-Z]/.test(value)) {
-        callback(new Error('密码必须包含字母'))
-      } else if (!/[0-9]/.test(value)) {
-        callback(new Error('密码必须包含数字'))
-      } else if (/\s/.test(value)) {
-        callback(new Error('密码不能包含空格'))
-      } else {
-        callback()
-      }
-    }
-  }
-]
-```
+- 长度 8-50 位
+- 必须包含字母和数字
+- 不能包含空格
 
 ---
 
@@ -647,26 +1080,8 @@ const passwordRules = [
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  
-  /* 阴影系统 */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 ```
-
-### 样式文件说明
-
-| 文件 | 描述 |
-|------|------|
-| variables.css | CSS 变量定义，设计系统 |
-| base.css | 基础样式，重置样式、排版、通用布局 |
-| components.css | 组件样式，卡片、按钮、表单等 |
-| pages.css | 页面样式，各页面通用样式 |
-| common.css | 通用样式 |
-| home.css | 首页专用样式 |
-| media-common.css | 媒体相关通用样式 |
-| dialog-common.css | 对话框通用样式 |
 
 ---
 
@@ -740,34 +1155,47 @@ docker run -d \
 docker-compose up -d --build
 ```
 
-### Nginx 配置说明
+---
 
-前端使用 Nginx 作为 Web 服务器，配置文件：
+## 常见问题
 
-- `nginx.conf` - Nginx 主配置
-- `default.conf` - 站点配置，包含：
-  - 静态资源服务
-  - API 请求代理转发
-  - Gzip 压缩
-  - 缓存策略
+### 1. npm install 失败
+
+**解决方案**：清除缓存重试
+```bash
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### 2. 页面空白
+
+**可能原因**：
+- 后端服务未启动
+- API 请求失败
+
+**解决方案**：
+- 确保后端服务运行在 http://localhost:8080
+- 打开浏览器控制台查看错误信息
+
+### 3. 登录后刷新页面退出
+
+**可能原因**：Token 未正确存储
+
+**解决方案**：
+- 检查浏览器 localStorage 中是否有 token
+- 检查 stores/user.js 中的 token 持久化逻辑
+
+### 4. 样式不生效
+
+**可能原因**：
+- scoped 样式作用域问题
+- CSS 优先级问题
+
+**解决方案**：
+- 使用 `:deep()` 穿透 scoped 样式
+- 检查 CSS 选择器优先级
 
 ---
 
-## 目录说明
-
-| 目录 | 说明 |
-|------|------|
-| `views/` | 页面组件，对应路由 |
-| `components/` | 可复用组件 |
-| `composables/` | 组合式函数，复用逻辑 |
-| `stores/` | Pinia 状态管理 |
-| `router/` | 路由配置 |
-| `utils/` | 工具函数 |
-| `styles/` | 全局样式 |
-| `config/` | 应用配置 |
-| `directives/` | 自定义指令 |
-| `__tests__/` | 测试文件 |
-
----
-
-**最后更新时间**：2026年3月30日
+**最后更新时间**：2026年4月3日
