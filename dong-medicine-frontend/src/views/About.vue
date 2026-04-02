@@ -130,7 +130,7 @@ import { logFetchError } from '@/utils/logger';
 
 const request = inject("request");
 const pageLoading = ref(false);
-const stats = ref({ plants: 0, formulas: 10, therapies: 5, inheritors: 0, qa: 0, resources: 0 });
+const stats = ref({ plants: 0, formulas: 12, therapies: 6, inheritors: 0, qa: 0, resources: 0 });
 
 const features = computed(() => [
   { icon: Collection, title: "知识体系化", desc: `${stats.value.formulas}+经典药方、${stats.value.therapies}类核心疗法、${stats.value.plants}种药用植物`, color: "linear-gradient(135deg, #667eea, #764ba2)" },
