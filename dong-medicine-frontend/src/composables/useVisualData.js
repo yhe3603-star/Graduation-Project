@@ -142,7 +142,7 @@ export function useVisualData(request) {
       const formulaMap = {};
       knowledge.forEach(k => {
         if (k.type === '药方' || k.title?.includes('方')) {
-          formulaMap[k.title || '未知'] = (formulaMap[k.title || '未知'] || 0) + (k.popularity || Math.floor(Math.random() * 50) + 10);
+          formulaMap[k.title || '未知'] = (formulaMap[k.title || '未知'] || 0) + (k.viewCount || 0);
         }
       });
       const formulaEntries = Object.entries(formulaMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
@@ -150,9 +150,9 @@ export function useVisualData(request) {
       chartData.value.formulaFreq = formulaEntries.map(([, value]) => value);
 
       if (chartData.value.formulaNames.length === 0) {
-        const popular = knowledge.filter(k => k.popularity > 0).sort((a, b) => b.popularity - a.popularity).slice(0, 8);
+        const popular = knowledge.filter(k => k.viewCount > 0).sort((a, b) => b.viewCount - a.viewCount).slice(0, 8);
         chartData.value.formulaNames = popular.map(k => k.title?.substring(0, 8) || '未知');
-        chartData.value.formulaFreq = popular.map(k => k.popularity);
+        chartData.value.formulaFreq = popular.map(k => k.viewCount);
       }
 
       try {
