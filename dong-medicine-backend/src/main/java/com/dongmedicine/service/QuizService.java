@@ -8,12 +8,9 @@ import com.dongmedicine.entity.QuizRecord;
 import java.util.List;
 
 public interface QuizService {
-    List<QuizQuestionDTO> getRandomQuestions();
-    List<QuizQuestionDTO> getRandomQuestionsByDifficulty(String difficulty);
-    Integer submit(Integer userId, List<AnswerDTO> answers);
-    Integer submitByDifficulty(Integer userId, List<AnswerDTO> answers, String difficulty);
-    Integer calculateScore(List<AnswerDTO> answers);
-    Integer calculateScoreByDifficulty(List<AnswerDTO> answers, String difficulty);
+    List<QuizQuestionDTO> getRandomQuestions(int count);
+    Integer submit(Integer userId, List<AnswerDTO> answers, int scorePerQuestion);
+    Integer calculateScore(List<AnswerDTO> answers, int scorePerQuestion);
     List<QuizRecord> getUserRecords(Integer userId);
 
     void deleteQuestion(Integer questionId);

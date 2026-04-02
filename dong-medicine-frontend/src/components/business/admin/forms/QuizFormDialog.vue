@@ -37,26 +37,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="难度">
-        <el-select
-          v-model="form.difficulty"
-          style="width: 100%"
-          placeholder="请选择难度"
-        >
-          <el-option
-            label="简单"
-            value="easy"
-          />
-          <el-option
-            label="中等"
-            value="medium"
-          />
-          <el-option
-            label="困难"
-            value="hard"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="选项A">
         <el-input
           v-model="form.optionA"
@@ -138,7 +118,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'save']);
 
-const getDefaultForm = () => ({ id: null, question: "", category: "", difficulty: "easy", optionA: "", optionB: "", optionC: "", optionD: "", correctAnswer: "A", explanation: "" });
+const getDefaultForm = () => ({ id: null, question: "", category: "", optionA: "", optionB: "", optionC: "", optionD: "", correctAnswer: "A", explanation: "" });
 
 const form = ref(getDefaultForm());
 
@@ -150,7 +130,6 @@ watch(() => props.visible, (val) => {
         id: props.data.id,
         question: props.data.question,
         category: props.data.category || "",
-        difficulty: props.data.difficulty || "easy",
         optionA: options[0] || "",
         optionB: options[1] || "",
         optionC: options[2] || "",
@@ -169,7 +148,6 @@ const handleSave = () => {
     id: form.value.id,
     question: form.value.question,
     category: form.value.category,
-    difficulty: form.value.difficulty,
     options: [form.value.optionA, form.value.optionB, form.value.optionC, form.value.optionD],
     correctAnswer: form.value.correctAnswer,
     explanation: form.value.explanation

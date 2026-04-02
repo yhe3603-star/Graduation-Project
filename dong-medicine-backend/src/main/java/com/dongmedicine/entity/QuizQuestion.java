@@ -19,7 +19,6 @@ public class QuizQuestion {
     private String options;
     private String answer;
     private String category;
-    private String difficulty;
     private String correctAnswer;
     private String explanation;
 

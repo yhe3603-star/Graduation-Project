@@ -55,7 +55,7 @@ class QuizServiceImplTest {
         when(questionMapper.selectRandomQuestions(anyInt()))
                 .thenReturn(Arrays.asList(testQuestion));
 
-        var result = quizService.getRandomQuestions();
+        var result = quizService.getRandomQuestions(10);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -68,7 +68,7 @@ class QuizServiceImplTest {
         when(questionMapper.selectBatchIds(anyCollection()))
                 .thenReturn(Arrays.asList(testQuestion));
 
-        Integer score = quizService.calculateScore(Arrays.asList(testAnswer));
+        Integer score = quizService.calculateScore(Arrays.asList(testAnswer), 10);
 
         assertEquals(10, score);
     }
@@ -80,7 +80,7 @@ class QuizServiceImplTest {
         when(questionMapper.selectBatchIds(anyCollection()))
                 .thenReturn(Arrays.asList(testQuestion));
 
-        Integer score = quizService.calculateScore(Arrays.asList(testAnswer));
+        Integer score = quizService.calculateScore(Arrays.asList(testAnswer), 10);
 
         assertEquals(0, score);
     }
@@ -88,8 +88,8 @@ class QuizServiceImplTest {
     @Test
     @DisplayName("计算分数 - 空答案抛出异常")
     void testCalculateScore_EmptyAnswers_ThrowsException() {
-        assertThrows(Exception.class, () -> quizService.calculateScore(null));
-        assertThrows(Exception.class, () -> quizService.calculateScore(Collections.emptyList()));
+        assertThrows(Exception.class, () -> quizService.calculateScore(null, 10));
+        assertThrows(Exception.class, () -> quizService.calculateScore(Collections.emptyList(), 10));
     }
 
     @Test
@@ -99,7 +99,7 @@ class QuizServiceImplTest {
                 .thenReturn(Arrays.asList(testQuestion));
         when(recordMapper.insert(any(QuizRecord.class))).thenReturn(1);
 
-        Integer score = quizService.submit(1, Arrays.asList(testAnswer));
+        Integer score = quizService.submit(1, Arrays.asList(testAnswer), 10);
 
         assertNotNull(score);
         verify(recordMapper).insert(any(QuizRecord.class));
@@ -108,7 +108,7 @@ class QuizServiceImplTest {
     @Test
     @DisplayName("提交答案 - 空用户ID抛出异常")
     void testSubmit_NullUserId_ThrowsException() {
-        assertThrows(Exception.class, () -> quizService.submit(null, Arrays.asList(testAnswer)));
+        assertThrows(Exception.class, () -> quizService.submit(null, Arrays.asList(testAnswer), 10));
     }
 
     @Test

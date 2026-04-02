@@ -218,6 +218,41 @@ service/
 - 发送对话消息
 - 获取对话历史
 
+### 16. CaptchaService.java - 验证码服务类
+
+**功能**：生成和验证图形验证码。
+
+**主要方法**：
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `generateCaptcha()` | CaptchaResult | 生成验证码，返回key和Base64图片 |
+| `validateCaptcha(key, code)` | boolean | 验证验证码是否正确 |
+| `validateCaptchaOrThrow(key, code)` | void | 验证验证码，失败抛出异常 |
+
+**验证码特性**：
+- 4位数字验证码
+- 图片尺寸：120x40像素
+- 有效期：5分钟
+- 包含干扰线和噪点
+- 存储在Redis中
+
+**使用示例**：
+```java
+@Autowired
+private CaptchaService captchaService;
+
+// 生成验证码
+CaptchaService.CaptchaResult result = captchaService.generateCaptcha();
+String captchaKey = result.getCaptchaKey();      // UUID key
+String captchaImage = result.getCaptchaImage();  // Base64图片
+
+// 验证验证码
+boolean valid = captchaService.validateCaptcha(captchaKey, userInput);
+
+// 验证并抛出异常
+captchaService.validateCaptchaOrThrow(captchaKey, userInput);
+```
+
 ## 服务统计
 
 | 服务接口 | 实现类 | 主要用途 |
@@ -750,4 +785,4 @@ public class FileUploadServiceImpl {
 
 ---
 
-**最后更新时间**：2026年3月29日
+**最后更新时间**：2026年3月30日

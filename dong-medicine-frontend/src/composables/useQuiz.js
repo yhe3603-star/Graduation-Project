@@ -22,7 +22,7 @@ export const useQuiz = (request, isLoggedIn) => {
     hard: { label: '高级', icon: '🏆', count: 30, scorePerQuestion: 20, time: 5 }
   }
 
-  const { formattedTime, isRunning, isExpired, isLowTime, start: startTimer, stop: stopTimer, reset: resetTimer } = useCountdown(3)
+  const { formattedTime, isRunning, isExpired, isLowTime, start: startTimer, stop: stopTimer, reset: resetTimer } = useCountdown(5)
 
   watch(isExpired, (expired) => {
     if (expired && isQuizStarted.value && !quizFinished.value) {
@@ -43,7 +43,12 @@ export const useQuiz = (request, isLoggedIn) => {
     quizLoading.value = true
     try {
       const config = difficultyConfig[selectedDifficulty.value]
-      const res = await request.get('/quiz/questions', { params: { difficulty: selectedDifficulty.value } })
+      const res = await request.get('/quiz/questions', { 
+        params: { 
+          count: config.count,
+          scorePerQuestion: config.scorePerQuestion
+        } 
+      })
       selectedQuestions.value = res?.data?.data || res?.data || []
       userAnswers.value = new Array(selectedQuestions.value.length).fill('')
       currentQuestion.value = 0
@@ -82,8 +87,13 @@ export const useQuiz = (request, isLoggedIn) => {
     stopTimer()
     submitting.value = true
     try {
+      const config = difficultyConfig[selectedDifficulty.value]
       const answers = selectedQuestions.value.map((q, i) => ({ questionId: q.id, answer: userAnswers.value[i] || '' }))
-      const res = await request.post('/quiz/submit', { answers }, { params: { difficulty: selectedDifficulty.value } })
+      const res = await request.post('/quiz/submit', { answers }, { 
+        params: { 
+          scorePerQuestion: config.scorePerQuestion
+        } 
+      })
       const data = res?.data?.data || res?.data || {}
       finalScore.value = data.score || 0
       correctCount.value = data.correct || 0

@@ -63,7 +63,33 @@ dto/
 
 **使用场景**：`PUT /api/user/info`
 
-### 4. PlantDTO.java - 药材DTO
+### 4. ChangePasswordDTO.java - 修改密码DTO
+
+**用途**：用户修改密码时的请求数据。
+
+**字段**：
+| 字段名 | 类型 | 验证规则 | 说明 |
+|-------|------|---------|------|
+| currentPassword | String | @NotBlank | 当前密码 |
+| newPassword | String | @NotBlank, @Size(6-20) | 新密码 |
+| captchaKey | String | @NotBlank | 验证码key |
+| captchaCode | String | @NotBlank | 验证码 |
+
+**使用场景**：`POST /api/user/change-password`
+
+### 5. CaptchaDTO.java - 验证码响应DTO
+
+**用途**：验证码生成后的响应数据。
+
+**字段**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| captchaKey | String | 验证码唯一标识key |
+| captchaImage | String | Base64编码的验证码图片（可直接用于img标签src） |
+
+**使用场景**：`GET /api/user/captcha`
+
+### 6. PlantDTO.java - 药材DTO
 
 **用途**：药材数据的传输对象。
 
@@ -225,7 +251,24 @@ dto/
 
 **使用场景**：`POST /api/chat`
 
-### 16. FileUploadResult.java - 文件上传结果DTO
+### 16. ChatResponse.java - AI对话响应DTO
+
+**用途**：AI对话的响应数据。
+
+**字段**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| reply | String | AI回复内容 |
+| success | boolean | 是否成功 |
+| error | String | 错误信息 |
+
+**静态方法**：
+- `success(String reply)`：创建成功响应
+- `error(String error)`：创建失败响应
+
+**使用场景**：`POST /api/chat` 响应
+
+### 17. FileUploadResult.java - 文件上传结果DTO
 
 **用途**：文件上传后的返回结果。
 
@@ -254,6 +297,8 @@ dto/
 | LoginDTO | 用户登录 | @NotBlank, @Size |
 | RegisterDTO | 用户注册 | @NotBlank, @Size, @Pattern |
 | UserUpdateDTO | 用户更新 | - |
+| ChangePasswordDTO | 修改密码 | @NotBlank, @Size |
+| CaptchaDTO | 验证码响应 | - |
 | PlantDTO | 药材数据 | @NotBlank, @Size |
 | KnowledgeDTO | 知识数据 | @NotBlank, @Size |
 | InheritorDTO | 传承人数据 | @NotBlank, @Size, @Pattern |
@@ -265,9 +310,10 @@ dto/
 | QuizSubmitDTO | 答题提交 | - |
 | PlantGameSubmitDTO | 游戏提交 | - |
 | AnswerDTO | 答案数据 | - |
-| ChatRequest | AI对话 | @NotBlank |
+| ChatRequest | AI对话请求 | @NotBlank |
+| ChatResponse | AI对话响应 | - |
 | FileUploadResult | 上传结果 | - |
-| **总计** | **16个** | - |
+| **总计** | **19个** | - |
 
 ## 开发规范
 
@@ -422,4 +468,4 @@ public class PhoneValidator implements ConstraintValidator<Phone, String> {
 
 ---
 
-**最后更新时间**：2026年3月29日
+**最后更新时间**：2026年3月30日

@@ -141,7 +141,6 @@ export const TABLE_CONFIGS = {
     titleName: '问题',
     columns: [
       { prop: 'category', label: '分类', width: 100 },
-      { prop: 'difficulty', label: '难度', type: 'tag', width: 70 },
       { slotName: 'correctAnswer', label: '正确答案', width: 150 }
     ]
   },

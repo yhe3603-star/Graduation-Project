@@ -24,37 +24,22 @@ public class QuizController {
     private final QuizService service;
 
     @GetMapping("/questions")
-    public R<List<QuizQuestionDTO>> list(@RequestParam(required = false) String difficulty) {
-        if (difficulty != null && !difficulty.isEmpty()) {
-            return R.ok(service.getRandomQuestionsByDifficulty(difficulty));
-        }
-        return R.ok(service.getRandomQuestions());
+    public R<List<QuizQuestionDTO>> list(
+            @RequestParam(defaultValue = "10") int count,
+            @RequestParam(defaultValue = "10") int scorePerQuestion) {
+        return R.ok(service.getRandomQuestions(count));
     }
 
     @PostMapping("/submit")
-    public R<Map<String, Object>> submit(@RequestBody QuizSubmitDTO dto, @RequestParam(required = false) String difficulty) {
+    public R<Map<String, Object>> submit(@RequestBody QuizSubmitDTO dto,
+                                         @RequestParam(defaultValue = "10") int scorePerQuestion) {
         Integer userId = SecurityUtils.getCurrentUserId();
-        int score;
-        if (difficulty != null && !difficulty.isEmpty()) {
-            score = (userId == null) ? service.calculateScoreByDifficulty(dto.getAnswers(), difficulty) : service.submitByDifficulty(userId, dto.getAnswers(), difficulty);
-        } else {
-            score = (userId == null) ? service.calculateScore(dto.getAnswers()) : service.submit(userId, dto.getAnswers());
-        }
+        int score = (userId == null) 
+                ? service.calculateScore(dto.getAnswers(), scorePerQuestion) 
+                : service.submit(userId, dto.getAnswers(), scorePerQuestion);
         int totalQuestions = dto.getAnswers() != null ? dto.getAnswers().size() : 0;
-        int correctAnswers = calculateCorrectAnswers(score, difficulty);
+        int correctAnswers = score / (scorePerQuestion > 0 ? scorePerQuestion : 10);
         return R.ok(Map.of("score", score, "correct", correctAnswers, "total", totalQuestions));
-    }
-
-    private int calculateCorrectAnswers(int score, String difficulty) {
-        if (difficulty == null || difficulty.isEmpty()) {
-            return score / 10;
-        }
-        int scorePerQuestion = switch (difficulty) {
-            case "medium" -> 15;
-            case "hard" -> 20;
-            default -> 10;
-        };
-        return score / scorePerQuestion;
     }
 
     @GetMapping("/records")

@@ -15,11 +15,6 @@
       <el-descriptions-item label="分类">
         {{ quiz?.category }}
       </el-descriptions-item>
-      <el-descriptions-item label="难度">
-        <el-tag :type="getDifficultyTagType(quiz?.difficulty)">
-          {{ getDifficultyText(quiz?.difficulty) }}
-        </el-tag>
-      </el-descriptions-item>
       <el-descriptions-item label="正确答案">
         {{ quiz?.correctAnswer || quiz?.answer }}
       </el-descriptions-item>
@@ -57,8 +52,6 @@
 </template>
 
 <script setup>
-import { getDifficultyTagType, getDifficultyText } from '@/utils/adminUtils';
-
 defineProps({
   visible: { type: Boolean, default: false },
   quiz: { type: Object, default: null }

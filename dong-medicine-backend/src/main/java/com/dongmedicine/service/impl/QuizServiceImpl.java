@@ -13,7 +13,6 @@ import com.dongmedicine.mapper.QuizQuestionMapper;
 import com.dongmedicine.mapper.QuizRecordMapper;
 import com.dongmedicine.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -27,22 +26,7 @@ import java.util.stream.Collectors;
 public class QuizServiceImpl implements QuizService {
 
     private static final int DEFAULT_QUESTION_COUNT = 10;
-    private static final int SCORE_PER_QUESTION = 10;
-
-    private static final Map<String, Integer> DIFFICULTY_CONFIG = Map.of(
-        "easy", 10,
-        "medium", 20,
-        "hard", 30
-    );
-
-    private static final Map<String, Integer> DIFFICULTY_SCORE = Map.of(
-        "easy", 10,
-        "medium", 15,
-        "hard", 20
-    );
-
-    @Value("${app.quiz.question-count:10}")
-    private int questionCount;
+    private static final int DEFAULT_SCORE_PER_QUESTION = 10;
 
     @Autowired
     private QuizQuestionMapper questionMapper;
@@ -50,46 +34,19 @@ public class QuizServiceImpl implements QuizService {
     private QuizRecordMapper recordMapper;
 
     @Override
-    public List<QuizQuestionDTO> getRandomQuestions() {
-        int count = questionCount > 0 ? questionCount : DEFAULT_QUESTION_COUNT;
-        List<QuizQuestion> questions = questionMapper.selectRandomQuestions(count);
+    public List<QuizQuestionDTO> getRandomQuestions(int count) {
+        int questionCount = count > 0 ? count : DEFAULT_QUESTION_COUNT;
+        List<QuizQuestion> questions = questionMapper.selectRandomQuestions(questionCount);
         return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public List<QuizQuestionDTO> getRandomQuestionsByDifficulty(String difficulty) {
-        int count = DIFFICULTY_CONFIG.getOrDefault(difficulty, DEFAULT_QUESTION_COUNT);
-        List<QuizQuestion> questions = questionMapper.selectRandomQuestionsByDifficulty(difficulty, count);
-        return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
-    }
-
-    @Override
-    public Integer submit(Integer userId, List<AnswerDTO> answers) {
+    public Integer submit(Integer userId, List<AnswerDTO> answers, int scorePerQuestion) {
         if (userId == null || answers == null || answers.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "用户ID和答案不能为空");
         }
 
-        int score = calculateScore(answers);
-
-        QuizRecord record = new QuizRecord();
-        record.setUserId(userId);
-        record.setScore(score);
-        record.setTotalQuestions(answers.size());
-        record.setCorrectAnswers(score / SCORE_PER_QUESTION);
-        record.setCreateTime(LocalDateTime.now());
-        recordMapper.insert(record);
-
-        return score;
-    }
-
-    @Override
-    public Integer submitByDifficulty(Integer userId, List<AnswerDTO> answers, String difficulty) {
-        if (userId == null || answers == null || answers.isEmpty()) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR, "用户ID和答案不能为空");
-        }
-
-        int score = calculateScoreByDifficulty(answers, difficulty);
-        int scorePerQuestion = DIFFICULTY_SCORE.getOrDefault(difficulty, SCORE_PER_QUESTION);
+        int score = calculateScore(answers, scorePerQuestion);
 
         QuizRecord record = new QuizRecord();
         record.setUserId(userId);
@@ -103,10 +60,12 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public Integer calculateScore(List<AnswerDTO> answers) {
+    public Integer calculateScore(List<AnswerDTO> answers, int scorePerQuestion) {
         if (answers == null || answers.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "答案不能为空");
         }
+
+        int actualScorePerQuestion = scorePerQuestion > 0 ? scorePerQuestion : DEFAULT_SCORE_PER_QUESTION;
 
         List<Integer> questionIds = answers.stream()
                 .map(AnswerDTO::getQuestionId)
@@ -128,41 +87,7 @@ public class QuizServiceImpl implements QuizService {
             }
             QuizQuestion q = questionMap.get(dto.getQuestionId());
             if (q != null && q.getAnswer().equals(dto.getAnswer())) {
-                score += SCORE_PER_QUESTION;
-            }
-        }
-        return score;
-    }
-
-    @Override
-    public Integer calculateScoreByDifficulty(List<AnswerDTO> answers, String difficulty) {
-        if (answers == null || answers.isEmpty()) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR, "答案不能为空");
-        }
-
-        int scorePerQuestion = DIFFICULTY_SCORE.getOrDefault(difficulty, SCORE_PER_QUESTION);
-
-        List<Integer> questionIds = answers.stream()
-                .map(AnswerDTO::getQuestionId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        if (questionIds.isEmpty()) {
-            return 0;
-        }
-
-        List<QuizQuestion> questions = questionMapper.selectBatchIds(questionIds);
-        Map<Integer, QuizQuestion> questionMap = questions.stream()
-                .collect(Collectors.toMap(QuizQuestion::getId, Function.identity()));
-
-        int score = 0;
-        for (AnswerDTO dto : answers) {
-            if (dto.getQuestionId() == null || !StringUtils.hasText(dto.getAnswer())) {
-                continue;
-            }
-            QuizQuestion q = questionMap.get(dto.getQuestionId());
-            if (q != null && q.getAnswer().equals(dto.getAnswer())) {
-                score += scorePerQuestion;
+                score += actualScorePerQuestion;
             }
         }
         return score;
