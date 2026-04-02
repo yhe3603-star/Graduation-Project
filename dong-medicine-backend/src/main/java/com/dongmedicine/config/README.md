@@ -1,59 +1,143 @@
-# 配置类目录 (config)
+# 配置模块 (config)
 
-本目录存放Spring Boot配置类，用于配置应用的各种功能。
+本目录存放 Spring Boot 的配置类，用于配置框架行为。
 
-## 📖 什么是配置类？
+## 目录
 
-配置类是使用`@Configuration`注解标记的类，用于定义Spring Bean和配置应用行为。常见的配置包括：
-- 安全配置（Spring Security）
-- 跨域配置（CORS）
-- 数据源配置
-- 缓存配置
-- 自定义Bean配置
+- [什么是配置类？](#什么是配置类)
+- [目录结构](#目录结构)
+- [核心配置类](#核心配置类)
+- [配置文件说明](#配置文件说明)
 
-## 📁 文件列表
+---
 
-| 文件名 | 功能说明 |
-|--------|----------|
-| `SecurityConfig.java` | Spring Security安全配置 |
-| `JwtUtil.java` | JWT工具类 |
-| `CorsConfig.java` | 跨域配置 |
-| `RedisConfig.java` | Redis缓存配置 |
-| `MyBatisPlusConfig.java` | MyBatis Plus配置 |
-| `WebConfig.java` | Web MVC配置 |
+## 什么是配置类？
 
-## 📦 详细说明
+### 配置类的概念
 
-### 1. SecurityConfig.java - 安全配置
+**配置类**是用来告诉 Spring Boot 如何工作的类。它就像电器的"设置菜单"——通过配置，你可以调整框架的各种行为。
 
-**功能:** 配置Spring Security安全框架
+### 为什么需要配置类？
 
-**主要配置:**
-- 认证规则：哪些URL需要认证
-- 授权规则：不同角色的权限
-- 密码编码器：BCrypt加密
-- JWT过滤器：Token验证
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     没有配置类                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Spring Boot 使用默认配置：                                      │
+│  - 默认端口 8080                                                │
+│  - 默认不启用安全验证                                            │
+│  - 默认不启用缓存                                                │
+│  - 默认不启用跨域                                                │
+│                                                                 │
+│  → 无法满足项目需求                                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
-**配置示例:**
+┌─────────────────────────────────────────────────────────────────┐
+│                      有配置类                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  通过配置类自定义：                                               │
+│  - 自定义安全规则（哪些接口需要登录）                              │
+│  - 自定义缓存策略                                                │
+│  - 自定义跨域规则                                                │
+│  - 自定义JWT验证                                                 │
+│                                                                 │
+│  → 满足项目需求                                                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 配置类的基本结构
+
 ```java
+@Configuration  // 标记这是一个配置类
+public class ExampleConfig {
+    
+    @Bean  // 创建一个Bean，交给Spring管理
+    public SomeService someService() {
+        return new SomeServiceImpl();
+    }
+}
+```
+
+---
+
+## 目录结构
+
+```
+config/
+│
+├── health/                            # 健康检查
+│   └── HealthCheckConfig.java
+│
+├── logging/                           # 日志配置
+│   └── LoggingConfig.java
+│
+├── SecurityConfig.java                # Spring Security 安全配置
+├── JwtUtil.java                       # JWT 工具类
+├── JwtAuthenticationFilter.java       # JWT 认证过滤器
+├── CacheConfig.java                   # 缓存配置
+├── RateLimitAspect.java               # 请求限流切面
+├── CorsConfig.java                    # 跨域配置
+├── WebConfig.java                     # Web配置
+├── OpenApiConfig.java                 # Swagger API文档配置
+├── DeepSeekConfig.java                # DeepSeek AI配置
+└── TokenBlacklistConfig.java          # Token黑名单配置
+```
+
+---
+
+## 核心配置类
+
+### SecurityConfig - 安全配置
+
+配置 Spring Security，定义哪些接口需要认证。
+
+```java
+/**
+ * Spring Security 安全配置
+ * 定义认证规则和权限控制
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     
     private final JwtAuthenticationFilter jwtFilter;
+    private final TokenBlacklistService blacklistService;
     
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // 禁用CSRF（前后端分离不需要）
             .csrf(csrf -> csrf.disable())
+            
+            // 配置Session：无状态（使用JWT）
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // 配置请求授权
             .authorizeHttpRequests(auth -> auth
+                // 公开接口：不需要登录
                 .requestMatchers("/api/user/login", "/api/user/register").permitAll()
+                .requestMatchers("/api/captcha/**").permitAll()
+                .requestMatchers("/api/plants/**").permitAll()
+                .requestMatchers("/api/knowledge/**").permitAll()
+                .requestMatchers("/api/inheritors/**").permitAll()
+                .requestMatchers("/api/resources/**").permitAll()
+                .requestMatchers("/api/chat/**").permitAll()
+                
+                // 管理员接口：需要ADMIN角色
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/upload/**").hasRole("ADMIN")
+                
+                // 其他接口：需要登录
                 .anyRequest().authenticated()
             )
+            
+            // 添加JWT过滤器
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
@@ -61,130 +145,356 @@ public class SecurityConfig {
     
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // 使用BCrypt加密密码
         return new BCryptPasswordEncoder();
     }
 }
 ```
 
-### 2. JwtUtil.java - JWT工具类
+### JwtAuthenticationFilter - JWT认证过滤器
 
-**功能:** 生成和解析JWT Token
+拦截请求，验证JWT Token。
 
-**主要方法:**
-| 方法名 | 功能说明 |
-|--------|----------|
-| `generateToken(User user)` | 生成Token |
-| `parseToken(String token)` | 解析Token |
-| `validateToken(String token)` | 验证Token |
-| `getUserId(String token)` | 获取用户ID |
-| `getUsername(String token)` | 获取用户名 |
-
-**使用示例:**
 ```java
+/**
+ * JWT认证过滤器
+ * 拦截每个请求，验证Token有效性
+ */
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService blacklistService;
+    
+    @Override
+    protected void doFilterInternal(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain filterChain
+    ) throws ServletException, IOException {
+        
+        // 1. 从请求头获取Token
+        String token = extractToken(request);
+        
+        if (token != null) {
+            // 2. 检查Token是否在黑名单中
+            if (blacklistService.isBlacklisted(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"code\":401,\"msg\":\"Token已失效\"}");
+                return;
+            }
+            
+            // 3. 验证Token有效性
+            if (jwtUtil.validateToken(token)) {
+                // 4. 从Token中获取用户名
+                String username = jwtUtil.extractUsername(token);
+                
+                // 5. 加载用户信息
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                
+                // 6. 检查用户状态
+                if (userDetails instanceof CustomUserDetails) {
+                    CustomUserDetails customUser = (CustomUserDetails) userDetails;
+                    if (customUser.isBanned()) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.getWriter().write("{\"code\":403,\"msg\":\"账号已被封禁\"}");
+                        return;
+                    }
+                }
+                
+                // 7. 设置认证信息
+                UsernamePasswordAuthenticationToken auth = 
+                    new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+        }
+        
+        // 继续执行后续过滤器
+        filterChain.doFilter(request, response);
+    }
+    
+    private String extractToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return null;
+    }
+}
+```
+
+### JwtUtil - JWT工具类
+
+生成和验证JWT Token。
+
+```java
+/**
+ * JWT工具类
+ * 用于生成、解析、验证JWT Token
+ */
 @Component
 public class JwtUtil {
     
-    @Value("${jwt.secret}")
+    @Value("${app.security.jwt-secret}")
     private String secret;
     
-    @Value("${jwt.expiration}")
-    private Long expiration;
+    @Value("${app.security.jwt-expiration}")
+    private long expiration;
     
-    public String generateToken(User user) {
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+    
+    /**
+     * 生成Token
+     */
+    public String generateToken(Integer userId, String username, String role) {
         return Jwts.builder()
-            .setSubject(user.getUsername())
-            .claim("userId", user.getId())
-            .claim("role", user.getRole())
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + expiration))
-            .signWith(SignatureAlgorithm.HS512, secret)
+            .subject(username)
+            .claim("userId", userId)
+            .claim("role", role)
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + expiration))
+            .signWith(getSigningKey())
             .compact();
     }
-}
-```
-
-### 3. CorsConfig.java - 跨域配置
-
-**功能:** 配置跨域资源共享（CORS）
-
-**配置示例:**
-```java
-@Configuration
-public class CorsConfig {
     
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("*");
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
-        config.setAllowCredentials(true);
-        
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        
-        return new CorsFilter(source);
+    /**
+     * 从Token中提取用户名
+     */
+    public String extractUsername(String token) {
+        return Jwts.parser()
+            .verifyWith(getSigningKey())
+            .build()
+            .parseSignedClaims(token)
+            .getPayload()
+            .getSubject();
+    }
+    
+    /**
+     * 验证Token是否有效
+     */
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 检查Token是否过期
+     */
+    public boolean isTokenExpired(String token) {
+        Date expiration = Jwts.parser()
+            .verifyWith(getSigningKey())
+            .build()
+            .parseSignedClaims(token)
+            .getPayload()
+            .getExpiration();
+        return expiration.before(new Date());
     }
 }
 ```
 
-### 4. MyBatisPlusConfig.java - MyBatis Plus配置
+### CacheConfig - 缓存配置
 
-**功能:** 配置MyBatis Plus分页插件等
+配置多级缓存（Caffeine + Redis）。
 
-**配置示例:**
 ```java
+/**
+ * 缓存配置
+ * 配置Caffeine本地缓存 + Redis分布式缓存
+ */
 @Configuration
-public class MyBatisPlusConfig {
+@EnableCaching
+public class CacheConfig {
     
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
-        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        // 分页插件
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
-        // 乐观锁插件
-        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
-        return interceptor;
+    public CacheManager cacheManager(RedisConnectionFactory factory) {
+        // 1. Caffeine本地缓存配置
+        CaffeineCacheManager caffeineManager = new CaffeineCacheManager();
+        caffeineManager.setCaffeine(Caffeine.newBuilder()
+            .maximumSize(1000)           // 最大缓存数量
+            .expireAfterWrite(60, TimeUnit.MINUTES)  // 过期时间
+            .recordStats());             // 记录统计信息
+        
+        // 2. Redis缓存配置
+        RedisCacheConfiguration redisConfig = RedisCacheConfiguration.defaultCacheConfig()
+            .entryTtl(Duration.ofMinutes(60))
+            .serializeValuesWith(RedisSerializationContext.SerializationPair
+                .fromSerializer(new GenericJackson2JsonRedisSerializer()));
+        
+        // 3. 组合缓存管理器
+        return new CompositeCacheManager(
+            caffeineManager,
+            RedisCacheManager.builder(factory)
+                .cacheDefaults(redisConfig)
+                .build()
+        );
     }
 }
 ```
 
-## 🎯 配置类规范
+### RateLimitAspect - 请求限流
 
-### 基本结构
+限制接口访问频率，防止恶意请求。
+
 ```java
-@Configuration
+/**
+ * 请求限流切面
+ * 使用Redis计数器实现限流
+ */
+@Aspect
+@Component
 @RequiredArgsConstructor
-public class ExampleConfig {
+public class RateLimitAspect {
     
-    private final SomeDependency dependency;
+    private final RedisTemplate<String, Object> redisTemplate;
     
-    @Bean
-    public SomeBean someBean() {
-        return new SomeBean();
+    // 本地令牌桶（Redis不可用时的降级方案）
+    private final Map<String, LocalTokenBucket> localBuckets = new ConcurrentHashMap<>();
+    
+    @Around("@annotation(rateLimit)")
+    public Object around(ProceedingJoinPoint point, RateLimit rateLimit) throws Throwable {
+        String key = "rate_limit:" + rateLimit.key() + ":" + getClientId();
+        int limit = rateLimit.value();
+        
+        // 尝试使用Redis限流
+        if (!tryAcquireWithRedis(key, limit)) {
+            // Redis不可用，使用本地限流
+            if (!tryAcquireLocally(key, limit)) {
+                throw new BusinessException("请求过于频繁，请稍后再试");
+            }
+        }
+        
+        return point.proceed();
+    }
+    
+    private boolean tryAcquireWithRedis(String key, int limit) {
+        try {
+            Long count = redisTemplate.opsForValue().increment(key);
+            if (count != null && count == 1) {
+                redisTemplate.expire(key, 1, TimeUnit.MINUTES);
+            }
+            return count != null && count <= limit;
+        } catch (Exception e) {
+            return false;  // Redis不可用
+        }
+    }
+    
+    private boolean tryAcquireLocally(String key, int limit) {
+        LocalTokenBucket bucket = localBuckets.computeIfAbsent(key, 
+            k -> new LocalTokenBucket(limit));
+        return bucket.tryAcquire();
     }
 }
 ```
 
-### 常用注解
+---
 
-| 注解 | 说明 |
-|------|------|
-| `@Configuration` | 标记为配置类 |
-| `@Bean` | 定义Spring Bean |
-| `@Value` | 注入配置属性 |
-| `@ConfigurationProperties` | 绑定配置属性 |
-| `@EnableWebSecurity` | 启用Web安全 |
-| `@EnableCaching` | 启用缓存 |
+## 配置文件说明
 
-### 最佳实践
-1. **单一职责**: 每个配置类只负责一个功能
-2. **命名规范**: 以`Config`结尾
-3. **使用构造注入**: 使用`@RequiredArgsConstructor`
-4. **配置外部化**: 使用`@Value`或`@ConfigurationProperties`
+### application.yml - 主配置
 
-## 📚 扩展阅读
+```yaml
+server:
+  port: 8080
 
-- [Spring Boot 配置](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config)
-- [Spring Security 配置](https://docs.spring.io/spring-security/reference/servlet/configuration.html)
-- [JWT 入门](https://jwt.io/introduction)
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET}
+    jwt-expiration: ${JWT_EXPIRATION:86400000}
+  cache:
+    enabled: true
+    max-size: 1000
+    expire-minutes: 60
+```
+
+### application-dev.yml - 开发环境
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/dong_medicine
+    username: root
+    password: 123456
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    com.dongmedicine: DEBUG
+```
+
+### application-prod.yml - 生产环境
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+
+logging:
+  level:
+    com.dongmedicine: INFO
+```
+
+---
+
+## 最佳实践
+
+### 1. 配置分离
+
+- 开发环境和生产环境使用不同的配置文件
+- 敏感信息使用环境变量
+
+### 2. 配置验证
+
+```java
+@ConfigurationProperties(prefix = "app")
+@Validated
+public class AppConfig {
+    
+    @NotNull
+    private String jwtSecret;
+    
+    @Min(3600000)  // 最少1小时
+    private long jwtExpiration = 86400000;
+}
+```
+
+### 3. 条件配置
+
+```java
+@Configuration
+@ConditionalOnProperty(name = "app.cache.enabled", havingValue = "true")
+public class CacheConfig {
+    // 只有启用缓存时才加载
+}
+```
+
+---
+
+**最后更新时间**：2026年4月3日

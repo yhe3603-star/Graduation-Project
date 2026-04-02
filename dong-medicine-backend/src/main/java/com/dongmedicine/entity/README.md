@@ -1,167 +1,383 @@
 # 实体类目录 (entity)
 
-本目录存放与数据库表对应的实体类（Entity）。
+本目录存放与数据库表对应的实体类。
 
-## 📖 什么是实体类？
+## 目录
 
-实体类是数据库表在Java代码中的映射。每个实体类对应数据库中的一张表，类的属性对应表的字段。
+- [什么是实体类？](#什么是实体类)
+- [目录结构](#目录结构)
+- [实体类列表](#实体类列表)
+- [开发规范](#开发规范)
+- [常用实体类详解](#常用实体类详解)
 
-## 📁 文件列表
+---
 
-| 文件名 | 对应表名 | 功能说明 |
-|--------|----------|----------|
-| `User.java` | `users` | 用户信息表 |
-| `Plant.java` | `plants` | 药用植物表 |
-| `Knowledge.java` | `knowledge` | 知识库表 |
-| `Inheritor.java` | `inheritors` | 传承人表 |
-| `Resource.java` | `resources` | 学习资源表 |
-| `Qa.java` | `qa` | 问答表 |
-| `QuizQuestion.java` | `quiz_questions` | 答题题目表 |
-| `QuizRecord.java` | `quiz_records` | 答题记录表 |
-| `PlantGameRecord.java` | `plant_game_records` | 植物游戏记录表 |
-| `Comment.java` | `comments` | 评论表 |
-| `Favorite.java` | `favorites` | 收藏表 |
-| `Feedback.java` | `feedback` | 反馈表 |
-| `OperationLog.java` | `operation_logs` | 操作日志表 |
+## 什么是实体类？
 
-## 📦 详细说明
+### 实体类的概念
 
-### 1. User.java - 用户实体
+**实体类（Entity）** 是与数据库表对应的 Java 类。它就像一个"数据容器"——类的属性对应表的字段，类的对象对应表中的一行数据。
 
-**对应表结构:**
-| 字段名 | 类型 | 说明 |
-|--------|------|------|
-| id | INT | 主键ID |
-| username | VARCHAR(50) | 用户名 |
-| password | VARCHAR(255) | 密码（加密） |
-| email | VARCHAR(100) | 邮箱 |
-| phone | VARCHAR(20) | 手机号 |
-| avatar | VARCHAR(255) | 头像URL |
-| role | VARCHAR(20) | 角色（USER/ADMIN） |
-| status | TINYINT | 状态（0禁用/1正常） |
-| create_time | DATETIME | 创建时间 |
-| update_time | DATETIME | 更新时间 |
+### 实体类的作用
 
-### 2. Plant.java - 植物实体
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     实体类与数据库表                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  数据库表 users                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  id  │  username  │  password_hash  │  role  │  status │   │
+│  ├──────┼────────────┼─────────────────┼────────┼─────────┤   │
+│  │  1   │  admin     │  $2a$10$...     │  ADMIN │    0    │   │
+│  │  2   │  zhangsan  │  $2a$10$...     │  USER  │    0    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                            ↕                                    │
+│                            映射                                 │
+│                            ↕                                    │
+│  Java实体类 User                                                │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  public class User {                                    │   │
+│  │      private Integer id;                                │   │
+│  │      private String username;                           │   │
+│  │      private String passwordHash;                       │   │
+│  │      private String role;                               │   │
+│  │      private Integer status;                            │   │
+│  │      // getter/setter...                                │   │
+│  │  }                                                      │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-**对应表结构:**
-| 字段名 | 类型 | 说明 |
-|--------|------|------|
-| id | INT | 主键ID |
-| name_cn | VARCHAR(100) | 中文名 |
-| name_dong | VARCHAR(100) | 侗语名 |
-| scientific_name | VARCHAR(200) | 学名 |
-| category | VARCHAR(50) | 分类 |
-| usage_way | VARCHAR(50) | 用法 |
-| habitat | TEXT | 生境 |
-| efficacy | TEXT | 功效 |
-| story | TEXT | 故事 |
-| images | TEXT | 图片（JSON数组） |
-| videos | TEXT | 视频（JSON数组） |
-| documents | TEXT | 文档（JSON数组） |
-| distribution | TEXT | 分布（JSON） |
-| view_count | INT | 浏览次数 |
-| update_log | TEXT | 更新日志 |
-| create_time | DATETIME | 创建时间 |
-| update_time | DATETIME | 更新时间 |
+### ORM框架的作用
 
-### 3. Knowledge.java - 知识实体
+MyBatis Plus 是一个 ORM（对象关系映射）框架，它自动完成：
+- Java对象 → 数据库行（插入、更新）
+- 数据库行 → Java对象（查询）
 
-**对应表结构:**
-| 字段名 | 类型 | 说明 |
-|--------|------|------|
-| id | INT | 主键ID |
-| title | VARCHAR(200) | 标题 |
-| content | TEXT | 内容 |
-| type | VARCHAR(50) | 类型 |
-| category | VARCHAR(50) | 分类 |
-| therapy | VARCHAR(100) | 疗法 |
-| disease | VARCHAR(100) | 疾病 |
-| herb | VARCHAR(100) | 药材 |
-| images | TEXT | 图片 |
-| videos | TEXT | 视频 |
-| documents | TEXT | 文档 |
-| view_count | INT | 浏览次数 |
-| popularity | INT | 热度 |
-| create_time | DATETIME | 创建时间 |
-| update_time | DATETIME | 更新时间 |
+---
 
-### 4. QuizQuestion.java - 答题题目实体
+## 目录结构
 
-**对应表结构:**
-| 字段名 | 类型 | 说明 |
-|--------|------|------|
-| id | INT | 主键ID |
-| question | TEXT | 题目内容 |
-| options | TEXT | 选项（JSON数组） |
-| answer | VARCHAR(10) | 正确答案 |
-| category | VARCHAR(50) | 分类 |
-| correct_answer | VARCHAR(10) | 正确答案字段 |
-| explanation | TEXT | 解析 |
-| create_time | DATETIME | 创建时间 |
+```
+entity/
+│
+├── User.java                          # 用户实体
+├── Plant.java                         # 药用植物实体
+├── Knowledge.java                     # 知识库实体
+├── Inheritor.java                     # 传承人实体
+├── Resource.java                      # 学习资源实体
+├── Qa.java                            # 问答实体
+├── Comment.java                       # 评论实体
+├── Favorite.java                      # 收藏实体
+├── Feedback.java                      # 反馈实体
+├── QuizQuestion.java                  # 测验题目实体
+├── QuizRecord.java                    # 测验记录实体
+├── PlantGameRecord.java               # 植物游戏记录实体
+└── OperationLog.java                  # 操作日志实体
+```
 
-## 🎯 实体类规范
+---
 
-### 基本结构
+## 实体类列表
+
+| 实体类 | 对应表 | 说明 |
+|--------|--------|------|
+| User | users | 用户信息 |
+| Plant | plants | 药用植物信息 |
+| Knowledge | knowledge | 知识库信息 |
+| Inheritor | inheritors | 传承人信息 |
+| Resource | resources | 学习资源信息 |
+| Qa | qa | 问答信息 |
+| Comment | comments | 评论信息 |
+| Favorite | favorites | 收藏信息 |
+| Feedback | feedback | 反馈信息 |
+| QuizQuestion | quiz_questions | 测验题目 |
+| QuizRecord | quiz_record | 测验记录 |
+| PlantGameRecord | plant_game_record | 植物游戏记录 |
+| OperationLog | operation_log | 操作日志 |
+
+---
+
+## 开发规范
+
+### 1. 实体类基本结构
+
 ```java
-@Data
-@TableName("table_name")
-public class Example {
+/**
+ * 用户实体类
+ * 对应数据库表 users
+ */
+@Data                               // Lombok：自动生成getter/setter/toString等
+@TableName("users")                 // 指定对应的数据库表名
+public class User {
     
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.AUTO)    // 主键，自增
     private Integer id;
     
-    @TableField("field_name")
-    private String fieldName;
+    private String username;        // 用户名
     
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    private String passwordHash;    // 密码哈希
     
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
+    private String role;            // 角色
     
-    @TableLogic
-    private Integer deleted;
+    private Integer status;         // 状态
     
-    @Version
-    private Integer version;
+    @TableField(fill = FieldFill.INSERT)  // 插入时自动填充
+    private LocalDateTime createdAt;       // 创建时间
 }
 ```
 
-### 常用注解
+### 2. 常用注解说明
 
 | 注解 | 说明 | 示例 |
 |------|------|------|
 | `@TableName` | 指定表名 | `@TableName("users")` |
-| `@TableId` | 主键注解 | `@TableId(type = IdType.AUTO)` |
-| `@TableField` | 字段注解 | `@TableField("user_name")` |
-| `@TableLogic` | 逻辑删除 | `@TableLogic` |
-| `@Version` | 乐观锁 | `@Version` |
+| `@TableId` | 标记主键 | `@TableId(type = IdType.AUTO)` |
+| `@TableField` | 字段配置 | `@TableField(fill = FieldFill.INSERT)` |
+| `@TableLogic` | 逻辑删除 | 删除时不真删，改为标记 |
+| `@Version` | 乐观锁版本号 | 防止并发修改 |
 
-### 主键类型
+### 3. 字段类型映射
+
+| Java类型 | MySQL类型 | 说明 |
+|----------|-----------|------|
+| Integer | INT | 整数 |
+| Long | BIGINT | 长整数 |
+| String | VARCHAR | 字符串 |
+| Double | DOUBLE | 浮点数 |
+| Boolean | TINYINT(1) | 布尔值 |
+| LocalDateTime | DATETIME | 日期时间 |
+| LocalDate | DATE | 日期 |
+
+---
+
+## 常用实体类详解
+
+### User - 用户实体
+
 ```java
-@TableId(type = IdType.AUTO)      // 自增
-@TableId(type = IdType.ASSIGN_ID) // 雪花算法
-@TableId(type = IdType.INPUT)     // 手动输入
-@TableId(type = IdType.UUID)      // UUID
+/**
+ * 用户实体类
+ */
+@Data
+@TableName("users")
+public class User {
+    
+    @TableId(type = IdType.AUTO)
+    private Integer id;
+    
+    private String username;
+    
+    private String passwordHash;
+    
+    private String role;
+    
+    private Integer status;
+    
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+    
+    // 业务方法：判断是否被封禁
+    public boolean isBanned() {
+        return status != null && status == 1;
+    }
+    
+    // 业务方法：判断是否是管理员
+    public boolean isAdmin() {
+        return "ADMIN".equals(role);
+    }
+}
 ```
 
-### 字段填充策略
+### Plant - 药用植物实体
+
 ```java
-@TableField(fill = FieldFill.INSERT)       // 插入时填充
-@TableField(fill = FieldFill.UPDATE)       // 更新时填充
-@TableField(fill = FieldFill.INSERT_UPDATE) // 插入和更新时填充
+/**
+ * 药用植物实体类
+ */
+@Data
+@TableName("plants")
+public class Plant {
+    
+    @TableId(type = IdType.AUTO)
+    private Integer id;
+    
+    private String nameCn;           // 中文名称
+    
+    private String nameDong;         // 侗语名称
+    
+    private String scientificName;   // 学名
+    
+    private String category;         // 分类
+    
+    private String usageWay;         // 用法方式
+    
+    private String habitat;          // 生长环境
+    
+    private String efficacy;         // 功效
+    
+    private String story;            // 相关故事
+    
+    private String images;           // 图片(JSON)
+    
+    private String videos;           // 视频(JSON)
+    
+    private String documents;        // 文档(JSON)
+    
+    private String distribution;     // 分布地区
+    
+    private String difficulty;       // 难度级别
+    
+    private Integer viewCount;       // 浏览次数
+    
+    private Integer favoriteCount;   // 收藏次数
+    
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+    
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
+}
 ```
 
-### 最佳实践
-1. **命名规范**: 类名使用大驼峰，属性名使用小驼峰
-2. **使用Lombok**: 使用@Data等注解简化代码
-3. **类型选择**: 使用包装类（Integer）而非基本类型（int）
-4. **时间类型**: 使用LocalDateTime代替Date
-5. **逻辑删除**: 使用@TableLogic实现软删除
+### Knowledge - 知识库实体
 
-## 📚 扩展阅读
+```java
+/**
+ * 知识库实体类
+ */
+@Data
+@TableName("knowledge")
+public class Knowledge {
+    
+    @TableId(type = IdType.AUTO)
+    private Integer id;
+    
+    private String title;            // 标题
+    
+    private String type;             // 类型
+    
+    private String therapyCategory;  // 疗法分类
+    
+    private String diseaseCategory;  // 疾病分类
+    
+    private String content;          // 内容
+    
+    private String formula;          // 配方
+    
+    private String usageMethod;      // 使用方法
+    
+    private String steps;            // 步骤(JSON)
+    
+    private String images;           // 图片(JSON)
+    
+    private String videos;           // 视频(JSON)
+    
+    private String documents;        // 文档(JSON)
+    
+    private String relatedPlants;    // 相关植物
+    
+    private Integer viewCount;       // 浏览次数
+    
+    private Integer favoriteCount;   // 收藏次数
+    
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+}
+```
+
+### Comment - 评论实体
+
+```java
+/**
+ * 评论实体类
+ */
+@Data
+@TableName("comments")
+public class Comment {
+    
+    @TableId(type = IdType.AUTO)
+    private Integer id;
+    
+    private Integer userId;          // 用户ID
+    
+    private String targetType;       // 目标类型(plant/knowledge/inheritor等)
+    
+    private Integer targetId;        // 目标ID
+    
+    private String content;          // 评论内容
+    
+    private Integer parentId;        // 父评论ID(用于嵌套回复)
+    
+    private Integer status;          // 状态(0待审核/1已审核)
+    
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+}
+```
+
+---
+
+## 最佳实践
+
+### 1. 使用Lombok简化代码
+
+```java
+// 使用 @Data 自动生成 getter/setter/toString/equals/hashCode
+@Data
+public class User {
+    private Integer id;
+    private String username;
+}
+
+// 等价于手写以下代码：
+public class User {
+    private Integer id;
+    private String username;
+    
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    // toString, equals, hashCode...
+}
+```
+
+### 2. 字段命名规范
+
+```java
+// Java使用驼峰命名
+private String passwordHash;
+
+// 数据库使用下划线命名
+// password_hash
+
+// MyBatis Plus 自动转换
+```
+
+### 3. 不要在实体类中写复杂逻辑
+
+```java
+// ✅ 好的做法：简单的判断方法
+public boolean isBanned() {
+    return status != null && status == 1;
+}
+
+// ❌ 不好的做法：复杂的业务逻辑
+public void calculateScore() {
+    // 复杂计算应该在Service层
+}
+```
+
+---
+
+**相关文档**
 
 - [MyBatis Plus 实体类](https://baomidou.com/guide/entity.html)
-- [Lombok 注解](https://projectlombok.org/features/)
-- [Java Bean 规范](https://en.wikipedia.org/wiki/JavaBean)
+- [Lombok 官方文档](https://projectlombok.org/)
+
+---
+
+**最后更新时间**：2026年4月3日

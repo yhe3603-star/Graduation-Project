@@ -1,236 +1,260 @@
-# 页面视图目录 (views)
+# 页面组件目录 (views)
 
-本目录存放页面级组件，每个文件对应一个路由页面。
+本目录存放页面级组件，每个组件对应一个路由页面。
 
-## 📁 文件列表
+## 目录
 
-| 文件名 | 功能说明 | 路由路径 |
-|--------|----------|----------|
-| `Home.vue` | 首页 | `/` |
-| `About.vue` | 关于非遗 | `/about` |
-| `Plants.vue` | 药用植物 | `/plants` |
-| `Knowledge.vue` | 知识库 | `/knowledge` |
-| `Inheritors.vue` | 传承人 | `/inheritors` |
-| `Resources.vue` | 学习资源 | `/resources` |
-| `Qa.vue` | 问答社区 | `/qa` |
-| `Interact.vue` | 文化互动 | `/interact` |
-| `Visual.vue` | 数据可视化 | `/visual` |
-| `PersonalCenter.vue` | 个人中心 | `/personal` |
-| `Feedback.vue` | 意见反馈 | `/feedback` |
-| `Admin.vue` | 管理后台 | `/admin` |
-| `GlobalSearch.vue` | 全局搜索 | `/search` |
-| `NotFound.vue` | 404页面 | `*` |
+- [什么是页面组件？](#什么是页面组件)
+- [目录结构](#目录结构)
+- [页面列表](#页面列表)
+- [页面开发规范](#页面开发规范)
 
-## 📦 页面详细说明
+---
 
-### 1. Home.vue - 首页
+## 什么是页面组件？
 
-**功能:**
-- 展示平台概览
-- 快速导航入口
-- 统计数据展示
-- 特色内容推荐
+### 页面组件的概念
 
-**主要组件:**
-- Hero区域
-- 统计卡片
-- 导航入口网格
-- 特色模块展示
+**页面组件**是构成网站页面的主要组件，每个页面组件对应一个URL路由。它就像一本书的"章节"——每个章节（页面）有独立的内容，读者（用户）可以通过目录（路由）跳转到不同章节。
 
-### 2. About.vue - 关于非遗
+### 页面组件与普通组件的区别
 
-**功能:**
-- 侗族医药文化介绍
-- 平台数据展示
-- 功能特色说明
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    页面组件 vs 普通组件                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  页面组件 (views/)                                              │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  - 对应一个完整的页面                                    │   │
+│  │  - 有对应的URL路由                                       │   │
+│  │  - 包含页面级的业务逻辑                                  │   │
+│  │  - 通常由多个普通组件组成                                │   │
+│  │  - 示例：Home.vue, Plants.vue                           │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  普通组件 (components/)                                         │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  - 可复用的UI单元                                        │   │
+│  │  - 没有对应的URL路由                                     │   │
+│  │  - 包含组件级的逻辑                                      │   │
+│  │  - 被页面组件引用                                        │   │
+│  │  - 示例：CardGrid.vue, Pagination.vue                    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-**主要内容:**
-- 文化背景介绍
-- 平台统计数据
-- 功能模块说明
+---
 
-### 3. Plants.vue - 药用植物
+## 目录结构
 
-**功能:**
-- 植物列表展示
-- 搜索筛选
-- 植物详情查看
-- 收藏功能
+```
+views/
+│
+├── Home.vue                           # 首页
+├── Plants.vue                         # 药用植物页面
+├── Inheritors.vue                     # 传承人页面
+├── Knowledge.vue                      # 知识库页面
+├── Qa.vue                             # 问答社区页面
+├── Resources.vue                      # 学习资源页面
+├── Interact.vue                       # 互动专区页面
+├── Visual.vue                         # 数据可视化页面
+├── PersonalCenter.vue                 # 个人中心页面
+├── Admin.vue                          # 管理后台页面
+├── About.vue                          # 关于页面
+├── Feedback.vue                       # 意见反馈页面
+├── GlobalSearch.vue                   # 全局搜索页面
+└── NotFound.vue                       # 404页面
+```
 
-**主要组件:**
-- 搜索过滤器
-- 植物卡片网格
-- 分页组件
-- 详情对话框
+---
 
-### 4. Knowledge.vue - 知识库
+## 页面列表
 
-**功能:**
-- 知识内容列表
-- 分类筛选
-- 知识详情查看
-- 收藏功能
+| 页面 | 路由 | 功能描述 | 权限 |
+|------|------|----------|------|
+| Home.vue | `/` | 首页，展示平台核心功能入口、统计数据、传承人风采 | 公开 |
+| Plants.vue | `/plants` | 药用植物图鉴，支持分类筛选、搜索、收藏 | 公开 |
+| Inheritors.vue | `/inheritors` | 传承人风采展示，按级别筛选 | 公开 |
+| Knowledge.vue | `/knowledge` | 非遗医药知识库，支持分类检索、搜索过滤 | 公开 |
+| Qa.vue | `/qa` | 问答社区，侗医药知识问答 | 公开 |
+| Interact.vue | `/interact` | 文化互动专区，趣味答题、植物识别游戏 | 公开 |
+| Resources.vue | `/resources` | 学习资源库，支持预览、下载、收藏 | 公开 |
+| Visual.vue | `/visual` | 数据可视化，统计图表展示 | 公开 |
+| PersonalCenter.vue | `/personal` | 个人中心，管理收藏、答题记录、账号设置 | 需登录 |
+| Admin.vue | `/admin` | 管理后台，数据管理、用户管理、评论审核 | 管理员 |
+| About.vue | `/about` | 关于页面，介绍平台和侗医文化 | 公开 |
+| Feedback.vue | `/feedback` | 意见反馈，用户提交功能建议 | 公开 |
+| GlobalSearch.vue | `/search` | 全局搜索，跨模块统一搜索 | 公开 |
+| NotFound.vue | `*` | 404页面，页面不存在时显示 | 公开 |
 
-**主要组件:**
-- 搜索过滤器
-- 知识卡片网格
-- 分页组件
-- 详情对话框
+---
 
-### 5. Inheritors.vue - 传承人
+## 页面开发规范
 
-**功能:**
-- 传承人列表
-- 搜索筛选
-- 传承人详情
+### 1. 页面基本结构
 
-**主要组件:**
-- 搜索过滤器
-- 传承人卡片网格
-- 分页组件
-- 详情对话框
-
-### 6. Resources.vue - 学习资源
-
-**功能:**
-- 资源列表展示
-- 资源分类筛选
-- 资源预览/下载
-
-**主要组件:**
-- 搜索过滤器
-- 资源列表
-- 分页组件
-- 预览对话框
-
-### 7. Qa.vue - 问答社区
-
-**功能:**
-- 问答列表展示
-- 问题分类筛选
-- AI智能问答
-
-**主要组件:**
-- 搜索过滤器
-- 问答列表
-- AI聊天卡片
-- 详情对话框
-
-### 8. Interact.vue - 文化互动
-
-**功能:**
-- 植物识别游戏
-- 趣味答题
-- 游戏记录查看
-
-**主要组件:**
-- 难度选择
-- 植物游戏组件
-- 答题组件
-- 游戏记录
-
-### 9. Visual.vue - 数据可视化
-
-**功能:**
-- 平台数据统计
-- 图表可视化展示
-- 数据分析
-
-**主要组件:**
-- 统计卡片
-- 各类图表
-- 数据表格
-
-### 10. PersonalCenter.vue - 个人中心
-
-**功能:**
-- 用户信息管理
-- 收藏管理
-- 游戏记录查看
-
-**主要组件:**
-- 用户信息卡片
-- 收藏列表
-- 记录列表
-
-### 11. Feedback.vue - 意见反馈
-
-**功能:**
-- 提交反馈意见
-- 查看反馈历史
-
-**主要组件:**
-- 反馈表单
-- 反馈列表
-
-### 12. Admin.vue - 管理后台
-
-**功能:**
-- 数据管理
-- 用户管理
-- 系统配置
-
-**主要组件:**
-- 侧边栏导航
-- 数据表格
-- 表单对话框
-- 详情对话框
-
-### 13. GlobalSearch.vue - 全局搜索
-
-**功能:**
-- 全站内容搜索
-- 搜索结果展示
-
-**主要组件:**
-- 搜索框
-- 结果列表
-- 分类筛选
-
-### 14. NotFound.vue - 404页面
-
-**功能:**
-- 显示页面不存在提示
-- 提供返回首页入口
-
-## 🎯 页面结构规范
-
-### 基本结构
 ```vue
 <template>
-  <div class="page-name module-page">
+  <div class="page-container">
     <!-- 页面头部 -->
-    <div class="module-header">
-      <h1>页面标题</h1>
-      <p class="subtitle">页面描述</p>
-    </div>
+    <header class="page-header">
+      <h1>{{ pageTitle }}</h1>
+    </header>
     
-    <!-- 页面内容 -->
-    <div class="page-content">
-      <!-- 内容区域 -->
-    </div>
+    <!-- 主要内容区 -->
+    <main class="page-content">
+      <!-- 加载状态 -->
+      <SkeletonGrid v-if="loading" />
+      
+      <!-- 内容展示 -->
+      <template v-else>
+        <!-- 内容组件 -->
+      </template>
+    </main>
+    
+    <!-- 侧边栏（可选） -->
+    <aside class="page-sidebar">
+      <!-- 侧边栏内容 -->
+    </aside>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-// 导入组件和工具
 
-// 页面逻辑
+// 页面数据
+const loading = ref(true)
+const data = ref([])
+
+// 获取数据
+const fetchData = async () => {
+  loading.value = true
+  try {
+    // 获取数据...
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchData()
+})
 </script>
 
 <style scoped>
-/* 页面样式 */
+.page-container {
+  /* 页面样式 */
+}
 </style>
 ```
 
-### 最佳实践
-1. **单一职责**: 每个页面只负责一个功能模块
-2. **组件复用**: 将可复用的部分提取为组件
-3. **逻辑分离**: 使用composables分离业务逻辑
-4. **样式隔离**: 使用scoped避免样式污染
+### 2. 页面命名规范
 
-## 📚 扩展阅读
+```javascript
+// 页面文件名使用 PascalCase
+Home.vue
+Plants.vue
+PersonalCenter.vue
 
-- [Vue 3 单文件组件](https://cn.vuejs.org/guide/scaling-up/sfc.html)
-- [Vue Router 路由](https://router.vuejs.org/zh/)
+// 路由 name 与文件名一致
+{
+  path: '/personal',
+  name: 'PersonalCenter',
+  component: () => import('@/views/PersonalCenter.vue')
+}
+```
+
+### 3. 页面组件拆分
+
+```vue
+<template>
+  <div class="plants-page">
+    <!-- 拆分为独立组件 -->
+    <SearchFilter 
+      v-model:keyword="keyword"
+      v-model:category="category"
+      @search="handleSearch"
+    />
+    
+    <SkeletonGridImage v-if="loading" :count="12" />
+    
+    <CardGrid v-else :items="plants" @item-click="handleItemClick" />
+    
+    <Pagination 
+      v-model:current="page"
+      :total="total"
+      :page-size="pageSize"
+    />
+    
+    <PlantDetailDialog 
+      v-model:visible="dialogVisible"
+      :plant="selectedPlant"
+    />
+  </div>
+</template>
+
+<script setup>
+import SearchFilter from '@/components/business/display/SearchFilter.vue'
+import CardGrid from '@/components/business/display/CardGrid.vue'
+import Pagination from '@/components/business/display/Pagination.vue'
+import PlantDetailDialog from '@/components/business/dialogs/PlantDetailDialog.vue'
+import SkeletonGridImage from '@/components/common/SkeletonGridImage.vue'
+
+// 页面逻辑...
+</script>
+```
+
+---
+
+## 最佳实践
+
+### 1. 页面职责清晰
+
+```javascript
+// 页面只负责：
+// 1. 数据获取和管理
+// 2. 页面级状态
+// 3. 组件组合
+// 4. 路由相关逻辑
+
+// 不要在页面中写：
+// 1. 可复用的UI组件
+// 2. 通用的业务逻辑（应该放在composables）
+```
+
+### 2. 使用组合式函数
+
+```vue
+<script setup>
+import { usePlants } from '@/composables/usePlants'
+import { useFavorite } from '@/composables/useFavorite'
+
+// 使用组合式函数封装逻辑
+const { plants, loading, fetchPlants } = usePlants()
+const { isFavorited, toggleFavorite } = useFavorite('plant')
+
+onMounted(() => {
+  fetchPlants()
+})
+</script>
+```
+
+### 3. 骨架屏加载
+
+```vue
+<template>
+  <div>
+    <!-- 加载中显示骨架屏 -->
+    <SkeletonGridImage v-if="loading" :count="12" />
+    
+    <!-- 加载完成显示内容 -->
+    <CardGrid v-else :items="plants" />
+  </div>
+</template>
+```
+
+---
+
+**最后更新时间**：2026年4月3日
