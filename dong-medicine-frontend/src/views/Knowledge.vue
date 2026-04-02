@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="knowledge-page module-page"
-  >
+  <div class="knowledge-page module-page">
     <div class="module-header">
       <h1>非遗医药知识库</h1>
       <p class="subtitle">
@@ -20,7 +17,15 @@
           @filter="handleFilter"
         />
 
-        <div class="knowledge-list">
+        <SkeletonGrid
+          v-if="pageLoading"
+          :count="12"
+        />
+
+        <div
+          v-else
+          class="knowledge-list"
+        >
           <div
             v-for="item in paginatedList"
             :key="item.id"
@@ -115,6 +120,7 @@ import KnowledgeDetailDialog from "@/components/business/dialogs/KnowledgeDetail
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
+import SkeletonGrid from "@/components/common/SkeletonGrid.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
 import { extractPageData, extractData, logFetchError } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";

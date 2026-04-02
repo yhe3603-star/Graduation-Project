@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="inheritors-page module-page"
-  >
+  <div class="inheritors-page module-page">
     <div class="module-header">
       <h1>传承人风采</h1>
       <p class="subtitle">
@@ -20,7 +17,15 @@
           @filter="handleFilter"
         />
 
-        <div class="inheritor-grid">
+        <SkeletonGrid
+          v-if="pageLoading"
+          :count="12"
+        />
+
+        <div
+          v-else
+          class="inheritor-grid"
+        >
           <div
             v-for="item in paginatedList"
             :key="item.id"
@@ -116,6 +121,7 @@ import InheritorDetailDialog from "@/components/business/dialogs/InheritorDetail
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
+import SkeletonGrid from "@/components/common/SkeletonGrid.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
 import { extractPageData, extractData } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";

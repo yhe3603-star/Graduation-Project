@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-loading="pageLoading"
-    class="qa-page module-page"
-  >
+  <div class="qa-page module-page">
     <div class="module-header">
       <h1>问答社区</h1>
       <p class="subtitle">
@@ -20,7 +17,15 @@
           @filter="handleFilter"
         />
 
-        <div class="qa-list">
+        <SkeletonGrid
+          v-if="pageLoading"
+          :count="6"
+        />
+
+        <div
+          v-else
+          class="qa-list"
+        >
           <div
             v-for="item in paginatedList"
             :key="item.id"
@@ -113,6 +118,7 @@ import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import QuizDetailDialog from "@/components/business/dialogs/QuizDetailDialog.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
+import SkeletonGrid from "@/components/common/SkeletonGrid.vue";
 import AiChatCard from "@/components/business/display/AiChatCard.vue";
 import { extractPageData, extractData } from "@/utils";
 import { useDebounceFn } from "@/composables/useDebounce";

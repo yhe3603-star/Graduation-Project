@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="pageLoading" class="resources-page module-page">
+  <div class="resources-page module-page">
     <div class="module-header">
       <h1>学习资源</h1>
       <p class="subtitle">侗医药学习资料库</p>
@@ -15,7 +15,15 @@
           @filter="handleFilter"
         />
 
-        <div class="resource-list">
+        <SkeletonGrid
+          v-if="pageLoading"
+          :count="6"
+        />
+
+        <div
+          v-else
+          class="resource-list"
+        >
           <div v-for="item in paginatedList" :key="item.id" class="resource-card" @click="openResource(item)">
             <div class="resource-icon" :class="getTypeClass(getFileInfo(item).type)">
               <el-icon :size="28"><component :is="getTypeIcon(getFileInfo(item).type)" /></el-icon>
@@ -83,6 +91,7 @@ import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import ResourceDetailDialog from "@/components/business/dialogs/ResourceDetailDialog.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
+import SkeletonGrid from "@/components/common/SkeletonGrid.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
 import { extractPageData, extractData } from "@/utils";
 import { parseMediaList } from "@/utils/media";
