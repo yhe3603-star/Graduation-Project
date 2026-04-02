@@ -48,3 +48,11 @@ Object.entries(Icons).forEach(([name, component]) => {
 })
 
 app.mount("#app")
+
+router.isReady().then(() => {
+  const loading = document.getElementById('app-loading')
+  if (loading) {
+    loading.classList.add('fade-out')
+    setTimeout(() => loading.remove(), 300)
+  }
+})
