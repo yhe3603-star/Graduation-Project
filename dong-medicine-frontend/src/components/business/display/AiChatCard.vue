@@ -10,10 +10,10 @@
           侗医智能助手
         </span>
         <el-tag
-          type="success"
+          :type="wsConnected ? 'success' : 'danger'"
           size="small"
         >
-          AI在线
+          {{ wsConnected ? 'AI在线' : 'AI离线' }}
         </el-tag>
       </div>
     </template>
@@ -55,21 +55,8 @@
         </div>
         <div class="message-content">
           <div class="message-text">
-            {{ msg.content }}
-          </div>
-        </div>
-      </div>
-      
-      <div
-        v-if="loading"
-        class="message assistant loading"
-      >
-        <div class="message-avatar">
-          🤖
-        </div>
-        <div class="message-content">
-          <div class="typing-indicator">
-            <span /><span /><span />
+            <span v-html="renderMarkdown(msg.content)"></span>
+            <span v-if="msg.streaming" class="cursor-blink">▌</span>
           </div>
         </div>
       </div>
@@ -79,17 +66,24 @@
       <el-input
         v-model="inputMessage"
         placeholder="请输入您的问题..."
-        :disabled="loading"
+        :disabled="streaming"
         @keyup.enter="sendMessage"
       >
         <template #append>
           <el-button 
+            v-if="!streaming"
             type="primary" 
-            :loading="loading" 
-            :disabled="!inputMessage.trim()"
+            :disabled="!inputMessage.trim() || !wsConnected"
             @click="sendMessage"
           >
             发送
+          </el-button>
+          <el-button 
+            v-else
+            type="danger" 
+            @click="stopGeneration"
+          >
+            停止
           </el-button>
         </template>
       </el-input>
@@ -98,22 +92,152 @@
 </template>
 
 <script setup>
-import { ref, nextTick, inject } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ChatDotRound } from '@element-plus/icons-vue'
 
-const request = inject('request')
-
 const messages = ref([])
 const inputMessage = ref('')
-const loading = ref(false)
+const streaming = ref(false)
+const wsConnected = ref(false)
 const chatContainer = ref(null)
+
+let ws = null
+let currentAssistantIndex = -1
 
 const quickQuestions = [
   '侗族医药有什么特点？',
   '什么是侗族药浴疗法？',
   '侗族常用草药有哪些？'
 ]
+
+const getWsUrl = () => {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const host = window.location.host
+  return `${protocol}//${host}/ws/chat`
+}
+
+const connectWebSocket = () => {
+  const url = getWsUrl()
+  ws = new WebSocket(url)
+
+  ws.onopen = () => {
+    wsConnected.value = true
+    console.log('WebSocket连接成功')
+  }
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+      handleWsMessage(data)
+    } catch (e) {
+      console.error('WebSocket消息解析失败', e)
+    }
+  }
+
+  ws.onclose = () => {
+    wsConnected.value = false
+    console.log('WebSocket连接关闭')
+    setTimeout(() => {
+      if (!ws || ws.readyState === WebSocket.CLOSED) {
+        connectWebSocket()
+      }
+    }, 3000)
+  }
+
+  ws.onerror = (error) => {
+    wsConnected.value = false
+    console.error('WebSocket连接错误', error)
+  }
+}
+
+const handleWsMessage = (data) => {
+  switch (data.type) {
+    case 'start':
+      currentAssistantIndex = messages.value.length
+      messages.value.push({ role: 'assistant', content: '', streaming: true })
+      streaming.value = true
+      scrollToBottom()
+      break
+
+    case 'token':
+      if (currentAssistantIndex >= 0 && currentAssistantIndex < messages.value.length) {
+        messages.value[currentAssistantIndex].content += data.content
+        scrollToBottom()
+      }
+      break
+
+    case 'done':
+      if (currentAssistantIndex >= 0 && currentAssistantIndex < messages.value.length) {
+        messages.value[currentAssistantIndex].streaming = false
+        messages.value[currentAssistantIndex].content = data.content || messages.value[currentAssistantIndex].content
+      }
+      streaming.value = false
+      currentAssistantIndex = -1
+      scrollToBottom()
+      break
+
+    case 'stopped':
+      if (currentAssistantIndex >= 0 && currentAssistantIndex < messages.value.length) {
+        messages.value[currentAssistantIndex].streaming = false
+      }
+      streaming.value = false
+      currentAssistantIndex = -1
+      break
+
+    case 'error':
+      if (currentAssistantIndex >= 0 && currentAssistantIndex < messages.value.length) {
+        messages.value[currentAssistantIndex].streaming = false
+        if (!messages.value[currentAssistantIndex].content) {
+          messages.value[currentAssistantIndex].content = data.content || '抱歉，服务暂时不可用。'
+        }
+      } else {
+        messages.value.push({
+          role: 'assistant',
+          content: data.content || '抱歉，服务暂时不可用。',
+          streaming: false
+        })
+      }
+      streaming.value = false
+      currentAssistantIndex = -1
+      break
+  }
+}
+
+const sendMessage = () => {
+  if (!inputMessage.value.trim() || streaming.value) return
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    ElMessage.error('WebSocket未连接，请稍后重试')
+    return
+  }
+
+  const userMessage = inputMessage.value.trim()
+  messages.value.push({ role: 'user', content: userMessage })
+  inputMessage.value = ''
+  scrollToBottom()
+
+  const history = messages.value.slice(-10, -1).map(m => ({
+    role: m.role,
+    content: m.content
+  }))
+
+  ws.send(JSON.stringify({
+    type: 'chat',
+    message: userMessage,
+    history: history
+  }))
+}
+
+const stopGeneration = () => {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'stop' }))
+  }
+}
+
+const sendQuickQuestion = (question) => {
+  inputMessage.value = question
+  sendMessage()
+}
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -123,50 +247,29 @@ const scrollToBottom = () => {
   })
 }
 
-const sendMessage = async () => {
-  if (!inputMessage.value.trim() || loading.value) return
-  
-  const userMessage = inputMessage.value.trim()
-  messages.value.push({ role: 'user', content: userMessage })
-  inputMessage.value = ''
-  scrollToBottom()
-  
-  loading.value = true
-  try {
-    const history = messages.value.slice(-10).map(m => ({
-      role: m.role,
-      content: m.content
-    }))
-    
-    const res = await request.post('/chat', { 
-      message: userMessage,
-      history: history.slice(0, -1)
-    })
-    
-    if (res.code === 200) {
-      messages.value.push({ role: 'assistant', content: res.data })
-    } else {
-      messages.value.push({ 
-        role: 'assistant', 
-        content: res.msg || '抱歉，服务暂时不可用，请稍后重试。' 
-      })
-    }
-  } catch (error) {
-    ElMessage.error('网络错误，请稍后重试')
-    messages.value.push({ 
-      role: 'assistant', 
-      content: '抱歉，网络连接出现问题，请稍后重试。' 
-    })
-  } finally {
-    loading.value = false
-    scrollToBottom()
-  }
+const renderMarkdown = (text) => {
+  if (!text) return ''
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>')
+  return html
 }
 
-const sendQuickQuestion = (question) => {
-  inputMessage.value = question
-  sendMessage()
-}
+onMounted(() => {
+  connectWebSocket()
+})
+
+onUnmounted(() => {
+  if (ws) {
+    ws.close()
+    ws = null
+  }
+})
 </script>
 
 <style scoped>
@@ -291,40 +394,26 @@ const sendQuickQuestion = (question) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.typing-indicator {
-  display: flex;
-  gap: 4px;
-  padding: 12px 16px;
-  background: white;
-  border-radius: 12px;
-  width: fit-content;
+.message.assistant .message-text :deep(code) {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
 }
 
-.typing-indicator span {
-  width: 8px;
-  height: 8px;
-  background: #1a5276;
-  border-radius: 50%;
-  animation: typing 1.4s infinite;
+.message.assistant .message-text :deep(strong) {
+  color: #1a5276;
 }
 
-.typing-indicator span:nth-child(2) {
-  animation-delay: 0.2s;
+.cursor-blink {
+  animation: blink 0.8s infinite;
+  color: #1a5276;
+  font-weight: bold;
 }
 
-.typing-indicator span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes typing {
-  0%, 60%, 100% {
-    transform: translateY(0);
-    opacity: 0.4;
-  }
-  30% {
-    transform: translateY(-8px);
-    opacity: 1;
-  }
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 .chat-input {

@@ -1,7 +1,7 @@
 # 多阶段构建
 
 # 构建阶段
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /build
 
@@ -31,19 +31,8 @@ COPY . .
 RUN npm run build
 
 # 运行阶段
-FROM nginx:alpine
+FROM nginx:latest
 
-# 配置Alpine国内镜像源
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-
-# 安装必要工具
-RUN apk add --no-cache tzdata
-
-# 设置时区
-ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# 复制nginx配置
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
 
