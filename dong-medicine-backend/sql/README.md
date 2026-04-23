@@ -1,785 +1,724 @@
-# SQL文件目录说明
+# 数据库 SQL -- 侗乡医药数字展示平台的数据仓库
 
-## 文件夹结构
-
-本目录包含项目的SQL文件，用于数据库初始化和维护。
-
-```
-sql/
-├── add_user_status.sql        # 添加用户状态字段
-├── dong_medicine.sql          # 数据库初始化脚本
-├── fix_knowledge_table.sql    # 修复知识库表结构
-├── fulltext_index.sql         # 全文索引创建脚本
-└── optimize_indexes.sql       # 索引优化脚本
-```
-
-## 详细说明
-
-### 1. dong_medicine.sql
-
-**功能**：数据库初始化脚本，创建所有表结构和初始数据。
-
-**主要内容**：
-- 创建数据库（如果不存在）
-- 创建所有表结构
-- 创建索引
-- 插入初始数据
-- 创建存储过程和触发器（如果有）
-
-**使用方法**：
-
-```bash
-# 执行初始化脚本
-mysql -u root -p < dong_medicine.sql
-
-# 或者在MySQL客户端中执行
-source /path/to/dong_medicine.sql
-```
-
-**表结构**：
-
-- `users`：用户表
-- `plants`：药材表
-- `inheritors`：传承人表
-- `knowledge`：知识库表
-- `comments`：评论表
-- `favorites`：收藏表
-- `feedback`：意见反馈表
-- `qa`：问答表
-- `quiz_questions`：答题题目表
-- `quiz_record`：答题记录表
-- `plant_game_record`：植物游戏记录表
-- `resources`：资源表
-- `operation_log`：操作日志表
-
-### 2. add_user_status.sql
-
-**功能**：添加用户状态字段。
-
-**主要内容**：
-- 为`users`表添加`status`字段
-- 设置默认值为`'normal'`
-- 更新现有数据
-
-**使用方法**：
-
-```bash
-mysql -u root -p dong_medicine < add_user_status.sql
-```
-
-### 3. fix_knowledge_table.sql
-
-**功能**：修复知识库表结构。
-
-**主要内容**：
-- 调整`knowledge`表的字段类型
-- 添加或修改字段
-- 修复约束
-
-**使用方法**：
-
-```bash
-mysql -u root -p dong_medicine < fix_knowledge_table.sql
-```
-
-### 4. fulltext_index.sql
-
-**功能**：创建全文索引，用于搜索功能。
-
-**主要内容**：
-- 为`plants`表的`name`、`description`字段创建全文索引
-- 为`knowledge`表的`title`、`content`字段创建全文索引
-- 为`inheritors`表的`name`、`bio`字段创建全文索引
-- 为`qa`表的`title`、`content`字段创建全文索引
-
-**使用方法**：
-
-```bash
-mysql -u root -p dong_medicine < fulltext_index.sql
-```
-
-### 5. optimize_indexes.sql
-
-**功能**：优化数据库索引，提高查询性能。
-
-**主要内容**：
-- 为各表创建适当的索引
-- 优化现有索引
-- 分析表统计信息
-
-**使用方法**：
-
-```bash
-mysql -u root -p dong_medicine < optimize_indexes.sql
-```
-
-## 数据库设计说明
-
-### 1. 数据库结构
-
-**数据库名称**：`dong_medicine`
-
-**字符集**：`utf8mb4`
-**校对规则**：`utf8mb4_unicode_ci`
-
-### 2. 表结构说明
-
-#### 2.1 users表
-
-**功能**：存储用户信息。
-
-**主要字段**：
-- `id`：用户ID（主键）
-- `username`：用户名（唯一）
-- `password`：密码（加密）
-- `email`：邮箱（唯一）
-- `phone`：手机号
-- `nickname`：昵称
-- `avatar`：头像
-- `role`：角色（admin、user、guest）
-- `status`：状态（normal、disabled）
-- `last_login_at`：最后登录时间
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.2 plants表
-
-**功能**：存储药材信息。
-
-**主要字段**：
-- `id`：药材ID（主键）
-- `name`：名称
-- `latin_name`：拉丁名
-- `category`：分类
-- `usage_way`：用法
-- `effect`：功效
-- `distribution`：分布
-- `description`：描述
-- `image_url`：图片URL
-- `view_count`：浏览量
-- `favorite_count`：收藏量
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.3 inheritors表
-
-**功能**：存储传承人信息。
-
-**主要字段**：
-- `id`：传承人ID（主键）
-- `name`：姓名
-- `level`：级别（国家级、自治区级、市级）
-- `specialties`：技艺特色
-- `experience_years`：从业年限
-- `bio`：个人简介
-- `representative_cases`：代表案例
-- `honors`：荣誉资质
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.4 knowledge表
-
-**功能**：存储知识库信息。
-
-**主要字段**：
-- `id`：知识ID（主键）
-- `title`：标题
-- `content`：内容
-- `type`：类型（理论知识、实践经验、历史文化）
-- `therapy_category`：疗法分类
-- `disease_category`：疾病分类
-- `view_count`：浏览量
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.5 comments表
-
-**功能**：存储评论信息。
-
-**主要字段**：
-- `id`：评论ID（主键）
-- `target_type`：目标类型（plant、inheritor、knowledge等）
-- `target_id`：目标ID
-- `content`：评论内容
-- `user_id`：用户ID
-- `reply_to_id`：回复ID
-- `status`：状态（normal、pending、deleted）
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.6 favorites表
-
-**功能**：存储收藏信息。
-
-**主要字段**：
-- `id`：收藏ID（主键）
-- `user_id`：用户ID
-- `target_type`：目标类型
-- `target_id`：目标ID
-- `created_at`：创建时间
-
-#### 2.7 feedback表
-
-**功能**：存储意见反馈信息。
-
-**主要字段**：
-- `id`：反馈ID（主键）
-- `user_id`：用户ID
-- `type`：反馈类型（suggestion、bug、other）
-- `content`：反馈内容
-- `contact`：联系方式
-- `status`：状态（pending、processing、processed）
-- `processed_by`：处理人
-- `processed_at`：处理时间
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.8 qa表
-
-**功能**：存储问答信息。
-
-**主要字段**：
-- `id`：问答ID（主键）
-- `title`：标题
-- `content`：内容
-- `category`：分类
-- `user_id`：用户ID
-- `user_name`：用户名
-- `answer_count`：回答数量
-- `view_count`：浏览量
-- `popularity`：热度
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.9 quiz_questions表
-
-**功能**：存储答题题目信息。
-
-**主要字段**：
-- `id`：题目ID（主键）
-- `content`：题目内容
-- `options`：选项（JSON格式）
-- `correct_answer`：正确答案
-- `category`：分类
-- `difficulty`：难度（easy、medium、hard）
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.10 quiz_record表
-
-**功能**：存储答题记录信息。
-
-**主要字段**：
-- `id`：记录ID（主键）
-- `user_id`：用户ID
-- `score`：得分
-- `correct_count`：正确数量
-- `total_count`：总数量
-- `created_at`：创建时间
-
-#### 2.11 plant_game_record表
-
-**功能**：存储植物游戏记录信息。
-
-**主要字段**：
-- `id`：记录ID（主键）
-- `user_id`：用户ID
-- `score`：得分
-- `difficulty`：难度
-- `correct_count`：正确数量
-- `total_count`：总数量
-- `created_at`：创建时间
-
-#### 2.12 resources表
-
-**功能**：存储资源信息。
-
-**主要字段**：
-- `id`：资源ID（主键）
-- `name`：名称
-- `description`：描述
-- `category`：分类
-- `file_url`：文件URL
-- `file_size`：文件大小
-- `file_type`：文件类型
-- `download_count`：下载量
-- `created_at`：创建时间
-- `updated_at`：更新时间
-
-#### 2.13 operation_log表
-
-**功能**：存储操作日志信息。
-
-**主要字段**：
-- `id`：日志ID（主键）
-- `user_id`：用户ID
-- `user_name`：用户名
-- `module`：操作模块
-- `type`：操作类型（add、update、delete、query）
-- `content`：操作内容
-- `ip_address`：IP地址
-- `user_agent`：用户代理
-- `created_at`：创建时间
-
-## 索引设计
-
-### 1. 主键索引
-
-所有表的`id`字段都设置为主键，自动创建主键索引。
-
-### 2. 唯一索引
-
-- `users.username`：用户名唯一索引
-- `users.email`：邮箱唯一索引
-
-### 3. 普通索引
-
-- `plants.category`：药材分类索引
-- `plants.usage_way`：药材用法索引
-- `plants.view_count`：药材浏览量索引
-- `plants.favorite_count`：药材收藏量索引
-- `inheritors.level`：传承人级别索引
-- `knowledge.type`：知识类型索引
-- `knowledge.therapy_category`：疗法分类索引
-- `knowledge.disease_category`：疾病分类索引
-- `comments.target_type`：评论目标类型索引
-- `comments.target_id`：评论目标ID索引
-- `comments.user_id`：评论用户ID索引
-- `favorites.user_id`：收藏用户ID索引
-- `favorites.target_type`：收藏目标类型索引
-- `favorites.target_id`：收藏目标ID索引
-- `feedback.user_id`：反馈用户ID索引
-- `feedback.status`：反馈状态索引
-- `qa.category`：问答分类索引
-- `qa.popularity`：问答热度索引
-- `quiz_questions.category`：答题题目分类索引
-- `quiz_questions.difficulty`：答题题目难度索引
-- `quiz_record.user_id`：答题记录用户ID索引
-- `quiz_record.score`：答题记录得分索引
-- `plant_game_record.user_id`：游戏记录用户ID索引
-- `plant_game_record.score`：游戏记录得分索引
-- `resources.category`：资源分类索引
-- `resources.download_count`：资源下载量索引
-- `operation_log.user_id`：操作日志用户ID索引
-- `operation_log.module`：操作日志模块索引
-- `operation_log.type`：操作日志类型索引
-
-### 4. 全文索引
-
-- `plants.name,plants.description`：药材全文索引
-- `knowledge.title,knowledge.content`：知识全文索引
-- `inheritors.name,inheritors.bio`：传承人全文索引
-- `qa.title,qa.content`：问答全文索引
-
-## 数据库维护
-
-### 1. 备份数据库
-
-```bash
-# 备份数据库
-mysqldump -u root -p dong_medicine > dong_medicine_backup.sql
-
-# 恢复数据库
-mysql -u root -p dong_medicine < dong_medicine_backup.sql
-```
-
-### 2. 优化数据库
-
-```bash
-# 分析表
-ANALYZE TABLE plants, knowledge, inheritors, comments, favorites, feedback, qa, quiz_questions, quiz_record, plant_game_record, resources, operation_log, users;
-
-# 优化表
-OPTIMIZE TABLE plants, knowledge, inheritors, comments, favorites, feedback, qa, quiz_questions, quiz_record, plant_game_record, resources, operation_log, users;
-```
-
-### 3. 监控数据库
-
-- 定期检查慢查询日志
-- 监控数据库连接数
-- 监控表空间使用情况
-- 定期备份数据库
-
-## 注意事项
-
-- 执行SQL脚本前，确保MySQL服务已启动
-- 执行初始化脚本时，会删除已存在的表结构，请谨慎操作
-- 生产环境中，应该使用参数化查询，避免SQL注入
-- 定期优化数据库，提高查询性能
-- 合理设计索引，避免过度索引
+> 本目录存放所有数据库脚本，包括建表语句、初始数据和迁移脚本。
 
 ---
 
-## 数据库优化建议
+## 一、什么是数据库？
 
-### 1. 查询优化
+**类比：大型仓库，有规律地存放数据**
 
-#### 使用EXPLAIN分析查询
+想象一个超大型仓库，里面有很多货架（表），每个货架有很多层（列），
+每层放着一个属性值，一行就是一个完整的物品（记录）。
 
-```sql
-EXPLAIN SELECT * FROM plants WHERE category = '清热药';
+```
++---------------------------------------------------------------+
+|                    数据库：dong_medicine                        |
+|                    （侗乡医药数字展示平台仓库）                    |
++---------------------------------------------------------------+
+|                                                                 |
+|  货架1: plants（药用植物表）                                     |
+|  +----+--------+----------+----------+----------+              |
+|  | id | name_cn| name_dong| efficacy | category |              |
+|  +----+--------+----------+----------+----------+              |
+|  | 1  | 钩藤   | jas goc  | 清热平肝 | 藤本类   | <-- 一行记录  |
+|  | 2  | 透骨草 | kgaox    | 祛风除湿 | 全草类   |              |
+|  +----+--------+----------+----------+----------+              |
+|                                                                 |
+|  货架2: users（用户表）                                          |
+|  +----+----------+---------------+-------+--------+            |
+|  | id | username | password_hash | role  | status |            |
+|  +----+----------+---------------+-------+--------+            |
+|  | 1  | admin    | $2a$10$...    | admin | active |            |
+|  +----+----------+---------------+-------+--------+            |
+|                                                                 |
++---------------------------------------------------------------+
 ```
 
-**关注指标**：
-- `type`：ALL（全表扫描）需要优化
-- `key`：使用的索引
-- `rows`：预估扫描行数
-- `Extra`：额外信息（Using filesort、Using temporary需要优化）
+我们使用的数据库是 **MySQL 8.0**，它是目前最流行的关系型数据库之一。
 
-#### 优化建议
+---
 
-```sql
--- 避免SELECT *
-SELECT id, name, category FROM plants WHERE category = '清热药';
+## 二、什么是 SQL？
 
--- 使用LIMIT限制结果
-SELECT * FROM plants ORDER BY view_count DESC LIMIT 10;
+**类比：仓库管理语言**
 
--- 避免在WHERE子句中使用函数
--- 不推荐
-SELECT * FROM plants WHERE YEAR(created_at) = 2024;
--- 推荐
-SELECT * FROM plants WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01';
+SQL 全称是 **Structured Query Language**（结构化查询语言），
+就像和仓库管理员沟通的专用语言：
 
--- 使用JOIN代替子查询
--- 不推荐
-SELECT * FROM plants WHERE id IN (SELECT plant_id FROM favorites WHERE user_id = 1);
--- 推荐
-SELECT p.* FROM plants p 
-INNER JOIN favorites f ON p.id = f.target_id 
-WHERE f.user_id = 1 AND f.target_type = 'plant';
+```
+你说的 SQL                              管理员理解的意思
+------------------------------------    --------------------
+SELECT * FROM plants                    "把 plants 货架上所有东西给我看看"
+INSERT INTO users VALUES (...)          "在 users 货架上放一个新物品"
+UPDATE plants SET view_count = 10       "把 plants 上的浏览量改成 10"
+DELETE FROM comments WHERE id = 5       "把 comments 上 id=5 的物品扔掉"
+CREATE TABLE ...                        "新建一个货架"
 ```
 
-### 2. 索引优化
+### 常用 SQL 命令分类
 
-#### 索引设计原则
+| 类型 | 命令 | 作用 | 示例 |
+|------|------|------|------|
+| DDL（定义） | CREATE TABLE | 创建表 | `CREATE TABLE plants (...)` |
+| | ALTER TABLE | 修改表 | `ALTER TABLE plants ADD COLUMN ...` |
+| | DROP TABLE | 删除表 | `DROP TABLE plants` |
+| DML（操作） | INSERT | 插入数据 | `INSERT INTO plants VALUES (...)` |
+| | SELECT | 查询数据 | `SELECT * FROM plants WHERE id = 1` |
+| | UPDATE | 更新数据 | `UPDATE plants SET view_count = 10` |
+| | DELETE | 删除数据 | `DELETE FROM plants WHERE id = 1` |
 
-| 原则 | 说明 |
-|------|------|
-| 最左前缀 | 复合索引从左到右匹配 |
-| 选择性高 | 选择区分度高的列 |
-| 避免冗余 | 不创建已有索引覆盖的索引 |
-| 适度索引 | 索引不是越多越好 |
+---
 
-#### 创建复合索引
+## 三、数据库核心概念
 
-```sql
--- 根据查询模式创建复合索引
-CREATE INDEX idx_plants_category_usage ON plants(category, usage_way);
-CREATE INDEX idx_comments_target ON comments(target_type, target_id);
-CREATE INDEX idx_favorites_user_target ON favorites(user_id, target_type, target_id);
+### 3.1 什么是表（Table）？
+
+**类比：Excel 工作表**
+
+表就像一个 Excel 工作表，有行有列：
+
+```
+plants 表
++----+--------+----------+-----------+
+| id | name_cn| name_dong| efficacy  |  <-- 列（Column）：定义数据类型
++----+--------+----------+-----------+
+| 1  | 钩藤   | jas goc  | 清热平肝   |  <-- 行（Row）：一条完整记录
+| 2  | 透骨草 | kgaox    | 祛风除湿   |
++----+--------+----------+-----------+
 ```
 
-#### 索引维护
+### 3.2 什么是行（Row）和列（Column）？
 
-```sql
--- 查看索引使用情况
-SELECT * FROM sys.schema_index_statistics 
-WHERE table_schema = 'dong_medicine';
+- **列（Column）**：定义数据的类型和名称，就像 Excel 的表头
+  - `name_cn` 列：存中文名称，类型是 VARCHAR(100)
+  - `view_count` 列：存浏览量，类型是 INT
+- **行（Row）**：一条完整的数据记录，就像 Excel 的一行数据
+  - 第1行：钩藤的完整信息
+  - 第2行：透骨草的完整信息
 
--- 删除未使用的索引
-DROP INDEX idx_unused ON table_name;
+### 3.3 什么是主键（Primary Key）？
+
+**类比：身份证号**
+
+每条记录都需要一个唯一标识，就像每个人都有唯一的身份证号：
+
+```
+plants 表
++----+--------+----------+
+| id | name_cn| efficacy |   id 就是主键
++----+--------+----------+   每条记录的 id 都不同
+| 1  | 钩藤   | 清热平肝  |   id=1 唯一标识"钩藤"
+| 2  | 透骨草 | 祛风除湿  |   id=2 唯一标识"透骨草"
+| 3  | 九节茶 | 活血消斑  |   id=3 唯一标识"九节茶"
++----+--------+----------+   绝对不会重复！
 ```
 
-### 3. 表结构优化
+主键的特点：
+- **唯一**：每条记录的主键值都不同
+- **非空**：主键不能为 NULL
+- **自动递增**：新记录的 id 自动 +1（AUTO_INCREMENT）
 
-#### 字段类型选择
+### 3.4 什么是索引（Index）？
 
-| 数据类型 | 推荐使用场景 |
-|---------|-------------|
-| TINYINT | 状态、标志位 |
-| INT | ID、计数器 |
-| BIGINT | 大数值ID |
-| VARCHAR | 可变长度字符串 |
-| TEXT | 长文本（少用） |
-| DATETIME | 时间戳 |
-| DECIMAL | 精确数值（金额） |
+**类比：书的目录**
 
-#### 分区表设计
+一本书没有目录，你要找"钩藤"的内容，只能从第1页翻到最后一页（全表扫描，很慢）。
+有了目录，你可以直接翻到对应页码（索引查找，很快）。
 
-```sql
--- 按时间分区（适用于日志表）
-ALTER TABLE operation_log 
-PARTITION BY RANGE (YEAR(created_at)) (
-    PARTITION p2023 VALUES LESS THAN (2024),
-    PARTITION p2024 VALUES LESS THAN (2025),
-    PARTITION p2025 VALUES LESS THAN (2026),
-    PARTITION pmax VALUES LESS THAN MAXVALUE
-);
+```
+没有索引：
+  查找 name_cn = "钩藤"
+  -> 从第1条开始逐条比较... 第1条、第2条... 找到了！
+  -> 65条数据，最坏要比较65次
+
+有索引（idx_name_cn）：
+  查找 name_cn = "钩藤"
+  -> 查索引目录："钩藤" -> 第1条
+  -> 直接跳到第1条，1次就找到！
 ```
 
-### 4. 连接池配置
+**本项目使用的索引类型**：
 
-```yaml
-spring:
-  datasource:
-    hikari:
-      minimum-idle: 5
-      maximum-pool-size: 20
-      idle-timeout: 300000
-      connection-timeout: 30000
-      max-lifetime: 1800000
-      connection-test-query: SELECT 1
+| 索引类型 | 作用 | 本项目示例 |
+|---------|------|-----------|
+| 普通索引 (INDEX) | 加速查询 | `INDEX idx_category(category)` |
+| 唯一索引 (UNIQUE INDEX) | 保证值不重复 | `UNIQUE INDEX uk_username(username)` |
+| 联合索引 (复合INDEX) | 多列组合查询加速 | `INDEX idx_target(target_type, target_id)` |
+| 全文索引 (FULLTEXT) | 全文搜索加速 | `FULLTEXT INDEX ft_plants_search(name_cn, name_dong, efficacy, story)` |
+
+### 3.5 什么是外键？
+
+**类比：关联关系**
+
+外键用于建立表与表之间的关联关系。比如 comments 表中的 user_id 关联到 users 表的 id：
+
+```
+users 表                    comments 表
++----+----------+          +----+---------+----------+
+| id | username |          | id | user_id | content  |
++----+----------+          +----+---------+----------+
+| 1  | admin    |<---------| 1  | 1       | 很好！   |
+| 2  | dongyi001|<---------| 2  | 2       | 不错！   |
++----+----------+          +----+---------+----------+
+                                  user_id 就是"外键"
+                                  指向 users 表的 id
 ```
 
-### 5. 慢查询优化
+**注意**：本项目没有使用数据库层面的外键约束（FOREIGN KEY），而是在代码层面维护关联关系。
+这是现代开发的常见做法，好处是更灵活、性能更好。
 
-#### 开启慢查询日志
+### 3.6 什么是 utf8mb4？
 
-```sql
--- 查看慢查询配置
-SHOW VARIABLES LIKE 'slow_query%';
-SHOW VARIABLES LIKE 'long_query_time';
+**utf8mb4** 是 MySQL 的字符编码，支持所有 Unicode 字符，包括 Emoji 表情：
 
--- 开启慢查询日志
-SET GLOBAL slow_query_log = 'ON';
-SET GLOBAL long_query_time = 2;  -- 超过2秒记录
 ```
+utf8    ：最多3字节，不支持 Emoji（如 🌿💊🍵）
+utf8mb4 ：最多4字节，支持所有字符，包括 Emoji
 
-#### 分析慢查询
-
-```sql
--- 查看慢查询数量
-SHOW GLOBAL STATUS LIKE 'Slow_queries';
-
--- 使用mysqldumpslow分析
--- mysqldumpslow -s t -t 10 /var/log/mysql/mysql-slow.log
-```
-
-### 6. 缓存策略
-
-#### 查询缓存
-
-```sql
--- 使用SQL_CACHE提示（MySQL 8.0已移除）
-SELECT SQL_CACHE * FROM plants WHERE id = 1;
-
--- 应用层缓存更有效
--- 使用Redis缓存热点数据
-```
-
-#### 缓存更新策略
-
-```java
-// Cache-Aside模式
-public Plant getPlant(Integer id) {
-    Plant plant = redisTemplate.opsForValue().get("plant:" + id);
-    if (plant == null) {
-        plant = plantMapper.selectById(id);
-        redisTemplate.opsForValue().set("plant:" + id, plant, 6, TimeUnit.HOURS);
-    }
-    return plant;
-}
+本项目必须用 utf8mb4，因为：
+1. 侗语名称可能包含特殊字符
+2. 用户评论可能输入 Emoji
+3. 现代应用的标准配置
 ```
 
 ---
 
-## 数据迁移指南
+## 四、本项目全部 13 张表结构详解
 
-### 1. 导出数据
+### 4.1 users -- 用户表
 
-```bash
-# 导出整个数据库
-mysqldump -u root -p dong_medicine > backup.sql
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| username | VARCHAR(20) | 用户名 | 非空, 唯一 |
+| password_hash | VARCHAR(100) | 密码哈希(BCrypt) | 非空 |
+| role | VARCHAR(20) | 角色: user/admin | 非空, 默认'user' |
+| status | VARCHAR(20) | 状态: active/banned | 默认'active' |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
 
-# 仅导出表结构
-mysqldump -u root -p --no-data dong_medicine > schema.sql
+索引：`uk_username(username)` -- 用户名唯一索引
 
-# 仅导出数据
-mysqldump -u root -p --no-create-info dong_medicine > data.sql
+### 4.2 plants -- 植物药材表
 
-# 导出特定表
-mysqldump -u root -p dong_medicine plants knowledge > tables.sql
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| name_cn | VARCHAR(100) | 中文名称 | 非空 |
+| name_dong | VARCHAR(100) | 侗语名称 | |
+| scientific_name | VARCHAR(200) | 学名 | |
+| category | VARCHAR(20) | 分类: 根茎类/全草类/花叶类/果实类/皮类 | 非空 |
+| usage_way | VARCHAR(20) | 使用方式: 外用/内服/药浴 | 非空 |
+| habitat | VARCHAR(200) | 生境 | |
+| efficacy | VARCHAR(500) | 功效 | |
+| story | VARCHAR(2000) | 药用故事 | |
+| images | TEXT | 图片(JSON数组) | |
+| videos | TEXT | 视频(JSON数组) | |
+| documents | TEXT | 相关文档(JSON数组) | |
+| distribution | TEXT | 地域分布 | |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+| view_count | INT | 浏览量 | 默认0 |
+| favorite_count | INT | 收藏量 | 默认0 |
+| popularity | INT | 热度值 | 默认1 |
+| update_log | TEXT | 更新日志(JSON数组) | |
+
+索引：`idx_category`, `idx_usage_way`, `idx_name_cn`, `idx_popularity`, `idx_plants_view_count`, `idx_plants_category_usage`
+全文索引：`ft_plants_search(name_cn, name_dong, efficacy, story)` -- 支持中文全文搜索
+
+### 4.3 knowledge -- 知识库表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| title | VARCHAR(200) | 标题 | 非空 |
+| type | VARCHAR(20) | 类型: 药方/疗法 | 非空 |
+| therapy_category | VARCHAR(50) | 疗法分类 | |
+| disease_category | VARCHAR(50) | 疾病分类 | |
+| herb_category | VARCHAR(50) | 药材分类 | |
+| content | TEXT | 内容 | 非空 |
+| formula | TEXT | 配方 | |
+| usage_method | TEXT | 用法 | |
+| steps | TEXT | 步骤(JSON数组) | |
+| images | TEXT | 图片(JSON数组) | |
+| videos | TEXT | 视频(JSON数组) | |
+| documents | TEXT | 相关文档 | |
+| related_plants | TEXT | 关联植物ID列表 | |
+| update_log | TEXT | 更新日志 | |
+| popularity | INT | 热度 | 默认0 |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+| view_count | INT | 浏览量 | 默认0 |
+| favorite_count | INT | 收藏量 | 默认0 |
+
+索引：`idx_type`, `idx_popularity`, `idx_knowledge_popularity`
+全文索引：`ft_knowledge_search(title, content)`
+
+### 4.4 inheritors -- 传承人表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| name | VARCHAR(50) | 姓名 | 非空 |
+| level | VARCHAR(20) | 等级: 国家级/省级/市级/县级/自治区级 | 非空 |
+| bio | VARCHAR(1000) | 从业履历 | |
+| specialties | VARCHAR(500) | 技艺特色 | |
+| experience_years | INT | 经验年限 | 非空 |
+| videos | TEXT | 视频(JSON数组) | |
+| images | TEXT | 图片(JSON数组) | |
+| documents | TEXT | 资质文档(JSON数组) | |
+| representative_cases | TEXT | 代表案例(JSON数组) | |
+| honors | VARCHAR(1000) | 荣誉资质 | |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+| view_count | INT | 浏览量 | 默认0 |
+| favorite_count | INT | 收藏量 | 默认0 |
+| popularity | INT | 热度值 | 默认0 |
+| update_log | TEXT | 更新日志 | |
+
+索引：`idx_level`, `idx_popularity`
+全文索引：`ft_inheritors_search(name, specialties, bio)`
+
+### 4.5 qa -- 问答表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| category | VARCHAR(50) | 分类: 侗药常识/侗医疗法/文化背景 | |
+| question | TEXT | 问题 | 非空 |
+| answer | TEXT | 答案 | 非空 |
+| popularity | INT | 热度 | 默认0 |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+| view_count | INT | 浏览量 | 默认0 |
+| favorite_count | INT | 收藏量 | 默认0 |
+
+索引：`idx_category`, `idx_popularity`
+全文索引：`ft_qa_search(question, answer)`
+
+### 4.6 resources -- 学习资源表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| title | VARCHAR(200) | 标题 | 非空 |
+| category | VARCHAR(20) | 分类: 入门/进阶/专业 | 非空 |
+| files | TEXT | 文件列表(JSON数组) | |
+| description | VARCHAR(1000) | 描述 | |
+| download_count | INT | 下载次数 | 默认0 |
+| popularity | INT | 热度 | 默认0 |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+| view_count | INT | 浏览量 | 默认0 |
+| favorite_count | INT | 收藏量 | 默认0 |
+| update_log | TEXT | 更新日志 | |
+
+索引：`idx_category`, `idx_popularity`
+全文索引：`ft_resources_search(title, description)`
+
+### 4.7 comments -- 评论表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | 非空 |
+| username | VARCHAR(50) | 用户名 | 非空 |
+| target_type | VARCHAR(50) | 目标类型: plant/knowledge/inheritor等 | 非空 |
+| target_id | INT | 目标ID | 非空 |
+| content | VARCHAR(1000) | 评论内容 | 非空 |
+| reply_to_id | INT | 回复的评论ID | |
+| reply_to_user_id | INT | 回复的用户ID | |
+| reply_to_username | VARCHAR(50) | 回复的用户名 | |
+| likes | INT | 点赞数 | 默认0 |
+| reply_count | INT | 回复数 | 默认0 |
+| status | VARCHAR(20) | 状态: pending/approved/rejected | 默认'approved' |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+| updated_at | DATETIME | 更新时间 | 自动更新 |
+
+索引：`idx_target(target_type, target_id)`, `idx_user_id`, `idx_status`, `idx_reply_to_id`, `idx_created_at`, `idx_likes`
+
+### 4.8 favorites -- 收藏表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | 非空 |
+| target_type | VARCHAR(50) | 目标类型 | 非空 |
+| target_id | INT | 目标ID | 非空 |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+
+索引：`uk_user_target(user_id, target_type, target_id)` -- 唯一索引，同一用户对同一目标只能收藏一次
+索引：`idx_user_id`
+
+### 4.9 feedback -- 反馈表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | |
+| user_name | VARCHAR(50) | 用户名 | 非空 |
+| type | VARCHAR(20) | 类型: 建议/问题/其他 | 非空 |
+| title | VARCHAR(200) | 标题 | 非空 |
+| content | TEXT | 内容 | 非空 |
+| contact | VARCHAR(100) | 联系方式 | |
+| status | VARCHAR(20) | 状态: pending/resolved | 默认'pending' |
+| reply | TEXT | 回复内容 | |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+
+索引：`idx_user_id`, `idx_status`
+
+### 4.10 quiz_questions -- 测验题目表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| question | TEXT | 题目内容 | 非空 |
+| options | TEXT | 选项(JSON数组) | 非空 |
+| answer | VARCHAR(500) | 正确答案 | 非空 |
+| category | VARCHAR(50) | 题目分类 | |
+| correct_answer | VARCHAR(10) | 正确选项: A/B/C/D | |
+| explanation | TEXT | 答案解析 | |
+
+### 4.11 quiz_record -- 测验记录表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | 非空 |
+| score | INT | 得分 | 非空 |
+| total_questions | INT | 总题数 | 非空 |
+| correct_answers | INT | 正确数 | 非空 |
+| created_at | DATETIME | 答题时间 | 默认当前时间 |
+
+索引：`idx_user_id`, `idx_created_at`
+
+### 4.12 plant_game_record -- 植物游戏记录表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | 非空 |
+| difficulty | VARCHAR(20) | 难度: easy/medium/hard | 非空 |
+| score | INT | 得分 | 非空 |
+| correct_count | INT | 正确数 | 非空 |
+| total_count | INT | 总题数 | 非空 |
+| created_at | DATETIME | 游戏时间 | 默认当前时间 |
+
+索引：`idx_user_id`, `idx_created_at`
+
+### 4.13 operation_log -- 操作日志表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | INT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | |
+| username | VARCHAR(50) | 用户名 | |
+| module | VARCHAR(50) | 模块名称 | 非空 |
+| operation | VARCHAR(100) | 操作描述 | 非空 |
+| type | VARCHAR(20) | 操作类型: CREATE/UPDATE/DELETE/QUERY | 非空 |
+| method | VARCHAR(200) | 请求方法 | |
+| params | TEXT | 请求参数 | |
+| ip | VARCHAR(50) | IP地址 | |
+| duration | INT | 执行时长(ms) | |
+| success | TINYINT | 是否成功: 0失败/1成功 | 默认1 |
+| error_msg | TEXT | 错误信息 | |
+| created_at | DATETIME | 操作时间 | 默认当前时间 |
+
+索引：`idx_user_id`, `idx_module`, `idx_created_at`
+
+---
+
+## 五、表关系总览图
+
+```
+                    +-----------+
+                    |   users   |
+                    +-----------+
+                    | id (PK)   |
+                    | username  |
+                    +-----------+
+                         |
+          +--------------+--------------+--------------+-----------+
+          |              |              |              |           |
+          v              v              v              v           v
+   +-----------+  +-----------+  +-----------+  +-----------+ +-----------+
+   | comments  |  | favorites |  | feedback  |  |quiz_record| |plant_game |
+   +-----------+  +-----------+  +-----------+  +-----------+ +_record    |
+   | user_id   |  | user_id   |  | user_id   |  | user_id   | +-----------+
+   | target_   |  | target_   |  +-----------+  +-----------+ | user_id   |
+   | type+id   |  | type+id   |                                +-----------+
+   +-----------+  +-----------+
+        |              |
+        v              v
+   +-----------+  +-----------+  +-----------+  +-----------+ +-----------+
+   |  plants   |  | knowledge |  |inheritors |  |    qa     | | resources |
+   +-----------+  +-----------+  +-----------+  +-----------+ +-----------+
+   | id (PK)   |  | id (PK)   |  | id (PK)   |  | id (PK)   | | id (PK)   |
+   | name_cn   |  | title     |  | name      |  | question  | | title     |
+   | efficacy  |  | content   |  | level     |  | answer    | | category  |
+   +-----------+  +-----------+  +-----------+  +-----------+ +-----------+
+
+   +-----------------+          +-----------+
+   | quiz_questions  |          |operation  |
+   +-----------------+          |_log       |
+   | id (PK)         |          +-----------+
+   | question        |          | user_id   |
+   | options (JSON)  |          | module    |
+   | correct_answer  |          | operation |
+   +-----------------+          +-----------+
 ```
 
-### 2. 导入数据
+**关联方式**：通过 `target_type + target_id` 实现多态关联
+- `target_type='plant'`, `target_id=1` -> 指向 plants 表 id=1 的记录
+- `target_type='knowledge'`, `target_id=2` -> 指向 knowledge 表 id=2 的记录
 
-```bash
-# 导入SQL文件
-mysql -u root -p dong_medicine < backup.sql
+---
 
-# 使用source命令
-mysql> USE dong_medicine;
-mysql> SOURCE /path/to/backup.sql;
-```
+## 六、如何初始化数据库
 
-### 3. 数据迁移脚本
+### 步骤 1：创建数据库
 
 ```sql
--- 批量插入数据
-INSERT INTO plants (name, category, description, created_at)
-VALUES 
-    ('钩藤', '清热药', '清热平肝，息风止痉', NOW()),
-    ('透骨草', '祛风湿药', '祛风除湿，舒筋活血', NOW());
+-- 登录 MySQL
+mysql -u root -p
 
--- 从其他表迁移数据
-INSERT INTO new_plants (name, category)
-SELECT name, category FROM old_plants WHERE status = 'active';
+-- 创建数据库（指定字符集为 utf8mb4）
+CREATE DATABASE dong_medicine DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
--- 批量更新
-UPDATE plants SET view_count = 0 WHERE view_count IS NULL;
+-- 使用该数据库
+USE dong_medicine;
+```
+
+### 步骤 2：导入建表和初始数据
+
+```sql
+-- 导入主 SQL 文件（包含所有建表语句和初始数据）
+SOURCE /path/to/dong_medicine.sql;
+
+-- 或者用命令行直接导入
+mysql -u root -p dong_medicine < dong_medicine.sql
+```
+
+### 步骤 3：执行迁移脚本（如果需要）
+
+```sql
+-- 按顺序执行 migrations 目录下的脚本
+SOURCE /path/to/migrations/remove_plant_difficulty.sql;
+SOURCE /path/to/migrations/remove_quiz_difficulty.sql;
+```
+
+### 步骤 4：验证
+
+```sql
+-- 查看所有表
+SHOW TABLES;
+
+-- 查看各表数据量
+SELECT 'users' AS tbl, COUNT(*) AS cnt FROM users
+UNION ALL SELECT 'plants', COUNT(*) FROM plants
+UNION ALL SELECT 'knowledge', COUNT(*) FROM knowledge
+UNION ALL SELECT 'inheritors', COUNT(*) FROM inheritors
+UNION ALL SELECT 'qa', COUNT(*) FROM qa
+UNION ALL SELECT 'resources', COUNT(*) FROM resources
+UNION ALL SELECT 'comments', COUNT(*) FROM comments
+UNION ALL SELECT 'favorites', COUNT(*) FROM favorites
+UNION ALL SELECT 'feedback', COUNT(*) FROM feedback
+UNION ALL SELECT 'quiz_questions', COUNT(*) FROM quiz_questions
+UNION ALL SELECT 'quiz_record', COUNT(*) FROM quiz_record
+UNION ALL SELECT 'plant_game_record', COUNT(*) FROM plant_game_record
+UNION ALL SELECT 'operation_log', COUNT(*) FROM operation_log;
 ```
 
 ---
 
-## 性能监控SQL
+## 七、迁移脚本说明
 
-### 1. 查看表状态
+`migrations/` 目录存放数据库结构变更脚本，按时间顺序执行：
+
+| 脚本文件 | 说明 | 操作 |
+|---------|------|------|
+| `remove_plant_difficulty.sql` | 移除 plants 表的 difficulty 字段 | 删除索引 `idx_plants_difficulty`，删除列 `difficulty` |
+| `remove_quiz_difficulty.sql` | 移除 quiz_questions 表的 difficulty 字段 | 删除列 `difficulty` |
+
+**为什么要迁移？**
+最初设计时，植物和题目都有难度分类（easy/medium/hard），后来决定改为随机抽取，
+所以需要从数据库中移除这些字段。迁移脚本记录了每一次结构变更，确保可追溯。
+
+---
+
+## 八、数据库备份与恢复
+
+### 8.1 备份数据库
+
+```bash
+# 备份整个数据库（包含表结构和数据）
+mysqldump -u root -p dong_medicine > backup_20260423.sql
+
+# 只备份表结构（不含数据）
+mysqldump -u root -p --no-data dong_medicine > backup_structure.sql
+
+# 只备份数据（不含表结构）
+mysqldump -u root -p --no-create-info dong_medicine > backup_data.sql
+```
+
+### 8.2 恢复数据库
+
+```bash
+# 从备份文件恢复
+mysql -u root -p dong_medicine < backup_20260423.sql
+```
+
+---
+
+## 九、常用调试 SQL 命令
+
+### 查看表结构
 
 ```sql
--- 查看所有表状态
-SHOW TABLE STATUS FROM dong_medicine;
+-- 查看表的字段定义
+DESC plants;
 
--- 查看表大小
-SELECT 
-    table_name,
-    ROUND(data_length / 1024 / 1024, 2) AS data_size_mb,
-    ROUND(index_length / 1024 / 1024, 2) AS index_size_mb,
-    table_rows
+-- 查看完整的建表语句（包含索引）
+SHOW CREATE TABLE plants;
+```
+
+### 查询数据
+
+```sql
+-- 查看所有植物（前10条）
+SELECT id, name_cn, category, view_count FROM plants LIMIT 10;
+
+-- 按热度排序
+SELECT id, name_cn, popularity FROM plants ORDER BY popularity DESC LIMIT 10;
+
+-- 按分类统计数量
+SELECT category, COUNT(*) AS count FROM plants GROUP BY category;
+
+-- 模糊搜索
+SELECT id, name_cn, efficacy FROM plants WHERE name_cn LIKE '%钩%';
+
+-- 全文搜索（需要全文索引支持）
+SELECT id, name_cn, efficacy FROM plants
+WHERE MATCH(name_cn, name_dong, efficacy, story)
+AGAINST('清热解毒' IN NATURAL LANGUAGE MODE);
+```
+
+### 查看索引
+
+```sql
+-- 查看表的所有索引
+SHOW INDEX FROM plants;
+```
+
+### 查看表大小
+
+```sql
+-- 查看各表占用空间
+SELECT table_name, table_rows,
+       ROUND(data_length / 1024 / 1024, 2) AS data_mb,
+       ROUND(index_length / 1024 / 1024, 2) AS index_mb
 FROM information_schema.tables
 WHERE table_schema = 'dong_medicine'
 ORDER BY data_length DESC;
 ```
 
-### 2. 查看锁信息
+### 清空表数据（慎用！）
 
 ```sql
--- 查看当前锁
-SHOW OPEN TABLES WHERE In_use > 0;
+-- 清空表数据（重置自增ID）
+TRUNCATE TABLE operation_log;
 
--- 查看InnoDB锁
-SELECT * FROM information_schema.INNODB_LOCKS;
-SELECT * FROM information_schema.INNODB_LOCK_WAITS;
-```
-
-### 3. 查看连接信息
-
-```sql
--- 查看当前连接
-SHOW PROCESSLIST;
-
--- 查看连接数
-SHOW STATUS LIKE 'Threads_connected';
-SHOW STATUS LIKE 'Max_used_connections';
-```
-
-### 4. 查看缓冲池状态
-
-```sql
--- InnoDB缓冲池状态
-SHOW STATUS LIKE 'Innodb_buffer_pool%';
-
--- 缓冲池命中率
-SELECT 
-    (1 - (Innodb_buffer_pool_reads / Innodb_buffer_pool_read_requests)) * 100 
-    AS buffer_pool_hit_rate
-FROM (
-    SELECT variable_value AS Innodb_buffer_pool_reads
-    FROM information_schema.global_status
-    WHERE variable_name = 'Innodb_buffer_pool_reads'
-) r,
-(
-    SELECT variable_value AS Innodb_buffer_pool_read_requests
-    FROM information_schema.global_status
-    WHERE variable_name = 'Innodb_buffer_pool_read_requests'
-) rr;
+-- 只删除数据（保留自增ID计数器）
+DELETE FROM operation_log WHERE created_at < '2026-01-01';
 ```
 
 ---
 
-## 常见问题
+## 十、JSON 字段说明
 
-### 1. 如何解决死锁问题？
+本项目多个表使用 TEXT 类型存储 JSON 格式数据，前端负责解析：
+
+| 表 | 字段 | JSON 格式示例 |
+|------|------|-------------|
+| plants | images | `[{"name":"钩藤.jpg","path":"/images/plant1.jpg","size":1024,"type":"image"}]` |
+| plants | videos | `[{"name":"钩藤.mp4","path":"/videos/plant1.mp4","size":0,"type":"video"}]` |
+| plants | update_log | `[{"id":1,"time":"2026-03-04","content":"创建植物","operator":"系统"}]` |
+| knowledge | steps | `["准备药材","加水煎煮","取汁服用"]` |
+| knowledge | related_plants | `[1, 2, 3, 7, 8]` |
+| inheritors | representative_cases | `["成立工作室","治疗患者数千例"]` |
+| inheritors | honors | `["国家级传承人","评估优秀"]` |
+| quiz_questions | options | `["选项A","选项B","选项C","选项D"]` |
+| resources | files | `[{"path":"/doc.pdf","name":"研究.pdf","size":421560,"type":"pdf"}]` |
+
+**为什么用 JSON 字符串而不是单独的表？**
+- 简化查询：一次查询就能拿到所有数据，不需要 JOIN
+- 灵活性：JSON 结构可以随时调整，不需要改表结构
+- 适合读多写少的场景：图片列表、步骤列表等几乎不会单独查询
+
+---
+
+## 十一、视图说明
+
+本项目还创建了两个视图（View），用于简化常用查询：
 
 ```sql
--- 查看死锁信息
-SHOW ENGINE INNODB STATUS;
-
--- 解决方案
--- 1. 减小事务范围
--- 2. 按相同顺序访问表
--- 3. 添加适当索引
--- 4. 降低隔离级别
+-- v_hot_plants：热门植物视图（按热度和收藏量排序）
+-- v_hot_knowledge：热门知识视图（按热度和收藏量排序）
 ```
 
-### 2. 如何处理大表？
+视图就像一个"虚拟表"，它本身不存储数据，而是基于查询定义的。
+每次查询视图时，MySQL 会自动执行视图背后的 SELECT 语句。
 
-```sql
--- 分批删除
-DELETE FROM operation_log WHERE created_at < '2023-01-01' LIMIT 1000;
+---
 
--- 使用分区
-ALTER TABLE operation_log PARTITION BY RANGE (YEAR(created_at)) (...);
+## 十二、常见错误与解决方案
 
--- 归档历史数据
-CREATE TABLE operation_log_archive AS 
-SELECT * FROM operation_log WHERE created_at < '2023-01-01';
+### 错误 1：导入 SQL 时编码错误
+
+```
+报错：Invalid utf8 character set
+原因：SQL 文件编码不是 UTF-8
+解决：确保 SQL 文件以 UTF-8 编码保存，开头有 SET NAMES utf8mb4;
 ```
 
-### 3. 如何优化COUNT查询？
+### 错误 2：全文索引搜索无结果
 
-```sql
--- 使用近似值
-EXPLAIN SELECT COUNT(*) FROM plants;
-
--- 使用缓存计数
--- 在应用层维护计数器
-
--- 使用覆盖索引
-CREATE INDEX idx_count ON plants(category);
-SELECT COUNT(*) FROM plants WHERE category = '清热药';
+```
+问题：MATCH ... AGAINST 搜索中文无结果
+原因：MySQL 全文索引对中文需要 ngram 解析器，且最小搜索长度为2
+解决：建表时已指定 WITH PARSER ngram，确保搜索词至少2个字符
 ```
 
-### 4. 如何处理字符集问题？
+### 错误 3：AUTO_INCREMENT 值冲突
 
-```sql
--- 查看字符集
-SHOW VARIABLES LIKE 'character%';
-SHOW CREATE TABLE plants;
+```
+报错：Duplicate entry '1' for key 'PRIMARY'
+原因：手动插入了指定 id 的数据，和 AUTO_INCREMENT 冲突
+解决：让数据库自动分配 id，或导入后重置自增值
+      ALTER TABLE plants AUTO_INCREMENT = (SELECT MAX(id) + 1 FROM plants);
+```
 
--- 修改字符集
-ALTER TABLE plants CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+### 错误 4：外键约束导致无法删除
 
--- 修改字段字符集
-ALTER TABLE plants MODIFY description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+报错：Cannot delete or update a parent row
+原因：有其他表的数据引用了当前记录
+解决：先删除关联数据，再删除主记录（本项目未使用外键约束，不会遇到此问题）
+```
+
+### 错误 5：连接数据库被拒绝
+
+```
+报错：Access denied for user 'root'@'localhost'
+原因：密码错误或用户没有权限
+解决：检查 application.yml 中的数据库连接配置
 ```
 
 ---
 
-## 未来改进建议
+## 十三、速记口诀
 
-### 短期改进 (1-2周)
-
-1. **索引优化**
-   - 分析慢查询日志
-   - 添加缺失索引
-   - 删除冗余索引
-
-2. **查询优化**
-   - 优化复杂查询
-   - 添加查询缓存
-   - 使用批量操作
-
-### 中期改进 (1-2月)
-
-1. **分区表**
-   - 日志表按时间分区
-   - 历史数据归档
-
-2. **读写分离**
-   - 配置主从复制
-   - 读写分离中间件
-
-### 长期规划 (3-6月)
-
-1. **分布式数据库**
-   - 分库分表
-   - 数据中间件
-
-2. **数据仓库**
-   - 数据同步
-   - 数据分析
-
----
-
-**最后更新时间**：2026年3月30日
+```
+数据库是仓库，SQL 是管理语言
+表是货架，行是物品，列是属性
+主键像身份证，唯一标识每条记录
+索引像目录，查找数据快如闪电
+utf8mb4 不能忘，中文 Emoji 都支持
+JSON 字段存复杂数据，前端解析最方便
+备份恢复要常做，数据安全最重要
+```

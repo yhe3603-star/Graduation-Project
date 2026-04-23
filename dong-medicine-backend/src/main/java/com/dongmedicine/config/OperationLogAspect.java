@@ -1,5 +1,6 @@
 package com.dongmedicine.config;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.dongmedicine.entity.OperationLog;
 import com.dongmedicine.service.OperationLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,8 +10,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -57,7 +56,6 @@ public class OperationLogAspect {
             if (attributes == null) return;
 
             HttpServletRequest request = attributes.getRequest();
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
             OperationLog log = new OperationLog();
             log.setIp(getClientIp(request));
@@ -65,9 +63,7 @@ public class OperationLogAspect {
             log.setDuration((int) duration);
             log.setSuccess(success);
             log.setErrorMsg(errorMsg);
-            log.setCreatedAt(LocalDateTime.now());
-            log.setUsername(auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())
-                    ? auth.getName() : "anonymous");
+            log.setUsername(StpUtil.isLogin() ? StpUtil.getSession().get("username", "anonymous").toString() : "anonymous");
 
             String className = point.getTarget().getClass().getSimpleName();
             log.setModule(getModuleFromController(className));

@@ -1,5 +1,6 @@
 package com.dongmedicine.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
@@ -10,7 +11,6 @@ import com.dongmedicine.service.KnowledgeService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,7 +67,7 @@ public class KnowledgeController {
     }
 
     @PostMapping("/favorite/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @SaCheckLogin
     public R<String> favorite(@PathVariable @NotNull(message = "ID不能为空") Integer id) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw BusinessException.unauthorized("请先登录");

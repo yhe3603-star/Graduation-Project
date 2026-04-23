@@ -1,110 +1,208 @@
-# 展示组件目录 (display)
+# 展示组件（Display Components）
 
-本目录存放数据展示相关的组件，如卡片、图表、分页等。
+## 什么是展示组件？
+
+类比：**展示柜**——商场里的展示柜把商品漂亮地陈列出来，让顾客一目了然。
+
+展示组件负责把数据"好看地"呈现给用户，是用户看到最多的组件类型。它们不处理复杂的交互逻辑，主要工作是：
+
+- **接收数据**（通过 props）
+- **展示数据**（通过模板）
+- **通知父组件**（通过 emit，比如"用户点击了这张卡片"）
+
+```
+数据 → [展示组件] → 界面
+       ↑ 接收      ↓ 显示
+     props        模板渲染
+```
+
+---
 
 ## 组件列表
 
-| 组件 | 功能描述 |
-|------|----------|
-| AiChatCard.vue | AI对话卡片，集成智能问答 |
-| CardGrid.vue | 卡片网格布局，展示列表数据 |
-| ChartCard.vue | 图表卡片，封装ECharts图表 |
-| PageSidebar.vue | 页面侧边栏，展示统计和热门内容 |
-| Pagination.vue | 分页组件 |
-| SearchFilter.vue | 搜索过滤组件 |
+### CardGrid —— 卡片网格
+
+**用途：** 以网格形式展示多张卡片（药用植物、知识条目等）
+
+```
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ 🌿 钩藤  │ │ 🌿 透骨草│ │ 🌿 九节茶│
+│  息风止痉 │ │  祛风除湿│ │  清热解毒│
+└─────────┘ └─────────┘ └─────────┘
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ 🌿 半夏  │ │ 🌿 白及  │ │ 🌿 黄精  │
+│  燥湿化痰 │ │  收敛止血│ │  补气养阴│
+└─────────┘ └─────────┘ └─────────┘
+```
+
+```vue
+<!-- 使用示例 -->
+<CardGrid
+  :items="plantList"
+  :columns="3"
+  @card-click="handleCardClick"
+/>
+```
 
 ---
 
-## CardGrid.vue - 卡片网格
+### ChartCard —— 图表卡片
 
-用于展示卡片列表，支持响应式布局。
+**用途：** 在卡片中展示数据图表（柱状图、饼图、折线图等）
+
+```
+┌──────────────────────────┐
+│  药用植物分类统计          │
+│  ┌──┐                    │
+│  │  │ ┌──┐               │
+│  │  │ │  │ ┌──┐          │
+│  │  │ │  │ │  │          │
+│  └──┘ └──┘ └──┘          │
+│  草本  灌木  藤本          │
+└──────────────────────────┘
+```
 
 ```vue
-<template>
-  <div class="card-grid">
-    <div
-      v-for="item in items"
-      :key="item.id"
-      class="card-item"
-      @click="$emit('item-click', item)"
-    >
-      <slot :item="item" />
-    </div>
-  </div>
-</template>
+<!-- 使用示例 -->
+<ChartCard
+  title="药用植物分类统计"
+  :chart-data="categoryData"
+  chart-type="bar"
+/>
+```
 
+---
+
+### Pagination —— 分页器
+
+**用途：** 当数据太多时，分页显示，每页只显示一部分
+
+```
+← 上一页  [1]  2  3  4  5  ...  20  下一页 →
+            ↑ 当前页
+```
+
+```vue
+<!-- 使用示例 -->
+<Pagination
+  :current="currentPage"
+  :total="200"
+  :page-size="10"
+  @change="handlePageChange"
+/>
+```
+
+---
+
+### SearchFilter —— 搜索过滤器
+
+**用途：** 提供搜索框和筛选条件，帮用户快速找到想要的内容
+
+```
+┌────────────────────────────────────────┐
+│ 🔍 [搜索药用植物名称...]               │
+│                                        │
+│ 分类：[全部 ▼]  功效：[全部 ▼]  排序：[默认 ▼] │
+└────────────────────────────────────────┘
+```
+
+```vue
+<!-- 使用示例 -->
+<SearchFilter
+  v-model:keyword="searchKeyword"
+  :filters="filterOptions"
+  @search="handleSearch"
+  @filter-change="handleFilterChange"
+/>
+```
+
+---
+
+### AiChatCard —— AI 对话卡片
+
+**用途：** 展示 AI 侗医药助手的对话界面，用户可以提问
+
+```
+┌──────────────────────────┐
+│  🤖 侗医药智能助手        │
+│                          │
+│  用户：钩藤有什么功效？    │
+│  AI：钩藤具有息风止痉、    │
+│      清热平肝的功效...     │
+│                          │
+│  [输入你的问题...]  [发送] │
+└──────────────────────────┘
+```
+
+```vue
+<!-- 使用示例 -->
+<AiChatCard
+  :chat-history="messages"
+  @send-message="handleSendMessage"
+/>
+```
+
+---
+
+### PageSidebar —— 页面侧边栏
+
+**用途：** 在页面侧边展示导航链接或快捷操作
+
+```
+┌──────────┬─────────────────────┐
+│ 📋 导航   │                     │
+│          │                     │
+│ · 药用植物 │    主内容区域        │
+│ · 传统疗法 │                     │
+│ · 传承人   │                     │
+│ · 学习资源 │                     │
+│          │                     │
+│ 🔍 快速搜索│                     │
+└──────────┴─────────────────────┘
+```
+
+```vue
+<!-- 使用示例 -->
+<PageSidebar
+  :nav-items="sidebarNavItems"
+  :active-key="currentSection"
+  @nav-click="handleNavClick"
+/>
+```
+
+---
+
+## 常见错误
+
+### 错误1：在展示组件里发请求
+
+```vue
 <script setup>
-defineProps({
+// ❌ 展示组件不应该自己发请求，数据应该由父组件传入
+import { ref } from 'vue'
+import { getPlants } from '@/api/plant'
+const plants = ref([])
+getPlants().then(res => { plants.value = res.data })
+
+// ✅ 展示组件只负责展示，数据通过 props 传入
+const props = defineProps({
   items: { type: Array, default: () => [] }
 })
-
-defineEmits(['item-click'])
 </script>
 ```
 
-**使用示例：**
+### 错误2：分页器忘记处理边界
 
 ```vue
-<CardGrid :items="plants" @item-click="handleItemClick">
-  <template #default="{ item }">
-    <PlantCard :plant="item" />
-  </template>
-</CardGrid>
-```
-
----
-
-## Pagination.vue - 分页组件
-
-```vue
-<template>
-  <div class="pagination">
-    <button :disabled="current <= 1" @click="changePage(current - 1)">上一页</button>
-    <span>{{ current }} / {{ totalPages }}</span>
-    <button :disabled="current >= totalPages" @click="changePage(current + 1)">下一页</button>
-  </div>
-</template>
-
 <script setup>
-const props = defineProps({
-  current: { type: Number, default: 1 },
-  total: { type: Number, default: 0 },
-  pageSize: { type: Number, default: 10 }
-})
+// ❌ 没有处理第一页点"上一页"和最后一页点"下一页"的情况
+const prevPage = () => { currentPage.value-- }  // 第一页时变成0或负数！
 
-const emit = defineEmits(['update:current', 'change'])
-
-const totalPages = computed(() => Math.ceil(props.total / props.pageSize))
-
-const changePage = (page) => {
-  emit('update:current', page)
-  emit('change', page)
+// ✅ 加上边界判断
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
 }
 </script>
 ```
-
----
-
-## SearchFilter.vue - 搜索过滤
-
-```vue
-<template>
-  <div class="search-filter">
-    <input
-      v-model="keyword"
-      placeholder="搜索..."
-      @input="handleSearch"
-    >
-    <select v-model="category" @change="handleFilter">
-      <option value="">全部分类</option>
-      <option v-for="cat in categories" :key="cat" :value="cat">
-        {{ cat }}
-      </option>
-    </select>
-  </div>
-</template>
-```
-
----
-
-**最后更新时间**：2026年4月3日

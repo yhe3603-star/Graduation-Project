@@ -1,5 +1,6 @@
 package com.dongmedicine.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -17,6 +18,6 @@ public class QuizRecord {
     private Integer score;
     private Integer totalQuestions;
     private Integer correctAnswers;
-    @TableField("created_at")
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 }

@@ -26,7 +26,7 @@ public class ChatController {
     private static final AtomicLong successRequests = new AtomicLong(0);
     private static final AtomicLong failedRequests = new AtomicLong(0);
 
-    @Value("#{'${app.security.cors-allowed-origins:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}'.split(',')}")
+    @Value("#{'${app.cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173}'.split(',')}")
     private List<String> allowedOrigins;
 
     @Autowired

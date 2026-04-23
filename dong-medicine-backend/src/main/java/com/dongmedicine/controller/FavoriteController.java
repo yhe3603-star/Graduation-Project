@@ -1,11 +1,11 @@
 package com.dongmedicine.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.service.FavoriteService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class FavoriteController {
     private final FavoriteService service;
 
     @PostMapping("/{targetType}/{targetId}")
-    @PreAuthorize("isAuthenticated()")
+    @SaCheckLogin
     public R<String> add(@PathVariable String targetType, @PathVariable Integer targetId) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw BusinessException.unauthorized("请先登录");
@@ -28,7 +28,7 @@ public class FavoriteController {
     }
 
     @DeleteMapping("/{targetType}/{targetId}")
-    @PreAuthorize("isAuthenticated()")
+    @SaCheckLogin
     public R<String> remove(@PathVariable String targetType, @PathVariable Integer targetId) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw BusinessException.unauthorized("请先登录");
@@ -37,7 +37,7 @@ public class FavoriteController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("isAuthenticated()")
+    @SaCheckLogin
     public R<List<Map<String, Object>>> myFavorites() {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw BusinessException.unauthorized("请先登录");

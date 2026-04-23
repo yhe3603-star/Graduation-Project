@@ -1,18 +1,16 @@
 package com.dongmedicine.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.entity.User;
 import com.dongmedicine.mapper.UserMapper;
 import com.dongmedicine.service.UserService;
-import com.dongmedicine.service.TokenBlacklistService;
-import com.dongmedicine.config.JwtUtil;
 import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.exception.ErrorCode;
 import com.dongmedicine.common.util.PasswordValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,10 +24,6 @@ import java.util.List;
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
@@ -47,7 +41,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw BusinessException.passwordWrong();
         }
-        return jwtUtil.generateToken(username, user.getId(), user.getRole());
+
+        StpUtil.login(user.getId());
+        StpUtil.getSession().set("username", user.getUsername());
+        StpUtil.getSession().set("role", user.getRole());
+
+        return StpUtil.getTokenValue();
     }
 
     @Override
@@ -74,7 +73,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setRole(RoleConstants.ROLE_USER);
         user.setStatus(User.STATUS_ACTIVE);
-        user.setCreatedAt(LocalDateTime.now());
         save(user);
     }
 
@@ -207,6 +205,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         user.setStatus(User.STATUS_BANNED);
         updateById(user);
+        StpUtil.kickout(userId);
     }
 
     @Override
@@ -233,6 +232,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw BusinessException.userNotFound();
         }
-        return jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+        StpUtil.login(user.getId());
+        StpUtil.getSession().set("username", user.getUsername());
+        StpUtil.getSession().set("role", user.getRole());
+        return StpUtil.getTokenValue();
     }
 }

@@ -1,549 +1,957 @@
-# 服务层 (service)
+# Service 层 -- 业务逻辑目录
 
-本目录存放所有服务接口和实现类，负责处理业务逻辑。
-
-## 目录
-
-- [什么是服务层？](#什么是服务层)
-- [目录结构](#目录结构)
-- [服务接口与实现](#服务接口与实现)
-- [服务列表](#服务列表)
-- [服务开发规范](#服务开发规范)
-- [常用服务详解](#常用服务详解)
+> Service 是三层架构中的"厨房"层，负责做菜（业务逻辑）。Controller 只管传话，Service 才是真正干活的地方。
 
 ---
 
-## 什么是服务层？
+## 一、什么是 Service 层？
 
-### 服务层的概念
-
-**服务层（Service）** 是后端应用中处理业务逻辑的层。它就像餐厅的"厨房"——服务员（Controller）把点单（请求）送来，厨房（Service）根据菜谱（业务规则）准备菜品（数据），然后服务员再把菜品端给顾客。
-
-### 服务层的作用
+### 生活类比：厨房
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        三层架构                                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    Controller 层                         │   │
-│  │  职责：接收请求，调用Service，返回响应                     │   │
-│  │  代码量：少，主要是转发                                    │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                              │                                  │
-│                              ▼                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                     Service 层                          │   │
-│  │  职责：处理业务逻辑                                       │   │
-│  │  代码量：多，包含各种业务规则                              │   │
-│  │  ┌─────────────────────────────────────────────────┐    │   │
-│  │  │  - 数据验证                                       │    │   │
-│  │  │  - 业务规则判断                                    │    │   │
-│  │  │  - 调用Mapper操作数据库                            │    │   │
-│  │  │  - 调用其他Service                                │    │   │
-│  │  │  - 事务管理                                       │    │   │
-│  │  └─────────────────────────────────────────────────┘    │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                              │                                  │
-│                              ▼                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                     Mapper 层                           │   │
-│  │  职责：与数据库交互                                       │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+服务员（Controller）把订单送进厨房
+       |
+       v
+厨师（Service）开始做菜
+       |
+       +-- 查看配方（业务规则）
+       +-- 检查食材是否新鲜（数据校验）
+       +-- 从调料架取调料（缓存）
+       +-- 让助手去仓库取食材（调用 Mapper）
+       +-- 按步骤烹饪（业务逻辑）
+       +-- 出菜！
+       |
+       v
+服务员把菜端给顾客
 ```
 
-### 为什么需要服务层？
-
-1. **业务逻辑集中**：所有业务规则都在Service层，便于维护
-2. **代码复用**：多个Controller可以调用同一个Service
-3. **事务管理**：Service层可以方便地管理事务
-4. **测试方便**：可以单独测试Service层的业务逻辑
+**Service 层的核心原则：所有业务逻辑都在这里，Controller 和 Mapper 都不关心业务规则。**
 
 ---
 
-## 目录结构
+## 二、为什么要分离 Controller 和 Service？
 
+### 对比：不分离 vs 分离
+
+**反面教材：所有逻辑塞在 Controller 里**
+
+```java
+// 错误示范！Controller 又当服务员又当厨师
+@RestController
+public class UserController {
+
+    @Autowired private UserMapper userMapper;
+    @Autowired private BCryptPasswordEncoder passwordEncoder;
+    @Autowired private JwtUtil jwtUtil;
+
+    @PostMapping("/login")
+    public R<Map<String, Object>> login(@RequestBody LoginDTO dto) {
+        // 1. 校验参数 -- 服务员不该管这个
+        if (dto.getUsername() == null || dto.getPassword() == null) {
+            return R.badRequest("用户名和密码不能为空");
+        }
+        // 2. 查数据库 -- 服务员不该直接去仓库
+        User user = userMapper.selectOne(
+            new LambdaQueryWrapper<User>().eq(User::getUsername, dto.getUsername()));
+        // 3. 验证密码 -- 这是业务逻辑，不该在 Controller
+        if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
+            return R.error("用户名或密码错误");
+        }
+        // 4. 检查封禁状态 -- 又是业务逻辑
+        if ("banned".equals(user.getStatus())) {
+            return R.forbidden("该用户已被封禁");
+        }
+        // 5. 生成Token -- 还是业务逻辑
+        String token = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole());
+        return R.ok(Map.of("token", token));
+    }
+}
 ```
-service/
-│
-├── impl/                              # 服务实现类
-│   ├── UserServiceImpl.java           # 用户服务实现
-│   ├── PlantServiceImpl.java          # 植物服务实现
-│   ├── KnowledgeServiceImpl.java      # 知识服务实现
-│   ├── InheritorServiceImpl.java      # 传承人服务实现
-│   ├── ResourceServiceImpl.java       # 资源服务实现
-│   ├── QaServiceImpl.java             # 问答服务实现
-│   ├── CommentServiceImpl.java        # 评论服务实现
-│   ├── FavoriteServiceImpl.java       # 收藏服务实现
-│   ├── FeedbackServiceImpl.java       # 反馈服务实现
-│   ├── QuizServiceImpl.java           # 测验服务实现
-│   ├── PlantGameServiceImpl.java      # 植物游戏服务实现
-│   ├── LeaderboardServiceImpl.java    # 排行榜服务实现
-│   ├── AiChatServiceImpl.java         # AI聊天服务实现
-│   ├── FileUploadServiceImpl.java     # 文件上传服务实现
-│   └── AdminServiceImpl.java          # 管理后台服务实现
-│
-├── UserService.java                   # 用户服务接口
-├── PlantService.java                  # 植物服务接口
-├── KnowledgeService.java              # 知识服务接口
-├── InheritorService.java              # 传承人服务接口
-├── ResourceService.java               # 资源服务接口
-├── QaService.java                     # 问答服务接口
-├── CommentService.java                # 评论服务接口
-├── FavoriteService.java               # 收藏服务接口
-├── FeedbackService.java               # 反馈服务接口
-├── QuizService.java                   # 测验服务接口
-├── PlantGameService.java              # 植物游戏服务接口
-├── LeaderboardService.java            # 排行榜服务接口
-├── AiChatService.java                 # AI聊天服务接口
-├── FileUploadService.java             # 文件上传服务接口
-└── AdminService.java                  # 管理后台服务接口
+
+**问题：**
+- 如果另一个接口（如管理员接口）也需要验证密码，这段代码就要复制一遍
+- 如果密码验证规则变了，要改所有 Controller
+- Controller 代码太长，难以阅读和维护
+- 无法单独对业务逻辑进行单元测试
+
+**正确做法：Controller 只传话，Service 做业务**
+
+```java
+// Controller：简洁明了，只管传话
+@PostMapping("/login")
+public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
+    String token = service.login(dto.getUsername(), dto.getPassword());
+    User user = service.getUserByUsername(dto.getUsername());
+    return R.ok(Map.of("token", token, "id", user.getId(), "username", user.getUsername(), "role", user.getRole()));
+}
+
+// Service：所有业务逻辑集中在这里
+@Override
+public String login(String username, String password) {
+    if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
+        throw BusinessException.badRequest("用户名和密码不能为空");
+    }
+    User user = getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
+    if (user == null) {
+        throw BusinessException.userNotFound();
+    }
+    if (user.isBanned()) {
+        throw BusinessException.forbidden("该用户已被封禁");
+    }
+    if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw BusinessException.passwordWrong();
+        }
+        // Sa-Token 登录
+        StpUtil.login(user.getId());
+        StpUtil.getSession().set("username", user.getUsername());
+        StpUtil.getSession().set("role", user.getRole());
+        return StpUtil.getTokenValue();
+    }
 ```
+
+**好处：**
+- `login()` 方法可以被任何 Controller 复用
+- 业务逻辑变更只需改 Service
+- 可以对 Service 进行独立的单元测试
+- Controller 代码简洁，一目了然
 
 ---
 
-## 服务接口与实现
+## 三、如何编写 Service
 
-### 服务接口
+### 3.1 两步走：接口 + 实现类
 
-服务接口定义了服务提供的方法，是一种规范。
+**第1步：定义接口（菜单 -- 告诉别人我能做什么）**
 
 ```java
-/**
- * 用户服务接口
- * 定义用户相关的业务方法
- */
-public interface UserService {
-    
+// service/PlantService.java
+public interface PlantService extends IService<Plant> {
+
     /**
-     * 用户登录
-     * @param dto 登录信息
-     * @return 登录结果（包含Token）
+     * 分页高级搜索植物
+     * @param keyword 搜索关键词（可选）
+     * @param category 植物分类（可选）
+     * @param usageWay 用法方式（可选）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 分页结果
      */
-    LoginVO login(LoginDTO dto);
-    
+    Page<Plant> advancedSearchPaged(String keyword, String category, String usageWay, Integer page, Integer size);
+
     /**
-     * 用户注册
-     * @param dto 注册信息
+     * 获取植物详情（包含故事）
+     * @param id 植物ID
+     * @return 植物详情，不存在则返回null
      */
-    void register(RegisterDTO dto);
-    
+    Plant getDetailWithStory(Integer id);
+
     /**
-     * 根据ID获取用户
-     * @param id 用户ID
-     * @return 用户信息
+     * 增加浏览次数
+     * @param id 植物ID
      */
-    User getById(Integer id);
-    
+    void incrementViewCount(Integer id);
+
     /**
-     * 修改密码
-     * @param userId 用户ID
-     * @param dto 密码信息
+     * 清除植物相关缓存
      */
-    void changePassword(Integer userId, ChangePasswordDTO dto);
-    
-    /**
-     * 退出登录
-     * @param token Token
-     */
-    void logout(String token);
+    void clearCache();
 }
 ```
 
-### 服务实现类
+> 为什么要写接口？接口就像"菜单"，Controller 只需要看菜单点菜，不需要知道厨房怎么做。以后换一种做法（比如从 MySQL 换成 MongoDB），只需要改实现类，Controller 不用动。
 
-服务实现类实现了接口中定义的方法，包含具体的业务逻辑。
-
-```java
-/**
- * 用户服务实现类
- * 实现用户相关的业务逻辑
- */
-@Service                           // 标记为服务类
-@RequiredArgsConstructor            // Lombok注解，生成构造函数
-@Slf4j                             // Lombok注解，生成日志对象
-public class UserServiceImpl implements UserService {
-    
-    // 依赖注入
-    private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final TokenBlacklistService tokenBlacklistService;
-    
-    @Override
-    public LoginVO login(LoginDTO dto) {
-        // 1. 验证验证码
-        validateCaptcha(dto.getCaptchaKey(), dto.getCaptchaCode());
-        
-        // 2. 查询用户
-        User user = userMapper.findByUsername(dto.getUsername());
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
-        
-        // 3. 验证密码
-        if (!passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
-            throw new BusinessException(ErrorCode.PASSWORD_ERROR);
-        }
-        
-        // 4. 检查用户状态
-        if (user.isBanned()) {
-            throw new BusinessException(ErrorCode.USER_BANNED);
-        }
-        
-        // 5. 生成Token
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
-        
-        // 6. 返回登录结果
-        return LoginVO.builder()
-            .token(token)
-            .userId(user.getId())
-            .username(user.getUsername())
-            .role(user.getRole())
-            .build();
-    }
-    
-    @Override
-    @Transactional  // 开启事务
-    public void register(RegisterDTO dto) {
-        // 1. 验证验证码
-        validateCaptcha(dto.getCaptchaKey(), dto.getCaptchaCode());
-        
-        // 2. 检查用户名是否存在
-        if (userMapper.findByUsername(dto.getUsername()) != null) {
-            throw new BusinessException(ErrorCode.USER_ALREADY_EXISTS);
-        }
-        
-        // 3. 验证密码
-        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
-            throw new BusinessException("两次密码不一致");
-        }
-        
-        // 4. 创建用户
-        User user = new User();
-        user.setUsername(dto.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
-        user.setRole(RoleConstants.USER);
-        user.setStatus(0);
-        user.setCreatedAt(LocalDateTime.now());
-        
-        userMapper.insert(user);
-        log.info("用户注册成功: {}", user.getUsername());
-    }
-    
-    @Override
-    public void logout(String token) {
-        // 将Token加入黑名单
-        tokenBlacklistService.addToBlacklist(token);
-        log.info("用户退出登录");
-    }
-    
-    // 私有方法：验证验证码
-    private void validateCaptcha(String key, String code) {
-        // 验证码验证逻辑...
-    }
-}
-```
-
----
-
-## 服务列表
-
-| 服务 | 功能描述 |
-|------|----------|
-| UserService | 用户注册、登录、信息管理、Token刷新 |
-| PlantService | 药用植物增删改查、搜索、浏览计数 |
-| KnowledgeService | 知识库增删改查、搜索、分类过滤 |
-| InheritorService | 传承人增删改查、级别筛选 |
-| ResourceService | 学习资源管理、下载计数 |
-| QaService | 问答管理 |
-| CommentService | 评论发表、审核、嵌套回复 |
-| FavoriteService | 收藏管理、收藏状态检查 |
-| FeedbackService | 用户反馈提交、回复 |
-| QuizService | 测验题目获取、答案提交、记录保存 |
-| PlantGameService | 植物游戏逻辑、分数计算 |
-| LeaderboardService | 排行榜数据统计 |
-| AiChatService | AI智能问答（DeepSeek集成） |
-| FileUploadService | 文件上传、类型验证、大小限制 |
-| AdminService | 管理后台数据统计、用户管理 |
-
----
-
-## 服务开发规范
-
-### 1. 接口定义规范
+**第2步：编写实现类（做菜 -- 具体怎么做）**
 
 ```java
-public interface ExampleService {
-    
-    /**
-     * 方法说明
-     * @param paramName 参数说明
-     * @return 返回值说明
-     * @throws BusinessException 异常说明
-     */
-    ReturnType methodName(ParamType paramName);
-}
-```
+// service/impl/PlantServiceImpl.java
+@Service   // 关键！告诉 Spring 这是一个业务类
+public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements PlantService {
 
-### 2. 实现类规范
+    @Autowired
+    private PlantMapper plantMapper;
 
-```java
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class ExampleServiceImpl implements ExampleService {
-    
-    // 1. 依赖注入（使用final + @RequiredArgsConstructor）
-    private final ExampleMapper exampleMapper;
-    private final OtherService otherService;
-    
-    // 2. 公有方法（实现接口）
     @Override
-    @Transactional
-    public ReturnType methodName(ParamType paramName) {
-        // 业务逻辑
+    public Page<Plant> advancedSearchPaged(String keyword, String category, String usageWay, Integer page, Integer size) {
+        // 具体业务逻辑...
     }
-    
-    // 3. 私有方法（内部使用）
-    private void privateMethod() {
-        // 辅助逻辑
-    }
-}
-```
 
-### 3. 事务管理规范
-
-```java
-@Service
-public class ExampleServiceImpl implements ExampleService {
-    
-    // 需要事务的方法
-    @Transactional
-    public void addWithDetails(ExampleDTO dto) {
-        // 多个数据库操作，需要事务保证一致性
-        exampleMapper.insert(example);
-        detailMapper.insertBatch(details);
-    }
-    
-    // 只读操作，不需要事务
-    public Example getById(Integer id) {
-        return exampleMapper.selectById(id);
-    }
-    
-    // 指定事务属性
-    @Transactional(
-        readOnly = false,                    // 非只读
-        timeout = 30,                        // 超时时间30秒
-        rollbackFor = Exception.class        // 所有异常都回滚
-    )
-    public void importantOperation() {
-        // 重要操作
-    }
-}
-```
-
-### 4. 异常处理规范
-
-```java
-@Service
-public class ExampleServiceImpl implements ExampleService {
-    
-    public Example getById(Integer id) {
-        Example example = exampleMapper.selectById(id);
-        
-        // 找不到数据时抛出业务异常
-        if (example == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND);
-        }
-        
-        return example;
-    }
-    
-    public void update(ExampleDTO dto) {
-        // 业务规则验证失败时抛出异常
-        if (!isValid(dto)) {
-            throw new BusinessException("数据验证失败：原因");
-        }
-        
-        exampleMapper.updateById(convert(dto));
-    }
-}
-```
-
----
-
-## 常用服务详解
-
-### UserService - 用户服务
-
-处理用户注册、登录、信息管理等核心功能。
-
-```java
-@Service
-@RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
-    
-    private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    
     @Override
-    public LoginVO login(LoginDTO dto) {
-        // 1. 查询用户
-        User user = userMapper.findByUsername(dto.getUsername());
-        
-        // 2. 验证用户存在
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
-        
-        // 3. 验证密码
-        if (!passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
-            throw new BusinessException(ErrorCode.PASSWORD_ERROR);
-        }
-        
-        // 4. 检查状态
-        if (user.isBanned()) {
-            throw new BusinessException(ErrorCode.USER_BANNED);
-        }
-        
-        // 5. 生成Token
-        String token = jwtUtil.generateToken(user);
-        
-        return new LoginVO(token, user);
+    public Plant getDetailWithStory(Integer id) {
+        return getById(id);
     }
-}
-```
 
-### PlantService - 植物服务
-
-处理药用植物的增删改查和搜索。
-
-```java
-@Service
-@RequiredArgsConstructor
-public class PlantServiceImpl implements PlantService {
-    
-    private final PlantMapper plantMapper;
-    
-    @Override
-    public Page<Plant> list(int page, int size, String category, String usageWay) {
-        Page<Plant> pageObj = new Page<>(page, size);
-        
-        LambdaQueryWrapper<Plant> wrapper = new LambdaQueryWrapper<>();
-        
-        // 条件筛选
-        wrapper.eq(StringUtils.hasText(category), Plant::getCategory, category);
-        wrapper.eq(StringUtils.hasText(usageWay), Plant::getUsageWay, usageWay);
-        wrapper.orderByDesc(Plant::getViewCount);
-        
-        return plantMapper.selectPage(pageObj, wrapper);
-    }
-    
-    @Override
-    public List<Plant> search(String keyword) {
-        // XSS过滤
-        if (XssUtils.containsXss(keyword)) {
-            throw new BusinessException("搜索词包含非法字符");
-        }
-        
-        // LIKE转义
-        String escaped = PageUtils.escapeLike(keyword);
-        
-        return plantMapper.searchByKeyword(escaped);
-    }
-    
     @Override
     public void incrementViewCount(Integer id) {
         plantMapper.incrementViewCount(id);
     }
+
+    @Override
+    @CacheEvict(value = "plants", allEntries = true)
+    public void clearCache() {
+        log.info("Plant cache cleared");
+    }
 }
 ```
 
-### QuizService - 测验服务
+### 3.2 继承关系说明
 
-处理测验题目获取和答案提交。
+```
+IService<Plant>（MyBatis-Plus提供的接口）
+    |   提供基础方法：save(), removeById(), updateById(), getById(), list(), page()...
+    |
+    v
+PlantService（我们定义的接口）
+    |   添加自定义方法：advancedSearchPaged(), getDetailWithStory()...
+    |
+    v
+PlantServiceImpl（我们的实现类）
+    |   继承 ServiceImpl<PlantMapper, Plant>
+    |   实现 PlantService 接口
+    |
+    v
+自动拥有 IService 的所有方法 + 自定义方法
+```
+
+> `ServiceImpl<PlantMapper, Plant>` 是 MyBatis-Plus 提供的基类，它帮你实现了 `IService` 接口的所有基础方法。所以你的 `PlantServiceImpl` 自动拥有了 `save()`, `getById()`, `list()`, `page()` 等方法，不用自己写。
+
+---
+
+## 四、核心注解详解
+
+### 4.1 @Service -- "我是厨师"
+
+```java
+@Service   // 告诉 Spring：请管理这个类的生命周期，其他类可以通过注入使用它
+public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements PlantService {
+    // ...
+}
+```
+
+**不加 @Service 会怎样？** Spring 不会创建这个类的实例，Controller 注入时会报 `NoSuchBeanDefinitionException`。
+
+### 4.2 @Transactional -- "这组操作要么全成功，要么全失败"
+
+**生活类比：** 你在药铺买三味药，要么三味都买到，要么都不买。不能只买到两味就收钱。
+
+```java
+@Override
+@Transactional(rollbackFor = Exception.class)  // 任何异常都回滚
+public void register(String username, String password) {
+    // 操作1：检查用户名是否已存在
+    // 操作2：加密密码
+    // 操作3：保存用户
+    // 如果操作3失败了，操作1和2的结果也会被撤销（回滚）
+    User user = new User();
+    user.setUsername(username);
+    user.setPasswordHash(passwordEncoder.encode(password));
+    user.setRole(RoleConstants.ROLE_USER);
+    save(user);  // 如果这里抛异常，前面的操作全部撤销
+}
+```
+
+**什么时候需要加 @Transactional？**
+
+| 场景 | 需要？ | 例子 |
+|------|--------|------|
+| 单个数据库操作 | 不需要 | `getById(id)` |
+| 多个数据库操作（必须同时成功） | **需要** | 注册=检查+保存 |
+| 先查后改 | **需要** | 改密码=验证+更新 |
+| 只读操作 | 不需要 | `list()`, `page()` |
+
+> **常见错误：** 在只读方法上加 `@Transactional`，虽然不会出错，但会不必要地占用数据库连接。
+
+### 4.3 @Cacheable -- "先查缓存，缓存没有再查数据库"
+
+**生活类比：** 厨师旁边有个调料架（缓存），做菜时先看调料架上有没有，有就直接用，没有再去仓库（数据库）拿，拿完放一份在调料架上。
+
+```java
+@Override
+@Cacheable(value = "plants", key = "'list:' + (#keyword ?: 'all') + ':' + (#category ?: 'all')")
+public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
+    // 第一次调用：执行这个方法，查数据库，结果存入缓存
+    // 后续调用：如果参数相同，直接从缓存返回，不执行这个方法
+    LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<>();
+    // ... 构建查询条件
+    return list(qw);
+}
+```
+
+**@Cacheable 参数详解：**
+
+| 参数 | 说明 | 例子 |
+|------|------|------|
+| `value` | 缓存区域名称（类似文件夹） | `"plants"` |
+| `key` | 缓存键（类似文件名），相同key返回相同结果 | `"'list:' + #keyword"` |
+
+**key 中的 SpEL 表达式：**
+
+```
+#keyword       --> 方法参数 keyword 的值
+#category      --> 方法参数 category 的值
+(#keyword ?: 'all')  --> 如果 keyword 为空就用 'all'
+```
+
+**缓存的工作流程：**
+
+```
+调用 advancedSearch("钩藤", "清热药", null)
+       |
+       v
+检查缓存：plants::list:钩藤:清热药:all
+       |
+       +-- 缓存命中 --> 直接返回缓存数据，不执行方法体
+       |
+       +-- 缓存未命中 --> 执行方法体，查数据库
+                           |
+                           v
+                       把结果存入缓存
+                           |
+                           v
+                       返回结果
+```
+
+### 4.4 @CacheEvict -- "清除缓存"
+
+**生活类比：** 仓库进了新货，调料架上的旧数据就不准了，需要清掉。
+
+```java
+@Override
+@CacheEvict(value = "plants", allEntries = true)  // 清除 plants 缓存区的所有条目
+public void clearCache() {
+    log.info("Plant cache cleared");
+}
+
+@Override
+@CacheEvict(value = "plants", allEntries = true)  // 删除植物时也要清缓存
+public void deleteWithFiles(Integer id) {
+    Plant plant = getById(id);
+    if (plant == null) return;
+    fileCleanupHelper.deleteFilesFromJson(plant.getImages());
+    fileCleanupHelper.deleteFilesFromJson(plant.getVideos());
+    fileCleanupHelper.deleteFilesFromJson(plant.getDocuments());
+    removeById(id);  // 数据库删除
+    // 方法执行完后，缓存自动清除
+}
+```
+
+**什么时候需要清缓存？**
+
+| 操作 | 需要清缓存？ | 原因 |
+|------|------------|------|
+| 新增植物 | 需要 | 列表数据变了 |
+| 修改植物 | 需要 | 详情数据变了 |
+| 删除植物 | 需要 | 列表和详情都变了 |
+| 查询植物 | 不需要 | 数据没变 |
+
+> **常见错误：** 修改了数据但忘记清缓存，导致前端看到的还是旧数据。
+
+### 4.5 @Async -- "后台慢慢做，不用等"
+
+**生活类比：** 顾客点了菜后，服务员先把菜单送进去，不用等菜做好才去接待下一位顾客。浏览量计数就是这种"不用等"的操作。
+
+```java
+// AsyncConfig.java 中定义了专用的线程池
+@Bean(name = "viewCountExecutor")
+public Executor viewCountExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(2);     // 核心线程数：2个厨师专门做浏览量计数
+    executor.setMaxPoolSize(5);      // 最大线程数：忙时最多5个
+    executor.setQueueCapacity(100);  // 排队容量：最多100个任务排队
+    executor.setThreadNamePrefix("view-count-");  // 线程名前缀
+    executor.initialize();
+    return executor;
+}
+```
+
+```java
+// Service 中使用 @Async
+@Async("viewCountExecutor")   // 在 viewCountExecutor 线程池中异步执行
+public void incrementViewCount(Integer id) {
+    plantMapper.incrementViewCount(id);
+    // 这个方法不会阻塞主请求，用户不用等浏览量更新完就能收到响应
+}
+```
+
+**同步 vs 异步对比：**
+
+```
+同步（没有 @Async）：
+  用户请求 --> 增加浏览量（等50ms） --> 返回响应 --> 用户看到页面
+  总耗时：50ms + 业务时间
+
+异步（有 @Async）：
+  用户请求 --> 提交浏览量任务 --> 立即返回响应 --> 用户看到页面
+                                     |
+                                     v（后台线程执行）
+                               增加浏览量（50ms）
+  总耗时：业务时间（不包含50ms）
+```
+
+> **注意：** @Async 方法不能是 private 的，不能在同一个类内部调用（否则不生效）。
+
+---
+
+## 五、项目中的 Service 实例
+
+### 5.1 PlantServiceImpl -- 药用植物服务
 
 ```java
 @Service
-@RequiredArgsConstructor
-public class QuizServiceImpl implements QuizService {
-    
-    private final QuizQuestionMapper questionMapper;
-    private final QuizRecordMapper recordMapper;
-    
+public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements PlantService {
+
+    private static final Logger log = LoggerFactory.getLogger(PlantServiceImpl.class);
+
+    // 常量定义：限制范围
+    private static final int MIN_PAGE_SIZE = 1;
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int DEFAULT_SEARCH_LIMIT = 50;
+
+    @Autowired
+    private PlantMapper plantMapper;
+    @Autowired
+    private FileCleanupHelper fileCleanupHelper;
+
+    @Value("${app.search.use-fulltext:true}")   // 从配置文件读取
+    private boolean useFullTextSearch;
+
+    // ---- 查询类方法 ----
+
     @Override
-    public List<QuizQuestion> getRandomQuestions(int count, int scorePerQuestion) {
-        // 随机获取问题
-        return questionMapper.selectRandomQuestions(count);
-    }
-    
-    @Override
-    @Transactional
-    public QuizResultVO submit(QuizSubmitDTO dto) {
-        // 1. 计算得分
-        int correctCount = 0;
-        for (AnswerDTO answer : dto.getAnswers()) {
-            QuizQuestion question = questionMapper.selectById(answer.getQuestionId());
-            if (question.getCorrectAnswer().equals(answer.getAnswer())) {
-                correctCount++;
-            }
+    @Cacheable(value = "plants", key = "'list:' + (#keyword ?: 'all') + ':' + (#category ?: 'all') + ':' + (#usageWay ?: 'all')")
+    public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
+        // 动态构建查询条件
+        LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            String escapedKeyword = PageUtils.escapeLike(keyword);  // 防止SQL注入
+            qw.and(wrapper -> wrapper
+                .like(Plant::getNameCn, escapedKeyword)     // 中文名模糊匹配
+                .or().like(Plant::getNameDong, escapedKeyword) // 侗语名模糊匹配
+                .or().like(Plant::getEfficacy, escapedKeyword) // 功效模糊匹配
+                .or().like(Plant::getStory, escapedKeyword));   // 故事模糊匹配
         }
-        
-        // 2. 计算总分
-        int totalScore = correctCount * dto.getScorePerQuestion();
-        
-        // 3. 保存记录
-        QuizRecord record = new QuizRecord();
-        record.setUserId(SecurityUtils.getCurrentUserId());
-        record.setTotalQuestions(dto.getAnswers().size());
-        record.setCorrectCount(correctCount);
-        record.setTotalScore(totalScore);
-        record.setCreatedAt(LocalDateTime.now());
-        recordMapper.insert(record);
-        
-        // 4. 返回结果
-        return new QuizResultVO(correctCount, dto.getAnswers().size(), totalScore);
+        if (StringUtils.hasText(category)) {
+            qw.eq(Plant::getCategory, category);  // 精确匹配分类
+        }
+        if (StringUtils.hasText(usageWay)) {
+            qw.eq(Plant::getUsageWay, usageWay);  // 精确匹配用法
+        }
+        qw.orderByAsc(Plant::getNameCn);  // 按中文名排序
+        return list(qw);
+    }
+
+    @Override
+    public List<Plant> search(String keyword, int limit) {
+        // 参数校验
+        if (!StringUtils.hasText(keyword)) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "搜索关键词不能为空");
+        }
+        if (limit < MIN_PAGE_SIZE || limit > MAX_PAGE_SIZE) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR,
+                    String.format("限制数量必须在%d-%d之间", MIN_PAGE_SIZE, MAX_PAGE_SIZE));
+        }
+
+        String escapedKeyword = PageUtils.escapeLike(keyword);
+
+        // 优先使用全文搜索（更快），失败则降级到 LIKE 搜索
+        try {
+            if (useFullTextSearch) {
+                List<Plant> results = plantMapper.searchByFullText(keyword, limit);
+                if (!results.isEmpty()) {
+                    return results;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("全文搜索失败，回退到LIKE搜索: {}", e.getMessage());
+        }
+
+        return plantMapper.searchByLike(escapedKeyword, limit);
+    }
+
+    @Override
+    public List<Plant> getSimilarPlants(Integer id) {
+        Plant current = getById(id);
+        if (current == null) return List.of();
+        return list(new LambdaQueryWrapper<Plant>()
+                .eq(Plant::getCategory, current.getCategory())  // 同分类
+                .ne(Plant::getId, id)                            // 排除自己
+                .orderByDesc(Plant::getId)
+                .last("LIMIT 4"));                               // 最多4个
+    }
+
+    // ---- 写入类方法 ----
+
+    @Override
+    public void incrementViewCount(Integer id) {
+        try {
+            plantMapper.incrementViewCount(id);
+        } catch (Exception e) {
+            log.error("Failed to increment view count for plant id: {}", id, e);
+            // 浏览量更新失败不影响主流程，只记录日志
+        }
+    }
+
+    @Override
+    @CacheEvict(value = "plants", allEntries = true)
+    public void clearCache() {
+        log.info("Plant cache cleared");
+    }
+
+    @Override
+    @CacheEvict(value = "plants", allEntries = true)
+    public void deleteWithFiles(Integer id) {
+        Plant plant = getById(id);
+        if (plant == null) return;
+        // 先删除关联文件，再删除数据库记录
+        fileCleanupHelper.deleteFilesFromJson(plant.getImages());
+        fileCleanupHelper.deleteFilesFromJson(plant.getVideos());
+        fileCleanupHelper.deleteFilesFromJson(plant.getDocuments());
+        removeById(id);
+        log.info("Deleted plant {} with associated files", id);
+    }
+}
+```
+
+### 5.2 UserServiceImpl -- 用户服务
+
+```java
+@Service
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    @Autowired private UserService userService;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    // ---- 登录 ----
+    @Override
+    public String login(String username, String password) {
+        // 1. 参数校验
+        if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
+            throw BusinessException.badRequest("用户名和密码不能为空");
+        }
+        // 2. 查找用户
+        User user = getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
+        if (user == null) {
+            throw BusinessException.userNotFound();
+        }
+        // 3. 检查封禁状态
+        if (user.isBanned()) {
+            throw BusinessException.forbidden("该用户已被封禁");
+        }
+        // 4. 验证密码
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw BusinessException.passwordWrong();
+        }
+        // 5. Sa-Token 登录，生成 Token
+        StpUtil.login(user.getId());
+        StpUtil.getSession().set("username", user.getUsername());
+        StpUtil.getSession().set("role", user.getRole());
+        return StpUtil.getTokenValue();  // 返回 Token 给前端
+    }
+
+    // ---- 注册 ----
+    @Override
+    @Transactional(rollbackFor = Exception.class)  // 事务：保证数据一致性
+    public void register(String username, String password) {
+        // 1. 参数校验
+        if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
+            throw BusinessException.badRequest("用户名和密码不能为空");
+        }
+        if (username.length() < 3 || username.length() > 20) {
+            throw new BusinessException(ErrorCode.USERNAME_TOO_SHORT);
+        }
+        // 2. 密码强度校验
+        PasswordValidator.ValidationResult validationResult = PasswordValidator.validate(password);
+        if (!validationResult.isValid()) {
+            throw BusinessException.passwordTooWeak();
+        }
+        // 3. 用户名唯一性检查
+        if (getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username)) != null) {
+            throw BusinessException.userAlreadyExists();
+        }
+        // 4. 创建用户
+        User user = new User();
+        user.setUsername(username);
+        user.setPasswordHash(passwordEncoder.encode(password));  // BCrypt加密
+        user.setRole(RoleConstants.ROLE_USER);
+        user.setStatus(User.STATUS_ACTIVE);
+        user.setCreatedAt(LocalDateTime.now());
+        save(user);
+    }
+
+    // ---- 修改密码 ----
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "users", allEntries = true)  // 清除用户缓存
+    public void changePassword(Integer userId, String currentPassword, String newPassword) {
+        if (!StringUtils.hasText(currentPassword) || !StringUtils.hasText(newPassword)) {
+            throw BusinessException.badRequest("密码不能为空");
+        }
+        PasswordValidator.ValidationResult validationResult = PasswordValidator.validate(newPassword);
+        if (!validationResult.isValid()) {
+            throw BusinessException.passwordTooWeak();
+        }
+        User user = getById(userId);
+        if (user == null) {
+            throw BusinessException.userNotFound();
+        }
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw BusinessException.passwordWrong();
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        updateById(user);
+    }
+
+    // ---- 获取用户信息 ----
+    @Override
+    public User getUserInfo(Integer userId) {
+        User user = getById(userId);
+        if (user == null) {
+            throw BusinessException.userNotFound();
+        }
+        user.setPasswordHash(null);  // 重要！返回给前端前清除密码
+        return user;
+    }
+
+    // ---- 删除用户 ----
+    @Override
+    @CacheEvict(value = "users", allEntries = true)
+    public void deleteUser(Integer userId) {
+        Integer currentId = SecurityUtils.getCurrentUserId();
+        if (currentId != null && currentId.equals(userId)) {
+            throw BusinessException.forbidden("不能删除当前登录账号");
+        }
+        User target = getById(userId);
+        if (target == null) {
+            throw BusinessException.userNotFound();
+        }
+        if (RoleConstants.ROLE_ADMIN.equals(target.getRole()) && countAdmins() <= 1) {
+            throw BusinessException.forbidden("不能删除系统唯一的管理员账号");
+        }
+        removeById(userId);
+    }
+
+    // ---- 封禁/解封 ----
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "users", allEntries = true)
+    public void banUser(Integer userId, String reason) {
+        Integer currentId = SecurityUtils.getCurrentUserId();
+        if (currentId != null && currentId.equals(userId)) {
+            throw BusinessException.forbidden("不能封禁当前登录账号");
+        }
+        User user = getById(userId);
+        if (user == null) throw BusinessException.userNotFound();
+        if (RoleConstants.ROLE_ADMIN.equals(user.getRole())) {
+            throw BusinessException.forbidden("不能封禁管理员账号");
+        }
+        user.setStatus(User.STATUS_BANNED);
+        updateById(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "users", allEntries = true)
+    public void unbanUser(Integer userId) {
+        User user = getById(userId);
+        if (user == null) throw BusinessException.userNotFound();
+        user.setStatus(User.STATUS_ACTIVE);
+        updateById(user);
     }
 }
 ```
 
 ---
 
-## 最佳实践
+## 六、缓存策略详解
 
-### 1. 服务层职责
+### 6.1 多级缓存架构
 
-- **处理业务逻辑**：所有业务规则都在Service层
-- **事务管理**：需要事务的方法加@Transactional
-- **调用Mapper**：通过Mapper操作数据库
-- **调用其他Service**：复杂业务可能需要多个Service协作
+```
+请求到达 Service
+       |
+       v
+[1] 检查 @Cacheable 注解
+       |
+       +-- 缓存命中 --> 直接返回（最快）
+       |
+       +-- 缓存未命中
+              |
+              v
+[2] 查询 Redis 缓存
+       |
+       +-- Redis 命中 --> 返回数据（快）
+       |
+       +-- Redis 未命中 / Redis 不可用
+              |
+              v
+[3] 查询 MySQL 数据库
+       |
+       v
+[4] 结果写入缓存，返回数据（最慢）
+```
 
-### 2. 不要在Service层做的事情
+### 6.2 各缓存区域的过期时间
 
-- 不要处理HTTP请求参数（Controller层做）
-- 不要直接操作HttpServletRequest/Response
-- 不要返回R<T>（Controller层封装）
+| 缓存区域 | 过期时间 | 说明 |
+|---------|---------|------|
+| plants | 6小时 | 药用植物数据变化不频繁 |
+| knowledges | 6小时 | 知识数据变化不频繁 |
+| inheritors | 6小时 | 传承人数据变化不频繁 |
+| resources | 4小时 | 资源数据偶尔更新 |
+| users | 30分钟 | 用户信息可能随时变更 |
+| quizQuestions | 12小时 | 题目很少变化 |
+| searchResults | 5分钟 | 搜索结果变化较快 |
+| hotData | 1小时 | 热门数据需要较新 |
 
-### 3. 性能优化
+### 6.3 Redis 不可用时的降级
 
 ```java
-// 使用缓存
-@Cacheable(value = "plants", key = "#id")
+// CacheConfig.java 中的降级逻辑
+@Bean
+@Primary
+public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+    try {
+        connectionFactory.getConnection().ping();  // 尝试连接 Redis
+        return createRedisCacheManager(connectionFactory);  // Redis 可用
+    } catch (Exception e) {
+        log.warn("Redis连接失败，降级到内存缓存: {}", e.getMessage());
+        return createFallbackCacheManager();  // 降级到 Caffeine
+    }
+}
+```
+
+---
+
+## 七、本项目的所有 Service
+
+| 服务接口 | 实现类 | 职责 | 关键注解 |
+|---------|--------|------|---------|
+| PlantService | PlantServiceImpl | 药用植物搜索、详情、缓存 | @Cacheable, @CacheEvict |
+| UserService | UserServiceImpl | 注册、登录、改密、封禁 | @Transactional, @CacheEvict, BCrypt |
+| KnowledgeService | KnowledgeServiceImpl | 知识库CRUD、分类查询 | @Cacheable, @CacheEvict |
+| InheritorService | InheritorServiceImpl | 传承人CRUD、级别筛选 | @Cacheable, @CacheEvict |
+| ResourceService | ResourceServiceImpl | 资源CRUD、下载计数 | @Cacheable, @CacheEvict |
+| QaService | QaServiceImpl | 问答CRUD、分类查询 | @Cacheable |
+| CommentService | CommentServiceImpl | 评论发表、嵌套回复、审核 | @Transactional |
+| FavoriteService | FavoriteServiceImpl | 收藏添加/取消、列表 | @Transactional |
+| FeedbackService | FeedbackServiceImpl | 反馈提交、管理员回复 | @Transactional |
+| QuizService | QuizServiceImpl | 测验题目、评分、记录 | @Cacheable, @Transactional |
+| PlantGameService | PlantGameServiceImpl | 植物识别游戏记录 | @Transactional |
+| AiChatService | AiChatServiceImpl | DeepSeek AI聊天 | @RateLimit |
+| FileUploadService | FileUploadServiceImpl | 文件上传校验+存储 | -- |
+| CaptchaService | -- | 验证码生成与验证 | Redis 5分钟过期 |
+| OperationLogService | OperationLogServiceImpl | 操作日志管理 | -- |
+
+---
+
+## 八、如何添加一个新的 Service
+
+假设要添加"侗族药方"（Recipe）模块的 Service：
+
+### 第1步：创建 Service 接口
+
+```java
+// service/RecipeService.java
+package com.dongmedicine.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.dongmedicine.entity.Recipe;
+import java.util.List;
+
+/**
+ * 侗族药方服务接口
+ */
+public interface RecipeService extends IService<Recipe> {
+
+    /**
+     * 分页搜索药方
+     */
+    Page<Recipe> searchPaged(String keyword, Integer page, Integer size);
+
+    /**
+     * 清除药方缓存
+     */
+    void clearCache();
+}
+```
+
+### 第2步：创建 Service 实现类
+
+```java
+// service/impl/RecipeServiceImpl.java
+package com.dongmedicine.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.exception.ErrorCode;
+import com.dongmedicine.common.util.PageUtils;
+import com.dongmedicine.entity.Recipe;
+import com.dongmedicine.mapper.RecipeMapper;
+import com.dongmedicine.service.RecipeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+@Service   // 必须加！
+public class RecipeServiceImpl extends ServiceImpl<RecipeMapper, Recipe> implements RecipeService {
+
+    @Autowired
+    private RecipeMapper recipeMapper;
+
+    @Override
+    @Cacheable(value = "recipes", key = "'search:' + (#keyword ?: 'all') + ':' + #page + ':' + #size")
+    public Page<Recipe> searchPaged(String keyword, Integer page, Integer size) {
+        Page<Recipe> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Recipe> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(w -> w.like(Recipe::getNameCn, escapedKeyword)
+                         .or().like(Recipe::getIndications, escapedKeyword));
+        }
+        qw.orderByDesc(Recipe::getCreatedAt);
+        return page(pageParam, qw);
+    }
+
+    @Override
+    @CacheEvict(value = "recipes", allEntries = true)
+    public void clearCache() {
+        log.info("Recipe cache cleared");
+    }
+}
+```
+
+### 第3步：在 CacheConfig 中注册缓存区域
+
+```java
+// CacheConfig.java 的 cacheConfigurations 中添加：
+cacheConfigurations.put("recipes", defaultConfig.entryTtl(Duration.ofHours(4)));
+```
+
+### 第4步：在 Controller 中使用
+
+```java
+@RestController
+@RequestMapping("/api/recipes")
+@RequiredArgsConstructor
+public class RecipeController {
+
+    private final RecipeService recipeService;  // 注入 Service
+
+    @GetMapping("/list")
+    public R<Map<String, Object>> list(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "12") Integer size,
+            @RequestParam(required = false) String keyword) {
+        return R.ok(PageUtils.toMap(recipeService.searchPaged(keyword, page, size)));
+    }
+}
+```
+
+---
+
+## 九、常见错误与避免方法
+
+### 错误1：忘记加 @Service 注解
+
+```java
+// 错误！Spring 不会创建这个 Bean，注入时报 NullPointerException
+public class RecipeServiceImpl extends ServiceImpl<RecipeMapper, Recipe> implements RecipeService {
+    // ...
+}
+
+// 正确！
+@Service
+public class RecipeServiceImpl extends ServiceImpl<RecipeMapper, Recipe> implements RecipeService {
+    // ...
+}
+```
+
+### 错误2：修改数据后忘记清缓存
+
+```java
+// 错误！数据库已更新，但缓存还是旧数据，前端看到的是过期数据
+@Override
+public void updateRecipe(Recipe recipe) {
+    updateById(recipe);  // 数据库更新了
+    // 缓存没清！前端可能看到旧数据
+}
+
+// 正确！更新后清除缓存
+@Override
+@CacheEvict(value = "recipes", allEntries = true)
+public void updateRecipe(Recipe recipe) {
+    updateById(recipe);
+}
+```
+
+### 错误3：在同一个类内部调用 @Cacheable 方法
+
+```java
+@Service
+public class PlantServiceImpl {
+
+    public void someMethod() {
+        // 错误！这样调用 @Cacheable 不会生效
+        // 因为 Spring AOP 是基于代理的，内部调用绕过了代理
+        this.advancedSearch("钩藤", null, null);
+    }
+
+    @Cacheable(value = "plants", key = "'search:' + #keyword")
+    public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
+        // ...
+    }
+}
+```
+
+> **解决方法：** 把 `@Cacheable` 方法放在不同的 Service 中，或者通过注入自身来调用（不推荐）。
+
+### 错误4：@Async 方法是 private 的
+
+```java
+// 错误！private 方法 @Async 不生效，Spring AOP 无法代理私有方法
+@Async("viewCountExecutor")
+private void incrementViewCount(Integer id) { ... }
+
+// 正确！必须是 public
+@Async("viewCountExecutor")
+public void incrementViewCount(Integer id) { ... }
+```
+
+### 错误5：返回给前端时忘记清除敏感信息
+
+```java
+// 错误！密码哈希被返回给前端
+@Override
+public User getUserInfo(Integer userId) {
+    return getById(userId);  // 包含 passwordHash！
+}
+
+// 正确！返回前清除密码
+@Override
+public User getUserInfo(Integer userId) {
+    User user = getById(userId);
+    if (user == null) throw BusinessException.userNotFound();
+    user.setPasswordHash(null);  // 清除敏感信息
+    return user;
+}
+```
+
+### 错误6：@Transactional 加在只读方法上
+
+```java
+// 不推荐！只读方法不需要事务，加了会占用数据库连接
+@Transactional(rollbackFor = Exception.class)
 public Plant getById(Integer id) {
     return plantMapper.selectById(id);
 }
 
-// 批量操作
-public void addBatch(List<Plant> plants) {
-    plantMapper.insertBatch(plants);
+// 正确！只读方法不加 @Transactional
+public Plant getById(Integer id) {
+    return plantMapper.selectById(id);
 }
 ```
-
----
-
-**最后更新时间**：2026年4月3日

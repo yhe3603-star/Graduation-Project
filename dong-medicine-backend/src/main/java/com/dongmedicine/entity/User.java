@@ -1,5 +1,6 @@
 package com.dongmedicine.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -21,6 +22,7 @@ public class User {
     private String passwordHash;
     private String role;
     private String status;
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     public boolean isBanned() {

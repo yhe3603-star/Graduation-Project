@@ -1,383 +1,383 @@
-# 实体类目录 (entity)
+# Entity 层 -- 实体类（数据库表的 Java 翻译模板）
 
-本目录存放与数据库表对应的实体类。
-
-## 目录
-
-- [什么是实体类？](#什么是实体类)
-- [目录结构](#目录结构)
-- [实体类列表](#实体类列表)
-- [开发规范](#开发规范)
-- [常用实体类详解](#常用实体类详解)
+> 本目录存放所有实体类（Entity），每一个实体类对应数据库中的一张表。
 
 ---
 
-## 什么是实体类？
+## 一、什么是 Entity？
 
-### 实体类的概念
+**类比：数据库表和 Java 类之间的"翻译模板"**
 
-**实体类（Entity）** 是与数据库表对应的 Java 类。它就像一个"数据容器"——类的属性对应表的字段，类的对象对应表中的一行数据。
+想象一下，数据库里有一张 `plants` 表，里面存着钩藤、透骨草等各种药用植物的数据。
+但 Java 代码不能直接操作数据库表，它只认识"对象"。
 
-### 实体类的作用
+Entity 就是那个"翻译模板"：它告诉 Java，数据库里的每一行数据，应该被翻译成什么样的 Java 对象。
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     实体类与数据库表                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  数据库表 users                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  id  │  username  │  password_hash  │  role  │  status │   │
-│  ├──────┼────────────┼─────────────────┼────────┼─────────┤   │
-│  │  1   │  admin     │  $2a$10$...     │  ADMIN │    0    │   │
-│  │  2   │  zhangsan  │  $2a$10$...     │  USER  │    0    │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                            ↕                                    │
-│                            映射                                 │
-│                            ↕                                    │
-│  Java实体类 User                                                │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  public class User {                                    │   │
-│  │      private Integer id;                                │   │
-│  │      private String username;                           │   │
-│  │      private String passwordHash;                       │   │
-│  │      private String role;                               │   │
-│  │      private Integer status;                            │   │
-│  │      // getter/setter...                                │   │
-│  │  }                                                      │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
++-------------------+          Entity           +-------------------+
+|   数据库 plants 表  |    <----翻译模板---->     |   Java Plant 对象   |
++-------------------+                           +-------------------+
+| id = 1            |                           | id = 1            |
+| name_cn = "钩藤"   |    一一对应，自动翻译       | nameCn = "钩藤"    |
+| efficacy = "清热.." |                          | efficacy = "清热.." |
++-------------------+                           +-------------------+
 ```
 
-### ORM框架的作用
-
-MyBatis Plus 是一个 ORM（对象关系映射）框架，它自动完成：
-- Java对象 → 数据库行（插入、更新）
-- 数据库行 → Java对象（查询）
+简单说：**一张表 = 一个 Entity 类 = 一行数据 = 一个 Java 对象**
 
 ---
 
-## 目录结构
+## 二、什么是 ORM？
+
+**类比：翻译官**
+
+ORM 全称是 **Object-Relational Mapping**（对象-关系映射），就像一个翻译官：
+
+- Java 世界说"对象语言"（`plant.getNameCn()`）
+- 数据库世界说"SQL 语言"（`SELECT name_cn FROM plants`）
+- ORM 翻译官自动帮你把两种语言互相翻译
 
 ```
-entity/
-│
-├── User.java                          # 用户实体
-├── Plant.java                         # 药用植物实体
-├── Knowledge.java                     # 知识库实体
-├── Inheritor.java                     # 传承人实体
-├── Resource.java                      # 学习资源实体
-├── Qa.java                            # 问答实体
-├── Comment.java                       # 评论实体
-├── Favorite.java                      # 收藏实体
-├── Feedback.java                      # 反馈实体
-├── QuizQuestion.java                  # 测验题目实体
-├── QuizRecord.java                    # 测验记录实体
-├── PlantGameRecord.java               # 植物游戏记录实体
-└── OperationLog.java                  # 操作日志实体
+  Java 世界                         数据库世界
++-----------+     ORM 翻译官     +-----------+
+| 对象.属性  |  ===============>  | 表.列     |
+| plant.id  |  <===============  | plants.id |
++-----------+                    +-----------+
 ```
+
+我们项目用的 ORM 框架是 **MyBatis-Plus**，它是 MyBatis 的增强版，能自动完成大部分翻译工作。
 
 ---
 
-## 实体类列表
+## 三、核心注解详解
 
-| 实体类 | 对应表 | 说明 |
-|--------|--------|------|
-| User | users | 用户信息 |
-| Plant | plants | 药用植物信息 |
-| Knowledge | knowledge | 知识库信息 |
-| Inheritor | inheritors | 传承人信息 |
-| Resource | resources | 学习资源信息 |
-| Qa | qa | 问答信息 |
-| Comment | comments | 评论信息 |
-| Favorite | favorites | 收藏信息 |
-| Feedback | feedback | 反馈信息 |
-| QuizQuestion | quiz_questions | 测验题目 |
-| QuizRecord | quiz_record | 测验记录 |
-| PlantGameRecord | plant_game_record | 植物游戏记录 |
-| OperationLog | operation_log | 操作日志 |
-
----
-
-## 开发规范
-
-### 1. 实体类基本结构
+### 3.1 @TableName -- 告诉翻译官"我对应哪张表"
 
 ```java
-/**
- * 用户实体类
- * 对应数据库表 users
- */
-@Data                               // Lombok：自动生成getter/setter/toString等
-@TableName("users")                 // 指定对应的数据库表名
-public class User {
-    
-    @TableId(type = IdType.AUTO)    // 主键，自增
+@TableName("plants")
+public class Plant { ... }
+```
+
+**含义**：这个 Plant 类对应数据库里的 `plants` 表。
+
+如果不加这个注解，MyBatis-Plus 会默认按类名找表（Plant -> plant），但我们的表名是 `plants`（复数），所以必须显式指定。
+
+**常见错误**：忘记加 @TableName，导致报错 "Table 'dong_medicine.plant' doesn't exist"。
+
+---
+
+### 3.2 @TableId -- 告诉翻译官"哪个字段是主键"
+
+```java
+@TableId(type = IdType.AUTO)
+private Integer id;
+```
+
+**含义**：
+- `id` 是主键
+- `IdType.AUTO` 表示主键由数据库自动递增（AUTO_INCREMENT）
+
+```
+数据库：id INT NOT NULL AUTO_INCREMENT
+                    ^^^^^^^^^^^^^^^
+Java：  @TableId(type = IdType.AUTO)
+                    ^^^^^^^^^^^^^^^^
+        两者必须对应！
+```
+
+---
+
+### 3.3 @TableField -- 字段映射 + 自动填充
+
+> 类比：@TableField 就像**标签贴纸**，告诉翻译官"这个Java字段对应数据库的哪个列"，以及"这个字段需要自动填充"。
+
+当 Java 字段名和数据库列名不一致时，需要用 @TableField 手动指定；也可以用它配置自动填充策略：
+
+```java
+// 情况1：Java字段名和数据库列名不一致时，手动指定映射
+@TableField("password_hash")      // Java: passwordHash → 数据库: password_hash
+private String passwordHash;
+
+// 情况2：自动填充 -- 插入时自动设置当前时间
+@TableField(fill = FieldFill.INSERT)
+private LocalDateTime createdAt;
+
+// 情况3：自动填充 -- 插入和更新时都自动设置当前时间
+@TableField(fill = FieldFill.INSERT_UPDATE)
+private LocalDateTime updatedAt;
+
+// 情况4：自动填充 + 列名映射（字段名和列名不一致时）
+@TableField(value = "created_at", fill = FieldFill.INSERT)
+private LocalDateTime createTime;
+```
+
+**什么时候需要用 @TableField？**
+
+| 情况 | 是否需要 @TableField | 示例 |
+|------|---------------------|------|
+| Java 名和数据库列名能自动匹配 | 不需要 | `nameCn` -> `name_cn`（自动转换） |
+| Java 名和数据库列名不能自动匹配 | **需要** | `passwordHash` -> `password_hash`（需手动指定） |
+| `createTime` -> `created_at` | **需要** | 两者差异太大，自动匹配不上 |
+| 需要自动填充时间等字段 | **需要** | `createdAt` 用 `fill = FieldFill.INSERT` |
+
+**自动填充策略说明：**
+
+| 策略 | 说明 | 使用场景 |
+|------|------|----------|
+| `FieldFill.INSERT` | 仅插入时填充 | `createdAt` 创建时间 |
+| `FieldFill.UPDATE` | 仅更新时填充 | 单独的更新时间字段 |
+| `FieldFill.INSERT_UPDATE` | 插入和更新时都填充 | `updatedAt` 更新时间 |
+| `FieldFill.DEFAULT` | 不自动填充 | 默认值，可省略 |
+
+**注意**：自动填充需要在 `MyMetaObjectHandler.java` 中配合实现，详见 config 目录 README。
+
+---
+
+### 3.4 @Data -- Lombok 魔法注解
+
+```java
+@Data
+public class Plant { ... }
+```
+
+**含义**：Lombok 自动帮你生成以下代码：
+
+```java
+// 以下代码你不用手写，@Data 全帮你生成了！
+public Integer getId() { return id; }
+public void setId(Integer id) { this.id = id; }
+public String getNameCn() { return nameCn; }
+public void setNameCn(String nameCn) { this.nameCn = nameCn; }
+// ... 每个字段都有 getter 和 setter ...
+
+public boolean equals(Object o) { ... }
+public int hashCode() { ... }
+public String toString() { ... }
+```
+
+**为什么用 @Data？** 一个 Plant 有十几个字段，手写 getter/setter 要写上百行代码，用 @Data 一行搞定！
+
+---
+
+## 四、字段命名映射规则（camelCase -> snake_case）
+
+MyBatis-Plus 默认开启驼峰命名转换：
+
+```
+Java 字段名（驼峰）          数据库列名（下划线）
+-------------------         -------------------
+nameCn            -->       name_cn
+scientificName    -->       scientific_name
+createdAt         -->       created_at
+viewCount         -->       view_count
+passwordHash      -->       password_hash
+```
+
+**规则很简单**：
+- Java 用驼峰：第一个单词小写，后面每个单词首字母大写（如 `nameCn`）
+- 数据库用下划线：所有字母小写，单词之间用下划线连接（如 `name_cn`）
+- MyBatis-Plus 自动帮你转换！
+
+---
+
+## 五、完整示例：Plant 实体类逐行解读
+
+```java
+package com.dongmedicine.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;      // 主键类型枚举
+import com.baomidou.mybatisplus.annotation.TableId;      // 主键注解
+import com.baomidou.mybatisplus.annotation.TableName;    // 表名注解
+import jakarta.validation.constraints.NotBlank;          // 校验注解：不能为空
+import lombok.Data;                                      // Lombok 注解
+
+import java.time.LocalDateTime;                          // 日期时间类型
+
+@Data                           // [1] Lombok：自动生成 getter/setter/toString/equals/hashCode
+@TableName("plants")            // [2] 对应数据库的 plants 表
+public class Plant {
+
+    @TableId(type = IdType.AUTO) // [3] 主键，数据库自动递增
     private Integer id;
-    
-    private String username;        // 用户名
-    
-    private String passwordHash;    // 密码哈希
-    
-    private String role;            // 角色
-    
-    private Integer status;         // 状态
-    
-    @TableField(fill = FieldFill.INSERT)  // 插入时自动填充
-    private LocalDateTime createdAt;       // 创建时间
+
+    @NotBlank(message = "中文名称不能为空")  // [4] 校验：保存时 nameCn 不能为空
+    private String nameCn;       // [5] 映射到数据库的 name_cn 列
+    private String nameDong;     //      映射到 name_dong
+    private String scientificName; //    映射到 scientific_name
+    private String category;     //      映射到 category
+    private String usageWay;     //      映射到 usage_way
+    private String habitat;      //      映射到 habitat
+    private String efficacy;     //      映射到 efficacy
+    private String story;        //      映射到 story
+    private String images;       //      映射到 images（JSON 字符串）
+    private String videos;       //      映射到 videos（JSON 字符串）
+    private String documents;    //      映射到 documents（JSON 字符串）
+    private String distribution; //      映射到 distribution
+    private String updateLog;    //      映射到 update_log
+    private LocalDateTime createdAt; //  映射到 created_at（日期时间）
+    private Integer viewCount, favoriteCount, popularity; // 统计字段
 }
 ```
 
-### 2. 常用注解说明
+**关键点说明**：
 
-| 注解 | 说明 | 示例 |
-|------|------|------|
-| `@TableName` | 指定表名 | `@TableName("users")` |
-| `@TableId` | 标记主键 | `@TableId(type = IdType.AUTO)` |
-| `@TableField` | 字段配置 | `@TableField(fill = FieldFill.INSERT)` |
-| `@TableLogic` | 逻辑删除 | 删除时不真删，改为标记 |
-| `@Version` | 乐观锁版本号 | 防止并发修改 |
-
-### 3. 字段类型映射
-
-| Java类型 | MySQL类型 | 说明 |
-|----------|-----------|------|
-| Integer | INT | 整数 |
-| Long | BIGINT | 长整数 |
-| String | VARCHAR | 字符串 |
-| Double | DOUBLE | 浮点数 |
-| Boolean | TINYINT(1) | 布尔值 |
-| LocalDateTime | DATETIME | 日期时间 |
-| LocalDate | DATE | 日期 |
+| 行号 | 注解/代码 | 作用 |
+|------|----------|------|
+| [1] | `@Data` | 自动生成 getter/setter，省去大量样板代码 |
+| [2] | `@TableName("plants")` | 指定对应的数据库表名 |
+| [3] | `@TableId(type = IdType.AUTO)` | 声明主键，且由数据库自增 |
+| [4] | `@NotBlank` | 保存时校验，如果 nameCn 为空则报错 |
+| [5] | `private String nameCn` | 自动映射到 `name_cn` 列 |
 
 ---
 
-## 常用实体类详解
+## 六、本项目全部 13 个实体类一览
 
-### User - 用户实体
+| 序号 | 实体类 | 数据库表名 | 主要字段 | 用途说明 |
+|------|--------|-----------|---------|---------|
+| 1 | `Plant` | `plants` | nameCn, nameDong, efficacy, story | 药用植物 |
+| 2 | `Knowledge` | `knowledge` | title, type, content, formula | 知识库（药方/疗法） |
+| 3 | `Inheritor` | `inheritors` | name, level, bio, specialties | 传承人 |
+| 4 | `Qa` | `qa` | category, question, answer | 问答知识 |
+| 5 | `Resource` | `resources` | title, category, files, description | 学习资源 |
+| 6 | `User` | `users` | username, passwordHash, role, status | 用户 |
+| 7 | `Comment` | `comments` | targetType, targetId, content, likes | 评论 |
+| 8 | `Favorite` | `favorites` | userId, targetType, targetId | 收藏 |
+| 9 | `Feedback` | `feedback` | type, title, content, status, reply | 反馈 |
+| 10 | `QuizQuestion` | `quiz_questions` | question, options, answer, explanation | 测验题目 |
+| 11 | `QuizRecord` | `quiz_record` | userId, score, totalQuestions | 测验记录 |
+| 12 | `PlantGameRecord` | `plant_game_record` | userId, difficulty, score, correctCount | 植物游戏记录 |
+| 13 | `OperationLog` | `operation_log` | userId, module, operation, type | 操作日志 |
+
+---
+
+## 七、特殊实体类说明
+
+### 7.1 User -- 使用了 @TableField
 
 ```java
-/**
- * 用户实体类
- */
 @Data
 @TableName("users")
 public class User {
-    
+    public static final String STATUS_ACTIVE = "active";   // 状态常量
+    public static final String STATUS_BANNED = "banned";
+
     @TableId(type = IdType.AUTO)
     private Integer id;
-    
     private String username;
-    
+    @TableField("password_hash")    // <-- 手动映射，因为自动匹配不上
     private String passwordHash;
-    
     private String role;
-    
-    private Integer status;
-    
-    @TableField(fill = FieldFill.INSERT)
+    private String status;
     private LocalDateTime createdAt;
-    
-    // 业务方法：判断是否被封禁
-    public boolean isBanned() {
-        return status != null && status == 1;
-    }
-    
-    // 业务方法：判断是否是管理员
-    public boolean isAdmin() {
-        return "ADMIN".equals(role);
+
+    public boolean isBanned() {     // 业务方法：判断用户是否被封禁
+        return STATUS_BANNED.equals(this.status);
     }
 }
 ```
 
-### Plant - 药用植物实体
+**为什么 passwordHash 需要 @TableField？**
+- Java 字段名：`passwordHash`
+- 自动转换结果：`password_hash`（看起来能匹配上？）
+- 实际上 MyBatis-Plus 的驼峰转换会把 `passwordHash` 转为 `password_hash`，这里是可以匹配的
+- 但为了**明确语义、避免歧义**，项目选择显式声明
+
+### 7.2 QuizQuestion -- 包含 JSON 字段处理
 
 ```java
-/**
- * 药用植物实体类
- */
 @Data
-@TableName("plants")
-public class Plant {
-    
-    @TableId(type = IdType.AUTO)
+@TableName("quiz_questions")
+public class QuizQuestion {
+    @TableId
     private Integer id;
-    
-    private String nameCn;           // 中文名称
-    
-    private String nameDong;         // 侗语名称
-    
-    private String scientificName;   // 学名
-    
-    private String category;         // 分类
-    
-    private String usageWay;         // 用法方式
-    
-    private String habitat;          // 生长环境
-    
-    private String efficacy;         // 功效
-    
-    private String story;            // 相关故事
-    
-    private String images;           // 图片(JSON)
-    
-    private String videos;           // 视频(JSON)
-    
-    private String documents;        // 文档(JSON)
-    
-    private String distribution;     // 分布地区
-    
-    private String difficulty;       // 难度级别
-    
-    private Integer viewCount;       // 浏览次数
-    
-    private Integer favoriteCount;   // 收藏次数
-    
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-    
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private String question;
+    @JsonIgnore                    // 返回给前端时不显示原始 options 字符串
+    private String options;        // 数据库存的是 JSON 字符串：["A","B","C","D"]
+    private String answer;
+    private String category;
+    private String correctAnswer;
+    private String explanation;
+
+    // 手动写方法：把 JSON 字符串转成 List<String>
+    public List<String> getOptionList() { ... }
+    // 手动写方法：把 List<String> 转成 JSON 字符串
+    public void setOptionList(List<String> optionList) { ... }
 }
 ```
 
-### Knowledge - 知识库实体
+**为什么 options 用 String 存 JSON？**
+数据库没有"数组"类型，所以把 `["选项A","选项B","选项C","选项D"]` 作为字符串存入数据库，
+在 Java 代码中通过 `getOptionList()` 方法解析成 `List<String>` 使用。
+
+### 7.3 QuizRecord / PlantGameRecord -- 字段名不匹配的例子
 
 ```java
-/**
- * 知识库实体类
- */
 @Data
-@TableName("knowledge")
-public class Knowledge {
-    
+@TableName("quiz_record")
+public class QuizRecord {
     @TableId(type = IdType.AUTO)
     private Integer id;
-    
-    private String title;            // 标题
-    
-    private String type;             // 类型
-    
-    private String therapyCategory;  // 疗法分类
-    
-    private String diseaseCategory;  // 疾病分类
-    
-    private String content;          // 内容
-    
-    private String formula;          // 配方
-    
-    private String usageMethod;      // 使用方法
-    
-    private String steps;            // 步骤(JSON)
-    
-    private String images;           // 图片(JSON)
-    
-    private String videos;           // 视频(JSON)
-    
-    private String documents;        // 文档(JSON)
-    
-    private String relatedPlants;    // 相关植物
-    
-    private Integer viewCount;       // 浏览次数
-    
-    private Integer favoriteCount;   // 收藏次数
-    
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-}
-```
-
-### Comment - 评论实体
-
-```java
-/**
- * 评论实体类
- */
-@Data
-@TableName("comments")
-public class Comment {
-    
-    @TableId(type = IdType.AUTO)
-    private Integer id;
-    
-    private Integer userId;          // 用户ID
-    
-    private String targetType;       // 目标类型(plant/knowledge/inheritor等)
-    
-    private Integer targetId;        // 目标ID
-    
-    private String content;          // 评论内容
-    
-    private Integer parentId;        // 父评论ID(用于嵌套回复)
-    
-    private Integer status;          // 状态(0待审核/1已审核)
-    
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private Integer userId;
+    private Integer score;
+    private Integer totalQuestions;
+    private Integer correctAnswers;
+    @TableField("created_at")      // <-- createTime 和 created_at 差异大，需手动映射
+    private LocalDateTime createTime;
 }
 ```
 
 ---
 
-## 最佳实践
+## 八、常见错误与解决方案
 
-### 1. 使用Lombok简化代码
+### 错误 1：忘记加 @TableName
 
-```java
-// 使用 @Data 自动生成 getter/setter/toString/equals/hashCode
-@Data
-public class User {
-    private Integer id;
-    private String username;
-}
-
-// 等价于手写以下代码：
-public class User {
-    private Integer id;
-    private String username;
-    
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-    // toString, equals, hashCode...
-}
+```
+报错：Table 'dong_medicine.plant' doesn't exist
+原因：MyBatis-Plus 默认用类名 Plant 找表 plant，但实际表名是 plants
+解决：加 @TableName("plants")
 ```
 
-### 2. 字段命名规范
+### 错误 2：字段名和数据库列名不匹配
 
-```java
-// Java使用驼峰命名
-private String passwordHash;
-
-// 数据库使用下划线命名
-// password_hash
-
-// MyBatis Plus 自动转换
+```
+报错：Column 'create_time' not found
+原因：Java 字段名 createTime，数据库列名 created_at，自动匹配不上
+解决：加 @TableField("created_at")
 ```
 
-### 3. 不要在实体类中写复杂逻辑
+### 错误 3：忘记加 @Data
 
-```java
-// ✅ 好的做法：简单的判断方法
-public boolean isBanned() {
-    return status != null && status == 1;
-}
+```
+报错：Cannot find getter for property 'nameCn'
+原因：没有 @Data，没有 getter/setter 方法
+解决：加 @Data 注解
+```
 
-// ❌ 不好的做法：复杂的业务逻辑
-public void calculateScore() {
-    // 复杂计算应该在Service层
-}
+### 错误 4：日期类型用错
+
+```
+错误写法：private Date createdAt;      // 过时的 java.util.Date
+正确写法：private LocalDateTime createdAt;  // 推荐的 java.time.LocalDateTime
+```
+
+### 错误 5：JSON 字段用错类型
+
+```
+错误写法：private List<String> images;    // MyBatis-Plus 不知道怎么存 List
+正确写法：private String images;           // 用 String 存 JSON，前端负责解析
 ```
 
 ---
 
-**相关文档**
+## 九、速记口诀
 
-- [MyBatis Plus 实体类](https://baomidou.com/guide/entity.html)
-- [Lombok 官方文档](https://projectlombok.org/)
-
----
-
-**最后更新时间**：2026年4月3日
+```
+一张表，一个类，@TableName 来配对
+主键加 @TableId，AUTO 递增最常见
+字段名驼峰写，自动映射下划线
+@Data 一加全都有，getter/setter 不用愁
+名字对不上别慌张，@TableField 来帮忙
+日期就用 LocalDateTime，JSON 字段用 String 存
+```

@@ -1,11 +1,11 @@
 package com.dongmedicine.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dongmedicine.common.R;
 import com.dongmedicine.entity.OperationLog;
 import com.dongmedicine.service.OperationLogService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -14,7 +14,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin/logs")
-@PreAuthorize("hasRole('ADMIN')")
+@SaCheckRole("admin")
 @RequiredArgsConstructor
 public class OperationLogController {
 

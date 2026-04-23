@@ -1,1201 +1,622 @@
-# 侗乡医药数字展示平台前端
+# 侗乡医药数字展示平台 - 前端应用
 
-> 基于 Vue 3 + Vite 的侗族医药文化遗产数字化展示平台前端应用
-
-## 目录
-
-- [项目概述](#项目概述)
-- [新手入门指南](#新手入门指南)
-- [Vue 3 基础概念](#vue-3-基础概念)
-- [技术栈](#技术栈)
-- [项目结构](#项目结构)
-- [页面组件](#页面组件)
-- [业务组件](#业务组件)
-- [组合式函数](#组合式函数)
-- [路由配置](#路由配置)
-- [状态管理](#状态管理)
-- [工具函数](#工具函数)
-- [安全机制](#安全机制)
-- [样式系统](#样式系统)
-- [快速开始](#快速开始)
-- [Docker 部署](#docker-部署)
-- [常见问题](#常见问题)
+> 基于Vue 3.4 + Vite 5的侗族医药文化遗产数字化展示平台前端应用
 
 ---
 
-## 项目概述
+## 一、先搞懂这些概念（写给第一次学前端的同学）
 
-本项目是侗乡医药数字展示平台的前端应用，提供用户界面展示、交互功能、数据可视化等功能。
+在动手之前，你需要理解本项目用到的核心技术。别怕，我们用生活中的例子来解释！
 
-### 核心功能
+### 1.1 什么是 Vue.js？
 
-| 功能模块 | 说明 |
-|---------|------|
-| 信息展示 | 植物、传承人、知识、资源展示 |
-| 用户交互 | 评论、收藏、反馈 |
-| 游戏化学习 | 趣味答题、植物识别游戏 |
-| 数据可视化 | ECharts 图表统计 |
-| 后台管理 | 内容管理、用户管理、数据统计 |
+**类比：搭积木的框架**
 
----
-
-## 新手入门指南
-
-### 我应该从哪里开始？
-
-如果你是第一次接触前端开发，建议按照以下顺序学习：
+想象你在搭一座乐高城堡。如果每次都要从零开始捏砖头，那太累了。Vue.js 就是一套"积木框架"——它帮你把网页拆成一个个**可复用的组件**（就像不同形状的积木块），你只需要拼装它们，就能搭出完整的页面。
 
 ```
-第1步：学习 HTML/CSS 基础 → 了解网页结构和样式
-第2步：学习 JavaScript 基础 → 了解网页交互逻辑
-第3步：学习 Vue 3 基础 → 阅读"Vue 3 基础概念"
-第4步：理解项目结构 → 阅读"项目结构"
-第5步：运行项目 → 按照"快速开始"操作
-第6步：阅读代码 → 从简单组件开始，逐步深入
+传统写网页：  一个大HTML文件，几千行代码混在一起，改一处牵动全身
+Vue写网页：   页面 = 组件A + 组件B + 组件C，每个组件独立维护
 ```
 
-### 学习路线图
+**核心思想：数据驱动视图。** 你只需要关心"数据是什么"，Vue 会自动帮你更新页面显示。就像 Excel 表格——你改了单元格的数字，图表自动跟着变。
+
+### 1.2 什么是 SPA（单页应用）？
+
+**类比：单页笔记本，翻页不刷新**
+
+传统网站像一本"多页书"：点一个链接，浏览器就重新加载一个全新的页面，白屏一闪。
+
+SPA 像"单页笔记本"：整个应用只加载一次，之后"翻页"（切换页面）时，只更新变化的部分，不会整页刷新。体验更流畅，像手机 App 一样。
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        前端学习路线图                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  基础阶段:                                                       │
-│  HTML → CSS → JavaScript → ES6+语法                             │
-│                                                                 │
-│  框架阶段:                                                       │
-│  Vue 3基础 → Vue Router → Pinia → 组件开发                       │
-│                                                                 │
-│  工具阶段:                                                       │
-│  Vite → Element Plus → ECharts → Axios                          │
-│                                                                 │
-│  实战阶段:                                                       │
-│  本项目代码阅读 → 修改组件 → 开发新功能                            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+传统网站：  首页 → [白屏刷新] → 植物页 → [白屏刷新] → 知识页
+SPA应用：  首页 → [丝滑切换] → 植物页 → [丝滑切换] → 知识页
 ```
 
-### 推荐学习资源
+本项目就是 SPA，你点击导航栏时页面不会白屏闪烁。
 
-| 学习内容 | 推荐资源 | 链接 |
-|---------|---------|------|
-| HTML/CSS | 菜鸟教程 | https://www.runoob.com/html/html-tutorial.html |
-| JavaScript | MDN Web Docs | https://developer.mozilla.org/zh-CN/docs/Web/JavaScript |
-| Vue 3 | Vue.js 官方中文教程 | https://cn.vuejs.org/tutorial/ |
-| Element Plus | Element Plus 文档 | https://element-plus.org/zh-CN/ |
+### 1.3 什么是组件化开发？
 
----
+**类比：乐高积木**
 
-## Vue 3 基础概念
-
-### 什么是 Vue？
-
-Vue 是一个用于构建用户界面的 JavaScript 框架。它基于标准 HTML、CSS 和 JavaScript 构建，并提供了一套声明式的、组件化的编程模型。
-
-**通俗理解**：Vue 就像是一个"智能模板"，你可以告诉它"这里显示用户名"，当用户名变化时，它会自动更新显示。
-
-### Vue 应用的基本结构
-
-一个 Vue 应用由两部分组成：
+组件化就是把页面拆成独立的小块，每块有自己的模板（长什么样）、逻辑（做什么事）、样式（怎么装饰）。
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Vue 应用结构                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  1. 模板 (Template) - 页面结构                                   │
-│     ┌─────────────────────────────────────────────────────┐    │
-│     │  <template>                                         │    │
-│     │    <div class="greeting">                           │    │
-│     │      <h1>{{ message }}</h1>                         │    │
-│     │      <button @click="count++">点击了{{ count }}次</button>│
-│     │    </div>                                           │    │
-│     │  </template>                                        │    │
-│     └─────────────────────────────────────────────────────┘    │
-│                                                                 │
-│  2. 脚本 (Script) - 逻辑代码                                     │
-│     ┌─────────────────────────────────────────────────────┐    │
-│     │  <script setup>                                     │    │
-│     │    import { ref } from 'vue'                        │    │
-│     │                                                     │    │
-│     │    const message = ref('你好，Vue!')                 │    │
-│     │    const count = ref(0)                             │    │
-│     │  </script>                                          │    │
-│     └─────────────────────────────────────────────────────┘    │
-│                                                                 │
-│  3. 样式 (Style) - 页面样式（可选）                               │
-│     ┌─────────────────────────────────────────────────────┐    │
-│     │  <style scoped>                                     │    │
-│     │    .greeting {                                      │    │
-│     │      color: blue;                                   │    │
-│     │    }                                                │    │
-│     │  </style>                                           │    │
-│     └─────────────────────────────────────────────────────┘    │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
++--------------------------------------------------+
+|                    页面 (Plants.vue)              |
+|  +------------+  +-------------+  +-----------+  |
+|  | 搜索筛选   |  | 卡片网格    |  | 分页器    |  |
+|  | SearchFilter|  | CardGrid    |  | Pagination|  |
+|  +------------+  +-------------+  +-----------+  |
++--------------------------------------------------+
 ```
 
-### 响应式数据 (ref 和 reactive)
+好处：
+- **复用**：同一个分页器组件，在植物页、知识页、资源页都能用
+- **独立**：改搜索筛选不会影响分页器
+- **协作**：不同人负责不同组件，互不干扰
 
-Vue 的核心特性是**响应式系统** - 当数据变化时，页面自动更新。
+### 1.4 什么是 Vite？
 
-#### ref - 用于基本类型
+**类比：高速加工厂**
+
+Vite 是一个**构建工具**，负责把你的源代码"加工"成浏览器能运行的文件。
+
+为什么选 Vite 而不是老牌的 Webpack？因为 Vite 快——
+
+| 场景 | Webpack（传统工厂） | Vite（高速工厂） |
+|------|-------------------|-----------------|
+| 启动开发服务器 | 等几十秒，先打包所有文件 | 秒开，按需加载 |
+| 修改代码后刷新 | 全部重新打包 | 只更新改动的部分（HMR） |
+| 生产构建 | 较慢 | 使用 Rollup，更快更小 |
+
+### 1.5 什么是 Element Plus？
+
+**类比：装修材料包**
+
+自己写按钮、表格、弹窗太费时间了。Element Plus 是一套现成的 UI 组件库，就像装修时直接买现成的门窗、橱柜，不用自己从木头开始做。
 
 ```vue
-<template>
-  <div>
-    <p>用户名: {{ username }}</p>
-    <button @click="changeName">修改名字</button>
-  </div>
-</template>
-
-<script setup>
-import { ref } from 'vue'
-
-// ref 用于创建响应式数据
-// 基本类型（字符串、数字、布尔值）使用 ref
-const username = ref('张三')
-
-// 修改 ref 的值需要使用 .value
-const changeName = () => {
-  username.value = '李四'  // 页面会自动更新显示"李四"
-}
-</script>
-```
-
-**为什么需要 .value？**
-- ref 把数据包装成一个对象，`.value` 是这个对象中存储实际值的属性
-- Vue 通过这个包装对象来追踪数据变化
-
-#### reactive - 用于对象类型
-
-```vue
-<template>
-  <div>
-    <p>姓名: {{ user.name }}</p>
-    <p>年龄: {{ user.age }}</p>
-    <button @click="user.age++">长大一岁</button>
-  </div>
-</template>
-
-<script setup>
-import { reactive } from 'vue'
-
-// reactive 用于创建响应式对象
-// 对象类型使用 reactive，不需要 .value
-const user = reactive({
-  name: '张三',
-  age: 25
-})
-
-// 直接修改对象属性，页面会自动更新
-// user.age++ 就可以，不需要 user.value.age++
-</script>
-```
-
-### 计算属性 (computed)
-
-计算属性是根据其他数据计算得出的值，会自动缓存结果。
-
-```vue
-<template>
-  <div>
-    <p>姓: <input v-model="firstName"></p>
-    <p>名: <input v-model="lastName"></p>
-    <p>全名: {{ fullName }}</p>
-    <!-- fullName 会自动根据 firstName 和 lastName 计算 -->
-  </div>
-</template>
-
-<script setup>
-import { ref, computed } from 'vue'
-
-const firstName = ref('张')
-const lastName = ref('三')
-
-// 计算属性 - 自动计算，有缓存
-// 只有 firstName 或 lastName 变化时才会重新计算
-const fullName = computed(() => {
-  return firstName.value + lastName.value
-})
-</script>
-```
-
-### 事件处理 (@click, @submit 等)
-
-使用 `@` 符号绑定事件：
-
-```vue
-<template>
-  <div>
-    <!-- 点击事件 -->
-    <button @click="handleClick">点击我</button>
-    
-    <!-- 传递参数 -->
-    <button @click="handleDelete(1)">删除ID为1的项目</button>
-    
-    <!-- 访问事件对象 -->
-    <button @click="handleEvent($event)">获取事件对象</button>
-    
-    <!-- 表单提交 -->
-    <form @submit.prevent="handleSubmit">
-      <input v-model="inputValue">
-      <button type="submit">提交</button>
-    </form>
-  </div>
-</template>
-
-<script setup>
-import { ref } from 'vue'
-
-const inputValue = ref('')
-
-const handleClick = () => {
-  alert('按钮被点击了！')
-}
-
-const handleDelete = (id) => {
-  console.log('删除项目:', id)
-}
-
-const handleEvent = (event) => {
-  console.log('事件对象:', event.target)
-}
-
-const handleSubmit = () => {
-  console.log('提交的数据:', inputValue.value)
-  // .prevent 修饰符阻止了表单默认提交行为
-}
-</script>
-```
-
-### 条件渲染 (v-if, v-show)
-
-根据条件显示或隐藏元素：
-
-```vue
-<template>
-  <div>
-    <!-- v-if: 条件为false时，元素不渲染到DOM中 -->
-    <div v-if="isLoggedIn">
-      欢迎回来，{{ username }}！
-    </div>
-    <div v-else>
-      请先登录
-    </div>
-    
-    <!-- v-show: 条件为false时，元素仍在DOM中，只是display:none -->
-    <div v-show="hasNotification">
-      你有新消息！
-    </div>
-    
-    <!-- v-else-if -->
-    <div v-if="score >= 90">优秀</div>
-    <div v-else-if="score >= 60">及格</div>
-    <div v-else>不及格</div>
-  </div>
-</template>
-
-<script setup>
-import { ref } from 'vue'
-
-const isLoggedIn = ref(false)
-const username = ref('张三')
-const hasNotification = ref(true)
-const score = ref(85)
-</script>
-```
-
-**v-if 和 v-show 的区别：**
-- `v-if` 是"真正的"条件渲染，条件为false时元素不存在于DOM中
-- `v-show` 只是切换 CSS `display` 属性，元素始终存在于DOM中
-- 频繁切换用 `v-show`，条件很少改变用 `v-if`
-
-### 列表渲染 (v-for)
-
-循环渲染列表：
-
-```vue
-<template>
-  <div>
-    <!-- 遍历数组 -->
-    <ul>
-      <li v-for="item in items" :key="item.id">
-        {{ item.name }} - ¥{{ item.price }}
-      </li>
-    </ul>
-    
-    <!-- 遍历对象 -->
-    <div v-for="(value, key) in userInfo" :key="key">
-      {{ key }}: {{ value }}
-    </div>
-    
-    <!-- 遍历数字 -->
-    <span v-for="n in 5" :key="n">{{ n }}</span>
-    <!-- 输出: 1 2 3 4 5 -->
-  </div>
-</template>
-
-<script setup>
-import { ref } from 'vue'
-
-const items = ref([
-  { id: 1, name: '苹果', price: 5 },
-  { id: 2, name: '香蕉', price: 3 },
-  { id: 3, name: '橙子', price: 4 }
-])
-
-const userInfo = {
-  name: '张三',
-  age: 25,
-  city: '北京'
-}
-</script>
-```
-
-**为什么需要 :key？**
-- `key` 帮助 Vue 识别列表中的每个元素，以便高效更新
-- 通常使用数据的唯一标识（如 id）作为 key
-- 不要使用索引 index 作为 key（除非列表不会重新排序）
-
-### 双向绑定 (v-model)
-
-`v-model` 实现表单元素的双向数据绑定：
-
-```vue
-<template>
-  <div>
-    <!-- 文本输入框 -->
-    <input v-model="username" placeholder="请输入用户名">
-    <p>你输入的是: {{ username }}</p>
-    
-    <!-- 多行文本 -->
-    <textarea v-model="content"></textarea>
-    
-    <!-- 复选框 -->
-    <input type="checkbox" v-model="agreed">
-    <label>同意条款</label>
-    
-    <!-- 单选按钮 -->
-    <input type="radio" v-model="gender" value="male"> 男
-    <input type="radio" v-model="gender" value="female"> 女
-    
-    <!-- 下拉选择 -->
-    <select v-model="selectedCity">
-      <option value="">请选择城市</option>
-      <option value="beijing">北京</option>
-      <option value="shanghai">上海</option>
-    </select>
-  </div>
-</template>
-
-<script setup>
-import { ref } from 'vue'
-
-const username = ref('')
-const content = ref('')
-const agreed = ref(false)
-const gender = ref('male')
-const selectedCity = ref('')
-</script>
-```
-
-### 组件基础
-
-组件是可复用的 Vue 实例。
-
-#### 定义组件
-
-```vue
-<!-- UserCard.vue - 用户卡片组件 -->
-<template>
-  <div class="user-card">
-    <img :src="avatar" :alt="name">
-    <h3>{{ name }}</h3>
-    <p>{{ bio }}</p>
-    <button @click="handleClick">关注</button>
-  </div>
-</template>
-
-<script setup>
-// 定义组件接收的属性（父组件传递的数据）
-const props = defineProps({
-  name: {
-    type: String,
-    required: true
-  },
-  avatar: {
-    type: String,
-    default: '/default-avatar.png'
-  },
-  bio: {
-    type: String,
-    default: '这个人很懒，什么都没写...'
-  }
-})
-
-// 定义组件发出的事件（通知父组件）
-const emit = defineEmits(['follow'])
-
-const handleClick = () => {
-  emit('follow', props.name)  // 发出 follow 事件，传递用户名
-}
-</script>
-
-<style scoped>
-.user-card {
-  border: 1px solid #ddd;
-  padding: 16px;
-  border-radius: 8px;
-}
+<!-- 不用 Element Plus：自己写一个按钮 -->
+<button class="my-btn" @click="handleClick">提交</button>
+<style>
+.my-btn { background: #409eff; color: white; border: none; padding: 8px 16px; ... }
 </style>
+
+<!-- 用 Element Plus：一行搞定，样式、交互、无障碍都帮你做好了 -->
+<el-button type="primary" @click="handleClick">提交</el-button>
 ```
 
-#### 使用组件
+本项目使用的 Element Plus 组件包括：按钮、表格、表单、弹窗、分页、消息提示等几十种。
 
-```vue
-<template>
-  <div>
-    <!-- 使用 UserCard 组件 -->
-    <UserCard 
-      name="张三" 
-      avatar="/avatars/zhangsan.jpg"
-      bio="前端开发工程师"
-      @follow="handleFollow"
-    />
-    
-    <!-- 传递动态数据 -->
-    <UserCard 
-      :name="userName" 
-      :avatar="userAvatar"
-    />
-  </div>
-</template>
+### 1.6 什么是 Pinia？
 
-<script setup>
-import { ref } from 'vue'
-import UserCard from './components/UserCard.vue'
+**类比：全局公告板**
 
-const userName = ref('李四')
-const userAvatar = ref('/avatars/lisi.jpg')
+想象一个学校公告板——任何人都可以去看公告，也可以更新公告，所有人看到的都是同一份信息。
 
-const handleFollow = (name) => {
-  alert(`你关注了 ${name}`)
-}
-</script>
-```
-
-### 组件通信
+Pinia 就是 Vue 应用的"全局公告板"（状态管理工具）。当多个组件需要共享同一份数据时（比如用户登录状态），不用组件之间传来传去，统一放在 Pinia 里，谁需要谁去取。
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        组件通信方式                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  父组件 → 子组件: Props                                         │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  父组件:                                                   │  │
-│  │    <ChildComponent :message="parentData" />              │  │
-│  │                                                           │  │
-│  │  子组件:                                                   │  │
-│  │    const props = defineProps(['message'])                 │  │
-│  │    // 使用: {{ props.message }}                           │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  子组件 → 父组件: Emit                                          │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  子组件:                                                   │  │
-│  │    const emit = defineEmits(['update'])                   │  │
-│  │    emit('update', newValue)                               │  │
-│  │                                                           │  │
-│  │  父组件:                                                   │  │
-│  │    <ChildComponent @update="handleUpdate" />              │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  跨组件: Pinia 状态管理                                         │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  // stores/user.js                                        │  │
-│  │  const useUserStore = defineStore('user', () => {        │  │
-│  │    const username = ref('')                               │  │
-│  │    return { username }                                    │  │
-│  │  })                                                       │  │
-│  │                                                           │  │
-│  │  // 任意组件中使用                                         │  │
-│  │  const userStore = useUserStore()                         │  │
-│  │  console.log(userStore.username)                          │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+没有 Pinia：  组件A → 传给 → 组件B → 传给 → 组件C（层层传递，很麻烦）
+有了 Pinia：  组件A → 存入Pinia ← 组件B ← 组件C（各取所需，互不干扰）
 ```
 
-### 生命周期钩子
+本项目的 `stores/user.js` 就是 Pinia Store，管理用户的登录状态、角色信息等。
 
-生命周期钩子是组件在不同阶段执行的函数：
+### 1.7 什么是 Vue Router？
 
-```vue
-<script setup>
-import { ref, onMounted, onUpdated, onUnmounted } from 'vue'
+**类比：导航地图**
 
-const data = ref([])
+一个 SPA 有很多"页面"，但 URL 只有一个怎么行？Vue Router 就是"导航地图"——它把不同的 URL 路径映射到不同的页面组件。
 
-// 组件挂载完成后执行（DOM已生成）
-onMounted(() => {
-  console.log('组件已挂载，可以访问DOM')
-  // 通常在这里发起API请求
-  fetchData()
-})
-
-// 组件更新后执行
-onUpdated(() => {
-  console.log('组件已更新')
-})
-
-// 组件卸载前执行
-onUnmounted(() => {
-  console.log('组件即将卸载')
-  // 清理定时器、事件监听等
-})
-
-const fetchData = async () => {
-  // 获取数据...
-}
-</script>
+```
+/            →  Home.vue（首页）
+/plants      →  Plants.vue（药用植物）
+/knowledge   →  Knowledge.vue（知识库）
+/admin       →  Admin.vue（管理后台，需要登录+管理员权限）
 ```
 
-**常用生命周期钩子：**
+它还能做"守卫"——比如你没登录就想访问个人中心，路由守卫会拦住你，跳转到首页让你先登录。
 
-| 钩子 | 执行时机 | 常见用途 |
-|------|----------|----------|
-| `onMounted` | 组件挂载完成 | 发起API请求、操作DOM |
-| `onUpdated` | 组件更新完成 | 响应数据变化 |
-| `onUnmounted` | 组件卸载 | 清理定时器、取消订阅 |
-| `onBeforeMount` | 挂载之前 | 很少使用 |
-| `onBeforeUpdate` | 更新之前 | 很少使用 |
+### 1.8 什么是 Axios？
 
-### 组合式函数 (Composables)
+**类比：服务员传菜单**
 
-组合式函数是 Vue 3 中复用逻辑的方式：
+前端需要从后端获取数据（比如植物列表），怎么拿？通过 HTTP 请求。Axios 就是一个"服务员"——你告诉他"我要点这道菜"（发请求），他跑去"厨房"（后端服务器），把"菜"（数据）端回来给你。
 
 ```javascript
-// composables/useCounter.js
-import { ref } from 'vue'
-
-// 定义一个可复用的计数器逻辑
-export function useCounter(initialValue = 0) {
-  const count = ref(initialValue)
-  
-  const increment = () => {
-    count.value++
-  }
-  
-  const decrement = () => {
-    count.value--
-  }
-  
-  const reset = () => {
-    count.value = initialValue
-  }
-  
-  // 返回需要暴露的数据和方法
-  return {
-    count,
-    increment,
-    decrement,
-    reset
-  }
-}
+// 告诉服务员：我要获取药用植物列表
+const response = await request.get('/plants/list', { params: { page: 1, size: 10 } })
+// 服务员端回来了：这是你要的数据
+console.log(response.data) // 植物列表数据
 ```
 
-```vue
-<!-- 使用组合式函数 -->
-<template>
-  <div>
-    <p>计数: {{ count }}</p>
-    <button @click="increment">+1</button>
-    <button @click="decrement">-1</button>
-    <button @click="reset">重置</button>
-  </div>
-</template>
+本项目的 `utils/request.js` 在 Axios 基础上做了很多增强（后面会详细讲）。
 
-<script setup>
-import { useCounter } from '@/composables/useCounter'
+### 1.9 什么是 ECharts？
 
-// 使用组合式函数，获取计数器逻辑
-const { count, increment, decrement, reset } = useCounter(10)
-</script>
-```
+**类比：画图工具**
+
+ECharts 是百度开源的数据可视化库，就像一个超级画图工具——你给它数据，它帮你画出漂亮的柱状图、折线图、饼图、地图等。
+
+本项目在"数据可视化"页面使用 ECharts 展示侗医药的统计数据，比如药用植物分类分布、传承人级别统计等。
 
 ---
 
-## 技术栈
-
-| 技术 | 版本 | 用途 | 通俗解释 |
-|------|------|------|----------|
-| Vue | 3.4+ | 前端框架 | 构建网页应用的核心工具 |
-| Vite | 5.0+ | 构建工具 | 打包和运行代码的工具 |
-| Vue Router | 4.2+ | 路由管理 | 控制页面跳转 |
-| Pinia | 2.3+ | 状态管理 | 组件间共享数据 |
-| Element Plus | 2.4+ | UI 组件库 | 提供现成的按钮、表格等组件 |
-| Axios | 1.6+ | HTTP 请求 | 与后端通信 |
-| ECharts | 5.4+ | 图表库 | 绘制数据可视化图表 |
-| Vitest | 1.0+ | 测试框架 | 测试代码 |
-
----
-
-## 项目结构
+## 二、项目结构详解
 
 ```
 dong-medicine-frontend/
 │
-├── public/                              # 静态资源目录
-│   └── favicon.ico                      # 网站图标
+├── public/                  # 公共静态资源（不会被Vite处理，原样复制）
+│   └── vite.svg             #   网站图标
 │
-├── src/
-│   │
-│   ├── views/                           # 页面组件 (14个)
-│   │   ├── Home.vue                     # 首页
-│   │   ├── Plants.vue                   # 药用植物页面
-│   │   ├── Inheritors.vue               # 传承人页面
-│   │   ├── Knowledge.vue                # 知识库页面
-│   │   ├── Qa.vue                       # 问答社区页面
-│   │   ├── Resources.vue                # 学习资源页面
-│   │   ├── Interact.vue                 # 互动专区页面
-│   │   ├── Visual.vue                   # 数据可视化页面
-│   │   ├── PersonalCenter.vue           # 个人中心页面
-│   │   ├── Admin.vue                    # 管理后台页面
-│   │   ├── About.vue                    # 关于页面
-│   │   ├── Feedback.vue                 # 意见反馈页面
-│   │   ├── GlobalSearch.vue             # 全局搜索页面
-│   │   └── NotFound.vue                 # 404页面
-│   │
-│   ├── components/                      # 组件目录
-│   │   │
-│   │   ├── base/                        # 基础组件
-│   │   │   ├── ErrorBoundary.vue        # 错误边界组件
-│   │   │   ├── VirtualList.vue          # 虚拟列表组件
-│   │   │   └── index.js
-│   │   │
-│   │   ├── common/                      # 通用组件
-│   │   │   ├── PageLoading.vue          # 页面加载动画
-│   │   │   ├── SkeletonGridCard.vue     # 卡片骨架屏
-│   │   │   ├── SkeletonGridImage.vue    # 图片骨架屏
-│   │   │   ├── SkeletonListQa.vue       # 问答骨架屏
-│   │   │   └── SkeletonListResource.vue # 资源骨架屏
-│   │   │
-│   │   └── business/                    # 业务组件
-│   │       │
-│   │       ├── layout/                  # 布局组件
-│   │       │   ├── AppHeader.vue        # 应用头部
-│   │       │   └── AppFooter.vue        # 应用底部
-│   │       │
-│   │       ├── display/                 # 展示组件
-│   │       │   ├── AiChatCard.vue       # AI对话卡片
-│   │       │   ├── CardGrid.vue         # 卡片网格
-│   │       │   ├── ChartCard.vue        # 图表卡片
-│   │       │   ├── PageSidebar.vue      # 页面侧边栏
-│   │       │   ├── Pagination.vue       # 分页组件
-│   │       │   ├── SearchFilter.vue     # 搜索过滤
-│   │       │   ├── UpdateLogCard.vue    # 更新日志卡片
-│   │       │   ├── UpdateLogDialog.vue  # 更新日志对话框
-│   │       │   └── index.js
-│   │       │
-│   │       ├── interact/                # 交互组件
-│   │       │   ├── CaptchaInput.vue     # 验证码输入
-│   │       │   ├── CommentSection.vue   # 评论组件
-│   │       │   ├── InteractSidebar.vue  # 互动侧边栏
-│   │       │   ├── PlantGame.vue        # 植物识别游戏
-│   │       │   ├── QuizSection.vue      # 趣味答题
-│   │       │   └── index.js
-│   │       │
-│   │       ├── media/                   # 媒体组件
-│   │       │   ├── DocumentList.vue     # 文档列表
-│   │       │   ├── DocumentPreview.vue  # 文档预览
-│   │       │   ├── ImageCarousel.vue    # 图片轮播
-│   │       │   ├── MediaDisplay.vue     # 媒体展示
-│   │       │   ├── VideoPlayer.vue      # 视频播放
-│   │       │   └── index.js
-│   │       │
-│   │       ├── upload/                  # 上传组件
-│   │       │   ├── DocumentUploader.vue # 文档上传
-│   │       │   ├── FileUploader.vue     # 通用文件上传
-│   │       │   ├── ImageUploader.vue    # 图片上传
-│   │       │   ├── VideoUploader.vue    # 视频上传
-│   │       │   └── index.js
-│   │       │
-│   │       ├── dialogs/                 # 详情对话框
-│   │       │   ├── InheritorDetailDialog.vue
-│   │       │   ├── KnowledgeDetailDialog.vue
-│   │       │   ├── PlantDetailDialog.vue
-│   │       │   ├── QuizDetailDialog.vue
-│   │       │   └── ResourceDetailDialog.vue
-│   │       │
-│   │       └── admin/                   # 管理后台组件
-│   │           ├── dialogs/             # 管理对话框
-│   │           ├── forms/               # 管理表单
-│   │           ├── AdminDashboard.vue   # 管理仪表盘
-│   │           ├── AdminDataTable.vue   # 数据表格
-│   │           └── AdminSidebar.vue     # 管理侧边栏
-│   │
-│   ├── composables/                     # 组合式函数 (11个)
-│   │   ├── index.js                     # 导出入口
-│   │   ├── useAdminData.js              # 管理后台数据
-│   │   ├── useDebounce.js               # 防抖函数
-│   │   ├── useErrorHandler.js           # 错误处理
-│   │   ├── useFavorite.js               # 收藏功能
-│   │   ├── useFormDialog.js             # 表单对话框
-│   │   ├── useInteraction.js            # 交互功能
-│   │   ├── useMedia.js                  # 媒体处理
-│   │   ├── usePersonalCenter.js         # 个人中心
-│   │   ├── usePlantGame.js              # 植物游戏
-│   │   ├── useQuiz.js                   # 答题逻辑
-│   │   ├── useUpdateLog.js              # 更新日志
-│   │   └── useVisualData.js             # 可视化数据
-│   │
-│   ├── router/                          # 路由配置
-│   │   └── index.js                     # 路由定义 + 守卫
-│   │
-│   ├── stores/                          # 状态管理
-│   │   ├── index.js                     # Pinia 实例
-│   │   └── user.js                      # 用户状态
-│   │
-│   ├── utils/                           # 工具函数 (7个)
-│   │   ├── index.js                     # 通用工具
-│   │   ├── adminUtils.js                # 管理后台工具
-│   │   ├── cache.js                     # 缓存工具
-│   │   ├── logger.js                    # 日志工具
-│   │   ├── media.js                     # 媒体工具
-│   │   ├── request.js                   # Axios 封装
-│   │   └── xss.js                       # XSS 防护
-│   │
-│   ├── styles/                          # 样式文件 (9个)
-│   │   ├── index.css                    # 样式入口
-│   │   ├── variables.css                # CSS 变量
-│   │   ├── base.css                     # 基础样式
-│   │   ├── components.css               # 组件样式
-│   │   ├── pages.css                    # 页面样式
-│   │   ├── common.css                   # 通用样式
-│   │   ├── home.css                     # 首页样式
-│   │   ├── media-common.css             # 媒体样式
-│   │   └── dialog-common.css            # 对话框样式
-│   │
-│   ├── config/                          # 配置文件
-│   │   └── homeConfig.js                # 首页配置
-│   │
-│   ├── directives/                      # 自定义指令
-│   │   └── index.js
-│   │
-│   ├── __tests__/                       # 测试文件
-│   │
-│   ├── App.vue                          # 根组件
-│   └── main.js                          # 入口文件
+├── src/                     # 源代码目录（你的主战场，详见 src/README.md）
+│   ├── assets/              #   静态资源（会被Vite优化处理）
+│   ├── components/          #   Vue组件（base/common/business三层）
+│   ├── composables/         #   组合式函数（可复用的业务逻辑）
+│   ├── config/              #   页面配置
+│   ├── directives/          #   自定义指令
+│   ├── router/              #   路由配置
+│   ├── stores/              #   Pinia状态管理
+│   ├── styles/              #   全局样式与设计系统
+│   ├── utils/               #   工具函数
+│   ├── views/               #   页面组件
+│   ├── App.vue              #   根组件
+│   └── main.js              #   应用入口
 │
-├── index.html                           # HTML 模板
-├── package.json                         # 项目配置
-├── vite.config.js                       # Vite 配置
-├── vitest.config.js                     # 测试配置
-├── Dockerfile                           # Docker 构建文件
-├── nginx.conf                           # Nginx 配置
-└── default.conf                         # Nginx 默认配置
+├── .dockerignore             # Docker构建时忽略的文件
+├── .env.example              # 环境变量示例（复制为.env使用）
+├── .gitignore                # Git忽略的文件
+├── Dockerfile                # Docker镜像构建脚本
+├── default.conf              # Nginx站点配置（Docker部署用）
+├── nginx.conf                # Nginx主配置（Docker部署用）
+├── index.html                # HTML入口（Vite注入JS的模板）
+├── package.json              # 项目依赖和脚本命令
+├── vite.config.js            # Vite构建配置
+├── vitest.config.js          # 测试配置
+└── eslint.config.js          # 代码规范配置
 ```
 
-### 目录职责说明
+### 关键文件说明
 
-| 目录 | 职责 | 通俗解释 |
-|------|------|----------|
-| `views/` | 页面组件 | 对应一个个网页，如首页、植物页等 |
-| `components/` | 可复用组件 | 可在多个页面中复用的UI组件 |
-| `composables/` | 组合式函数 | 可复用的逻辑代码 |
-| `stores/` | 状态管理 | 存储全局共享的数据 |
-| `router/` | 路由配置 | 控制URL和页面的对应关系 |
-| `utils/` | 工具函数 | 通用的小函数 |
-| `styles/` | 样式文件 | CSS样式 |
-| `config/` | 配置文件 | 可配置的数据 |
+| 文件 | 作用 | 你需要改吗？ |
+|------|------|------------|
+| `package.json` | 定义项目依赖和npm脚本 | 添加新依赖时改 |
+| `vite.config.js` | Vite构建配置（路径别名、代理、打包优化） | 需要改代理或别名时改 |
+| `index.html` | 单页应用的唯一HTML文件 | 一般不用改 |
+| `.env.example` | 环境变量模板 | 复制为.env后填入实际值 |
 
 ---
 
-## 页面组件
+## 三、核心功能模块
 
-| 页面 | 路由 | 功能描述 |
-|------|------|----------|
-| Home.vue | `/` | 首页，展示平台核心功能入口、统计数据、传承人风采、快速导航 |
-| Plants.vue | `/plants` | 药用资源图鉴，展示黔东南道地药材图文详解，支持分类筛选 |
-| Inheritors.vue | `/inheritors` | 传承人风采展示，按级别筛选、展示传承谱系与技艺特色 |
-| Knowledge.vue | `/knowledge` | 非遗医药知识库，支持分类检索、搜索过滤、收藏功能 |
-| Qa.vue | `/qa` | 问答社区，侗医药知识问答、疑难解答、互动交流 |
-| Interact.vue | `/interact` | 文化互动专区，包含趣味答题、植物识别游戏、评论交流 |
-| Resources.vue | `/resources` | 学习资源库，支持视频/文档/图片资源的预览、下载、收藏 |
-| Visual.vue | `/visual` | 数据可视化，展示药方频次、疗法分类、传承人分布等统计图表 |
-| PersonalCenter.vue | `/personal` | 个人中心（需登录），管理收藏、答题记录、评论历史、账号设置 |
-| Admin.vue | `/admin` | 管理后台（需管理员权限），数据管理、用户管理、评论审核、日志查看 |
-| About.vue | `/about` | 关于页面，介绍选题背景、平台特色、功能模块、侗医文化 |
-| Feedback.vue | `/feedback` | 意见反馈，用户提交功能建议、问题反馈 |
-| GlobalSearch.vue | `/search` | 全局搜索，跨知识、植物、传承人、问答的统一搜索入口 |
-| NotFound.vue | `/:pathMatch(.*)*` | 404页面 |
+| 功能模块 | 说明 | 涉及的关键组件 |
+|---------|------|--------------|
+| 首页 | 数据概览、快速导航、传承人风采 | ECharts统计卡片、组件化布局 |
+| 药用植物 | 植物图鉴、分类筛选、全文搜索、收藏 | CardGrid + SearchFilter + Pagination |
+| 传承人 | 传承人档案、级别筛选、代表案例 | 级别标签映射、ngram搜索 |
+| 知识库 | 知识条目、疗法/疾病/药材分类、相关推荐 | 多维度筛选、关联推荐 |
+| 问答社区 | 常见问题、AI智能回答 | AiChatCard + DeepSeek API |
+| 学习资源 | 视频/文档/图片资源库、在线预览 | KKFileView文档预览、MediaDisplay |
+| 互动专区 | 趣味答题、植物识别游戏、评论交流 | QuizSection + PlantGame + CommentSection |
+| 数据可视化 | ECharts统计图表 | useVisualData + chartConfig |
+| 个人中心 | 收藏管理、答题记录、账号设置 | usePersonalCenter |
+| 管理后台 | 内容CRUD、用户管理、评论审核 | AdminDataTable + AdminSidebar |
 
 ---
 
-## 业务组件
+## 四、技术栈一览
 
-### 布局组件 (layout/)
-
-| 组件 | 用途 |
-|------|------|
-| AppHeader.vue | 应用头部，导航栏、登录状态、全局搜索入口 |
-| AppFooter.vue | 应用底部，版权信息、友情链接 |
-
-### 展示组件 (display/)
-
-| 组件 | 用途 |
-|------|------|
-| AiChatCard.vue | AI 对话卡片，集成智能问答 |
-| CardGrid.vue | 卡片网格组件，通用卡片列表展示 |
-| ChartCard.vue | 图表卡片组件，封装 ECharts 图表 |
-| PageSidebar.vue | 页面侧边栏，展示统计和热门内容 |
-| Pagination.vue | 分页组件 |
-| SearchFilter.vue | 搜索过滤组件 |
-| UpdateLogCard.vue | 更新日志卡片 |
-| UpdateLogDialog.vue | 更新日志对话框 |
-
-### 交互组件 (interact/)
-
-| 组件 | 用途 |
-|------|------|
-| CaptchaInput.vue | 验证码输入组件 |
-| CommentSection.vue | 评论组件，支持发表评论、回复 |
-| InteractSidebar.vue | 互动侧边栏，展示排行榜和统计 |
-| PlantGame.vue | 植物识别游戏，根据图片识别药材名称 |
-| QuizSection.vue | 趣味答题组件，支持计时、评分 |
-
-### 媒体组件 (media/)
-
-| 组件 | 用途 |
-|------|------|
-| DocumentList.vue | 文档列表组件 |
-| DocumentPreview.vue | 文档预览组件 |
-| ImageCarousel.vue | 图片轮播组件 |
-| MediaDisplay.vue | 媒体展示组件 |
-| VideoPlayer.vue | 视频播放组件 |
-
-### 上传组件 (upload/)
-
-| 组件 | 用途 |
-|------|------|
-| DocumentUploader.vue | 文档上传组件 |
-| FileUploader.vue | 通用文件上传组件 |
-| ImageUploader.vue | 图片上传组件 |
-| VideoUploader.vue | 视频上传组件 |
-
-### 详情对话框组件 (dialogs/)
-
-| 组件 | 用途 |
-|------|------|
-| PlantDetailDialog.vue | 药材详情对话框 |
-| KnowledgeDetailDialog.vue | 知识详情对话框 |
-| InheritorDetailDialog.vue | 传承人详情对话框 |
-| ResourceDetailDialog.vue | 资源详情对话框 |
-| QuizDetailDialog.vue | 答题详情对话框 |
-
-### 管理后台组件 (admin/)
-
-| 组件 | 用途 |
-|------|------|
-| AdminDashboard.vue | 管理仪表盘，数据概览 |
-| AdminDataTable.vue | 数据表格组件，通用 CRUD 表格 |
-| AdminSidebar.vue | 管理侧边栏导航 |
+| 技术 | 版本 | 用途 | 一句话理解 |
+|------|------|------|----------|
+| Vue.js | 3.4 | 渐进式JavaScript框架 | 搭积木的框架 |
+| Vite | 5.0 | 构建工具与开发服务器 | 高速加工厂 |
+| Element Plus | 2.4 | UI组件库（中文locale） | 装修材料包 |
+| Pinia | 2.3 | 状态管理 | 全局公告板 |
+| Vue Router | 4.2 | 前端路由 | 导航地图 |
+| Axios | 1.6 | HTTP客户端 | 服务员传菜单 |
+| ECharts | 5.4 | 数据可视化 | 画图工具 |
+| lodash-es | 4.17 | 工具函数（debounce/throttle） | 工具箱 |
+| vuedraggable | 4.1 | 拖拽排序 | 拖拽插件 |
+| Vitest | 1.0 | 单元测试 | 代码体检 |
+| ESLint | 9.22 | 代码规范 | 语法检查器 |
 
 ---
 
-## 组合式函数
+## 五、关键架构特性（新手重点理解）
 
-| 函数 | 功能描述 |
-|------|----------|
-| useAdminData | 管理后台数据管理，包含数据获取、对话框管理、CRUD 操作 |
-| useQuiz | 趣味答题功能，题目加载、答案提交、计时、评分 |
-| usePlantGame | 植物识别游戏，难度设置、答题逻辑、分数计算 |
-| useInteraction | 交互功能，包含倒计时、评论、分页、过滤、统计 |
-| useFavorite | 收藏功能，收藏状态管理、收藏/取消收藏操作 |
-| useMedia | 媒体处理，文档预览、媒体显示 |
-| usePersonalCenter | 个人中心功能，用户信息、收藏管理、密码修改 |
-| useFormDialog | 表单对话框通用逻辑 |
-| useUpdateLog | 更新日志解析与管理 |
-| useDebounce | 防抖函数 |
-| useErrorHandler | 错误处理 |
+### 5.1 HTTP客户端 (utils/request.js)
 
----
+这个文件是整个前端与后端通信的"总管"，在 Axios 基础上增加了四大能力：
 
-## 路由配置
+#### 能力一：请求去重
 
-| 路由路径 | 名称 | 组件 | 权限要求 |
-|---------|------|------|----------|
-| `/` | Home | Home.vue | 无 |
-| `/plants` | Plants | Plants.vue | 无 |
-| `/inheritors` | Inheritors | Inheritors.vue | 无 |
-| `/knowledge` | Knowledge | Knowledge.vue | 无 |
-| `/qa` | Qa | Qa.vue | 无 |
-| `/interact` | Interact | Interact.vue | 无 |
-| `/resources` | Resources | Resources.vue | 无 |
-| `/visual` | Visual | Visual.vue | 无 |
-| `/personal` | Personal | PersonalCenter.vue | 需登录 |
-| `/admin` | Admin | Admin.vue | 需登录 + 管理员权限 |
-| `/about` | About | About.vue | 无 |
-| `/feedback` | Feedback | Feedback.vue | 无 |
-| `/search` | Search | GlobalSearch.vue | 无 |
-| `/:pathMatch(.*)*` | NotFound | NotFound.vue | 无 |
+**问题**：用户快速点击两次"查询"按钮，发了两个一模一样的请求，浪费资源。
 
-### 路由守卫功能
+**解决**：用 CancelToken 机制，如果发现相同的请求已经在进行中，就取消前一个，只保留最新的。
 
 ```javascript
-// router/index.js
+// 生成请求的唯一标识（方法+地址+参数）
+function generateRequestKey(config) {
+  const { method, url, params, data } = config
+  return [method, url, JSON.stringify(params), JSON.stringify(data)].join('&')
+}
 
-// 本地Token过期检查
-function isTokenLocallyExpired(userStore) {
-  const token = userStore.token
-  if (!token) return true
-  
+// 如果发现重复请求，取消前一个
+if (pendingRequests.has(key)) {
+  const cancel = pendingRequests.get(key)
+  cancel(`请求被取消: ${config.url}`)
+}
+```
+
+#### 能力二：Token自动刷新
+
+**问题**：JWT Token 过期了，用户正在操作，突然被踢下线，体验很差。
+
+**解决**：当后端返回 401（未授权）时，自动用旧 Token 去换新 Token，换好之后重新发送之前失败的请求，用户完全无感知。
+
+```javascript
+// 单例Promise模式：多个请求同时401时，只刷新一次Token
+async function getOrRefreshToken() {
+  if (refreshPromise) {
+    return refreshPromise  // 已经在刷新了，等结果就行
+  }
+  refreshPromise = refreshToken()  // 开始刷新
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return Date.now() >= payload.exp * 1000
-  } catch {
-    return true
+    return await refreshPromise
+  } finally {
+    refreshPromise = null  // 刷新完毕，清除状态
   }
 }
-
-// Token验证缓存（60秒）
-const VALIDATION_CACHE_TTL = 60 * 1000
-
-// 路由守卫逻辑
-router.beforeEach(async (to, from, next) => {
-  // 1. 初始化用户状态
-  // 2. 检查是否需要认证
-  // 3. 本地Token过期检查
-  // 4. 服务端Token验证（带缓存）
-  // 5. 管理员权限验证
-})
 ```
 
----
+#### 能力三：自动重试
 
-## 状态管理
+**问题**：网络偶尔抖动，请求失败一次就报错，太脆弱了。
 
-### 用户状态 (stores/user.js)
+**解决**：对 GET 请求自动重试最多3次，间隔时间指数递增（1秒、2秒、4秒），只重试"可恢复"的错误（超时、服务器错误等）。
 
-| 状态/方法 | 描述 |
-|----------|------|
-| `token` | 用户认证令牌 |
-| `userId` | 用户 ID |
-| `username` | 用户名 |
-| `role` | 用户角色 |
-| `userInfo` | 用户详细信息 |
-| `isLoggedIn` | 登录状态（计算属性） |
-| `isAdmin` | 是否管理员（计算属性） |
-| `setAuth()` | 设置认证信息 |
-| `clearAuth()` | 清除认证信息 |
-| `login()` | 登录方法 |
-| `logout()` | 登出方法 |
-| `validateToken()` | 验证 Token 有效性 |
-| `changePassword()` | 修改密码 |
-| `fetchUserInfo()` | 获取用户信息 |
-
----
-
-## 工具函数
-
-### 通用工具 (utils/index.js)
-
-| 函数 | 描述 |
-|------|------|
-| `formatTime()` | 时间格式化，支持相对时间 |
-| `extractData()` | 响应数据提取，兼容多种数据结构 |
-| `getRankClass()` | 获取排名样式类 |
-| `formatFileSize()` | 文件大小格式化 |
-| `truncate()` | 文本截断 |
-| `debounce()` | 防抖函数 |
-| `throttle()` | 节流函数 |
-| `deepClone()` | 深拷贝 |
-| `isEmpty/isNotEmpty()` | 空值判断 |
-| `generateId()` | 生成唯一 ID |
-| `sleep()` | 延迟函数 |
-| `retry()` | 重试函数 |
-
-### Axios 封装 (utils/request.js)
-
-核心功能：
-- 请求/响应拦截器
-- Token 自动注入
-- Token 刷新机制（Promise缓存，避免竞态）
-- 请求取消（防重复提交）
-- 自动重试机制
-- XSS/SQL 注入防护
-- 统一错误处理
-
----
-
-## 安全机制
-
-### XSS 防护 (utils/xss.js)
-
-覆盖 30+ 危险模式：
-- script标签
-- javascript/vbscript协议
-- 事件处理器 (onclick, onerror等)
-- HTML实体编码
-- eval/expression函数
-- 危险标签 (iframe, object, embed等)
-
-### 密码验证规则
-
-- 长度 8-50 位
-- 必须包含字母和数字
-- 不能包含空格
-
----
-
-## 样式系统
-
-### CSS 变量 (styles/variables.css)
-
-```css
-:root {
-  /* 品牌色 - 侗族文化特色 */
-  --dong-indigo: #1A5276;        /* 靛蓝 - 主色调 */
-  --dong-jade: #28B463;          /* 青绿 - 辅助色 */
-  --dong-gold: #c9a227;          /* 金铜 - 强调色 */
-  
-  /* 功能色 */
-  --color-primary: #1A5276;
-  --color-success: #28B463;
-  --color-warning: #f5a623;
-  --color-danger: #e74c3c;
-  
-  /* 间距系统 */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 24px;
-  
-  /* 圆角系统 */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+```javascript
+const RETRY_CONFIG = {
+  maxRetries: 3,                          // 最多重试3次
+  retryDelay: 1000,                       // 基础延迟1秒
+  retryableStatuses: [408, 429, 500, 502, 503, 504],  // 这些状态码可以重试
+  retryableMethods: ['get', 'head', 'options']         // 只有GET类请求重试（POST不重试，避免重复操作）
 }
 ```
 
+#### 能力四：安全过滤
+
+**问题**：恶意用户在输入框里填入 `<script>alert('hack')</script>` 或 `DROP TABLE users`。
+
+**解决**：请求发送前，递归检查所有参数，发现 XSS 或 SQL 注入就自动清理。
+
+```javascript
+// 递归检查并清理请求数据
+if (containsXss(value) || containsSqlInjection(value)) {
+  sanitized[key] = sanitize(value)  // 清理危险内容
+}
+```
+
+### 5.2 双层缓存 (utils/cache.js)
+
+**问题**：每次打开植物列表都要请求后端，加载慢又浪费带宽。
+
+**解决**：双层缓存机制，像电脑的内存和硬盘一样配合工作。
+
+```
++-------------------+     没有？     +-------------------+
+|   内存缓存 (Map)  | <-----------> | SessionStorage缓存 |
+|   速度：极快      |               | 速度：快           |
+|   生命周期：页面  |               | 生命周期：浏览器会话|
+|   刷新后丢失      |               | 关闭标签页后丢失    |
++-------------------+               +-------------------+
+         |                                  |
+         | 都没有？                          |
+         v                                  v
+    请求后端API，拿到数据后同时写入两层缓存
+```
+
+每种数据有不同的缓存时间（TTL）：
+
+| 数据类型 | 缓存时间 | 存储位置 | 为什么这样设？ |
+|---------|---------|---------|-------------|
+| 植物/知识/传承人 | 10分钟 | SessionStorage | 数据不常变，可以缓存久一点 |
+| 学习资源 | 5分钟 | SessionStorage | 可能经常上传新资源 |
+| 分类信息 | 30分钟 | SessionStorage | 很少变化 |
+| 测验题目 | 5分钟 | 内存 | 每次答题应该拿新题 |
+| 排行榜 | 2分钟 | 内存 | 实时性要求高 |
+| 用户信息 | 30分钟 | SessionStorage | 很少变化 |
+
+还有一个 `createCachedFetcher` 高阶函数，可以把任何异步请求自动包装成带缓存的版本：
+
+```javascript
+// 创建一个带缓存的获取植物数据的函数
+const fetchPlants = createCachedFetcher(
+  (page, size) => request.get('/plants/list', { params: { page, size } }),
+  'plants'  // 使用plants的缓存配置
+)
+// 第一次调用：请求后端，结果存入缓存
+// 第二次调用（10分钟内）：直接从缓存返回，不请求后端
+```
+
+### 5.3 JWT生命周期
+
+JWT（JSON Web Token）是用户登录后的"通行证"。本项目的 JWT 管理非常完善：
+
+```
+用户登录
+   |
+   v
+后端返回Token + 用户信息
+   |
+   v
+存入sessionStorage + Pinia Store
+   |
+   v
+每次请求自动带上Token（请求拦截器）
+   |
+   v
++-- 本地过期检查（5分钟缓冲）--- 过期？---> 清除登录状态
+|                                          |
+|  没过期                                  |
+|  v                                       |
++-- 路由守卫：服务端验证（60秒缓存）--- 无效？---> 跳转首页
+|                                          |
+|  有效                                    |
+|  v                                       |
++-- 正常访问页面
+   |
+   v
+Token快过期时（401响应）---> 自动刷新 ---> 继续操作（用户无感知）
+   |
+   刷新失败？
+   v
+清除登录状态 + 触发auth-expired事件 + 提示重新登录
+```
+
+**5分钟缓冲**是什么意思？如果 Token 还剩5分钟就过期了，系统认为它"实际上已过期"，提前刷新，避免用户操作到一半突然失效。
+
+### 5.4 设计系统 (styles/variables.css)
+
+这不是随便选的颜色！每个颜色都来自侗族传统文化：
+
+```
++----------------------------------------------------------+
+|                  侗乡医药设计系统                          |
++----------------------------------------------------------+
+|                                                          |
+|  靛蓝 #1A5276  —— 侗族传统服饰主色调，象征智慧与传承      |
+|  ████████                                                |
+|                                                          |
+|  翡翠绿 #28B463 —— 侗乡山水与草药，寓意生机与希望         |
+|  ████████                                                |
+|                                                          |
+|  古金 #c9a227  —— 象征非遗荣誉与匠人精神                  |
+|  ████████                                                |
+|                                                          |
+|  铜色 #b87333  —— 传统铜器质感，体现历史厚重感            |
+|  ████████                                                |
+|                                                          |
+|  暖米 #f8f5f0  —— 传统纸张质感，体现文化底蕴              |
+|  ████████                                                |
++----------------------------------------------------------+
+```
+
+除了颜色，还定义了完整的间距、字体、阴影、圆角、动画等变量，确保整个应用视觉统一。还预留了暗色模式支持。
+
 ---
 
-## 快速开始
+## 六、如何运行项目（手把手教学）
 
-### 环境要求
+### 6.1 环境准备
 
-- Node.js 18+
-- npm 9+
+**第一步：安装 Node.js**
 
-### 安装步骤
+去 [Node.js官网](https://nodejs.org/) 下载 LTS（长期支持）版本，安装时一路下一步即可。
+
+安装完成后打开终端验证：
+
+```bash
+node -v    # 应该显示 v18.x.x 或更高
+npm -v     # 应该显示 9.x.x 或更高
+```
+
+**第二步：安装编辑器**
+
+推荐使用 VS Code，安装以下插件：
+- Vue - Official（Vue语法高亮和智能提示）
+- ESLint（代码规范检查）
+
+### 6.2 安装与运行
 
 ```bash
 # 1. 进入项目目录
 cd dong-medicine-frontend
 
-# 2. 安装依赖
+# 2. 安装依赖（只需要执行一次，会根据package.json下载所有依赖包）
 npm install
+# 注意：如果下载慢，可以先设置国内镜像
+# npm config set registry https://registry.npmmirror.com
 
-# 3. 启动开发服务器
-npm run dev
-```
-
-### 常用命令
-
-```bash
-# 开发模式
+# 3. 启动开发服务器（会自动打开浏览器访问 http://localhost:5173）
 npm run dev
 
-# 代码检查
-npm run lint
-
-# 运行测试
-npm run test:run
-
-# 构建生产版本
+# 4. 构建生产版本（把源代码编译成可部署的静态文件，输出到dist/目录）
 npm run build
 
-# 预览生产构建
-npm run preview
+# 5. 运行单元测试
+npm run test:run
+
+# 6. 代码规范检查（自动修复可修复的问题）
+npm run lint
 ```
 
-### 访问地址
+### 6.3 环境变量配置
 
-- 开发地址: http://localhost:5173
-- 生产构建: `dist/` 目录
+复制 `.env.example` 为 `.env`，根据实际情况修改：
+
+```env
+# 后端API地址（开发时Vite会自动代理，生产环境需要改成实际地址）
+VITE_API_BASE_URL=/api
+
+# KKFileView文档预览服务地址
+VITE_KKFILEVIEW_URL=http://localhost:8012
+```
+
+### 6.4 开发代理说明
+
+开发时，Vite 会自动把以下请求转发到后端服务器（localhost:8080），你不需要处理跨域问题：
+
+| 前端请求路径 | 转发到后端 | 用途 |
+|------------|----------|------|
+| `/api` | `http://localhost:8080` | API接口 |
+| `/images` | `http://localhost:8080` | 图片资源 |
+| `/videos` | `http://localhost:8080` | 视频资源 |
+| `/documents` | `http://localhost:8080` | 文档资源 |
+| `/kkfileview` | `http://localhost:8012` | 文档预览服务 |
 
 ---
 
-## Docker 部署
+## 七、Docker部署
 
-### 构建镜像
+### 7.1 什么是Docker？（给新手的超简版）
+
+**类比：集装箱**
+
+你写好的代码在你的电脑上能跑，在别人电脑上可能就跑不了（Node版本不同、缺少依赖等）。Docker 就像一个"集装箱"——把你的代码和它需要的所有环境一起打包，放到任何服务器上都能正常运行。
+
+### 7.2 构建和运行
 
 ```bash
+# 构建Docker镜像（把前端代码打包成可部署的镜像）
 docker build -t dong-medicine-frontend .
+
+# 运行容器（启动镜像，把容器的80端口映射到主机的80端口）
+docker run -p 80:80 dong-medicine-frontend
 ```
 
-### 运行容器
+### 7.3 Docker构建过程解析
 
-```bash
-docker run -d \
-  --name dong-medicine-frontend \
-  -p 80:80 \
-  dong-medicine-frontend
+Dockerfile 使用了"多阶段构建"——先用 Node.js 环境编译代码，再把编译结果放进 Nginx 服务器：
+
+```
+阶段一：构建（Node.js环境）          阶段二：运行（Nginx环境）
++---------------------------+       +---------------------------+
+| 1. 安装npm依赖            |       | 1. 复制Nginx配置文件       |
+| 2. 运行npm run build      |  -->  | 2. 从阶段一复制dist/目录   |
+| 3. 生成dist/目录          |       | 3. 启动Nginx服务          |
++---------------------------+       +---------------------------+
+   最终镜像只有Nginx + 静态文件，非常小（~30MB）
 ```
 
-### 使用 Docker Compose
+### 7.4 Nginx配置要点
 
-```bash
-# 在项目根目录执行
-docker-compose up -d --build
-```
+生产环境用 Nginx 作为 Web 服务器，关键配置：
+
+| 配置项 | 值 | 作用 |
+|-------|-----|------|
+| 静态资源缓存 | 1年 | JS/CSS/图片等不常变，浏览器缓存后不用重复下载 |
+| API代理 | 60秒超时 | 转发API请求到后端 |
+| SPA回退 | try_files $uri /index.html | 刷新页面时不会404 |
+| 安全头 | X-Frame-Options等 | 防止点击劫持、XSS攻击 |
+| Gzip压缩 | level 6 | 减小传输体积，加快加载速度 |
+| 上传限制 | 100MB | 支持大文件上传 |
 
 ---
 
-## 常见问题
+## 八、常见问题与解决方案
 
-### 1. npm install 失败
+### Q1：`npm install` 报错或很慢
 
-**解决方案**：清除缓存重试
+**原因**：npm默认从国外服务器下载，网络可能不稳定。
+
+**解决**：
 ```bash
-npm cache clean --force
-rm -rf node_modules package-lock.json
+# 切换到国内镜像源
+npm config set registry https://registry.npmmirror.com
+
+# 然后重新安装
 npm install
 ```
 
-### 2. 页面空白
+### Q2：`npm run dev` 后页面空白
 
 **可能原因**：
-- 后端服务未启动
-- API 请求失败
+1. 后端服务没启动——检查 `http://localhost:8080` 是否可访问
+2. 端口被占用——Vite 会自动尝试下一个端口（5174、5175...），看终端输出
 
-**解决方案**：
-- 确保后端服务运行在 http://localhost:8080
-- 打开浏览器控制台查看错误信息
+### Q3：修改代码后页面没更新
 
-### 3. 登录后刷新页面退出
+**解决**：
+- Vite 的热更新（HMR）通常会自动刷新，如果没有，手动按 `Ctrl+S` 保存
+- 如果还是不行，重启开发服务器：在终端按 `Ctrl+C` 停止，再 `npm run dev`
 
-**可能原因**：Token 未正确存储
+### Q4：登录后刷新页面就退出登录了
 
-**解决方案**：
-- 检查浏览器 localStorage 中是否有 token
-- 检查 stores/user.js 中的 token 持久化逻辑
+**原因**：本项目使用 `sessionStorage` 存储登录信息，关闭浏览器标签页就会丢失。这是设计选择，不是Bug——对于展示类平台，这样更安全。
 
-### 4. 样式不生效
+### Q5：`npm run build` 后怎么预览？
 
-**可能原因**：
-- scoped 样式作用域问题
-- CSS 优先级问题
+```bash
+# 方法一：安装serve工具预览dist目录
+npx serve dist
 
-**解决方案**：
-- 使用 `:deep()` 穿透 scoped 样式
-- 检查 CSS 选择器优先级
+# 方法二：用Vite的预览命令
+npx vite preview
+```
+
+### Q6：Docker构建失败
+
+**常见原因**：
+1. 网络问题——Dockerfile已配置国内镜像源，如果还慢检查Docker网络设置
+2. 内存不足——Node.js构建需要至少2GB内存，Docker Desktop默认可能不够
+
+### Q7：ESLint报一堆红色波浪线
+
+**解决**：
+```bash
+# 自动修复可修复的问题
+npm run lint
+```
+如果还有无法自动修复的，看错误提示手动修改。
+
+### Q8：组件导入路径中的 `@` 是什么？
+
+`@` 是路径别名，在 `vite.config.js` 中配置的，指向 `src/` 目录：
+
+```javascript
+// vite.config.js
+resolve: {
+  alias: {
+    "@": resolve(__dirname, "src"),
+  },
+}
+
+// 所以这两行是等价的：
+import AppHeader from "@/components/business/layout/AppHeader.vue"
+import AppHeader from "../../../components/business/layout/AppHeader.vue"  // 相对路径，容易写错
+```
 
 ---
 
-**最后更新时间**：2026年4月3日
+## 九、项目限制与改进方向
+
+### 当前限制
+
+- AI聊天为同步请求，等待响应时用户体验不佳
+- 前端缓存基于sessionStorage，浏览器关闭后丢失
+- 部分页面组件较大，可进一步拆分
+- 缺少端到端测试
+
+### 未来改进方向
+
+- [ ] AI聊天改为WebSocket流式输出
+- [ ] 增加PWA离线支持
+- [ ] 增加端到端测试（Playwright/Cypress）
+- [ ] 增加国际化（i18n）
+- [ ] 组件进一步拆分，提升可维护性
+- [ ] 增加Storybook组件文档

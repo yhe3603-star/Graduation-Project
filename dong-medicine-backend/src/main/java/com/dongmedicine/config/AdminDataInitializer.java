@@ -8,15 +8,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-
-/**
- * 应用启动时初始化一个默认管理员账号：
- * 用户名：admin
- * 密码：必须通过环境变量 ADMIN_INIT_PASSWORD 设置
- *
- * 仅在不存在任何 ADMIN 角色用户时创建，方便本地调试与毕业设计演示。
- */
 @Component
 public class AdminDataInitializer implements CommandLineRunner {
 
@@ -48,7 +39,7 @@ public class AdminDataInitializer implements CommandLineRunner {
         admin.setUsername(DEFAULT_ADMIN_USERNAME);
         admin.setPasswordHash(encoder.encode(initPassword));
         admin.setRole(RoleConstants.ROLE_ADMIN);
-        admin.setCreatedAt(LocalDateTime.now());
+        admin.setStatus(User.STATUS_ACTIVE);
         userService.save(admin);
         System.out.println("默认管理员账号创建成功: " + DEFAULT_ADMIN_USERNAME);
     }

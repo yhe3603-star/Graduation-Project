@@ -1,9 +1,7 @@
 package com.dongmedicine.common;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.dongmedicine.common.constant.RoleConstants;
-import com.dongmedicine.config.CustomUserDetails;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 public final class SecurityUtils {
 
@@ -11,36 +9,30 @@ public final class SecurityUtils {
     }
 
     public static Integer getCurrentUserId() {
-        CustomUserDetails user = getCurrentUser();
-        return user != null ? user.getUserId() : null;
-    }
-
-    public static CustomUserDetails getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null) {
+        if (!StpUtil.isLogin()) {
             return null;
         }
-        return auth.getPrincipal() instanceof CustomUserDetails ? (CustomUserDetails) auth.getPrincipal() : null;
+        return StpUtil.getLoginIdAsInt();
     }
 
     public static String getCurrentUsername() {
-        CustomUserDetails user = getCurrentUser();
-        return user != null ? user.getUsername() : null;
+        if (!StpUtil.isLogin()) {
+            return null;
+        }
+        Object username = StpUtil.getSession().get("username");
+        return username != null ? username.toString() : null;
     }
 
     public static String getCurrentUserRole() {
-        CustomUserDetails user = getCurrentUser();
-        if (user == null) {
+        if (!StpUtil.isLogin()) {
             return null;
         }
-        return user.getAuthorities().stream()
-                .findFirst()
-                .map(auth -> auth.getAuthority().replace("ROLE_", ""))
-                .orElse(RoleConstants.ROLE_USER);
+        Object role = StpUtil.getSession().get("role");
+        return role != null ? role.toString() : RoleConstants.ROLE_USER;
     }
 
     public static boolean isAuthenticated() {
-        return getCurrentUser() != null;
+        return StpUtil.isLogin();
     }
 
     public static boolean isAdmin() {

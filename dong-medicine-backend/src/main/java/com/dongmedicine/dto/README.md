@@ -1,453 +1,468 @@
-# DTO 数据传输对象目录 (dto)
+# DTO 层 -- 数据传输对象（快递包裹）
 
-本目录存放数据传输对象（DTO），用于接收前端请求和返回数据。
-
-## 目录
-
-- [什么是DTO？](#什么是dto)
-- [目录结构](#目录结构)
-- [DTO列表](#dto列表)
-- [开发规范](#开发规范)
-- [常用DTO详解](#常用dto详解)
+> 本目录存放所有 DTO（Data Transfer Object），用于在前后端之间传输数据。
 
 ---
 
-## 什么是DTO？
+## 一、什么是 DTO？
 
-### DTO的概念
+**类比：快递包裹，只装需要运送的东西**
 
-**DTO（Data Transfer Object，数据传输对象）** 是用于在不同层之间传输数据的对象。它就像一个"快递包裹"——把需要传输的数据打包好，从前端送到后端，或者从后端送到前端。
+DTO 全称是 **Data Transfer Object**（数据传输对象），就像快递包裹：
 
-### 为什么需要DTO？
+- 你寄快递时，不会把整个房间的东西都寄出去，只寄对方需要的东西
+- 同样，DTO 只包含前端需要的数据，不会把数据库的所有字段都暴露出去
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      不使用DTO                                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  前端发送：                                                      │
-│  {                                                              │
-│    "username": "admin",                                         │
-│    "password": "123456",                                        │
-│    "confirmPassword": "123456",                                 │
-│    "captchaKey": "abc123",                                      │
-│    "captchaCode": "1234"                                        │
-│  }                                                              │
-│                                                                 │
-│  直接使用Entity接收：                                            │
-│  - Entity没有confirmPassword字段                                │
-│  - Entity没有captchaKey/captchaCode字段                         │
-│  - Entity可能有敏感字段（如passwordHash）不应该暴露              │
-│                                                                 │
-│  → 字段不匹配、安全问题                                          │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                       使用DTO                                   │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  前端发送 → RegisterDTO（专门用于注册）                          │
-│  {                                                              │
-│    "username": "admin",        ← RegisterDTO有这个字段          │
-│    "password": "123456",       ← RegisterDTO有这个字段          │
-│    "confirmPassword": "123456", ← RegisterDTO有这个字段         │
-│    "captchaKey": "abc123",     ← RegisterDTO有这个字段          │
-│    "captchaCode": "1234"       ← RegisterDTO有这个字段          │
-│  }                                                              │
-│                                                                 │
-│  Service层处理：                                                 │
-│  1. 验证DTO数据                                                  │
-│  2. 创建Entity对象                                               │
-│  3. 保存到数据库                                                 │
-│                                                                 │
-│  → 字段匹配、安全可控                                            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+Entity（整个房间）                DTO（快递包裹）
++------------------+             +------------------+
+| id               |             | id               |
+| username         |             | username         |
+| passwordHash     |  不寄！ --> |                  |  密码不暴露！
+| role             |             | role             |
+| status           |             | status           |
+| createdAt        |             | createdAt        |
++------------------+             +------------------+
+  包含所有数据库字段               只包含前端需要的字段
 ```
 
-### DTO与Entity的区别
+---
+
+## 二、为什么用 DTO 而不是直接用 Entity？
+
+### 2.1 安全性：不暴露敏感信息
+
+**最典型的例子：密码**
+
+```java
+// Entity：包含密码哈希，绝对不能直接返回给前端！
+public class User {
+    private Integer id;
+    private String username;
+    private String passwordHash;   // <-- 敏感信息！不能让前端看到！
+    private String role;
+    private String status;
+}
+
+// DTO：不包含密码，安全地返回给前端
+public class UserUpdateDTO {
+    private String username;       // <-- 只暴露允许修改的字段
+}
+```
+
+如果直接返回 Entity，前端就能看到 `passwordHash` 字段（即使值是加密的，也不应该暴露）。
+
+### 2.2 灵活性：不同场景需要不同的字段
+
+同一个 Entity，在不同场景下需要不同的字段组合：
+
+```
+场景1：用户登录        --> LoginDTO（需要 username + password + 验证码）
+场景2：用户注册        --> RegisterDTO（需要 username + password + 确认密码 + 验证码）
+场景3：修改用户信息    --> UserUpdateDTO（只需要 username）
+场景4：修改密码        --> ChangePasswordDTO（需要当前密码 + 新密码 + 验证码）
+```
+
+如果只用一个 Entity，所有场景都混在一起，既不清晰也不安全。
+
+### 2.3 验证规则：不同场景有不同的校验
+
+```
+注册时：密码长度 6-50 位
+修改密码时：密码长度 6-20 位（更严格）
+登录时：密码只需要不为空
+```
+
+用不同的 DTO，每个 DTO 可以定义自己的验证规则。
+
+---
+
+## 三、Entity vs DTO 对比表
 
 | 对比项 | Entity | DTO |
 |--------|--------|-----|
-| 用途 | 与数据库交互 | 与前端交互 |
-| 字段 | 与数据库表对应 | 根据接口需求定义 |
-| 验证 | 无 | 有验证注解 |
-| 敏感信息 | 可能包含 | 不包含敏感信息 |
-
----
-
-## 目录结构
+| **用途** | 和数据库交互 | 和前端交互 |
+| **字段来源** | 对应数据库表的列 | 根据业务需求选择 |
+| **包含敏感信息** | 可能包含（如 passwordHash） | 不包含 |
+| **校验注解** | 较少（只校验数据库约束） | 较多（校验业务规则） |
+| **数量** | 一张表一个 | 一个 Entity 可能有多个 DTO |
+| **命名规范** | `Plant`、`User` | `PlantDTO`、`LoginDTO`、`RegisterDTO` |
+| **谁使用** | Mapper、Service | Controller、前端 |
 
 ```
-dto/
-│
-├── LoginDTO.java                      # 登录请求
-├── RegisterDTO.java                   # 注册请求
-├── ChangePasswordDTO.java             # 修改密码请求
-├── CaptchaDTO.java                    # 验证码响应
-│
-├── PlantDTO.java                      # 植物数据传输
-├── KnowledgeDTO.java                  # 知识数据传输
-├── InheritorDTO.java                  # 传承人数据传输
-├── ResourceDTO.java                   # 资源数据传输
-│
-├── CommentDTO.java                    # 评论数据
-├── CommentAddDTO.java                 # 添加评论请求
-├── FeedbackDTO.java                   # 反馈数据
-├── FeedbackReplyDTO.java              # 反馈回复
-│
-├── QuizQuestionDTO.java               # 测验问题
-├── QuizSubmitDTO.java                 # 提交答案
-├── AnswerDTO.java                     # 答案数据
-├── PlantGameSubmitDTO.java            # 植物游戏提交
-│
-├── ChatRequest.java                   # AI聊天请求
-├── ChatResponse.java                  # AI聊天响应
-│
-└── LoginVO.java                       # 登录响应
+数据流向：
+
+  前端 --(请求DTO)--> Controller --(Entity)--> Service --(Entity)--> Mapper --> 数据库
+  前端 <-(响应DTO)-- Controller <-(Entity)-- Service <-(Entity)-- Mapper <-- 数据库
+
+  进入时：DTO -> Entity（只取需要的字段）
+  返回时：Entity -> DTO（只暴露允许的字段）
 ```
 
 ---
 
-## DTO列表
+## 四、校验注解详解
 
-### 请求DTO
+### 4.1 什么是校验注解？
 
-| DTO | 用途 |
-|-----|------|
-| LoginDTO | 用户登录请求 |
-| RegisterDTO | 用户注册请求 |
-| ChangePasswordDTO | 修改密码请求 |
-| CommentAddDTO | 添加评论请求 |
-| QuizSubmitDTO | 提交测验答案 |
-| PlantGameSubmitDTO | 提交游戏结果 |
-| ChatRequest | AI聊天请求 |
-| FeedbackReplyDTO | 反馈回复 |
+**类比：快递员检查包裹**
 
-### 响应DTO
+寄快递时，快递员会检查：地址填了没？电话号码格式对不对？包裹超重了吗？
+校验注解就是 Java 世界里的"快递员"，在数据进入系统前自动检查：
 
-| DTO | 用途 |
-|-----|------|
-| LoginVO | 登录响应（包含Token） |
-| CaptchaDTO | 验证码响应 |
-| QuizResultVO | 测验结果响应 |
-| ChatResponse | AI聊天响应 |
+- 用户名填了没？ -> `@NotBlank`
+- 密码够不够长？ -> `@Size(min = 6)`
+- 级别是不是合法值？ -> `@Pattern(regexp = "...")`
 
-### 数据传输DTO
+### 4.2 常用校验注解一览
 
-| DTO | 用途 |
-|-----|------|
-| PlantDTO | 植物数据传输 |
-| KnowledgeDTO | 知识数据传输 |
-| InheritorDTO | 传承人数据传输 |
-| ResourceDTO | 资源数据传输 |
-| CommentDTO | 评论数据传输 |
-| FeedbackDTO | 反馈数据传输 |
-| QuizQuestionDTO | 测验问题数据 |
-
----
-
-## 开发规范
-
-### 1. 请求DTO规范
-
-```java
-/**
- * 用户登录请求DTO
- */
-@Data
-public class LoginDTO {
-    
-    @NotBlank(message = "用户名不能为空")
-    @Size(min = 2, max = 20, message = "用户名长度为2-20个字符")
-    private String username;
-    
-    @NotBlank(message = "密码不能为空")
-    private String password;
-    
-    @NotBlank(message = "验证码Key不能为空")
-    private String captchaKey;
-    
-    @NotBlank(message = "验证码不能为空")
-    private String captchaCode;
-}
-```
-
-### 2. 响应DTO规范
-
-```java
-/**
- * 登录响应VO
- */
-@Data
-@Builder
-public class LoginVO {
-    
-    private String token;       // JWT Token
-    
-    private Integer userId;     // 用户ID
-    
-    private String username;    // 用户名
-    
-    private String role;        // 角色
-}
-```
-
-### 3. 验证注解说明
-
-| 注解 | 说明 | 示例 |
+| 注解 | 作用 | 示例 |
 |------|------|------|
-| `@NotBlank` | 字符串不能为空 | `@NotBlank(message = "用户名不能为空")` |
-| `@NotNull` | 不能为null | `@NotNull(message = "ID不能为空")` |
-| `@Size` | 长度限制 | `@Size(min = 2, max = 20)` |
-| `@Min` | 最小值 | `@Min(value = 0)` |
-| `@Max` | 最大值 | `@Max(value = 100)` |
-| `@Pattern` | 正则验证 | `@Pattern(regexp = "^[a-zA-Z0-9]+$")` |
-| `@Email` | 邮箱格式 | `@Email(message = "邮箱格式不正确")` |
+| `@NotBlank` | 不能为空（字符串） | `@NotBlank(message = "用户名不能为空")` |
+| `@NotNull` | 不能为 null（任何类型） | `@NotNull(message = "目标ID不能为空")` |
+| `@NotEmpty` | 不能为空（集合/数组） | `@NotEmpty(message = "答案列表不能为空")` |
+| `@Size(min, max)` | 长度范围 | `@Size(min = 3, max = 20, message = "用户名长度3-20")` |
+| `@Pattern(regexp)` | 正则匹配 | `@Pattern(regexp = "^[a-zA-Z0-9_]+$")` |
+| `@Valid` | 级联校验（校验对象内部） | `@Valid @NotEmpty List<AnswerDTO> answers` |
+
+### 4.3 @NotBlank vs @NotNull vs @NotEmpty 的区别
+
+```
+@NotBlank（字符串专用）：null、""、"   " 都不行，必须有实际内容
+  "hello"  -> 通过
+  ""       -> 不通过
+  "   "    -> 不通过（空格也不行）
+  null     -> 不通过
+
+@NotNull（通用）：只要不是 null 就行
+  "hello"  -> 通过
+  ""       -> 通过（空字符串也算"不是null"）
+  "   "    -> 通过（空格也算"不是null"）
+  null     -> 不通过
+
+@NotEmpty（集合/数组/字符串）：不能为空，必须有内容
+  [1,2,3]  -> 通过
+  []       -> 不通过
+  null     -> 不通过
+```
+
+**选择建议**：
+- 字符串字段用 `@NotBlank`（最严格，推荐）
+- 数字/对象字段用 `@NotNull`
+- 列表/集合字段用 `@NotEmpty`
 
 ---
 
-## 常用DTO详解
-
-### LoginDTO - 登录请求
+## 五、完整示例：LoginDTO 逐行解读
 
 ```java
-/**
- * 用户登录请求DTO
- */
-@Data
+package com.dongmedicine.dto;
+
+import lombok.Data;                                    // Lombok 注解
+import jakarta.validation.constraints.NotBlank;        // 非空校验
+import jakarta.validation.constraints.Size;            // 长度校验
+
+@Data   // [1] Lombok：自动生成 getter/setter
 public class LoginDTO {
-    
+
+    // [2] 用户名：不能为空，长度3-20
     @NotBlank(message = "用户名不能为空")
+    @Size(min = 3, max = 20, message = "用户名长度必须在3-20个字符之间")
     private String username;
-    
+
+    // [3] 密码：不能为空，最少6位
     @NotBlank(message = "密码不能为空")
+    @Size(min = 6, message = "密码长度不能少于6位")
     private String password;
-    
-    @NotBlank(message = "验证码Key不能为空")
+
+    // [4] 验证码key：不能为空（用于从 Redis 中查找验证码图片）
+    @NotBlank(message = "验证码key不能为空")
     private String captchaKey;
-    
-    @NotBlank(message = "验证码不能为空")
+
+    // [5] 验证码：不能为空（用户输入的验证码）
+    @NotBlank(message = "请输入验证码")
     private String captchaCode;
 }
 ```
 
-### RegisterDTO - 注册请求
+**校验流程**：
+
+```
+前端提交数据                    后端校验                        结果
++------------------+         +------------------+         +------------------+
+| username: ""     |  ---->  | @NotBlank 失败    |  ---->  | 返回错误：        |
+| password: "123"  |         | @Size(min=6) 失败 |         | "用户名不能为空"   |
+| captchaKey: "xx" |         |                   |         | "密码长度不能少于6"|
+| captchaCode: ""  |         | @NotBlank 失败    |         | "请输入验证码"     |
++------------------+         +------------------+         +------------------+
+
+前端提交数据                    后端校验                        结果
++------------------+         +------------------+         +------------------+
+| username: "admin"|  ---->  | 全部通过          |  ---->  | 继续执行登录逻辑   |
+| password: "123456"|        |                   |         |                   |
+| captchaKey: "abc" |        |                   |         |                   |
+| captchaCode: "A3x" |       |                   |         |                   |
++------------------+         +------------------+         +------------------+
+```
+
+**Controller 中如何触发校验**：
 
 ```java
-/**
- * 用户注册请求DTO
- */
-@Data
-public class RegisterDTO {
-    
-    @NotBlank(message = "用户名不能为空")
-    @Size(min = 2, max = 20, message = "用户名长度为2-20个字符")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "用户名只能包含字母、数字、下划线")
-    private String username;
-    
-    @NotBlank(message = "密码不能为空")
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,50}$", 
-             message = "密码长度8-50位，必须包含字母和数字")
-    private String password;
-    
-    @NotBlank(message = "确认密码不能为空")
-    private String confirmPassword;
-    
-    @NotBlank(message = "验证码Key不能为空")
-    private String captchaKey;
-    
-    @NotBlank(message = "验证码不能为空")
-    private String captchaCode;
+@PostMapping("/login")
+public R<String> login(@Valid @RequestBody LoginDTO loginDTO) {
+    //                  ^^^^^ 加 @Valid 才会触发校验！
+    // 如果校验失败，Spring 会自动返回 400 错误和错误信息
+    // 只有校验通过，才会执行到这里
+    return R.ok(jwtToken);
 }
 ```
 
-### LoginVO - 登录响应
+---
+
+## 六、本项目全部 DTO 一览
+
+### 6.1 请求 DTO（前端发给后端的数据）
+
+| 序号 | DTO 类名 | 用途 | 关键字段 | 校验规则 |
+|------|---------|------|---------|---------|
+| 1 | `LoginDTO` | 用户登录 | username, password, captchaKey, captchaCode | 用户名3-20位，密码>=6位 |
+| 2 | `RegisterDTO` | 用户注册 | username, password, confirmPassword, captchaKey, captchaCode | 用户名3-20位只含字母数字下划线，密码6-50位 |
+| 3 | `ChangePasswordDTO` | 修改密码 | currentPassword, newPassword, captchaKey, captchaCode | 新密码6-20位 |
+| 4 | `UserUpdateDTO` | 修改用户信息 | username | 用户名3-20位（可选） |
+| 5 | `PlantDTO` | 新增/编辑植物 | nameCn, nameDong, category, efficacy, story, images... | 中文名必填，最长100字符 |
+| 6 | `KnowledgeDTO` | 新增/编辑知识 | title, type, therapyCategory, content, images... | 标题必填，最长200字符 |
+| 7 | `InheritorDTO` | 新增/编辑传承人 | name, level, bio, images, videos... | 姓名必填，级别必须是"国家级/省级/市级/县级/自治区级" |
+| 8 | `FeedbackDTO` | 提交反馈 | type, title, content, contact | 类型必填最长20，标题必填最长200，内容必填最长2000 |
+| 9 | `FeedbackReplyDTO` | 回复反馈 | reply | 回复内容必填，最长1000 |
+| 10 | `CommentAddDTO` | 添加评论 | targetType, targetId, content, replyToId... | 目标类型必填，内容必填最长1000 |
+| 11 | `QuizSubmitDTO` | 提交测验答案 | answers (List<AnswerDTO>) | 答案列表不能为空，内部级联校验 |
+| 12 | `AnswerDTO` | 单个答案 | questionId, answer | 题目ID不能为null，答案不能为空 |
+| 13 | `PlantGameSubmitDTO` | 提交植物游戏结果 | difficulty, score, correctCount, totalCount | 所有字段不能为空 |
+| 14 | `ChatRequest` | AI 对话请求 | message, history | 消息必填最长2000，历史最多20条 |
+
+### 6.2 响应 DTO（后端返回给前端的数据）
+
+| 序号 | DTO 类名 | 用途 | 关键字段 | 说明 |
+|------|---------|------|---------|------|
+| 1 | `CaptchaDTO` | 验证码响应 | captchaKey, captchaImage | 包含验证码 key 和 Base64 图片 |
+| 2 | `QuizQuestionDTO` | 测验题目响应 | id, q, options | 只返回题目和选项，不返回答案 |
+| 3 | `CommentDTO` | 评论响应 | id, userId, username, content, likes... | 评论详情，包含用户名 |
+| 4 | `FileUploadResult` | 文件上传结果 | success, fileName, fileUrl, fileSize... | 上传成功/失败信息 |
+| 5 | `ChatResponse` | AI 对话响应 | reply, success, error | AI 回复内容或错误信息 |
+
+### 6.3 特殊 DTO 说明
+
+**QuizQuestionDTO** -- 不返回答案和解析（防作弊）：
 
 ```java
-/**
- * 登录响应VO
- * 返回给前端的登录结果
- */
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class LoginVO {
-    
-    private String token;       // JWT Token
-    
-    private Integer userId;     // 用户ID
-    
-    private String username;    // 用户名
-    
-    private String role;        // 角色
+public class QuizQuestionDTO {
+    private Integer id;           // 题目ID
+    private String q;             // 题目内容
+    private List<String> options; // 选项列表
+    // 注意：没有 answer、correctAnswer、explanation 字段！
+    // 前端拿不到答案，防止作弊
 }
 ```
 
-### QuizSubmitDTO - 提交答案
+**FileUploadResult** -- 使用了 Builder 模式：
 
 ```java
-/**
- * 提交测验答案DTO
- */
 @Data
-public class QuizSubmitDTO {
-    
-    @NotNull(message = "答案列表不能为空")
-    @Size(min = 1, message = "至少需要提交一个答案")
-    private List<AnswerDTO> answers;
-    
-    @NotNull(message = "每题分数不能为空")
-    @Min(value = 1, message = "每题分数至少为1")
-    private Integer scorePerQuestion;
-}
+@Builder          // [1] 建造者模式：链式创建对象
+@NoArgsConstructor   // [2] 无参构造器
+@AllArgsConstructor  // [3] 全参构造器
+public class FileUploadResult {
+    private boolean success;
+    private String fileName;
+    private String fileUrl;
+    // ...
 
-/**
- * 答案DTO
- */
-@Data
-public class AnswerDTO {
-    
-    @NotNull(message = "问题ID不能为空")
-    private Integer questionId;
-    
-    @NotBlank(message = "答案不能为空")
-    private String answer;
+    // 静态工厂方法：创建成功结果
+    public static FileUploadResult success(...) {
+        return FileUploadResult.builder()
+                .success(true)
+                .fileName(fileName)
+                // ... 链式调用，代码更清晰
+                .build();
+    }
+
+    // 静态工厂方法：创建失败结果
+    public static FileUploadResult fail(String message) {
+        return FileUploadResult.builder()
+                .success(false)
+                .message(message)
+                .build();
+    }
 }
 ```
 
-### ChatRequest - AI聊天请求
+**ChatRequest** -- 包含嵌套 DTO：
 
 ```java
-/**
- * AI聊天请求DTO
- */
 @Data
 public class ChatRequest {
-    
-    @NotBlank(message = "消息不能为空")
+    @NotBlank(message = "消息内容不能为空")
     @Size(max = 2000, message = "消息长度不能超过2000个字符")
     private String message;
-    
-    private List<Message> history;  // 历史消息
-    
+
+    @Size(max = 20, message = "历史消息数量不能超过20条")
+    private List<Message> history;   // <-- 嵌套的内部类
+
     @Data
-    public static class Message {
-        private String role;      // user 或 assistant
-        private String content;   // 消息内容
+    public static class Message {    // <-- 静态内部类
+        private String role;
+        @Size(max = 2000, message = "历史消息长度不能超过2000个字符")
+        private String content;
     }
 }
 ```
 
 ---
 
-## 使用示例
+## 七、DTO 在 Controller 中的使用
 
-### Controller中使用
+### 7.1 请求 DTO：接收前端数据
 
 ```java
 @RestController
 @RequestMapping("/api/user")
-@RequiredArgsConstructor
 public class UserController {
-    
-    private final UserService userService;
-    
-    // 使用 @Valid 触发参数验证
+
+    // 用 @RequestBody 接收 JSON 数据，用 @Valid 触发校验
     @PostMapping("/login")
-    public R<LoginVO> login(@RequestBody @Valid LoginDTO dto) {
-        // 如果验证失败，会自动返回错误信息
-        // 这里只需要处理业务逻辑
-        return R.ok(userService.login(dto));
+    public R<String> login(@Valid @RequestBody LoginDTO loginDTO) {
+    //                       ^^^^^  ^^^^^^^^^^^
+    //                       校验    请求DTO
+        String token = userService.login(loginDTO);
+        return R.ok(token);
     }
-    
+
     @PostMapping("/register")
-    public R<String> register(@RequestBody @Valid RegisterDTO dto) {
-        userService.register(dto);
-        return R.ok("注册成功");
+    public R<Void> register(@Valid @RequestBody RegisterDTO registerDTO) {
+        userService.register(registerDTO);
+        return R.ok();
     }
 }
 ```
 
-### Service中使用
+### 7.2 响应 DTO：返回给前端数据
 
 ```java
-@Service
-@RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
-    
-    private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
-    
-    @Override
-    public void register(RegisterDTO dto) {
-        // 1. 验证两次密码是否一致
-        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
-            throw new BusinessException("两次密码不一致");
-        }
-        
-        // 2. 检查用户名是否存在
-        if (userMapper.findByUsername(dto.getUsername()) != null) {
-            throw new BusinessException("用户名已存在");
-        }
-        
-        // 3. 创建Entity
-        User user = new User();
-        user.setUsername(dto.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
-        user.setRole("USER");
-        user.setStatus(0);
-        
-        // 4. 保存
-        userMapper.insert(user);
-    }
+@GetMapping("/captcha")
+public R<CaptchaDTO> getCaptcha() {
+    //                   ^^^^^^^^^ 响应DTO
+    CaptchaDTO captcha = captchaService.generateCaptcha();
+    return R.ok(captcha);
 }
+```
+
+### 7.3 Entity 转 DTO 的转换
+
+```java
+// PlantDTO 中的静态转换方法
+public static PlantDTO fromEntity(Plant plant) {
+    if (plant == null) return null;     // 空值保护
+    PlantDTO dto = new PlantDTO();
+    dto.setId(plant.getId());           // 逐个字段复制
+    dto.setNameCn(plant.getNameCn());
+    dto.setNameDong(plant.getNameDong());
+    dto.setCategory(plant.getCategory());
+    dto.setUsageWay(plant.getUsageWay());
+    dto.setEfficacy(plant.getEfficacy());
+    dto.setStory(plant.getStory());
+    dto.setImages(plant.getImages());
+    dto.setVideos(plant.getVideos());
+    dto.setDocuments(plant.getDocuments());
+    dto.setViewCount(plant.getViewCount());
+    dto.setFavoriteCount(plant.getFavoriteCount());
+    dto.setCreatedAt(plant.getCreatedAt());
+    return dto;
+    // 注意：没有复制 updateLog、distribution 等前端不需要的字段
+}
+```
+
+**使用方式**：
+
+```java
+// 在 Service 中转换
+Plant plant = plantMapper.selectById(id);
+PlantDTO dto = PlantDTO.fromEntity(plant);  // Entity -> DTO
+return dto;
 ```
 
 ---
 
-## 最佳实践
+## 八、常见错误与解决方案
 
-### 1. DTO与Entity分离
+### 错误 1：忘记加 @Valid
 
-```java
-// ✅ 好的做法：使用DTO接收请求
-public void register(RegisterDTO dto) { ... }
-
-// ❌ 不好的做法：直接使用Entity
-public void register(User user) { ... }
+```
+现象：DTO 上的 @NotBlank 校验没有生效，空数据也能提交成功
+原因：Controller 方法参数上没有加 @Valid 注解
+解决：在参数前加 @Valid，如 @Valid @RequestBody LoginDTO loginDTO
 ```
 
-### 2. 使用验证注解
+### 错误 2：混淆 @NotBlank 和 @NotNull
 
-```java
-// ✅ 好的做法：使用注解验证
-@NotBlank(message = "用户名不能为空")
-@Size(min = 2, max = 20, message = "用户名长度为2-20个字符")
+```
+错误：用 @NotNull 校验字符串
+@NotNull
 private String username;
 
-// ❌ 不好的做法：手动验证
-if (username == null || username.length() < 2) {
-    throw new BusinessException("用户名不合法");
+问题："" (空字符串) 和 "   " (空格) 也能通过校验！
+正确：字符串应该用 @NotBlank
+@NotBlank
+private String username;
+```
+
+### 错误 3：DTO 直接暴露了敏感字段
+
+```
+错误：在 CommentDTO 中暴露了用户密码
+public class CommentDTO {
+    private String passwordHash;  // <-- 绝对不能有！
+}
+
+正确：DTO 只包含前端需要展示的字段
+public class CommentDTO {
+    private Integer userId;
+    private String username;
+    private String content;
 }
 ```
 
-### 3. 响应DTO不包含敏感信息
+### 错误 4：@Size 用在数字类型上
 
-```java
-// ✅ 好的做法：不返回敏感信息
-public class LoginVO {
-    private String token;
-    private String username;
-    // 不包含passwordHash
-}
+```
+错误：@Size 用在 Integer 上
+@Size(min = 1, max = 100)
+private Integer score;   // @Size 只能用在字符串和集合上！
 
-// ❌ 不好的做法：直接返回Entity
-return user;  // 可能包含passwordHash等敏感信息
+正确：数字范围用 @Min 和 @Max
+@Min(value = 0)
+@Max(value = 100)
+private Integer score;
+```
+
+### 错误 5：忘记处理校验异常
+
+```
+现象：校验失败时返回 500 错误，前端看不到友好的错误提示
+原因：没有全局异常处理器
+解决：在 GlobalExceptionHandler 中处理 MethodArgumentNotValidException
 ```
 
 ---
 
-**最后更新时间**：2026年4月3日
+## 九、速记口诀
+
+```
+DTO 是快递包，只装需要的东西
+密码不暴露，安全排第一
+不同场景不同 DTO，校验规则各自定
+@NotBlank 字符串，@NotNull 通用型
+@Size 控长度，@Pattern 正则行
+Controller 加 @Valid，校验才能生效
+Entity 转 DTO，fromEntity 来帮忙
+```

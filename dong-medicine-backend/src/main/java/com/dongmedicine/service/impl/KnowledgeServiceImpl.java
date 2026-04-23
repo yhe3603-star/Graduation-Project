@@ -200,7 +200,6 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         feedbackEntity.setTitle("知识反馈：" + knowledge.getTitle());
         feedbackEntity.setContent("【知识ID：" + knowledgeId + "】" + feedback);
         feedbackEntity.setStatus("pending");
-        feedbackEntity.setCreateTime(LocalDateTime.now());
         feedbackService.save(feedbackEntity);
     }
 

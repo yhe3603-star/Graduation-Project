@@ -1,260 +1,243 @@
-# 页面组件目录 (views)
+# 页面组件目录 (views/)
 
-本目录存放页面级组件，每个组件对应一个路由页面。
+> 类比：想象一家侗族文化餐厅。餐厅有不同的区域——大厅（首页）、包间（详情页）、厨房（管理后台）。每个区域有自己独特的装修和功能，**views 就是这些区域**，每个 `.vue` 文件就是一个独立的"房间"。
 
-## 目录
+## 什么是页面组件（View）？
 
-- [什么是页面组件？](#什么是页面组件)
-- [目录结构](#目录结构)
-- [页面列表](#页面列表)
-- [页面开发规范](#页面开发规范)
+页面组件是**直接对应一个 URL 路由**的 Vue 组件。当用户在浏览器地址栏输入 `/plants` 时，路由器就会把 `Plants.vue` 渲染到页面上。
 
----
+简单来说：
+- 用户**能看到的一个完整网页** = 一个 View
+- URL 路径和 View 是**一一对应**的关系
 
-## 什么是页面组件？
+## views 和 components 有什么区别？
 
-### 页面组件的概念
+这是新手最容易混淆的概念，用表格说清楚：
 
-**页面组件**是构成网站页面的主要组件，每个页面组件对应一个URL路由。它就像一本书的"章节"——每个章节（页面）有独立的内容，读者（用户）可以通过目录（路由）跳转到不同章节。
+| 对比项 | views/（页面组件） | components/（通用组件） |
+|--------|-------------------|----------------------|
+| 类比 | 餐厅的各个区域（大厅、包间） | 餐厅里的桌椅、灯具（可复用） |
+| 对应路由 | 有，一个 View = 一个 URL | 没有，不会单独出现在地址栏 |
+| 复用性 | 通常不复用，每个页面独一份 | 高度复用，多个页面都能用 |
+| 文件大小 | 较大，组装各种子组件 | 较小，专注单一功能 |
+| 例子 | `Plants.vue`（药用植物页） | `SearchFilter.vue`（搜索筛选组件） |
 
-### 页面组件与普通组件的区别
+**一句话总结**：views 是"搭积木的图纸"，components 是"积木块"。views 把各种 components 组装成完整页面。
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    页面组件 vs 普通组件                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  页面组件 (views/)                                              │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  - 对应一个完整的页面                                    │   │
-│  │  - 有对应的URL路由                                       │   │
-│  │  - 包含页面级的业务逻辑                                  │   │
-│  │  - 通常由多个普通组件组成                                │   │
-│  │  - 示例：Home.vue, Plants.vue                           │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  普通组件 (components/)                                         │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  - 可复用的UI单元                                        │   │
-│  │  - 没有对应的URL路由                                     │   │
-│  │  - 包含组件级的逻辑                                      │   │
-│  │  - 被页面组件引用                                        │   │
-│  │  - 示例：CardGrid.vue, Pagination.vue                    │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+## 全部 14 个页面组件
 
----
+| 页面组件 | 路由路径 | 访问权限 | 功能说明 |
+|---------|---------|---------|---------|
+| `Home.vue` | `/` | 公开 | 首页，数据概览、快速导航、传承人风采 |
+| `Plants.vue` | `/plants` | 公开 | 药用植物图鉴，分类筛选、搜索、收藏 |
+| `Inheritors.vue` | `/inheritors` | 公开 | 传承人档案，级别筛选、代表案例 |
+| `Knowledge.vue` | `/knowledge` | 公开 | 知识库，多维度分类、搜索 |
+| `Qa.vue` | `/qa` | 公开 | 问答社区，AI 智能回答 |
+| `Resources.vue` | `/resources` | 公开 | 学习资源，多媒体展示与下载 |
+| `Interact.vue` | `/interact` | 公开 | 互动专区，答题、植物游戏、评论 |
+| `Visual.vue` | `/visual` | 公开 | 数据可视化，ECharts 图表展示 |
+| `PersonalCenter.vue` | `/personal` | 需登录 | 个人中心，收藏/记录/设置 |
+| `Admin.vue` | `/admin` | 需登录 + 管理员 | 管理后台，内容 CRUD/用户管理/审核 |
+| `About.vue` | `/about` | 公开 | 关于平台，项目介绍与统计数据 |
+| `Feedback.vue` | `/feedback` | 公开 | 意见反馈提交 |
+| `GlobalSearch.vue` | `/search` | 公开 | 全局搜索结果页 |
+| `NotFound.vue` | `/:pathMatch(.*)*` | 公开 | 404 页面，找不到路由时显示 |
 
-## 目录结构
+## 路由懒加载 -- 为什么要用 `() => import()`？
 
-```
-views/
-│
-├── Home.vue                           # 首页
-├── Plants.vue                         # 药用植物页面
-├── Inheritors.vue                     # 传承人页面
-├── Knowledge.vue                      # 知识库页面
-├── Qa.vue                             # 问答社区页面
-├── Resources.vue                      # 学习资源页面
-├── Interact.vue                       # 互动专区页面
-├── Visual.vue                         # 数据可视化页面
-├── PersonalCenter.vue                 # 个人中心页面
-├── Admin.vue                          # 管理后台页面
-├── About.vue                          # 关于页面
-├── Feedback.vue                       # 意见反馈页面
-├── GlobalSearch.vue                   # 全局搜索页面
-└── NotFound.vue                       # 404页面
+打开 `router/index.js`，你会看到所有路由都长这样：
+
+```javascript
+// 懒加载写法：用箭头函数包裹 import
+{ path: '/plants', component: () => import('@/views/Plants.vue') }
+
+// 千万不要这样写（同步加载）：
+// { path: '/plants', component: PlantsVue }  // 这会把所有页面打包到一个文件里！
 ```
 
----
+**为什么要懒加载？**
 
-## 页面列表
+类比：你不会一次性把餐厅所有区域的灯都打开，而是客人走到哪个区域，再开哪个区域的灯。
 
-| 页面 | 路由 | 功能描述 | 权限 |
-|------|------|----------|------|
-| Home.vue | `/` | 首页，展示平台核心功能入口、统计数据、传承人风采 | 公开 |
-| Plants.vue | `/plants` | 药用植物图鉴，支持分类筛选、搜索、收藏 | 公开 |
-| Inheritors.vue | `/inheritors` | 传承人风采展示，按级别筛选 | 公开 |
-| Knowledge.vue | `/knowledge` | 非遗医药知识库，支持分类检索、搜索过滤 | 公开 |
-| Qa.vue | `/qa` | 问答社区，侗医药知识问答 | 公开 |
-| Interact.vue | `/interact` | 文化互动专区，趣味答题、植物识别游戏 | 公开 |
-| Resources.vue | `/resources` | 学习资源库，支持预览、下载、收藏 | 公开 |
-| Visual.vue | `/visual` | 数据可视化，统计图表展示 | 公开 |
-| PersonalCenter.vue | `/personal` | 个人中心，管理收藏、答题记录、账号设置 | 需登录 |
-| Admin.vue | `/admin` | 管理后台，数据管理、用户管理、评论审核 | 管理员 |
-| About.vue | `/about` | 关于页面，介绍平台和侗医文化 | 公开 |
-| Feedback.vue | `/feedback` | 意见反馈，用户提交功能建议 | 公开 |
-| GlobalSearch.vue | `/search` | 全局搜索，跨模块统一搜索 | 公开 |
-| NotFound.vue | `*` | 404页面，页面不存在时显示 | 公开 |
+- 如果不用懒加载，用户打开首页时，浏览器会**一次性下载所有 14 个页面的代码**
+- 用了懒加载，用户访问 `/plants` 时，**只下载 Plants.vue 的代码**
+- 这让首页加载速度大幅提升，特别是用户可能永远不会访问 Admin 页面
 
----
+**技术原理**：`() => import()` 是 ES6 的动态导入语法，Webpack/Vite 会自动把它拆分成单独的 JS 文件（chunk），只有路由被访问时才加载。
 
-## 页面开发规范
+## 认证守卫 -- 谁能进哪个"房间"？
 
-### 1. 页面基本结构
+路由通过 `meta` 字段标记权限，导航守卫在进入页面前检查：
+
+```javascript
+// 需要登录才能访问
+{ path: '/personal', component: () => import('@/views/PersonalCenter.vue'), meta: { requiresAuth: true } }
+
+// 需要登录 + 管理员身份才能访问
+{ path: '/admin', component: () => import('@/views/Admin.vue'), meta: { requiresAuth: true, requiresAdmin: true } }
+
+// 公开页面，不需要任何权限
+{ path: '/plants', component: () => import('@/views/Plants.vue') }
+```
+
+守卫的执行流程（简化版）：
+
+```
+用户访问 /admin
+    |
+    v
+页面需要登录吗？（meta.requiresAuth）
+    |
+    +-- 不需要 --> 直接放行
+    |
+    +-- 需要 --> 有 token 吗？
+                    |
+                    +-- 没有 --> 跳转首页，提示登录
+                    |
+                    +-- 有 --> token 过期了吗？
+                                    |
+                                    +-- 过期了 --> 清除登录状态，跳转首页
+                                    |
+                                    +-- 没过期 --> 需要管理员吗？（meta.requiresAdmin）
+                                                    |
+                                                    +-- 不需要 --> 放行
+                                                    |
+                                                    +-- 需要 --> 是管理员吗？
+                                                                    |
+                                                                    +-- 是 --> 放行
+                                                                    |
+                                                                    +-- 否 --> 跳转首页，提示无权限
+```
+
+## 如何创建一个新页面？-- 五步走
+
+假设你要创建一个"侗族药浴"页面：
+
+### 第 1 步：创建 Vue 文件
+
+在 `views/` 目录下新建 `HerbalBath.vue`：
 
 ```vue
 <template>
-  <div class="page-container">
+  <div class="module-page">
     <!-- 页面头部 -->
-    <header class="page-header">
-      <h1>{{ pageTitle }}</h1>
-    </header>
-    
-    <!-- 主要内容区 -->
-    <main class="page-content">
-      <!-- 加载状态 -->
-      <SkeletonGrid v-if="loading" />
-      
-      <!-- 内容展示 -->
-      <template v-else>
-        <!-- 内容组件 -->
-      </template>
-    </main>
-    
-    <!-- 侧边栏（可选） -->
-    <aside class="page-sidebar">
-      <!-- 侧边栏内容 -->
-    </aside>
+    <div class="module-header">
+      <h1>侗族药浴</h1>
+      <p class="subtitle">传承千年的养生智慧</p>
+    </div>
+
+    <!-- 页面主体内容 -->
+    <div class="page-container">
+      <div class="page-main">
+        <!-- 在这里组装你的子组件 -->
+        <p>药浴内容区域</p>
+      </div>
+
+      <!-- 侧边栏 -->
+      <div class="page-sidebar">
+        <p>侧边栏区域</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
+// 在这里引入需要的 composable 和组件
 import { ref, onMounted } from 'vue'
 
 // 页面数据
-const loading = ref(true)
-const data = ref([])
+const bathList = ref([])
 
-// 获取数据
-const fetchData = async () => {
-  loading.value = true
-  try {
-    // 获取数据...
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchData()
+// 页面加载时获取数据
+onMounted(async () => {
+  // 调用 API 获取药浴数据
 })
 </script>
 
 <style scoped>
-.page-container {
-  /* 页面样式 */
+/* 页面专属样式写在这里 */
+/* 推荐使用 CSS 变量，保持风格统一 */
+.herbal-bath-card {
+  background: var(--bg-cream);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
 }
 </style>
 ```
 
-### 2. 页面命名规范
+### 第 2 步：注册路由
+
+打开 `router/index.js`，在 `routes` 数组中添加：
 
 ```javascript
-// 页面文件名使用 PascalCase
-Home.vue
-Plants.vue
-PersonalCenter.vue
-
-// 路由 name 与文件名一致
 {
-  path: '/personal',
-  name: 'PersonalCenter',
-  component: () => import('@/views/PersonalCenter.vue')
+  path: '/herbal-bath',
+  name: 'HerbalBath',
+  component: () => import('@/views/HerbalBath.vue')
+  // 如果需要登录才能访问，加上 meta：
+  // meta: { requiresAuth: true }
 }
 ```
 
-### 3. 页面组件拆分
+### 第 3 步：添加导航链接
+
+在 `AppHeader.vue` 的导航菜单中添加入口：
 
 ```vue
-<template>
-  <div class="plants-page">
-    <!-- 拆分为独立组件 -->
-    <SearchFilter 
-      v-model:keyword="keyword"
-      v-model:category="category"
-      @search="handleSearch"
-    />
-    
-    <SkeletonGridImage v-if="loading" :count="12" />
-    
-    <CardGrid v-else :items="plants" @item-click="handleItemClick" />
-    
-    <Pagination 
-      v-model:current="page"
-      :total="total"
-      :page-size="pageSize"
-    />
-    
-    <PlantDetailDialog 
-      v-model:visible="dialogVisible"
-      :plant="selectedPlant"
-    />
-  </div>
-</template>
-
-<script setup>
-import SearchFilter from '@/components/business/display/SearchFilter.vue'
-import CardGrid from '@/components/business/display/CardGrid.vue'
-import Pagination from '@/components/business/display/Pagination.vue'
-import PlantDetailDialog from '@/components/business/dialogs/PlantDetailDialog.vue'
-import SkeletonGridImage from '@/components/common/SkeletonGridImage.vue'
-
-// 页面逻辑...
-</script>
+<el-menu-item index="/herbal-bath">侗族药浴</el-menu-item>
 ```
 
----
+### 第 4 步：测试访问
 
-## 最佳实践
+启动开发服务器后，访问 `http://localhost:5173/herbal-bath` 查看页面。
 
-### 1. 页面职责清晰
+### 第 5 步：完善功能
+
+根据需要引入 composable（如 `useFavorite`、`useInteraction`）和子组件，逐步丰富页面内容。
+
+## 常见错误
+
+### 错误 1：忘记用懒加载
 
 ```javascript
-// 页面只负责：
-// 1. 数据获取和管理
-// 2. 页面级状态
-// 3. 组件组合
-// 4. 路由相关逻辑
+// 错误：同步导入，所有页面打包到一起
+import PlantsVue from '@/views/Plants.vue'
+{ path: '/plants', component: PlantsVue }
 
-// 不要在页面中写：
-// 1. 可复用的UI组件
-// 2. 通用的业务逻辑（应该放在composables）
+// 正确：懒加载，按需加载
+{ path: '/plants', component: () => import('@/views/Plants.vue') }
 ```
 
-### 2. 使用组合式函数
+### 错误 2：在 views 里写过多业务逻辑
+
+页面组件应该是"组装者"，而不是"实现者"。复杂的逻辑应该抽到 composable 里：
 
 ```vue
+<!-- 不好的做法：页面里塞满逻辑 -->
 <script setup>
-import { usePlants } from '@/composables/usePlants'
-import { useFavorite } from '@/composables/useFavorite'
+const data = ref([])
+const loading = ref(false)
+const fetchData = async () => { /* 50行逻辑 */ }
+const handleSearch = () => { /* 30行逻辑 */ }
+const handleFilter = () => { /* 20行逻辑 */ }
+</script>
 
-// 使用组合式函数封装逻辑
-const { plants, loading, fetchPlants } = usePlants()
-const { isFavorited, toggleFavorite } = useFavorite('plant')
-
-onMounted(() => {
-  fetchPlants()
-})
+<!-- 好的做法：逻辑抽到 composable -->
+<script setup>
+import { useAdminData } from '@/composables'
+const { data, loading, fetchData } = useAdminData(request)
 </script>
 ```
 
-### 3. 骨架屏加载
+### 错误 3：路由 path 不一致
 
-```vue
-<template>
-  <div>
-    <!-- 加载中显示骨架屏 -->
-    <SkeletonGridImage v-if="loading" :count="12" />
-    
-    <!-- 加载完成显示内容 -->
-    <CardGrid v-else :items="plants" />
-  </div>
-</template>
+路由的 `path` 和导航菜单的 `index` 必须完全一致，否则点击菜单无法跳转：
+
+```javascript
+// router/index.js
+{ path: '/herbal-bath', ... }  // 注意连字符
+
+// AppHeader.vue
+<el-menu-item index="/herbalBath">  // 错误！驼峰命名不一致
+<el-menu-item index="/herbal-bath">  // 正确！和路由 path 一致
 ```
-
----
-
-**最后更新时间**：2026年4月3日

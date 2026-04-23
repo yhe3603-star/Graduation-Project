@@ -1,6 +1,8 @@
 package com.dongmedicine.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import jakarta.validation.constraints.NotBlank;
@@ -33,6 +35,7 @@ public class Knowledge {
     private String relatedPlants;
     private String updateLog;
     private Integer popularity;
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
     private Integer viewCount, favoriteCount;
 }

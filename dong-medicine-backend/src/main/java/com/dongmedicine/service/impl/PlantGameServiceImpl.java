@@ -8,7 +8,6 @@ import com.dongmedicine.mapper.PlantGameRecordMapper;
 import com.dongmedicine.service.PlantGameService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,7 +22,6 @@ public class PlantGameServiceImpl extends ServiceImpl<PlantGameRecordMapper, Pla
         record.setScore(dto.getScore());
         record.setCorrectCount(dto.getCorrectCount());
         record.setTotalCount(dto.getTotalCount());
-        record.setCreateTime(LocalDateTime.now());
         baseMapper.insert(record);
         return dto.getScore();
     }

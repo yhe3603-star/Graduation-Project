@@ -11,7 +11,6 @@ import com.dongmedicine.service.FeedbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -38,7 +37,6 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
     public void submitFeedback(Feedback feedback, Integer userId) {
         feedback.setUserId(userId);
         feedback.setStatus("pending");
-        feedback.setCreateTime(LocalDateTime.now());
         
         if (userId != null) {
             User user = userMapper.selectById(userId);

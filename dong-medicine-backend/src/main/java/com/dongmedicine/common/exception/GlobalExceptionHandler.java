@@ -1,10 +1,8 @@
 package com.dongmedicine.common.exception;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotRoleException;
 import com.dongmedicine.common.R;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,11 +12,6 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -79,6 +72,20 @@ public class GlobalExceptionHandler {
             case SYSTEM_ERROR, DATABASE_ERROR, UNKNOWN_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
+    }
+
+    @ExceptionHandler(NotLoginException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public R<?> handleNotLoginException(NotLoginException e) {
+        log.warn("未登录异常: {}", e.getMessage());
+        return R.error(ErrorCode.LOGIN_REQUIRED, "未登录或登录已过期");
+    }
+
+    @ExceptionHandler(NotRoleException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public R<?> handleNotRoleException(NotRoleException e) {
+        log.warn("权限不足: 需要角色={}", e.getRole());
+        return R.error(ErrorCode.PERMISSION_DENIED, "权限不足，需要角色: " + e.getRole());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -158,55 +165,6 @@ public class GlobalExceptionHandler {
     public R<?> handleMultipartException(MultipartException e) {
         log.warn("文件上传异常: {}", e.getMessage());
         return R.error(ErrorCode.FILE_UPLOAD_ERROR, "文件上传失败: " + e.getMessage());
-    }
-
-    @ExceptionHandler(BadCredentialsException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public R<?> handleBadCredentialsException(BadCredentialsException e) {
-        log.warn("认证失败: {}", e.getMessage());
-        return R.error(ErrorCode.PASSWORD_WRONG);
-    }
-
-    @ExceptionHandler({DisabledException.class, LockedException.class})
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public R<?> handleDisabledException(AuthenticationException e) {
-        log.warn("账号状态异常: {}", e.getMessage());
-        return R.error(ErrorCode.ACCOUNT_DISABLED);
-    }
-
-    @ExceptionHandler(AuthenticationException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public R<?> handleAuthenticationException(AuthenticationException e) {
-        log.warn("认证异常: {}", e.getMessage());
-        return R.error(ErrorCode.TOKEN_INVALID);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public R<?> handleAccessDeniedException(AccessDeniedException e) {
-        log.warn("权限不足: {}", e.getMessage());
-        return R.error(ErrorCode.PERMISSION_DENIED);
-    }
-
-    @ExceptionHandler({ExpiredJwtException.class})
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public R<?> handleExpiredJwtException(ExpiredJwtException e) {
-        log.warn("JWT已过期: {}", e.getMessage());
-        return R.error(ErrorCode.TOKEN_EXPIRED);
-    }
-
-    @ExceptionHandler({MalformedJwtException.class, SignatureException.class})
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public R<?> handleInvalidJwtException(JwtException e) {
-        log.warn("JWT无效: {}", e.getMessage());
-        return R.error(ErrorCode.TOKEN_INVALID);
-    }
-
-    @ExceptionHandler(JwtException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public R<?> handleJwtException(JwtException e) {
-        log.warn("JWT异常: {}", e.getMessage());
-        return R.error(ErrorCode.TOKEN_INVALID);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

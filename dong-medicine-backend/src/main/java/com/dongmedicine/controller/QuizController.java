@@ -1,5 +1,6 @@
 package com.dongmedicine.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -9,7 +10,6 @@ import com.dongmedicine.service.QuizService;
 import com.dongmedicine.dto.QuizQuestionDTO;
 import com.dongmedicine.dto.QuizSubmitDTO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -64,7 +64,7 @@ public class QuizController {
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasRole('ADMIN')")
+    @SaCheckRole("admin")
     public R<String> add(@RequestBody QuizQuestion question) {
         normalizeOptions(question);
         service.addQuestionDirect(question);
@@ -72,7 +72,7 @@ public class QuizController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasRole('ADMIN')")
+    @SaCheckRole("admin")
     public R<String> update(@RequestBody QuizQuestion question) {
         normalizeOptions(question);
         service.updateQuestionDirect(question);
@@ -80,7 +80,7 @@ public class QuizController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @SaCheckRole("admin")
     public R<String> delete(@PathVariable Integer id) {
         service.deleteQuestion(id);
         return R.ok("删除成功");

@@ -1,5 +1,6 @@
 package com.dongmedicine.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.dto.FeedbackDTO;
@@ -30,6 +31,7 @@ public class FeedbackController {
     }
 
     @GetMapping("/my")
+    @SaCheckLogin
     public R<List<Feedback>> myFeedbacks() {
         Integer userId = SecurityUtils.getCurrentUserId();
         return R.ok(userId == null ? List.of() : feedbackService.listByUserId(userId));

@@ -32,13 +32,23 @@ spring:
 jwt:
   expiration: ${JWT_EXPIRATION:86400000}
 
+sa-token:
+  token-name: Authorization
+  timeout: ${SA_TOKEN_TIMEOUT:2592000}
+  active-timeout: -1
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: false
+  is-read-cookie: false
+  is-read-body: false
+  is-read-header: true
+  token-prefix: Bearer
+  jwt-secret-key: ${JWT_SECRET:dev-secret-key-for-jwt-token-generation-must-be-at-least-64-characters-long-for-hs512}
+
 app:
-  security:
-    jwt-secret: ${JWT_SECRET:dev-secret-key-for-jwt-token-generation-must-be-at-least-64-characters-long-for-hs512}
-    jwt-expiration: ${JWT_EXPIRATION:7200000}
-    jwt-refresh-threshold-minutes: ${JWT_REFRESH_THRESHOLD:30}
-    jwt-refresh-grace-days: ${JWT_REFRESH_GRACE_DAYS:7}
-    cors-allowed-origins:
+    cors:
+    allowed-origins:
       - ${CORS_ORIGIN_1:http://localhost:5173}
       - ${CORS_ORIGIN_2:http://localhost:3000}
       - ${CORS_ORIGIN_3:http://127.0.0.1:5173}
@@ -65,7 +75,7 @@ file:
 logging:
   level:
     com.dongmedicine: INFO
-    org.springframework.security: WARN
+    cn.dev33.satoken: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 

@@ -1,5 +1,6 @@
 package com.dongmedicine.config;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,8 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -109,9 +108,8 @@ public class RateLimitAspect {
         StringBuilder key = new StringBuilder();
         key.append(rateLimit.key().isEmpty() ? joinPoint.getSignature().getName() : rateLimit.key());
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            key.append(":").append(authentication.getName());
+        if (StpUtil.isLogin()) {
+            key.append(":").append(StpUtil.getLoginIdAsString());
         } else {
             key.append(":").append(getClientIp());
         }

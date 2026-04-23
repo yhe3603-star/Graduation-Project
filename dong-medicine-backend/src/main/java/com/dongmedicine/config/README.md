@@ -1,63 +1,29 @@
-# 配置模块 (config)
+# 配置类目录 (config/)
 
-本目录存放 Spring Boot 的配置类，用于配置框架行为。
-
-## 目录
-
-- [什么是配置类？](#什么是配置类)
-- [目录结构](#目录结构)
-- [核心配置类](#核心配置类)
-- [配置文件说明](#配置文件说明)
-
----
+> 类比：配置类就像**装修方案** -- 搬进新房子之前，你需要决定哪里放沙发、哪里装灯、门锁用什么类型。配置类就是在应用"搬进"服务器之前，告诉 Spring 框架"这个项目要怎么运行"。
 
 ## 什么是配置类？
 
-### 配置类的概念
+在 Spring Boot 项目中，配置类是用 `@Configuration` 标注的特殊类。它们不是处理业务逻辑的，而是负责**搭建运行环境**的。就像开一家侗药铺，你得先把柜台、药柜、收银台布置好，才能开始卖药。
 
-**配置类**是用来告诉 Spring Boot 如何工作的类。它就像电器的"设置菜单"——通过配置，你可以调整框架的各种行为。
+### 三个核心注解
 
-### 为什么需要配置类？
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     没有配置类                                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Spring Boot 使用默认配置：                                      │
-│  - 默认端口 8080                                                │
-│  - 默认不启用安全验证                                            │
-│  - 默认不启用缓存                                                │
-│  - 默认不启用跨域                                                │
-│                                                                 │
-│  → 无法满足项目需求                                              │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│                      有配置类                                   │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  通过配置类自定义：                                               │
-│  - 自定义安全规则（哪些接口需要登录）                              │
-│  - 自定义缓存策略                                                │
-│  - 自定义跨域规则                                                │
-│  - 自定义JWT验证                                                 │
-│                                                                 │
-│  → 满足项目需求                                                  │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 配置类的基本结构
+| 注解 | 作用 | 类比 |
+|------|------|------|
+| `@Configuration` | 告诉 Spring "这个类是配置类" | 挂上"装修方案"的牌子 |
+| `@Bean` | 在配置类中创建一个对象交给 Spring 管理 | 装修方案里写"这里放一个药柜" |
+| `@Value` | 从配置文件中读取一个值 | 从设计图纸上读取尺寸数据 |
 
 ```java
-@Configuration  // 标记这是一个配置类
-public class ExampleConfig {
-    
-    @Bean  // 创建一个Bean，交给Spring管理
-    public SomeService someService() {
-        return new SomeServiceImpl();
+@Configuration  // 标记这是配置类
+public class CacheConfig {
+
+    @Value("${app.cache.max-size:1000}")  // 从 application.yml 读取，默认1000
+    private int maxCacheSize;
+
+    @Bean  // 创建一个对象交给 Spring 管理
+    public CacheManager cacheManager(RedisConnectionFactory factory) {
+        // ... 创建缓存管理器
     }
 }
 ```
@@ -68,433 +34,382 @@ public class ExampleConfig {
 
 ```
 config/
-│
-├── health/                            # 健康检查
-│   └── HealthCheckConfig.java
-│
-├── logging/                           # 日志配置
-│   └── LoggingConfig.java
-│
-├── SecurityConfig.java                # Spring Security 安全配置
-├── JwtUtil.java                       # JWT 工具类
-├── JwtAuthenticationFilter.java       # JWT 认证过滤器
-├── CacheConfig.java                   # 缓存配置
-├── RateLimitAspect.java               # 请求限流切面
-├── CorsConfig.java                    # 跨域配置
-├── WebConfig.java                     # Web配置
-├── OpenApiConfig.java                 # Swagger API文档配置
-├── DeepSeekConfig.java                # DeepSeek AI配置
-└── TokenBlacklistConfig.java          # Token黑名单配置
+├── health/                        # 健康检查配置（体检中心）
+│   ├── CacheHealthIndicator.java  #   缓存健康指标
+│   ├── DatabaseHealthIndicator.java # 数据库健康指标
+│   └── RedisHealthIndicator.java  #   Redis健康指标
+├── logging/                       # 日志配置（日记本）
+│   └── SensitiveDataConverter.java # 日志敏感数据脱敏
+├── AdminDataInitializer.java      # 管理员账号初始化
+├── AppProperties.java             # 自定义配置属性
+├── AsyncConfig.java               # 异步线程池配置
+├── CacheConfig.java               # 多级缓存配置
+├── DeepSeekConfig.java            # AI对话配置
+├── FileUploadProperties.java      # 文件上传配置
+├── LoggingAspect.java             # 请求日志切面
+├── MyMetaObjectHandler.java       # MyBatis-Plus 自动填充
+├── MybatisPlusConfig.java         # 数据库分页插件
+├── OpenApiConfig.java             # API文档配置
+├── OperationLogAspect.java        # 操作审计切面
+├── RateLimit.java                 # 限流注解
+├── RateLimitAspect.java           # 限流切面
+├── RequestIdFilter.java           # 请求ID过滤器
+├── RequestSizeFilter.java         # 请求大小限制
+├── SaTokenConfig.java             # Sa-Token 路由拦截 + CORS
+├── StpInterfaceImpl.java          # Sa-Token 权限认证接口
+├── SecurityConfigValidator.java   # 安全配置校验
+├── StartupInfoPrinter.java        # 启动信息打印
+├── WebMvcConfig.java              # 静态资源映射
+└── XssFilter.java                 # XSS防护过滤器
 ```
 
 ---
 
-## 核心配置类
+## 核心配置类详解
 
-### SecurityConfig - 安全配置
+### 1. SaTokenConfig + StpInterfaceImpl -- 安全大门的守卫长
 
-配置 Spring Security，定义哪些接口需要认证。
+> 类比：SaTokenConfig 就像侗药铺的**保安队长**，决定谁能进哪个房间。StpInterfaceImpl 是保安队长的**花名册**，告诉他每个人是什么角色。
+
+SaTokenConfig 配置了：
+- **路由拦截规则**：哪些接口公开，哪些需要登录，哪些需要管理员
+- **CORS 跨域**：允许前端（如 localhost:5173）访问后端
+
+StpInterfaceImpl 实现了 Sa-Token 的权限接口：
+- **getRoleList()**：返回用户角色列表（从数据库查询）
+- **getPermissionList()**：返回用户权限列表（本项目暂未使用）
 
 ```java
-/**
- * Spring Security 安全配置
- * 定义认证规则和权限控制
- */
 @Configuration
-@EnableWebSecurity
-@RequiredArgsConstructor
-public class SecurityConfig {
-    
-    private final JwtAuthenticationFilter jwtFilter;
-    private final TokenBlacklistService blacklistService;
-    
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            // 禁用CSRF（前后端分离不需要）
-            .csrf(csrf -> csrf.disable())
-            
-            // 配置Session：无状态（使用JWT）
-            .sessionManagement(session -> 
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            
-            // 配置请求授权
-            .authorizeHttpRequests(auth -> auth
-                // 公开接口：不需要登录
-                .requestMatchers("/api/user/login", "/api/user/register").permitAll()
-                .requestMatchers("/api/captcha/**").permitAll()
-                .requestMatchers("/api/plants/**").permitAll()
-                .requestMatchers("/api/knowledge/**").permitAll()
-                .requestMatchers("/api/inheritors/**").permitAll()
-                .requestMatchers("/api/resources/**").permitAll()
-                .requestMatchers("/api/chat/**").permitAll()
-                
-                // 管理员接口：需要ADMIN角色
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/upload/**").hasRole("ADMIN")
-                
-                // 其他接口：需要登录
-                .anyRequest().authenticated()
-            )
-            
-            // 添加JWT过滤器
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        
-        return http.build();
-    }
-    
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // 使用BCrypt加密密码
-        return new BCryptPasswordEncoder();
-    }
-}
-```
+public class SaTokenConfig implements WebMvcConfigurer {
 
-### JwtAuthenticationFilter - JWT认证过滤器
-
-拦截请求，验证JWT Token。
-
-```java
-/**
- * JWT认证过滤器
- * 拦截每个请求，验证Token有效性
- */
-@Component
-@RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
-    private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
-    private final TokenBlacklistService blacklistService;
-    
     @Override
-    protected void doFilterInternal(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        FilterChain filterChain
-    ) throws ServletException, IOException {
-        
-        // 1. 从请求头获取Token
-        String token = extractToken(request);
-        
-        if (token != null) {
-            // 2. 检查Token是否在黑名单中
-            if (blacklistService.isBlacklisted(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"code\":401,\"msg\":\"Token已失效\"}");
-                return;
-            }
-            
-            // 3. 验证Token有效性
-            if (jwtUtil.validateToken(token)) {
-                // 4. 从Token中获取用户名
-                String username = jwtUtil.extractUsername(token);
-                
-                // 5. 加载用户信息
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                
-                // 6. 检查用户状态
-                if (userDetails instanceof CustomUserDetails) {
-                    CustomUserDetails customUser = (CustomUserDetails) userDetails;
-                    if (customUser.isBanned()) {
-                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        response.getWriter().write("{\"code\":403,\"msg\":\"账号已被封禁\"}");
-                        return;
-                    }
-                }
-                
-                // 7. 设置认证信息
-                UsernamePasswordAuthenticationToken auth = 
-                    new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
-        }
-        
-        // 继续执行后续过滤器
-        filterChain.doFilter(request, response);
-    }
-    
-    private String extractToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7);
-        }
-        return null;
-    }
-}
-```
-
-### JwtUtil - JWT工具类
-
-生成和验证JWT Token。
-
-```java
-/**
- * JWT工具类
- * 用于生成、解析、验证JWT Token
- */
-@Component
-public class JwtUtil {
-    
-    @Value("${app.security.jwt-secret}")
-    private String secret;
-    
-    @Value("${app.security.jwt-expiration}")
-    private long expiration;
-    
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-    }
-    
-    /**
-     * 生成Token
-     */
-    public String generateToken(Integer userId, String username, String role) {
-        return Jwts.builder()
-            .subject(username)
-            .claim("userId", userId)
-            .claim("role", role)
-            .issuedAt(new Date())
-            .expiration(new Date(System.currentTimeMillis() + expiration))
-            .signWith(getSigningKey())
-            .compact();
-    }
-    
-    /**
-     * 从Token中提取用户名
-     */
-    public String extractUsername(String token) {
-        return Jwts.parser()
-            .verifyWith(getSigningKey())
-            .build()
-            .parseSignedClaims(token)
-            .getPayload()
-            .getSubject();
-    }
-    
-    /**
-     * 验证Token是否有效
-     */
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    
-    /**
-     * 检查Token是否过期
-     */
-    public boolean isTokenExpired(String token) {
-        Date expiration = Jwts.parser()
-            .verifyWith(getSigningKey())
-            .build()
-            .parseSignedClaims(token)
-            .getPayload()
-            .getExpiration();
-        return expiration.before(new Date());
-    }
-}
-```
-
-### CacheConfig - 缓存配置
-
-配置多级缓存（Caffeine + Redis）。
-
-```java
-/**
- * 缓存配置
- * 配置Caffeine本地缓存 + Redis分布式缓存
- */
-@Configuration
-@EnableCaching
-public class CacheConfig {
-    
-    @Bean
-    public CacheManager cacheManager(RedisConnectionFactory factory) {
-        // 1. Caffeine本地缓存配置
-        CaffeineCacheManager caffeineManager = new CaffeineCacheManager();
-        caffeineManager.setCaffeine(Caffeine.newBuilder()
-            .maximumSize(1000)           // 最大缓存数量
-            .expireAfterWrite(60, TimeUnit.MINUTES)  // 过期时间
-            .recordStats());             // 记录统计信息
-        
-        // 2. Redis缓存配置
-        RedisCacheConfiguration redisConfig = RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofMinutes(60))
-            .serializeValuesWith(RedisSerializationContext.SerializationPair
-                .fromSerializer(new GenericJackson2JsonRedisSerializer()));
-        
-        // 3. 组合缓存管理器
-        return new CompositeCacheManager(
-            caffeineManager,
-            RedisCacheManager.builder(factory)
-                .cacheDefaults(redisConfig)
-                .build()
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new SaInterceptor(handle -> {
+            // 可在此处添加全局路由拦截规则
+        }))
+        .addPathPatterns("/api/**")
+        .excludePathPatterns(
+            "/api/user/login",       // 登录接口公开
+            "/api/user/register",    // 注册接口公开
+            "/api/plants/**",        // 植物数据公开浏览
+            "/api/knowledge/**",     // 知识数据公开浏览
+            // ... 更多公开接口
         );
     }
 }
-```
 
-### RateLimitAspect - 请求限流
-
-限制接口访问频率，防止恶意请求。
-
-```java
-/**
- * 请求限流切面
- * 使用Redis计数器实现限流
- */
-@Aspect
 @Component
-@RequiredArgsConstructor
-public class RateLimitAspect {
-    
-    private final RedisTemplate<String, Object> redisTemplate;
-    
-    // 本地令牌桶（Redis不可用时的降级方案）
-    private final Map<String, LocalTokenBucket> localBuckets = new ConcurrentHashMap<>();
-    
-    @Around("@annotation(rateLimit)")
-    public Object around(ProceedingJoinPoint point, RateLimit rateLimit) throws Throwable {
-        String key = "rate_limit:" + rateLimit.key() + ":" + getClientId();
-        int limit = rateLimit.value();
-        
-        // 尝试使用Redis限流
-        if (!tryAcquireWithRedis(key, limit)) {
-            // Redis不可用，使用本地限流
-            if (!tryAcquireLocally(key, limit)) {
-                throw new BusinessException("请求过于频繁，请稍后再试");
-            }
+public class StpInterfaceImpl implements StpInterface {
+
+    @Override
+    public List<String> getRoleList(Object loginId, String loginType) {
+        // 根据 userId 查询角色
+        User user = userService.getUserInfo((Integer) loginId);
+        if (user != null && user.getRole() != null) {
+            return List.of(user.getRole());
         }
-        
-        return point.proceed();
-    }
-    
-    private boolean tryAcquireWithRedis(String key, int limit) {
-        try {
-            Long count = redisTemplate.opsForValue().increment(key);
-            if (count != null && count == 1) {
-                redisTemplate.expire(key, 1, TimeUnit.MINUTES);
-            }
-            return count != null && count <= limit;
-        } catch (Exception e) {
-            return false;  // Redis不可用
-        }
-    }
-    
-    private boolean tryAcquireLocally(String key, int limit) {
-        LocalTokenBucket bucket = localBuckets.computeIfAbsent(key, 
-            k -> new LocalTokenBucket(limit));
-        return bucket.tryAcquire();
+        return new ArrayList<>();
     }
 }
 ```
 
----
+**Sa-Token 权限注解（在 Controller 上使用）：**
 
-## 配置文件说明
+| 注解 | 作用 | 示例 |
+|------|------|------|
+| `@SaCheckLogin` | 验证是否登录 | `@SaCheckLogin` 加在需要登录的接口上 |
+| `@SaCheckRole("admin")` | 验证角色 | `@SaCheckRole("admin")` 加在管理员接口上 |
+| `@SaCheckPermission("user:add")` | 验证权限 | 本项目暂未使用 |
 
-### application.yml - 主配置
-
-```yaml
-server:
-  port: 8080
-
-spring:
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
-
-app:
-  security:
-    jwt-secret: ${JWT_SECRET}
-    jwt-expiration: ${JWT_EXPIRATION:86400000}
-  cache:
-    enabled: true
-    max-size: 1000
-    expire-minutes: 60
-```
-
-### application-dev.yml - 开发环境
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/dong_medicine
-    username: root
-    password: 123456
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
-logging:
-  level:
-    com.dongmedicine: DEBUG
-```
-
-### application-prod.yml - 生产环境
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
-
-logging:
-  level:
-    com.dongmedicine: INFO
-```
+**常见错误**：
+- 忘记在 SaTokenConfig 中排除公开接口，导致未登录用户也无法访问
+- StpInterfaceImpl 中查询数据库没有做缓存，每次请求都查库，性能差
+- 把 `@SaCheckRole("admin")` 写成 `@SaCheckRole("ADMIN")`，角色名大小写不一致
 
 ---
 
-## 最佳实践
+### 2. Sa-Token 登录认证 -- 令牌工厂 + 门卫
 
-### 1. 配置分离
+> 类比：Sa-Token 就像一个**智能门禁系统**，既能发通行证（登录），也能随时作废通行证（踢人下线），还能查验通行证（鉴权）。
 
-- 开发环境和生产环境使用不同的配置文件
-- 敏感信息使用环境变量
-
-### 2. 配置验证
+Sa-Token 整合了 JWT 模式，Token 格式为 JWT，同时具备会话管理能力：
 
 ```java
-@ConfigurationProperties(prefix = "app")
-@Validated
-public class AppConfig {
-    
-    @NotNull
-    private String jwtSecret;
-    
-    @Min(3600000)  // 最少1小时
-    private long jwtExpiration = 86400000;
+// 登录 -- 相当于"制作通行证"
+StpUtil.login(userId);                    // 生成 JWT Token
+StpUtil.getSession().set("username", username);  // 存储额外信息
+StpUtil.getSession().set("role", role);
+String token = StpUtil.getTokenValue();   // 获取生成的 Token
+
+// 验证 -- 相当于"查验通行证"
+StpUtil.isLogin();                        // 是否已登录
+StpUtil.getLoginIdAsInt();                // 获取当前用户ID
+
+// 踢人下线 -- 相当于"作废通行证"
+StpUtil.kickout(userId);                  // 一行代码踢人下线
+
+// 退出登录
+StpUtil.logout();                         // 清除当前会话
+```
+
+**Sa-Token 相比纯 JWT 的优势：**
+
+| 功能 | 纯 JWT | Sa-Token + JWT |
+|------|--------|----------------|
+| 踢人下线 | 需手动实现黑名单 | ✅ `StpUtil.kickout()` |
+| 同端互斥登录 | ❌ 不支持 | ✅ 配置 `is-concurrent: false` |
+| Token 自动续期 | 需手动实现 | ✅ `StpUtil.renewTimeout()` |
+| 会话信息存储 | ❌ 无 | ✅ `StpUtil.getSession()` |
+| 权限注解 | 需配合 Spring Security | ✅ `@SaCheckRole("admin")` |
+
+**常见错误**：
+- 在 Token 中存储敏感信息（如密码）-- JWT 只是 Base64 编码，不是加密
+- 密钥太短（如 "123456"）-- 容易被暴力破解，生产环境必须 >= 64 字符
+- 忘记在登录时设置 Session 信息，后续取不到用户名和角色
+
+---
+
+### 3. MyMetaObjectHandler -- 自动填充时间字段
+
+> 类比：就像侗药铺的**自动盖章机**，每份新文件进来自动盖上"创建时间"章，修改时自动盖上"更新时间"章。
+
+MyBatis-Plus 的自动填充功能，在插入和更新数据时自动设置时间字段，不需要手动写 `setCreatedAt(LocalDateTime.now())`。
+
+```java
+@Slf4j
+@Component
+public class MyMetaObjectHandler implements MetaObjectHandler {
+
+    @Override
+    public void insertFill(MetaObject metaObject) {
+        // 插入时自动填充创建时间和更新时间
+        this.strictInsertFill(metaObject, "createdAt", LocalDateTime.class, LocalDateTime.now());
+        this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
+        this.strictInsertFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
+        this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
+    }
+
+    @Override
+    public void updateFill(MetaObject metaObject) {
+        // 更新时自动填充更新时间
+        this.strictUpdateFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
+        this.strictUpdateFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
+    }
 }
 ```
 
-### 3. 条件配置
+**实体类中使用 `@TableField` 注解标记自动填充字段：**
+
+```java
+@TableField(fill = FieldFill.INSERT)       // 仅插入时填充
+private LocalDateTime createdAt;
+
+@TableField(fill = FieldFill.INSERT_UPDATE) // 插入和更新时都填充
+private LocalDateTime updatedAt;
+```
+
+**`strictInsertFill` 的特点**：只在字段为 `null` 时才填充，如果手动设置了值，会保留你的值。
+
+---
+
+### 4. CacheConfig -- 双层保险柜
+
+> 类比：CacheConfig 就像药铺的**双层药柜** -- 外层是柜台上的常用药（Caffeine内存缓存，快但容量小），内层是仓库（Redis，慢但容量大）。柜台没药了去仓库拿，仓库也没了才去药田采（查数据库）。
 
 ```java
 @Configuration
-@ConditionalOnProperty(name = "app.cache.enabled", havingValue = "true")
+@EnableCaching  // 开启缓存功能
 public class CacheConfig {
-    // 只有启用缓存时才加载
+
+    @Bean
+    @Primary  // 默认使用这个缓存管理器
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        try {
+            // 尝试连接Redis
+            connectionFactory.getConnection().ping();
+            log.info("Redis连接成功，使用Redis缓存");
+            return createRedisCacheManager(connectionFactory);
+        } catch (Exception e) {
+            // Redis挂了？没关系，降级到内存缓存
+            log.warn("Redis连接失败，降级到内存缓存: {}", e.getMessage());
+            return createFallbackCacheManager();
+        }
+    }
 }
+```
+
+**缓存TTL（存活时间）配置表**：
+
+| 缓存名 | Redis TTL | 说明 | 类比 |
+|--------|-----------|------|------|
+| plants | 6小时 | 药用植物数据，变更少 | 常用药材，半天补一次货 |
+| knowledges | 6小时 | 知识条目，变更少 | 同上 |
+| inheritors | 6小时 | 传承人信息，变更少 | 同上 |
+| resources | 4小时 | 资源数据 | 较常更新的药材 |
+| users | 30分钟 | 用户数据，变更较频繁 | 热门药材，频繁补货 |
+| quizQuestions | 12小时 | 测验题目，很稳定 | 珍藏药方，很少变 |
+| searchResults | 5分钟 | 搜索结果，时效性短 | 时令药材，很快就换 |
+| hotData | 1小时 | 热门数据 | 当日推荐 |
+
+**常见错误**：
+- 缓存时间设置太长，数据更新后用户看不到变化
+- 缓存时间设置太短，起不到缓存效果，数据库压力大
+- 忘记在更新数据时清除缓存，导致数据不一致
+
+---
+
+### 5. RateLimitAspect + RateLimit -- 客流控制
+
+> 类比：RateLimitAspect 就像药铺门口的**客流控制器**，防止一下子涌进太多人把店挤爆。
+
+```java
+// 使用方式：在Controller方法上加注解
+@RateLimit(value = 5)  // 每秒最多5次请求
+@PostMapping("/api/feedback")
+public R<?> submitFeedback(@RequestBody FeedbackDTO dto) {
+    // ...
+}
+```
+
+**限流流程**：
+
+```
+请求到达 @RateLimit 注解的方法
+  |
+  v
+生成限流Key（方法名 + 用户名 或 IP地址）
+  |
+  v
+Redis 可用吗？
+  |-- 是 --> Redis INCR 计数 + EXPIRE 设置1秒过期
+  |          计数超过限制？--> 抛出 "操作过于频繁" 异常
+  |-- 否 --> 降级到本地令牌桶（LocalTokenBucket）
+             桶里没令牌了？--> 抛出 "操作过于频繁" 异常
+  |
+  v
+通过限流检查，继续执行业务逻辑
+```
+
+**常见错误**：
+- `value` 设太小（如1），正常用户也会被限流
+- 忘记考虑集群环境：本地令牌桶只能限单机，多台服务器各限各的
+- 限流Key设计不合理，导致不同用户共享限额
+
+---
+
+### 6. XssFilter -- 危险品检测仪
+
+> 类比：XssFilter 就像药铺入口的**安检仪**，检查每个人带进来的东西有没有危险品（恶意脚本）。
+
+XSS（跨站脚本攻击）是黑客在输入框中注入恶意 JavaScript 代码的攻击方式。比如有人在评论框里输入 `<script>alert('hack')</script>`，如果不过滤，其他用户看到这条评论时就会执行这段脚本。
+
+XssFilter 处理两种请求：
+
+```java
+@Component
+public class XssFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        String contentType = httpRequest.getContentType();
+
+        if (contentType != null && contentType.contains("application/json")) {
+            // JSON请求体 --> 递归遍历JSON所有文本节点，清洗危险内容
+            chain.doFilter(new XssJsonRequestWrapper(httpRequest), response);
+        } else {
+            // 表单参数 --> 逐个清洗参数值
+            chain.doFilter(new XssHttpServletRequestWrapper(httpRequest), response);
+        }
+    }
+}
+```
+
+**XSS清洗过程**：
+
+```
+输入: "<script>alert('hack')</script>你好"
+  |
+  v  检测到XSS模式
+清洗: "&lt;script&gt;alert('hack')&lt;/script&gt;你好"
+  |
+  v  特殊字符被转义，浏览器不会执行脚本
+```
+
+**常见错误**：
+- 只过滤表单参数，忘记过滤 JSON 请求体
+- 过滤后忘记缓存请求体，导致 Controller 中 `@RequestBody` 读不到数据
+- 过于激进的过滤，把正常内容也改了（如用户输入 `<` 作为数学符号）
+
+---
+
+## JWT 认证完整流程图
+
+```
+                          JWT 认证流程
+                          ============
+
+  前端                          后端
+  ----                          ----
+                                |
+  1. POST /api/user/login       |
+     {username, password}  ----> |
+                                | 2. 验证用户名密码
+                                | 3. 生成 JWT Token
+                                |    (包含 userId, role, 过期时间)
+  4. 收到 Token           <---- |    返回 {token: "eyJhbG..."}
+                                |
+  5. 后续请求带上 Token         |
+     Authorization: Bearer eyJhbG...  ----> |
+                                | 6. JwtAuthenticationFilter 拦截
+                                |    - 提取 Token
+                                |    - 检查黑名单
+                                |    - 解析验证签名
+                                |    - 检查用户状态
+                                |    - 设置 SecurityContext
+                                |
+                                | 7. 到达 Controller 处理业务
+                                |
+  8. 收到响应数据          <---- |
+                                |
+  ---- Token快过期时 ----       |
+                                |
+  9. POST /api/user/refresh-token
+     Authorization: Bearer 旧Token  ----> |
+                                | 10. canRefresh() 检查
+                                |     (过期7天内仍可刷新)
+                                | 11. 生成新 Token
+  12. 收到新Token         <---- |
 ```
 
 ---
 
-**最后更新时间**：2026年4月3日
+## 配置文件参考 (application.yml)
+
+```yaml
+app:
+  security:
+    jwt-secret: "你的密钥-生产环境至少64字符"  # JWT签名密钥
+    jwt-expiration: 86400000                   # Token过期时间(毫秒)，默认24小时
+    cors-allowed-origins:                      # 允许跨域的前端地址
+      - http://localhost:5173
+      - http://localhost:3000
+  cache:
+    enabled: true       # 是否启用缓存
+    max-size: 1000      # 本地缓存最大条目数
+    expire-minutes: 60  # 本地缓存默认过期时间(分钟)
+```
+
+---
+
+## 常见问题
+
+**Q: 为什么禁用 CSRF？**
+A: CSRF（跨站请求伪造）是利用浏览器自动携带 Cookie 的特性发起攻击。我们使用 JWT 而不是 Cookie，所以不需要 CSRF 保护。
+
+**Q: Redis 挂了系统会崩溃吗？**
+A: 不会。CacheConfig 会自动检测 Redis 连接，失败时降级到 Caffeine 内存缓存。RateLimitAspect 也会降级到本地令牌桶。系统可以正常运行，只是缓存和限流效果会打折扣。
+
+**Q: 为什么 JWT 过期了还能刷新？**
+A: 设计了7天宽限期（`refreshGraceDays`）。Token 过期后7天内，用户可以用旧 Token 换新 Token，避免用户突然掉线需要重新登录。但超过7天就必须重新登录了。

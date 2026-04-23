@@ -1,513 +1,536 @@
-# 控制器层 (controller)
+# Controller 层 -- 控制器目录
 
-本目录存放所有控制器类，负责接收HTTP请求并返回响应。
-
-## 目录
-
-- [什么是控制器？](#什么是控制器)
-- [目录结构](#目录结构)
-- [控制器列表](#控制器列表)
-- [控制器开发规范](#控制器开发规范)
-- [常用控制器详解](#常用控制器详解)
+> Controller 是三层架构中的"服务员"层，负责接待顾客（前端请求），把订单传给厨房（Service），再把做好的菜端给顾客。
 
 ---
 
-## 什么是控制器？
+## 一、什么是 Controller？
 
-### 控制器的概念
-
-**控制器（Controller）** 是后端应用中处理 HTTP 请求的类。它就像餐厅的"服务员"——接收顾客（用户）的点单（请求），然后告诉厨房（Service层）准备菜品，最后把菜品（响应）端给顾客。
-
-### 控制器的作用
+### 生活类比：餐厅服务员
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        请求处理流程                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  用户发起请求                                                    │
-│       │                                                         │
-│       ▼                                                         │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    Controller 层                         │   │
-│  │  ┌─────────────────────────────────────────────────┐    │   │
-│  │  │  1. 接收请求（参数验证）                          │    │   │
-│  │  │  2. 调用 Service 处理业务逻辑                     │    │   │
-│  │  │  3. 封装响应结果                                 │    │   │
-│  │  │  4. 返回给用户                                   │    │   │
-│  │  └─────────────────────────────────────────────────┘    │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│       │                                                         │
-│       ▼                                                         │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                     Service 层                          │   │
-│  │              处理具体的业务逻辑                          │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+顾客（前端）走进餐厅
+       |
+       v
+服务员（Controller）迎上去
+       |
+       +-- "您好，看菜单"        --> GET 请求（查询数据）
+       +-- "好的，帮您下单"      --> POST 请求（创建数据）
+       +-- "这道菜帮您换一下"    --> PUT 请求（更新数据）
+       +-- "好的，帮您退掉"      --> DELETE 请求（删除数据）
+       |
+       v
+服务员把订单交给厨房（Service）
+       |
+       v
+厨房做好菜，服务员端给顾客
+       |
+       v
+顾客收到菜（JSON 响应）
 ```
 
-### 控制器的基本结构
+**Controller 的核心原则：只做"传话人"，不做"厨师"。**
+
+- 该做的：接收请求、提取参数、校验参数、调用 Service、返回结果
+- 不该做的：写业务逻辑、直接操作数据库、处理复杂计算
+
+---
+
+## 二、核心注解详解
+
+### 2.1 @RestController -- "我是服务员"
 
 ```java
-// @RestController - 标记这是一个控制器类
-// 相当于 @Controller + @ResponseBody，方法返回值自动转为JSON
-@RestController
-@RequestMapping("/api/users")  // 设置这个控制器的基础路径
-@RequiredArgsConstructor       // Lombok注解，生成构造函数
-public class UserController {
-    
-    // 注入Service
-    private final UserService userService;
-    
-    // @GetMapping - 处理GET请求
-    // 访问路径：GET /api/users/list
-    @GetMapping("/list")
-    public R<List<User>> list() {
-        List<User> users = userService.list();
-        return R.ok(users);
-    }
-    
-    // @PostMapping - 处理POST请求
-    // 访问路径：POST /api/users/add
-    @PostMapping("/add")
-    public R<String> add(@RequestBody UserDTO dto) {
-        userService.add(dto);
-        return R.ok("添加成功");
-    }
+@RestController   // 告诉 Spring：这个类是接收 HTTP 请求的控制器
+@RequestMapping("/api/plants")  // 这个控制器处理所有 /api/plants 开头的请求
+public class PlantController {
+    // ...
 }
 ```
 
----
+**@RestController = @Controller + @ResponseBody**
 
-## 目录结构
+| 注解 | 作用 |
+|------|------|
+| `@Controller` | 标记这是一个控制器类 |
+| `@ResponseBody` | 方法的返回值自动转成 JSON 返回给前端 |
 
-```
-controller/
-│
-├── AdminController.java              # 管理后台接口
-├── AiChatController.java             # AI聊天接口
-├── CaptchaController.java            # 验证码接口
-├── CommentController.java            # 评论接口
-├── FavoriteController.java           # 收藏接口
-├── FeedbackController.java           # 反馈接口
-├── FileUploadController.java         # 文件上传接口
-├── InheritorController.java          # 传承人接口
-├── KnowledgeController.java          # 知识库接口
-├── LeaderboardController.java        # 排行榜接口
-├── PlantController.java              # 药用植物接口
-├── PlantGameController.java          # 植物游戏接口
-├── QaController.java                 # 问答接口
-├── QuizController.java               # 测验接口
-├── ResourceController.java           # 学习资源接口
-├── UserController.java               # 用户接口
-└── HealthController.java             # 健康检查接口
-```
+> 如果只用 `@Controller` 不加 `@ResponseBody`，Spring 会把返回值当作页面名称去查找 HTML 模板。我们做的是前后端分离项目，只需要返回 JSON 数据，所以用 `@RestController`。
 
----
-
-## 控制器列表
-
-| 控制器 | 基础路径 | 功能描述 |
-|--------|----------|----------|
-| UserController | `/api/user` | 用户注册、登录、信息管理 |
-| CaptchaController | `/api/captcha` | 图形验证码生成 |
-| PlantController | `/api/plants` | 药用植物增删改查 |
-| KnowledgeController | `/api/knowledge` | 知识库增删改查 |
-| InheritorController | `/api/inheritors` | 传承人增删改查 |
-| ResourceController | `/api/resources` | 学习资源管理 |
-| QaController | `/api/qa` | 问答管理 |
-| CommentController | `/api/comments` | 评论管理 |
-| FavoriteController | `/api/favorites` | 收藏管理 |
-| FeedbackController | `/api/feedback` | 用户反馈 |
-| QuizController | `/api/quiz` | 趣味测验 |
-| PlantGameController | `/api/plant-game` | 植物识别游戏 |
-| LeaderboardController | `/api/leaderboard` | 排行榜 |
-| AiChatController | `/api/chat` | AI智能问答 |
-| FileUploadController | `/api/upload` | 文件上传 |
-| AdminController | `/api/admin` | 管理后台 |
-| HealthController | `/actuator` | 健康检查 |
-
----
-
-## 控制器开发规范
-
-### 1. 类结构规范
+### 2.2 @RequestMapping -- "我的工位在哪"
 
 ```java
-@RestController
-@RequestMapping("/api/example")
-@RequiredArgsConstructor
-@Tag(name = "示例管理", description = "示例相关接口")  // Swagger文档
-public class ExampleController {
-    
-    // 1. 依赖注入（使用final + @RequiredArgsConstructor）
-    private final ExampleService exampleService;
-    
-    // 2. 公开接口方法
-    @GetMapping("/list")
-    @Operation(summary = "获取列表")  // Swagger文档
-    public R<List<Example>> list() {
-        return R.ok(exampleService.list());
-    }
+@RequestMapping("/api/plants")  // 所有请求的公共前缀
+public class PlantController {
+
+    @GetMapping("/list")       // 完整路径：GET /api/plants/list
+    public R<Map<String, Object>> list(...) { ... }
+
+    @GetMapping("/{id}")       // 完整路径：GET /api/plants/5
+    public R<Plant> detail(...) { ... }
+
+    @PostMapping("/{id}/view") // 完整路径：POST /api/plants/5/view
+    public R<String> incrementView(...) { ... }
 }
 ```
 
-### 2. 请求映射规范
+### 2.3 HTTP 方法注解 -- "顾客要做什么操作"
 
-```java
-// GET请求 - 查询数据
-@GetMapping("/list")           // 列表查询
-@GetMapping("/{id}")           // 详情查询
-@GetMapping("/search")         // 搜索查询
+| 注解 | HTTP方法 | 用途 | 类比 |
+|------|---------|------|------|
+| `@GetMapping` | GET | 查询数据 | 看菜单 |
+| `@PostMapping` | POST | 创建数据 | 下新订单 |
+| `@PutMapping` | PUT | 更新数据 | 修改订单 |
+| `@DeleteMapping` | DELETE | 删除数据 | 取消订单 |
 
-// POST请求 - 创建数据
-@PostMapping("/add")           // 添加
-@PostMapping("/login")         // 登录等操作
+**RESTful 风格的 URL 设计：**
 
-// PUT请求 - 更新数据
-@PutMapping("/update")         // 更新
-
-// DELETE请求 - 删除数据
-@DeleteMapping("/{id}")        // 删除
+```
+GET    /api/plants/list      --> 查询植物列表
+GET    /api/plants/5         --> 查询ID为5的植物
+POST   /api/plants           --> 新增一个植物
+PUT    /api/plants/5         --> 修改ID为5的植物
+DELETE /api/plants/5         --> 删除ID为5的植物
 ```
 
-### 3. 参数接收规范
+---
+
+## 三、请求参数的三种方式
+
+### 3.1 @PathVariable -- 从 URL 路径中提取
 
 ```java
-@RestController
-@RequestMapping("/api/example")
-public class ExampleController {
-    
-    // @PathVariable - 获取URL路径中的变量
-    // 访问：GET /api/example/123
-    @GetMapping("/{id}")
-    public R<Example> getById(@PathVariable Integer id) {
-        return R.ok(exampleService.getById(id));
-    }
-    
-    // @RequestParam - 获取URL查询参数
-    // 访问：GET /api/example/search?keyword=张三&page=1
-    @GetMapping("/search")
-    public R<Page<Example>> search(
-        @RequestParam String keyword,                    // 必需参数
-        @RequestParam(defaultValue = "1") int page,      // 有默认值
-        @RequestParam(required = false) Integer size     // 可选参数
-    ) {
-        return R.ok(exampleService.search(keyword, page, size));
-    }
-    
-    // @RequestBody - 获取请求体中的JSON数据
-    // 前端发送：POST /api/example/add
-    // Body: {"name": "张三", "age": 25}
-    @PostMapping("/add")
-    public R<String> add(@RequestBody @Valid ExampleDTO dto) {
-        exampleService.add(dto);
-        return R.ok("添加成功");
-    }
-    
-    // @RequestHeader - 获取请求头
-    @GetMapping("/info")
-    public R<Example> getInfo(@RequestHeader("Authorization") String token) {
-        return R.ok(exampleService.getByToken(token));
-    }
+// 请求：GET /api/plants/5
+//                              URL 中的 {id} 被提取为 id=5
+@GetMapping("/{id}")
+public R<Plant> detail(@PathVariable @NotNull Integer id) {
+    Plant plant = service.getDetailWithStory(id);
+    return plant == null ? R.error("植物不存在") : R.ok(plant);
 }
 ```
 
-### 4. 响应格式规范
+**适用场景：** 获取指定 ID 的资源详情、删除指定资源等。
+
+### 3.2 @RequestParam -- 从 URL 查询字符串中提取
 
 ```java
-// 所有接口统一使用 R<T> 封装响应
+// 请求：GET /api/plants/list?page=1&size=12&category=清热药&keyword=钩藤
+@GetMapping("/list")
+public R<Map<String, Object>> list(
+        @RequestParam(defaultValue = "1") Integer page,        // 有默认值
+        @RequestParam(defaultValue = "12") Integer size,       // 有默认值
+        @RequestParam(required = false) String category,       // 可选参数
+        @RequestParam(required = false) String keyword) {      // 可选参数
+    // ...
+}
+```
 
+| 属性 | 作用 | 示例 |
+|------|------|------|
+| `defaultValue` | 参数不存在时的默认值 | `defaultValue = "1"` |
+| `required` | 是否必填（默认 true） | `required = false` |
+| `name` | 指定参数名（字段名不同时） | `name = "page_num"` |
+
+**适用场景：** 分页、筛选、搜索等查询条件。
+
+### 3.3 @RequestBody -- 从请求体中提取（JSON）
+
+```java
+// 请求：POST /api/user/login
+// 请求体：{"username": "admin", "password": "Admin123456"}
+@PostMapping("/login")
+@RateLimit(value = 5, key = "user_login")
+public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
+    // dto.getUsername() --> "admin"
+    // dto.getPassword() --> "Admin123456"
+    String token = service.login(dto.getUsername(), dto.getPassword());
+    return R.ok(Map.of("token", token, ...));
+}
+```
+
+**适用场景：** 提交表单、创建资源、登录注册等，数据量较大或包含敏感信息时。
+
+> **三种参数方式对比：**
+>
+> | 方式 | 数据位置 | 适用场景 | 例子 |
+> |------|---------|---------|------|
+> | @PathVariable | URL路径 | 资源标识 | /api/plants/5 |
+> | @RequestParam | URL查询串 | 筛选条件 | ?page=1&keyword=钩藤 |
+> | @RequestBody | 请求体(JSON) | 提交数据 | {"name":"钩藤"} |
+
+---
+
+## 四、统一响应格式 R\<T\>
+
+所有 Controller 方法都返回 `R<T>` 类型，保证前端收到的响应格式一致：
+
+```java
+public class R<T> {
+    private int code;        // 状态码：200成功，400参数错误，401未登录，403无权限，500服务器错误
+    private String msg;      // 提示信息
+    private T data;          // 具体数据（泛型，可以是任何类型）
+    private String requestId; // 请求追踪ID，方便排查问题
+}
+```
+
+### 常用方法
+
+```java
 // 成功响应
-return R.ok(data);              // 返回数据
-return R.ok("操作成功");         // 返回消息
+R.ok()                        // {"code":200, "msg":"success", "data":null}
+R.ok(plant)                   // {"code":200, "msg":"success", "data":{植物对象}}
+R.ok("注册成功")               // {"code":200, "msg":"success", "data":"注册成功"}
 
 // 失败响应
-return R.fail("操作失败");       // 返回错误消息
-return R.fail(ErrorCode.PARAM_ERROR);  // 返回错误码
-
-// 分页响应
-Page<Example> page = exampleService.page(pageNum, pageSize);
-return R.ok(page.getRecords(), page.getTotal());
+R.error("植物不存在")          // {"code":500, "msg":"植物不存在", "data":null}
+R.badRequest("参数错误")       // {"code":400, "msg":"参数错误", "data":null}
+R.unauthorized("请先登录")     // {"code":401, "msg":"请先登录", "data":null}
+R.forbidden("权限不足")        // {"code":403, "msg":"权限不足", "data":null}
+R.notFound("资源不存在")       // {"code":404, "msg":"资源不存在", "data":null}
 ```
 
-### 5. 权限控制规范
+### 为什么需要统一格式？
+
+```
+没有统一格式时，前端开发者崩溃了：
+  接口A返回：{"status": "ok", "result": {...}}
+  接口B返回：{"success": true, "data": {...}}
+  接口C返回：{"code": 0, "info": {...}}
+  接口D返回：直接报500错误，没有JSON
+
+有了统一格式后，前端开发者很开心：
+  所有接口都返回：{"code": 200, "msg": "success", "data": {...}, "requestId": "..."}
+  只需判断 code === 200 就知道是否成功
+```
+
+---
+
+## 五、速率限制 @RateLimit
+
+### 什么是速率限制？
+
+**生活类比：** 药铺门口放个叫号机，每分钟只叫5个号。防止有人恶意刷号（暴力破解密码、恶意注册等）。
+
+### 怎么用？
 
 ```java
+@PostMapping("/login")
+@RateLimit(value = 5, key = "user_login")   // 每秒最多5次登录请求
+public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
+    // ...
+}
+
+@PostMapping("/register")
+@RateLimit(value = 3, key = "user_register")  // 每秒最多3次注册请求
+public R<String> register(@Valid @RequestBody RegisterDTO dto) {
+    // ...
+}
+```
+
+### @RateLimit 参数说明
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `value` | 10 | 每秒允许的最大请求数 |
+| `key` | "" | 限流的唯一标识，用于区分不同接口 |
+
+### 超过限制会怎样？
+
+```json
+{
+  "code": 429,
+  "msg": "操作过于频繁，请稍后再试",
+  "data": null,
+  "requestId": "x1y2z3"
+}
+```
+
+### 实现原理
+
+```
+请求到达 Controller
+       |
+       v
+RateLimitAspect 切面拦截（AOP）
+       |
+       +-- 用 Redis 计数器检查：这个 key 在过去1秒内被调用了几次？
+       |       |
+       |       +-- 未超限 --> 放行，计数器+1
+       |       +-- 已超限 --> 抛出 BusinessException(OPERATION_TOO_FREQUENT)
+       |
+       +-- Redis 不可用？降级到本地令牌桶（LocalTokenBucket）
+```
+
+---
+
+## 六、权限控制
+
+### 三种权限级别
+
+```
++-----------------------------------------------------------+
+|                    所有接口                                  |
+|                                                           |
+|  +------------------+  +------------------+  +----------+ |
+|  |   permitAll      |  |   authenticated  |  |  ADMIN   | |
+|  |   (公开访问)      |  |   (需要登录)      |  | (需管理员)| |
+|  |                  |  |                  |  |          | |
+|  | 植物列表/详情     |  | 修改密码         |  | 用户管理  | |
+|  | 知识列表/详情     |  | 发表评论         |  | 内容CRUD  | |
+|  | 传承人列表/详情   |  | 我的收藏         |  | 评论审核  | |
+|  | 登录/注册        |  | 退出登录         |  | 反馈回复  | |
+|  | 验证码           |  | 我的测验记录     |  | 文件上传  | |
+|  | AI聊天           |  |                  |  |          | |
+|  +------------------+  +------------------+  +----------+ |
++-----------------------------------------------------------+
+```
+
+### 权限控制方式
+
+本项目使用 **Sa-Token** 注解进行权限控制：
+
+| 注解 | 作用 | 使用场景 |
+|------|------|----------|
+| `@SaCheckLogin` | 验证是否登录 | 需要登录才能访问的接口 |
+| `@SaCheckRole("admin")` | 验证角色 | 仅管理员可访问的接口 |
+| 无注解 | 公开访问 | 不需要登录的公开接口 |
+
+**示例：**
+
+```java
+// 公开接口 -- 任何人都能访问
+@GetMapping("/api/plants/list")
+public R<Map<String, Object>> list() { ... }
+
+// 需要登录 -- 加 @SaCheckLogin
+@GetMapping("/api/user/me")
+@SaCheckLogin
+public R<User> me() { ... }
+
+// 仅管理员 -- 加 @SaCheckRole("admin")
 @RestController
 @RequestMapping("/api/admin")
-public class AdminController {
-    
-    // 需要登录才能访问
-    @GetMapping("/profile")
-    public R<User> getProfile() {
-        // SecurityUtils 获取当前登录用户
-        Integer userId = SecurityUtils.getCurrentUserId();
-        return R.ok(userService.getById(userId));
-    }
-    
-    // 需要管理员权限
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/user/{id}")
-    public R<String> deleteUser(@PathVariable Integer id) {
-        userService.delete(id);
-        return R.ok("删除成功");
-    }
-}
+@SaCheckRole("admin")
+public class AdminController { ... }
 ```
+
+### 权限不足时的响应
+
+| 情况 | HTTP状态码 | 响应 |
+|------|-----------|------|
+| 未登录（没带Token） | 401 | `{"code":401,"msg":"未登录或登录已过期"}` |
+| 已登录但权限不够 | 403 | `{"code":403,"msg":"权限不足"}` |
 
 ---
 
-## 常用控制器详解
-
-### UserController - 用户控制器
-
-处理用户注册、登录、信息管理等请求。
+## 七、完整示例：PlantController 逐行解析
 
 ```java
-@RestController
-@RequestMapping("/api/user")
-@RequiredArgsConstructor
-@Tag(name = "用户管理", description = "用户注册、登录、信息管理")
-public class UserController {
-    
-    private final UserService userService;
-    
-    // 用户登录
-    @PostMapping("/login")
-    @Operation(summary = "用户登录")
-    public R<LoginVO> login(@RequestBody @Valid LoginDTO dto) {
-        LoginVO vo = userService.login(dto);
-        return R.ok(vo);
-    }
-    
-    // 用户注册
-    @PostMapping("/register")
-    @Operation(summary = "用户注册")
-    public R<String> register(@RequestBody @Valid RegisterDTO dto) {
-        userService.register(dto);
-        return R.ok("注册成功");
-    }
-    
-    // 获取当前用户信息
-    @GetMapping("/me")
-    @Operation(summary = "获取当前用户信息")
-    public R<User> getCurrentUser() {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        return R.ok(userService.getById(userId));
-    }
-    
-    // 修改密码
-    @PostMapping("/change-password")
-    @Operation(summary = "修改密码")
-    public R<String> changePassword(@RequestBody @Valid ChangePasswordDTO dto) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        userService.changePassword(userId, dto);
-        return R.ok("密码修改成功");
-    }
-    
-    // 退出登录
-    @PostMapping("/logout")
-    @Operation(summary = "退出登录")
-    public R<String> logout() {
-        String token = SecurityUtils.getCurrentToken();
-        userService.logout(token);
-        return R.ok("退出成功");
-    }
-}
-```
+package com.dongmedicine.controller;
 
-### PlantController - 药用植物控制器
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dongmedicine.common.R;
+import com.dongmedicine.common.util.PageUtils;
+import com.dongmedicine.entity.Plant;
+import com.dongmedicine.service.PlantService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
-处理药用植物的增删改查请求。
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
+import java.util.Map;
 
-```java
-@RestController
-@RequestMapping("/api/plants")
-@RequiredArgsConstructor
-@Tag(name = "药用植物", description = "药用植物管理")
+@RestController                    // [1] 标记为REST控制器，返回值自动转JSON
+@RequestMapping("/api/plants")     // [2] 所有接口的URL前缀
+@Validated                         // [3] 开启参数校验（@NotNull等注解才生效）
+@RequiredArgsConstructor           // [4] Lombok：自动生成构造函数，用于依赖注入
 public class PlantController {
-    
-    private final PlantService plantService;
-    
-    // 植物列表（支持分类和用法过滤）
+
+    private final PlantService service;  // [5] 注入Service（厨师），用final保证不可变
+
+    // ============================================================
+    // 接口1：获取植物列表（分页+筛选）
+    // 请求：GET /api/plants/list?page=1&size=12&category=清热药&keyword=钩藤
+    // ============================================================
     @GetMapping("/list")
-    @Operation(summary = "获取植物列表")
-    public R<Page<Plant>> list(
-        @RequestParam(defaultValue = "1") int page,
-        @RequestParam(defaultValue = "12") int size,
-        @RequestParam(required = false) String category,
-        @RequestParam(required = false) String usageWay
-    ) {
-        return R.ok(plantService.list(page, size, category, usageWay));
+    public R<Map<String, Object>> list(
+            @RequestParam(defaultValue = "1") Integer page,      // 页码，默认第1页
+            @RequestParam(defaultValue = "12") Integer size,     // 每页数量，默认12条
+            @RequestParam(required = false) String category,     // 分类筛选（可选）
+            @RequestParam(required = false) String usageWay,     // 用法筛选（可选）
+            @RequestParam(required = false) String keyword) {    // 关键词搜索（可选）
+        Page<Plant> pageResult = service.advancedSearchPaged(keyword, category, usageWay, page, size);
+        return R.ok(PageUtils.toMap(pageResult));  // 分页结果转Map返回
     }
-    
-    // 搜索植物
+
+    // ============================================================
+    // 接口2：搜索植物
+    // 请求：GET /api/plants/search?keyword=钩藤&page=1&size=12
+    // ============================================================
     @GetMapping("/search")
-    @Operation(summary = "搜索植物")
-    public R<List<Plant>> search(@RequestParam String keyword) {
-        return R.ok(plantService.search(keyword));
+    public R<Map<String, Object>> search(
+            @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "12") Integer size) {
+        Page<Plant> pageResult = service.searchPaged(keyword, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
-    
-    // 植物详情
+
+    // ============================================================
+    // 接口3：获取植物详情
+    // 请求：GET /api/plants/5
+    // ============================================================
     @GetMapping("/{id}")
-    @Operation(summary = "获取植物详情")
-    public R<Plant> getById(@PathVariable Integer id) {
-        return R.ok(plantService.getById(id));
+    public R<Plant> detail(@PathVariable @NotNull Integer id) {  // 从URL路径取id
+        Plant plant = service.getDetailWithStory(id);
+        return plant == null ? R.error("植物不存在") : R.ok(plant);  // 三元表达式处理空值
     }
-    
-    // 增加浏览次数
-    @PostMapping("/{id}/view")
-    @Operation(summary = "增加浏览次数")
-    public R<String> incrementViewCount(@PathVariable Integer id) {
-        plantService.incrementViewCount(id);
-        return R.ok("success");
+
+    // ============================================================
+    // 接口4：获取相似植物
+    // 请求：GET /api/plants/5/similar
+    // ============================================================
+    @GetMapping("/{id}/similar")
+    public R<List<Plant>> similar(@PathVariable @NotNull Integer id) {
+        return R.ok(service.getSimilarPlants(id));
     }
-    
-    // 随机获取植物（用于游戏）
+
+    // ============================================================
+    // 接口5：随机获取植物
+    // 请求：GET /api/plants/random?limit=20
+    // ============================================================
     @GetMapping("/random")
-    @Operation(summary = "随机获取植物")
-    public R<List<Plant>> getRandom(
-        @RequestParam(defaultValue = "10") int count,
-        @RequestParam(required = false) String difficulty
-    ) {
-        return R.ok(plantService.getRandom(count, difficulty));
+    public R<List<Plant>> random(
+            @RequestParam(defaultValue = "20")
+            @Min(value = 1, message = "数量不能小于1")       // 最小值校验
+            @Max(value = 100, message = "数量不能大于100")   // 最大值校验
+            Integer limit) {
+        return R.ok(service.getRandomPlants(limit));
     }
-}
-```
 
-### QuizController - 测验控制器
-
-处理趣味测验相关请求。
-
-```java
-@RestController
-@RequestMapping("/api/quiz")
-@RequiredArgsConstructor
-@Tag(name = "趣味测验", description = "侗医药知识测验")
-public class QuizController {
-    
-    private final QuizService quizService;
-    
-    // 获取随机问题
-    @GetMapping("/questions")
-    @Operation(summary = "获取随机问题")
-    public R<List<QuizQuestion>> getQuestions(
-        @RequestParam(defaultValue = "10") int count,
-        @RequestParam(defaultValue = "10") int scorePerQuestion
-    ) {
-        return R.ok(quizService.getRandomQuestions(count, scorePerQuestion));
-    }
-    
-    // 提交答案
-    @PostMapping("/submit")
-    @Operation(summary = "提交答案")
-    public R<QuizResultVO> submit(@RequestBody QuizSubmitDTO dto) {
-        return R.ok(quizService.submit(dto));
-    }
-    
-    // 获取答题记录
-    @GetMapping("/records")
-    @Operation(summary = "获取答题记录")
-    public R<List<QuizRecord>> getRecords() {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        return R.ok(quizService.getRecords(userId));
-    }
-}
-```
-
-### AiChatController - AI聊天控制器
-
-处理AI智能问答请求。
-
-```java
-@RestController
-@RequestMapping("/api/chat")
-@RequiredArgsConstructor
-@Tag(name = "AI问答", description = "侗医药智能问答")
-public class AiChatController {
-    
-    private final AiChatService aiChatService;
-    
-    // 发送聊天消息
-    @PostMapping
-    @Operation(summary = "发送聊天消息")
-    @RateLimit(value = 10, key = "chat")  // 限流：每秒最多10次
-    public R<ChatResponse> chat(@RequestBody @Valid ChatRequest request) {
-        return R.ok(aiChatService.chat(request));
-    }
-    
-    // 获取聊天统计（管理员）
-    @GetMapping("/stats")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "获取聊天统计")
-    public R<ChatStats> getStats() {
-        return R.ok(aiChatService.getStats());
+    // ============================================================
+    // 接口6：增加浏览量
+    // 请求：POST /api/plants/5/view
+    // ============================================================
+    @PostMapping("/{id}/view")
+    public R<String> incrementView(@PathVariable Integer id) {
+        service.incrementViewCount(id);
+        return R.ok("ok");
     }
 }
 ```
 
 ---
 
-## 最佳实践
+## 八、本项目的所有控制器
 
-### 1. 控制器职责
+| 控制器 | 路径前缀 | 权限 | 说明 |
+|--------|---------|------|------|
+| PlantController | /api/plants | 公开+认证 | 药用植物列表、详情、搜索、随机 |
+| KnowledgeController | /api/knowledge | 公开+认证 | 知识库列表、详情、搜索 |
+| InheritorController | /api/inheritors | 公开+认证 | 传承人列表、详情、搜索 |
+| QaController | /api/qa | 公开 | 问答列表、搜索 |
+| ResourceController | /api/resources | 公开+认证 | 资源列表、详情、下载 |
+| UserController | /api/user | 混合 | 注册、登录、登出、改密 |
+| CaptchaController | /api/captcha | 公开 | 验证码生成 |
+| AdminController | /api/admin | ADMIN | 统一管理接口 |
+| CommentController | /api/comments | 公开+认证 | 评论发表、列表 |
+| FavoriteController | /api/favorites | 认证 | 收藏管理 |
+| FeedbackController | /api/feedback | 混合 | 反馈提交、查看 |
+| QuizController | /api/quiz | 混合 | 测验题目、提交 |
+| PlantGameController | /api/plant-game | 混合 | 植物识别游戏 |
+| ChatController | /api/chat | 混合 | AI聊天 |
+| LeaderboardController | /api/leaderboard | 公开 | 排行榜 |
+| StatisticsController | /api/stats | 公开 | 统计数据 |
+| FileUploadController | /api/upload | ADMIN | 文件上传 |
+| OperationLogController | /api/admin/logs | ADMIN | 操作日志 |
 
-- **只做请求转发**：不包含业务逻辑
-- **参数验证**：使用 @Valid 注解验证参数
-- **异常处理**：让全局异常处理器处理异常
-- **响应封装**：统一使用 R<T> 封装响应
+---
 
-### 2. 安全考虑
+## 九、常见错误与避免方法
+
+### 错误1：忘记加 @Validated 或 @Valid
 
 ```java
-// 1. 参数验证
-@PostMapping("/add")
-public R<String> add(@RequestBody @Valid ExampleDTO dto) {
-    // @Valid 会自动验证 DTO 中的注解
-}
-
-// 2. XSS防护
+// 错误！@NotBlank 注解不会生效，空关键词也能通过
 @GetMapping("/search")
-public R<List<Example>> search(@RequestParam String keyword) {
-    // Service层会进行XSS过滤
-    return R.ok(exampleService.search(keyword));
+public R<Map<String, Object>> search(@RequestParam @NotBlank String keyword) { ... }
+
+// 正确！类上加了 @Validated，方法参数上的校验注解才会生效
+@Validated   // <-- 必须在类上添加这个注解
+public class PlantController {
+    @GetMapping("/search")
+    public R<Map<String, Object>> search(@RequestParam @NotBlank String keyword) { ... }
 }
 
-// 3. SQL注入防护
-// 使用MyBatis Plus的LambdaQueryWrapper，自动参数化查询
+// 对于 @RequestBody 的校验，需要在参数前加 @Valid
+@PostMapping("/login")
+public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) { ... }
 ```
 
-### 3. 性能优化
+### 错误2：Controller 里写业务逻辑
 
 ```java
-// 1. 分页查询
-@GetMapping("/list")
-public R<Page<Example>> list(
-    @RequestParam(defaultValue = "1") int page,
-    @RequestParam(defaultValue = "10") int size
-) {
-    // 限制每页最大数量
-    size = Math.min(size, 100);
-    return R.ok(exampleService.page(page, size));
+// 错误！Controller 不应该包含业务逻辑
+@GetMapping("/{id}")
+public R<Plant> detail(@PathVariable Integer id) {
+    Plant plant = plantMapper.selectById(id);  // 直接调 Mapper
+    if (plant.getViewCount() > 1000) {          // 业务判断写在 Controller
+        plant.setStory("热门植物：" + plant.getStory());
+    }
+    return R.ok(plant);
 }
 
-// 2. 缓存热门数据
-@GetMapping("/hot")
-@Cacheable(value = "hotExamples", key = "'list'")
-public R<List<Example>> getHot() {
-    return R.ok(exampleService.getHot());
+// 正确！业务逻辑放在 Service 里
+@GetMapping("/{id}")
+public R<Plant> detail(@PathVariable Integer id) {
+    Plant plant = service.getDetailWithStory(id);  // 只调 Service
+    return plant == null ? R.error("植物不存在") : R.ok(plant);
 }
 ```
 
----
+### 错误3：用 @Autowired 字段注入（不推荐）
 
-**相关文档**
+```java
+// 不推荐！字段注入，不利于测试，隐藏了依赖关系
+@Autowired
+private PlantService plantService;
 
-- [Spring MVC 官方文档](https://docs.spring.io/spring-framework/reference/web/webmvc.html)
-- [Spring Security 官方文档](https://docs.spring.io/spring-security/reference/)
+// 推荐！构造器注入，依赖关系明确，方便测试
+@RequiredArgsConstructor   // Lombok 自动生成构造函数
+public class PlantController {
+    private final PlantService service;  // final 保证不可变
+}
+```
 
----
+### 错误4：返回类型不统一
 
-**最后更新时间**：2026年4月3日
+```java
+// 错误！直接返回对象，前端不知道请求是否成功
+@GetMapping("/{id}")
+public Plant detail(@PathVariable Integer id) {
+    return service.getById(id);
+}
+
+// 正确！用 R<T> 统一封装
+@GetMapping("/{id}")
+public R<Plant> detail(@PathVariable Integer id) {
+    Plant plant = service.getDetailWithStory(id);
+    return plant == null ? R.error("植物不存在") : R.ok(plant);
+}
+```
+
+### 错误5：忘记在 SecurityConfig 中配置新接口的权限
+
+```java
+// 新增了 /api/recipes 接口，但忘记在 SecurityConfig 中配置
+// 结果：所有请求都被拦截，返回 401 或 403
+
+// 解决：在 SecurityConfig.filterChain() 中添加权限规则
+.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
+.requestMatchers("/api/admin/recipes/**").hasRole("ADMIN")
+```

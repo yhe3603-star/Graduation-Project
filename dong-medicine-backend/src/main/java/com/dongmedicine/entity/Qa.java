@@ -1,6 +1,8 @@
 package com.dongmedicine.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import jakarta.validation.constraints.NotBlank;
@@ -21,5 +23,6 @@ public class Qa {
     private Integer popularity;
     private Integer viewCount;
     private Integer favoriteCount;
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

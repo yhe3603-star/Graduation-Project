@@ -1,5 +1,6 @@
 package com.dongmedicine.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
@@ -10,7 +11,6 @@ import com.dongmedicine.dto.CommentDTO;
 import com.dongmedicine.entity.Comment;
 import com.dongmedicine.service.CommentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +29,7 @@ public class CommentController {
     private final CommentService service;
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @SaCheckLogin
     public R<String> add(@Valid @RequestBody CommentAddDTO dto) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw BusinessException.unauthorized("请先登录");
@@ -64,7 +64,7 @@ public class CommentController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("isAuthenticated()")
+    @SaCheckLogin
     public R<List<CommentDTO>> myComments() {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw BusinessException.unauthorized("请先登录");

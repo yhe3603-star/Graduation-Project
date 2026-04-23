@@ -1,127 +1,103 @@
-# 业务组件目录 (business)
-
-本目录存放包含业务逻辑的组件，是项目特有的组件。
-
-## 目录
-
-- [什么是业务组件？](#什么是业务组件)
-- [目录结构](#目录结构)
-- [子目录说明](#子目录说明)
-
----
+# 业务组件（Business Components）
 
 ## 什么是业务组件？
 
-**业务组件**是包含具体业务逻辑的组件，它们：
-- 与项目业务相关
-- 可能调用API
-- 可能使用状态管理
-- 可能包含复杂的业务规则
+类比：**专用设备**——咖啡机只能在咖啡区用，X光机只能在医院用。它们是为特定业务场景量身定制的。
+
+业务组件和侗医药平台的功能直接绑定，包含具体的业务逻辑。比如"药用植物卡片"组件知道怎么展示植物名称、侗语名、功效；"知识问答"组件知道怎么提交答案和判断对错。
+
+### 业务组件 vs 通用组件
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     业务组件分类                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  layout/     - 布局组件（头部、底部、侧边栏）                     │
-│  display/    - 展示组件（卡片、图表、分页）                       │
-│  interact/   - 交互组件（评论、答题、游戏）                       │
-│  media/      - 媒体组件（图片、视频、文档）                       │
-│  upload/     - 上传组件（图片上传、文件上传）                     │
-│  dialogs/    - 详情对话框（各种详情弹窗）                         │
-│  admin/      - 管理后台组件（仪表盘、数据表格）                   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+通用组件（Common）              业务组件（Business）
+┌──────────────────┐          ┌──────────────────┐
+│   SkeletonCard   │          │    PlantCard     │
+│                  │          │                  │
+│  不知道展示什么    │          │  知道展示植物信息  │
+│  只负责"占位"     │          │  名称、侗语名、功效 │
+│  任何页面都能用    │          │  只在植物相关页面用 │
+└──────────────────┘          └──────────────────┘
+就像：通用桌椅                    就像：专用手术台
 ```
 
 ---
 
-## 目录结构
+## 7 个子目录概览
 
 ```
 business/
-│
-├── layout/                             # 布局组件
-│   ├── AppHeader.vue                   # 应用头部
-│   └── AppFooter.vue                   # 应用底部
-│
-├── display/                            # 展示组件
-│   ├── AiChatCard.vue                  # AI对话卡片
-│   ├── CardGrid.vue                    # 卡片网格
-│   ├── ChartCard.vue                   # 图表卡片
-│   ├── PageSidebar.vue                 # 页面侧边栏
-│   ├── Pagination.vue                  # 分页组件
-│   ├── SearchFilter.vue                # 搜索过滤
-│   └── index.js
-│
-├── interact/                           # 交互组件
-│   ├── CaptchaInput.vue                # 验证码输入
-│   ├── CommentSection.vue              # 评论组件
-│   ├── InteractSidebar.vue             # 互动侧边栏
-│   ├── PlantGame.vue                   # 植物识别游戏
-│   ├── QuizSection.vue                 # 趣味答题
-│   └── index.js
-│
-├── media/                              # 媒体组件
-│   ├── DocumentList.vue                # 文档列表
-│   ├── DocumentPreview.vue             # 文档预览
-│   ├── ImageCarousel.vue               # 图片轮播
-│   ├── MediaDisplay.vue                # 媒体展示
-│   ├── VideoPlayer.vue                 # 视频播放
-│   └── index.js
-│
-├── upload/                             # 上传组件
-│   ├── DocumentUploader.vue            # 文档上传
-│   ├── FileUploader.vue                # 通用文件上传
-│   ├── ImageUploader.vue               # 图片上传
-│   ├── VideoUploader.vue               # 视频上传
-│   └── index.js
-│
-├── dialogs/                            # 详情对话框
-│   ├── InheritorDetailDialog.vue
-│   ├── KnowledgeDetailDialog.vue
-│   ├── PlantDetailDialog.vue
-│   ├── QuizDetailDialog.vue
-│   └── ResourceDetailDialog.vue
-│
-└── admin/                              # 管理后台组件
-    ├── dialogs/                        # 管理对话框
-    ├── forms/                          # 管理表单
-    ├── AdminDashboard.vue              # 管理仪表盘
-    ├── AdminDataTable.vue              # 数据表格
-    └── AdminSidebar.vue                # 管理侧边栏
+├── display/      展示组件 —— 展示柜，把商品漂亮地展示出来
+├── interact/     互动组件 —— 互动游戏区，让用户参与进来
+├── media/        媒体组件 —— 多媒体播放器，展示图片/视频/文档
+├── upload/       上传组件 —— 快递寄件台，把文件安全地送到服务器
+├── layout/       布局组件 —— 房子的框架，天花板和地板
+├── dialogs/      详情弹窗 —— 放大镜，点击卡片后弹出详细信息
+└── admin/        管理组件 —— 后台管理工具箱
 ```
 
----
-
-## 子目录说明
-
-| 目录 | 说明 | 典型组件 |
-|------|------|----------|
-| layout/ | 页面布局相关组件 | AppHeader, AppFooter |
-| display/ | 数据展示相关组件 | CardGrid, ChartCard, Pagination |
-| interact/ | 用户交互相关组件 | CommentSection, QuizSection, PlantGame |
-| media/ | 媒体文件相关组件 | ImageCarousel, VideoPlayer, DocumentPreview |
-| upload/ | 文件上传相关组件 | ImageUploader, VideoUploader, DocumentUploader |
-| dialogs/ | 详情弹窗组件 | PlantDetailDialog, KnowledgeDetailDialog |
-| admin/ | 管理后台专用组件 | AdminDashboard, AdminDataTable |
+| 子目录 | 类比 | 职责 | 典型组件 |
+|--------|------|------|----------|
+| `display/` | 展示柜 | 展示数据，让信息一目了然 | CardGrid、SearchFilter、Pagination |
+| `interact/` | 互动游戏区 | 用户参与互动，提升趣味性 | CommentSection、QuizSection、PlantGame |
+| `media/` | 多媒体播放器 | 展示图片、视频、文档 | ImageCarousel、VideoPlayer、DocumentPreview |
+| `upload/` | 快递寄件台 | 上传文件到服务器 | ImageUploader、VideoUploader、FileUploader |
+| `layout/` | 房子框架 | 页面的顶部导航和底部版权 | AppHeader、AppFooter |
+| `dialogs/` | 放大镜 | 点击后弹出详细信息 | PlantDetail、KnowledgeDetail |
+| `admin/` | 工具箱 | 后台管理专用组件 | AdminDashboard、AdminDataTable |
 
 ---
 
-## 使用示例
+## 业务组件如何与通用组件配合
 
-### 导入业务组件
+```vue
+<!-- 一个典型的业务组件内部会使用通用组件 -->
+<template>
+  <div class="plant-page">
+    <!-- 通用组件：骨架屏（加载中时显示） -->
+    <SkeletonCard v-if="isLoading" />
 
-```javascript
-// 从子目录导入
-import AppHeader from '@/components/business/layout/AppHeader.vue'
-import CardGrid from '@/components/business/display/CardGrid.vue'
-import CommentSection from '@/components/business/interact/CommentSection.vue'
-
-// 或从index.js导入
-import { CardGrid, Pagination, SearchFilter } from '@/components/business/display'
+    <!-- 业务组件：药用植物卡片（加载完显示） -->
+    <PlantCard
+      v-else
+      v-for="plant in plants"
+      :key="plant.id"
+      :data="plant"
+    />
+  </div>
+</template>
 ```
 
+**原则：业务组件负责"做什么"，通用组件负责"怎么做"。**
+
 ---
 
-**最后更新时间**：2026年4月3日
+## 常见错误
+
+### 错误1：在业务组件里写通用逻辑
+
+```vue
+<!-- ❌ 在业务组件里写 loading 动画逻辑，其他组件无法复用 -->
+<template>
+  <div v-if="isLoading" class="my-custom-loading">
+    <div class="spinner" />  <!-- 自己写的 loading，别的组件用不了 -->
+  </div>
+</template>
+
+<!-- ✅ 使用通用组件 PageLoading -->
+<template>
+  <PageLoading v-if="isLoading" />  <!-- 复用通用组件 -->
+</template>
+```
+
+### 错误2：业务组件之间互相嵌套太深
+
+```
+❌ 组件嵌套太深，像俄罗斯套娃，调试困难：
+PlantPage → PlantCard → PlantDetail → PlantComment → PlantReply
+
+✅ 保持扁平结构，通过事件通信：
+PlantPage
+  ├── PlantCard（点击时通知 PlantPage）
+  ├── PlantDetail（由 PlantPage 控制显示）
+  └── PlantComment（由 PlantPage 控制显示）
+```

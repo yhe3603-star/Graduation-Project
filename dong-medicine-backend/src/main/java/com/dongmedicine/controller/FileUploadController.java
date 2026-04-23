@@ -1,11 +1,11 @@
 package com.dongmedicine.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.dongmedicine.common.R;
 import com.dongmedicine.dto.FileUploadResult;
 import com.dongmedicine.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/upload")
-@PreAuthorize("hasRole('ADMIN')")
+@SaCheckRole("admin")
 @RequiredArgsConstructor
 public class FileUploadController {
 

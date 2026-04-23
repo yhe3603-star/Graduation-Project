@@ -17,7 +17,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -53,7 +52,6 @@ public class QuizServiceImpl implements QuizService {
         record.setScore(score);
         record.setTotalQuestions(answers.size());
         record.setCorrectAnswers(score / scorePerQuestion);
-        record.setCreateTime(LocalDateTime.now());
         recordMapper.insert(record);
 
         return score;

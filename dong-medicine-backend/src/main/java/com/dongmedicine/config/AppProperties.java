@@ -10,22 +10,16 @@ import java.util.List;
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
 
-    private Security security = new Security();
+    private Cors cors = new Cors();
     private Cache cache = new Cache();
     private Logging logging = new Logging();
 
-    public static class Security {
-        private String jwtSecret;
-        private Long jwtExpiration = 86400000L;
-        private List<String> corsAllowedOrigins = new ArrayList<>();
+    public static class Cors {
+        private List<String> allowedOrigins = new ArrayList<>();
 
-        public String getJwtSecret() { return jwtSecret; }
-        public void setJwtSecret(String jwtSecret) { this.jwtSecret = jwtSecret; }
-        public Long getJwtExpiration() { return jwtExpiration; }
-        public void setJwtExpiration(Long jwtExpiration) { this.jwtExpiration = jwtExpiration == null ? 86400000L : jwtExpiration; }
-        public List<String> getCorsAllowedOrigins() { return corsAllowedOrigins; }
-        public void setCorsAllowedOrigins(List<String> corsAllowedOrigins) {
-            this.corsAllowedOrigins = corsAllowedOrigins == null ? new ArrayList<>() : corsAllowedOrigins;
+        public List<String> getAllowedOrigins() { return allowedOrigins; }
+        public void setAllowedOrigins(List<String> allowedOrigins) {
+            this.allowedOrigins = allowedOrigins == null ? new ArrayList<>() : allowedOrigins;
         }
     }
 
@@ -44,7 +38,6 @@ public class AppProperties {
         private boolean requestLogging = true;
         private boolean databaseMonitoring = true;
 
-        // getters and setters
         public boolean isPerformanceMonitoring() { return performanceMonitoring; }
         public void setPerformanceMonitoring(boolean performanceMonitoring) { this.performanceMonitoring = performanceMonitoring; }
         public boolean isRequestLogging() { return requestLogging; }
@@ -53,9 +46,8 @@ public class AppProperties {
         public void setDatabaseMonitoring(boolean databaseMonitoring) { this.databaseMonitoring = databaseMonitoring; }
     }
 
-    // 主要的getters and setters
-    public Security getSecurity() { return security; }
-    public void setSecurity(Security security) { this.security = security; }
+    public Cors getCors() { return cors; }
+    public void setCors(Cors cors) { this.cors = cors; }
     public Cache getCache() { return cache; }
     public void setCache(Cache cache) { this.cache = cache; }
     public Logging getLogging() { return logging; }
