@@ -218,7 +218,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash -s' << 'SCRIPT'
           cd /tmp/deploy
           chmod +x docker-deploy.sh
-          sudo bash docker-deploy.sh
+          sudo bash docker-deploy.sh --no-cache
           SCRIPT
 
       - name: Health check

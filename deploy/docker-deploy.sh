@@ -22,6 +22,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="/opt/dong-medicine"
 BACKUP_DIR="/opt/dong-medicine/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+NO_CACHE=""
+
+for arg in "$@"; do
+    case $arg in
+        --no-cache) NO_CACHE="--no-cache" ;;
+    esac
+done
 
 if docker compose version &> /dev/null; then
     COMPOSE_CMD="docker compose"
@@ -168,7 +175,13 @@ $COMPOSE_CMD pull 2>/dev/null || true
 print_info "镜像拉取完成"
 
 print_step "构建并启动容器..."
-$COMPOSE_CMD up -d --build
+if [ -n "$NO_CACHE" ]; then
+    print_info "无缓存构建模式"
+    $COMPOSE_CMD build --no-cache
+else
+    $COMPOSE_CMD build
+fi
+$COMPOSE_CMD up -d
 print_success "容器启动完成"
 
 print_step "等待服务启动..."
