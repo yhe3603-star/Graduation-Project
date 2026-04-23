@@ -156,7 +156,7 @@ jobs:
       - name: Upload files to server
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /tmp/deploy"
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "rm -rf /opt/dong-medicine/dong-medicine-backend/src /opt/dong-medicine/dong-medicine-frontend/src"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "rm -rf /opt/dong-medicine/dong-medicine-backend /opt/dong-medicine/dong-medicine-frontend"
           scp -r deploy-package/. ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/deploy/
 
       - name: Initialize Server (Install Docker)

@@ -27,7 +27,8 @@ RUN npm ci --legacy-peer-deps
 # 复制源代码
 COPY . .
 
-# 构建生产版本
+# 构建生产版本（增加Node内存限制）
+ENV NODE_OPTIONS="--max-old-space-size=1024"
 RUN npm run build
 
 # 运行阶段

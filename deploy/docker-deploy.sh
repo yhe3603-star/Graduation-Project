@@ -69,8 +69,8 @@ print_success "备份完成"
 print_step "部署应用文件..."
 cp "$SCRIPT_DIR/docker-compose.yml" "$APP_DIR/"
 cp "$SCRIPT_DIR/.env" "$APP_DIR/"
-rm -rf "$APP_DIR/dong-medicine-backend/src" "$APP_DIR/dong-medicine-backend/pom.xml"
-rm -rf "$APP_DIR/dong-medicine-frontend/src" "$APP_DIR/dong-medicine-frontend/package.json" "$APP_DIR/dong-medicine-frontend/package-lock.json" "$APP_DIR/dong-medicine-frontend/vite.config.js" "$APP_DIR/dong-medicine-frontend/index.html" "$APP_DIR/dong-medicine-frontend/public"
+rm -rf "$APP_DIR/dong-medicine-backend"
+rm -rf "$APP_DIR/dong-medicine-frontend"
 cp -r "$SCRIPT_DIR/dong-medicine-backend" "$APP_DIR/"
 cp -r "$SCRIPT_DIR/dong-medicine-frontend" "$APP_DIR/"
 print_success "应用文件部署完成"
@@ -171,6 +171,10 @@ docker ps -a --format '{{.Names}}: {{.Ports}}' | grep -E '8080|80' || echo "没�
 
 # 等待几秒钟确保端口完全释放
 sleep 3
+
+print_step "清理Docker构建缓存..."
+docker builder prune -af 2>/dev/null || true
+print_success "Docker构建缓存清理完成"
 
 print_step "拉取最新镜像..."
 $COMPOSE_CMD pull 2>/dev/null || true
