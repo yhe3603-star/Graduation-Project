@@ -174,7 +174,15 @@ sleep 3
 
 print_step "清理Docker构建缓存..."
 docker builder prune -af 2>/dev/null || true
+docker system prune -f 2>/dev/null || true
 print_success "Docker构建缓存清理完成"
+
+print_step "拉取基础镜像..."
+docker pull maven:3.9-eclipse-temurin-17 2>/dev/null || true
+docker pull eclipse-temurin:17-jre 2>/dev/null || true
+docker pull node:20 2>/dev/null || true
+docker pull nginx:latest 2>/dev/null || true
+print_success "基础镜像拉取完成"
 
 print_step "拉取最新镜像..."
 $COMPOSE_CMD pull 2>/dev/null || true
