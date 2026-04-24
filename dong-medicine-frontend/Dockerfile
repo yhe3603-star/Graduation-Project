@@ -32,7 +32,7 @@ ENV NODE_OPTIONS="--max-old-space-size=1024"
 RUN npm run build
 
 # 运行阶段
-FROM nginx:latest
+FROM nginx:1.25-alpine
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
@@ -46,6 +46,9 @@ EXPOSE 80
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost/ || exit 1
+
+# 以非root用户运行
+USER nginx
 
 # 启动nginx
 CMD ["nginx", "-g", "daemon off;"]

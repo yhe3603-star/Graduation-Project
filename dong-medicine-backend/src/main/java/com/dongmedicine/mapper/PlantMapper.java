@@ -31,4 +31,23 @@ public interface PlantMapper extends BaseMapper<Plant> {
             "story LIKE CONCAT('%', #{keyword}, '%') ESCAPE '\\' " +
             "ORDER BY id DESC LIMIT #{limit}")
     List<Plant> searchByLike(@Param("keyword") String keyword, @Param("limit") int limit);
+
+    // ===== 统计查询方法 =====
+
+    @Select("SELECT COUNT(DISTINCT category) FROM plants WHERE category IS NOT NULL AND category != ''")
+    int countDistinctCategory();
+
+    @Select("SELECT IFNULL(SUM(view_count), 0) FROM plants")
+    long sumViewCount();
+
+    @Select("SELECT IFNULL(SUM(favorite_count), 0) FROM plants")
+    long sumFavoriteCount();
+
+    // ===== 去重查询方法（用于筛选器） =====
+
+    @Select("SELECT DISTINCT category FROM plants WHERE category IS NOT NULL AND category != '' ORDER BY category")
+    List<String> selectDistinctCategory();
+
+    @Select("SELECT DISTINCT usage_way FROM plants WHERE usage_way IS NOT NULL AND usage_way != '' ORDER BY usage_way")
+    List<String> selectDistinctUsageWay();
 }

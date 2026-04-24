@@ -95,6 +95,10 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ChatDotRound } from '@element-plus/icons-vue'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+
+marked.setOptions({ breaks: true, gfm: true })
 
 const messages = ref([])
 const inputMessage = ref('')
@@ -114,8 +118,13 @@ const quickQuestions = [
 const getWsUrl = () => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const host = window.location.host
-  return `${protocol}//${host}/ws/chat`
+  const token = sessionStorage.getItem('token')
+  const params = token ? `?token=${encodeURIComponent(token)}` : ''
+  return `${protocol}//${host}/ws/chat${params}`
 }
+
+const MAX_WS_RETRIES = 5
+let wsRetryCount = 0
 
 const connectWebSocket = () => {
   const url = getWsUrl()
@@ -123,6 +132,7 @@ const connectWebSocket = () => {
 
   ws.onopen = () => {
     wsConnected.value = true
+    wsRetryCount = 0
     console.log('WebSocket连接成功')
   }
 
@@ -138,11 +148,17 @@ const connectWebSocket = () => {
   ws.onclose = () => {
     wsConnected.value = false
     console.log('WebSocket连接关闭')
-    setTimeout(() => {
-      if (!ws || ws.readyState === WebSocket.CLOSED) {
-        connectWebSocket()
-      }
-    }, 3000)
+    if (wsRetryCount < MAX_WS_RETRIES) {
+      const delay = Math.min(3000 * Math.pow(2, wsRetryCount), 30000)
+      wsRetryCount++
+      setTimeout(() => {
+        if (!ws || ws.readyState === WebSocket.CLOSED) {
+          connectWebSocket()
+        }
+      }, delay)
+    } else {
+      console.warn('WebSocket重连已达最大次数')
+    }
   }
 
   ws.onerror = (error) => {
@@ -249,15 +265,8 @@ const scrollToBottom = () => {
 
 const renderMarkdown = (text) => {
   if (!text) return ''
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br>')
-  return html
+  const html = marked.parse(text)
+  return DOMPurify.sanitize(html)
 }
 
 onMounted(() => {

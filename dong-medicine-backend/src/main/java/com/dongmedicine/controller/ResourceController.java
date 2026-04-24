@@ -2,6 +2,7 @@ package com.dongmedicine.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.FileTypeUtils;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Resource;
@@ -71,7 +72,8 @@ public class ResourceController {
     @GetMapping("/{id}")
     public R<Resource> getById(@PathVariable Integer id) {
         Resource resource = service.getById(id);
-        return resource == null ? R.notFound("资源不存在") : R.ok(resource);
+        if (resource == null) throw BusinessException.notFound("资源不存在");
+        return R.ok(resource);
     }
 
     @PostMapping("/{id}/view")

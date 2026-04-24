@@ -93,10 +93,11 @@ import ResourceDetailDialog from "@/components/business/dialogs/ResourceDetailDi
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import SkeletonListResource from "@/components/common/SkeletonListResource.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
-import { extractPageData, extractData } from "@/utils";
+import { extractPageData } from "@/utils";
 import { parseMediaList } from "@/utils/media";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
+import { useFavorite } from "@/composables/useFavorite";
 import { useUserStore } from "@/stores/user";
 
 const FILE_TYPE_MAP = {
@@ -116,13 +117,14 @@ const showLoginDialog = inject("showLoginDialog");
 const userStore = useUserStore();
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 
+const { items: favItems, isFavorited, loadFavorites, toggleFavorite: doToggleFavorite } = useFavorite('resource');
+
 const pageLoading = ref(false);
 const keyword = ref("");
 const allResources = ref([]);
 const hotResources = ref([]);
 const previewVisible = ref(false);
 const currentResource = ref(null);
-const favorites = ref([]);
 const categoryFilter = ref("");
 const typeFilter = ref("");
 const currentPage = ref(1);
@@ -215,25 +217,10 @@ const openResource = async (item) => {
   } catch {}
 };
 
-const isFavorited = (id) => favorites.value.some(f => f.targetId === id && f.type === "resource");
 const isCurrentFavorited = computed(() => currentResource.value && isFavorited(currentResource.value.id));
 
-const toggleFavorite = async (item) => {
-  if (!item || !isLoggedIn.value) { if (!isLoggedIn.value) ElMessage.warning("请先登录后再收藏"); return; }
-  try {
-    const resIdx = allResources.value.findIndex(r => r.id === item.id);
-    if (isFavorited(item.id)) {
-      await request.delete(`/favorites/resource/${item.id}`);
-      favorites.value = favorites.value.filter(f => !(f.targetId === item.id && f.type === "resource"));
-      if (resIdx > -1) allResources.value[resIdx].favoriteCount = Math.max(0, (allResources.value[resIdx].favoriteCount || 1) - 1);
-      ElMessage.success("已取消收藏");
-    } else {
-      await request.post(`/favorites/resource/${item.id}`);
-      favorites.value.push({ targetId: item.id, type: "resource" });
-      if (resIdx > -1) allResources.value[resIdx].favoriteCount = (allResources.value[resIdx].favoriteCount || 0) + 1;
-      ElMessage.success("收藏成功");
-    }
-  } catch { ElMessage.error("操作失败"); }
+const toggleFavorite = (item) => {
+  if (item) doToggleFavorite(item.id, isFavorited(item.id));
 };
 
 const toggleFavoriteDetail = () => { if (currentResource.value) toggleFavorite(currentResource.value); };
@@ -284,15 +271,14 @@ const loadResourcesData = async () => {
     
     const { records, total } = extractPageData(pageRes);
     allResources.value = records.map(r => ({ ...r, fileType: detectFileType(getFileInfo(r).url, getFileInfo(r).type) }));
+    favItems.value = allResources.value;
     totalItems.value = total;
     hotResources.value = allResources.value.slice(0, 5);
     
     const sd = statsRes.data || statsRes || {};
     statsData.value = { total: sd.total || 0, videoCount: sd.videoCount || 0, documentCount: sd.documentCount || 0, imageCount: sd.imageCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0, totalDownloads: sd.totalDownloads || 0, totalSize: sd.totalSize || 0 };
     
-    if (isLoggedIn.value) {
-      try { favorites.value = extractData(await request.get("/favorites/my")); } catch {}
-    }
+    await loadFavorites();
   } catch { ElMessage.error("加载失败"); }
   finally { pageLoading.value = false; }
 };

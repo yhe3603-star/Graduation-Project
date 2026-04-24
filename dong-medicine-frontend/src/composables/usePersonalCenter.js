@@ -139,7 +139,6 @@ export function usePersonalCenter(request, updateUserState) {
         request.get('/comments/my').catch(() => ({}))
       ])
       
-      const extractData = (res) => res?.data?.data || res?.data || []
       favorites.value = extractData(favRes)
       quizRecords.value = extractData(quizRes)
       gameRecords.value = extractData(gameRes)

@@ -32,11 +32,13 @@ import App from "./App.vue"
 import router from "./router"
 import request from "./utils/request"
 import { pinia } from "./stores"
+import { directives } from './directives'
 import "./styles/index.css"
 
 const app = createApp(App)
 
 app.use(ElementPlus, { locale: zhCn })
+app.use(directives)
 app.use(router)
 app.use(pinia)
 

@@ -16,7 +16,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -147,5 +149,45 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
         fileCleanupHelper.deleteFilesFromJson(resource.getFiles());
         removeById(id);
         log.info("Deleted resource {} with associated files", id);
+    }
+
+    @Override
+    public Map<String, Object> getStats() {
+        // 使用SQL聚合查询获取数值统计
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("total", count());
+        stats.put("totalFavorites", resourceMapper.sumFavoriteCount());
+        stats.put("totalViews", resourceMapper.sumViewCount());
+        stats.put("totalDownloads", resourceMapper.sumDownloadCount());
+
+        // 解析files JSON统计文件类型数量和总大小（仅查询files字段，避免全表加载）
+        long videoCount = 0, documentCount = 0, imageCount = 0, totalSize = 0;
+        List<String> filesList = resourceMapper.selectAllFiles();
+        com.fasterxml.jackson.databind.ObjectMapper jsonMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        for (String files : filesList) {
+            try {
+                List<Map<String, Object>> fileList = jsonMapper.readValue(files, List.class);
+                for (Map<String, Object> f : fileList) {
+                    String type = f.get("type") != null ? f.get("type").toString() : "";
+                    long size = f.get("size") != null ? Long.parseLong(f.get("size").toString()) : 0;
+                    totalSize += size;
+                    if (type.startsWith("video/")) videoCount++;
+                    else if (type.startsWith("image/")) imageCount++;
+                    else documentCount++;
+                }
+            } catch (Exception ignored) {}
+        }
+        stats.put("videoCount", videoCount);
+        stats.put("documentCount", documentCount);
+        stats.put("imageCount", imageCount);
+        stats.put("totalSize", totalSize);
+        return stats;
+    }
+
+    @Override
+    public Map<String, List<String>> getFilterOptions() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        map.put("category", resourceMapper.selectDistinctCategory());
+        return map;
     }
 }

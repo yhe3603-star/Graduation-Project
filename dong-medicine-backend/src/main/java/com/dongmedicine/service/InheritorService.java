@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.dongmedicine.entity.Inheritor;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 传承人服务接口
@@ -99,4 +100,18 @@ public interface InheritorService extends IService<Inheritor> {
      * @param id 传承人ID
      */
     void deleteWithFiles(Integer id);
+
+    /**
+     * 获取传承人统计数据（使用SQL聚合查询，避免全表加载）
+     *
+     * @return 统计结果Map，包含total、regionLevelCount、cityLevelCount、countyLevelCount、totalViews、totalFavorites
+     */
+    Map<String, Object> getStats();
+
+    /**
+     * 获取传承人筛选选项（使用SQL DISTINCT查询，避免全表加载）
+     *
+     * @return 筛选选项Map，包含level
+     */
+    Map<String, List<String>> getFilterOptions();
 }

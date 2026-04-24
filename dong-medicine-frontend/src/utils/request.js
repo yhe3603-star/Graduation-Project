@@ -183,9 +183,6 @@ request.interceptors.request.use((config) => {
     if (token) config.headers.Authorization = "Bearer " + token
   }
   
-  const userId = sessionStorage.getItem("userId")
-  if (userId) config.headers["userId"] = userId
-
   if (config.data && typeof config.data === 'object') {
     config.data = sanitizeRequestData(config.data)
   }

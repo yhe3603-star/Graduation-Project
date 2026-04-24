@@ -1063,4 +1063,27 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_hot_plants` AS select 
 DROP VIEW IF EXISTS `v_user_stats`;
 CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_user_stats` AS select `u`.`id` AS `id`,`u`.`username` AS `username`,count(distinct `qr`.`id`) AS `quiz_count`,avg(`qr`.`score`) AS `avg_quiz_score`,count(distinct `pgr`.`id`) AS `game_count`,avg(`pgr`.`score`) AS `avg_game_score`,count(distinct `f`.`id`) AS `favorite_count` from (((`users` `u` left join `quiz_record` `qr` on((`qr`.`user_id` = `u`.`id`))) left join `plant_game_record` `pgr` on((`pgr`.`user_id` = `u`.`id`))) left join `favorites` `f` on((`f`.`user_id` = `u`.`id`))) group by `u`.`id`,`u`.`username`;
 
+-- ----------------------------
+-- 数据库优化：添加缺失的 updated_at 字段
+-- ----------------------------
+ALTER TABLE `users` ADD COLUMN `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE `feedback` ADD COLUMN `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE `resources` ADD COLUMN `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE `quiz_questions` ADD COLUMN `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE `quiz_record` ADD COLUMN `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE `plant_game_record` ADD COLUMN `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE `favorites` ADD COLUMN `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- ----------------------------
+-- 数据库优化：删除重复索引
+-- ----------------------------
+ALTER TABLE `knowledge` DROP INDEX `idx_knowledge_popularity`;
+ALTER TABLE `plants` DROP INDEX `idx_category`;
+
+-- ----------------------------
+-- 数据库优化：添加缺失索引
+-- ----------------------------
+ALTER TABLE `operation_log` ADD INDEX `idx_type` (`type`);
+ALTER TABLE `plants` ADD INDEX `idx_name_dong` (`name_dong`);
+
 SET FOREIGN_KEY_CHECKS = 1;

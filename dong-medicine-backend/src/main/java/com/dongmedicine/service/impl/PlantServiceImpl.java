@@ -19,7 +19,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements PlantService {
@@ -185,5 +187,23 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         fileCleanupHelper.deleteFilesFromJson(plant.getDocuments());
         removeById(id);
         log.info("Deleted plant {} with associated files", id);
+    }
+
+    @Override
+    public Map<String, Object> getStats() {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("total", count());
+        stats.put("categoryCount", plantMapper.countDistinctCategory());
+        stats.put("totalViews", plantMapper.sumViewCount());
+        stats.put("totalFavorites", plantMapper.sumFavoriteCount());
+        return stats;
+    }
+
+    @Override
+    public Map<String, List<String>> getFilterOptions() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        map.put("category", plantMapper.selectDistinctCategory());
+        map.put("usageWay", plantMapper.selectDistinctUsageWay());
+        return map;
     }
 }

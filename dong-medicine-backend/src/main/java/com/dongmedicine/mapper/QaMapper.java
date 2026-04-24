@@ -3,7 +3,10 @@ package com.dongmedicine.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.dongmedicine.entity.Qa;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 @Mapper
 public interface QaMapper extends BaseMapper<Qa> {
@@ -13,4 +16,20 @@ public interface QaMapper extends BaseMapper<Qa> {
 
     @Update("UPDATE qa SET favorite_count = IFNULL(favorite_count, 0) + #{delta} WHERE id = #{id}")
     void incrementFavoriteCount(Integer id, int delta);
+
+    // ===== 统计查询方法 =====
+
+    @Select("SELECT COUNT(DISTINCT category) FROM qa WHERE category IS NOT NULL AND category != ''")
+    int countDistinctCategory();
+
+    @Select("SELECT IFNULL(SUM(view_count), 0) FROM qa")
+    long sumViewCount();
+
+    @Select("SELECT IFNULL(SUM(favorite_count), 0) FROM qa")
+    long sumFavoriteCount();
+
+    // ===== 去重查询方法（用于筛选器） =====
+
+    @Select("SELECT DISTINCT category FROM qa WHERE category IS NOT NULL AND category != '' ORDER BY category")
+    List<String> selectDistinctCategory();
 }

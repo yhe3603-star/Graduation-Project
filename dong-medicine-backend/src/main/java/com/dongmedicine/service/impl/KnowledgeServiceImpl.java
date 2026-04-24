@@ -23,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge> implements KnowledgeService {
@@ -230,5 +232,26 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         fileCleanupHelper.deleteFilesFromJson(knowledge.getDocuments());
         removeById(id);
         log.info("Deleted knowledge {} with associated files", id);
+    }
+
+    @Override
+    public Map<String, Object> getStats() {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("total", count());
+        stats.put("therapyCategoryCount", knowledgeMapper.countDistinctTherapyCategory());
+        stats.put("diseaseCategoryCount", knowledgeMapper.countDistinctDiseaseCategory());
+        stats.put("typeCount", knowledgeMapper.countDistinctType());
+        stats.put("totalViews", knowledgeMapper.sumViewCount());
+        stats.put("totalFavorites", knowledgeMapper.sumFavoriteCount());
+        return stats;
+    }
+
+    @Override
+    public Map<String, List<String>> getFilterOptions() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        map.put("therapyCategory", knowledgeMapper.selectDistinctTherapyCategory());
+        map.put("diseaseCategory", knowledgeMapper.selectDistinctDiseaseCategory());
+        map.put("herbCategory", knowledgeMapper.selectDistinctHerbCategory());
+        return map;
     }
 }

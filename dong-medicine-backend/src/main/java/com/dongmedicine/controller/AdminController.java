@@ -7,10 +7,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.common.util.PageUtils;
-import com.dongmedicine.dto.CommentDTO;
+import com.dongmedicine.dto.*;
 import com.dongmedicine.entity.*;
 import com.dongmedicine.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -82,14 +83,18 @@ public class AdminController {
     }
 
     @PostMapping("/inheritors")
-    public R<String> createInheritor(@Valid @RequestBody Inheritor inheritor) {
+    public R<String> createInheritor(@RequestBody @Valid InheritorCreateDTO dto) {
+        Inheritor inheritor = new Inheritor();
+        BeanUtils.copyProperties(dto, inheritor);
         inheritorService.save(inheritor);
         inheritorService.clearCache();
         return R.ok("新增传承人成功");
     }
 
     @PutMapping("/inheritors/{id}")
-    public R<String> updateInheritor(@PathVariable @NotNull Integer id, @Valid @RequestBody Inheritor inheritor) {
+    public R<String> updateInheritor(@PathVariable @NotNull Integer id, @RequestBody @Valid InheritorUpdateDTO dto) {
+        Inheritor inheritor = new Inheritor();
+        BeanUtils.copyProperties(dto, inheritor);
         inheritor.setId(id);
         inheritorService.updateById(inheritor);
         inheritorService.clearCache();
@@ -112,14 +117,18 @@ public class AdminController {
     }
 
     @PostMapping("/knowledge")
-    public R<String> createKnowledge(@Valid @RequestBody Knowledge knowledge) {
+    public R<String> createKnowledge(@RequestBody @Valid KnowledgeCreateDTO dto) {
+        Knowledge knowledge = new Knowledge();
+        BeanUtils.copyProperties(dto, knowledge);
         knowledgeService.save(knowledge);
         knowledgeService.clearCache();
         return R.ok("新增知识条目成功");
     }
 
     @PutMapping("/knowledge/{id}")
-    public R<String> updateKnowledge(@PathVariable @NotNull Integer id, @Valid @RequestBody Knowledge knowledge) {
+    public R<String> updateKnowledge(@PathVariable @NotNull Integer id, @RequestBody @Valid KnowledgeUpdateDTO dto) {
+        Knowledge knowledge = new Knowledge();
+        BeanUtils.copyProperties(dto, knowledge);
         knowledge.setId(id);
         knowledgeService.updateById(knowledge);
         knowledgeService.clearCache();
@@ -142,17 +151,18 @@ public class AdminController {
     }
 
     @PostMapping("/plants")
-    public R<String> createPlant(@Valid @RequestBody Plant plant) {
-        if (plant.getNameCn() == null || plant.getNameCn().isBlank()) {
-            return R.error("中文名称不能为空");
-        }
+    public R<String> createPlant(@RequestBody @Valid PlantCreateDTO dto) {
+        Plant plant = new Plant();
+        BeanUtils.copyProperties(dto, plant);
         plantService.save(plant);
         plantService.clearCache();
         return R.ok("新增药用植物成功");
     }
 
     @PutMapping("/plants/{id}")
-    public R<String> updatePlant(@PathVariable @NotNull Integer id, @Valid @RequestBody Plant plant) {
+    public R<String> updatePlant(@PathVariable @NotNull Integer id, @RequestBody @Valid PlantUpdateDTO dto) {
+        Plant plant = new Plant();
+        BeanUtils.copyProperties(dto, plant);
         plant.setId(id);
         plantService.updateById(plant);
         plantService.clearCache();
@@ -175,13 +185,17 @@ public class AdminController {
     }
 
     @PostMapping("/qa")
-    public R<String> createQa(@Valid @RequestBody Qa qa) {
+    public R<String> createQa(@RequestBody @Valid QaCreateDTO dto) {
+        Qa qa = new Qa();
+        BeanUtils.copyProperties(dto, qa);
         qaService.save(qa);
         return R.ok("新增问答成功");
     }
 
     @PutMapping("/qa/{id}")
-    public R<String> updateQa(@PathVariable @NotNull Integer id, @Valid @RequestBody Qa qa) {
+    public R<String> updateQa(@PathVariable @NotNull Integer id, @RequestBody @Valid QaUpdateDTO dto) {
+        Qa qa = new Qa();
+        BeanUtils.copyProperties(dto, qa);
         qa.setId(id);
         qaService.updateById(qa);
         return R.ok("更新问答成功");
@@ -203,17 +217,18 @@ public class AdminController {
     }
 
     @PostMapping("/resources")
-    public R<String> createResource(@Valid @RequestBody Resource resource) {
-        if (resource.getDownloadCount() == null) resource.setDownloadCount(0);
-        if (resource.getViewCount() == null) resource.setViewCount(0);
-        if (resource.getFavoriteCount() == null) resource.setFavoriteCount(0);
+    public R<String> createResource(@RequestBody @Valid ResourceCreateDTO dto) {
+        Resource resource = new Resource();
+        BeanUtils.copyProperties(dto, resource);
         resourceService.save(resource);
         resourceService.clearCache();
         return R.ok("新增学习资源成功");
     }
 
     @PutMapping("/resources/{id}")
-    public R<String> updateResource(@PathVariable @NotNull Integer id, @Valid @RequestBody Resource resource) {
+    public R<String> updateResource(@PathVariable @NotNull Integer id, @RequestBody @Valid ResourceUpdateDTO dto) {
+        Resource resource = new Resource();
+        BeanUtils.copyProperties(dto, resource);
         resource.setId(id);
         resourceService.updateById(resource);
         resourceService.clearCache();
@@ -241,15 +256,8 @@ public class AdminController {
     }
 
     @PutMapping("/feedback/{id}/reply")
-    public R<String> replyFeedback(@PathVariable @NotNull Integer id, @RequestBody Map<String, String> body) {
-        String reply = body.get("reply");
-        if (reply == null || reply.trim().isEmpty()) {
-            return R.error("回复内容不能为空");
-        }
-        if (reply.length() > 1000) {
-            return R.error("回复内容长度不能超过1000字符");
-        }
-        feedbackService.replyFeedback(id, reply.trim());
+    public R<String> replyFeedback(@PathVariable @NotNull Integer id, @RequestBody @Valid FeedbackReplyDTO dto) {
+        feedbackService.replyFeedback(id, dto.getReply().trim());
         return R.ok("回复成功");
     }
 

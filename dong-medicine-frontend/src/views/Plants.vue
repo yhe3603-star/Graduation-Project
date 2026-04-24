@@ -42,13 +42,13 @@
               <span class="stat-item"><el-icon><Star /></el-icon>{{ item.favoriteCount || 0 }}</span>
             </div>
             <el-button
-              :type="isFavoritedCard(item.id) ? 'warning' : 'default'"
+              :type="isItemFavorited(item.id) ? 'warning' : 'default'"
               size="small"
               class="favorite-btn"
-              :class="{ favorited: isFavoritedCard(item.id) }"
+              :class="{ favorited: isItemFavorited(item.id) }"
               @click.stop="toggleFavoriteCard(item)"
             >
-              <el-icon><component :is="isFavoritedCard(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
+              <el-icon><component :is="isItemFavorited(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
             </el-button>
           </template>
         </CardGrid>
@@ -104,10 +104,10 @@ import PlantDetailDialog from "@/components/business/dialogs/PlantDetailDialog.v
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
 import SkeletonGridImage from "@/components/common/SkeletonGridImage.vue";
-import { extractPageData, extractData, logFetchError } from "@/utils";
+import { extractPageData, logFetchError } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
-import { useUserStore } from "@/stores/user";
+import { useFavorite } from "@/composables/useFavorite";
 
 const PAGE_SIZE_OPTIONS = {
   DEFAULT: 12,
@@ -119,8 +119,8 @@ const DEBOUNCE_DELAY = 300;
 
 const route = useRoute();
 const request = inject("request");
-const userStore = useUserStore();
-const isLoggedIn = computed(() => userStore.isLoggedIn);
+
+const { items: favItems, isFavorited: isItemFavorited, loadFavorites, toggleFavorite: doToggleFavorite } = useFavorite('plant');
 
 const pageLoading = ref(false);
 const keyword = ref("");
@@ -128,7 +128,6 @@ const allPlants = ref([]);
 const hotPlants = ref([]);
 const detailVisible = ref(false);
 const currentPlant = ref(null);
-const favorites = ref([]);
 const catFilter = ref("");
 const useFilter = ref("");
 const currentPage = ref(1);
@@ -181,8 +180,7 @@ const handleFilter = (filters) => {
   loadPlantsData();
 };
 
-const isFavorited = computed(() => currentPlant.value && favorites.value.some(f => f.targetId === currentPlant.value.id && f.type === "plant"));
-const isFavoritedCard = (id) => favorites.value.some(f => f.targetId === id && f.type === "plant");
+const isFavorited = computed(() => currentPlant.value && isItemFavorited(currentPlant.value.id));
 
 const showDetail = async (plant) => {
   currentPlant.value = plant;
@@ -196,34 +194,8 @@ const showDetail = async (plant) => {
   }
 };
 
-const updateFavorite = (id, delta) => {
-  const idx = allPlants.value.findIndex(p => p.id === id);
-  if (idx > -1) allPlants.value[idx].favoriteCount = Math.max(0, (allPlants.value[idx].favoriteCount || 0) + delta);
-};
-
-const doToggleFavorite = async (id, isFav) => {
-  if (!isLoggedIn.value) { ElMessage.warning("请先登录"); return false; }
-  try {
-    if (isFav) {
-      await request.delete(`/favorites/plant/${id}`);
-      favorites.value = favorites.value.filter(f => !(f.targetId === id && f.type === "plant"));
-      updateFavorite(id, -1);
-      ElMessage.success("已取消收藏");
-    } else {
-      await request.post(`/favorites/plant/${id}`);
-      favorites.value.push({ targetId: id, type: "plant" });
-      updateFavorite(id, 1);
-      ElMessage.success("收藏成功");
-    }
-    return true;
-  } catch (e) {
-    logFetchError('收藏操作', e);
-    ElMessage.error("操作失败"); return false;
-  }
-};
-
 const toggleFavorite = () => { if (currentPlant.value) doToggleFavorite(currentPlant.value.id, isFavorited.value); };
-const toggleFavoriteCard = (item) => { doToggleFavorite(item.id, isFavoritedCard(item.id)); };
+const toggleFavoriteCard = (item) => { doToggleFavorite(item.id, isItemFavorited(item.id)); };
 
 const loadPlantsData = async () => {
   pageLoading.value = true;
@@ -244,15 +216,14 @@ const loadPlantsData = async () => {
     
     const { records, total } = extractPageData(pageRes);
     allPlants.value = records;
+    favItems.value = allPlants.value;
     totalItems.value = total;
     hotPlants.value = [...allPlants.value].sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 5);
     
     const sd = statsRes.data || statsRes || {};
     statsData.value = { total: sd.total || 0, categoryCount: sd.categoryCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0 };
     
-    if (isLoggedIn.value) {
-      try { favorites.value = extractData(await request.get("/favorites/my")); } catch (e) { console.debug('加载收藏失败:', e); }
-    }
+    await loadFavorites();
   } catch (e) {
     logFetchError('植物数据', e);
     ElMessage.error("加载失败");

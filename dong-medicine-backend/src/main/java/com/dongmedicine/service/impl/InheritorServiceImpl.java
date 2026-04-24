@@ -17,7 +17,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor> implements InheritorService {
@@ -134,5 +136,24 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
         fileCleanupHelper.deleteFilesFromJson(inheritor.getDocuments());
         removeById(id);
         log.info("Deleted inheritor {} with associated files", id);
+    }
+
+    @Override
+    public Map<String, Object> getStats() {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("total", count());
+        stats.put("regionLevelCount", inheritorMapper.countByLevel("自治区级"));
+        stats.put("cityLevelCount", inheritorMapper.countByLevel("市级"));
+        stats.put("countyLevelCount", inheritorMapper.countByLevel("县级"));
+        stats.put("totalViews", inheritorMapper.sumViewCount());
+        stats.put("totalFavorites", inheritorMapper.sumFavoriteCount());
+        return stats;
+    }
+
+    @Override
+    public Map<String, List<String>> getFilterOptions() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        map.put("level", inheritorMapper.selectDistinctLevel());
+        return map;
     }
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.dongmedicine.entity.Knowledge;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 知识库服务接口
@@ -128,4 +129,18 @@ public interface KnowledgeService extends IService<Knowledge> {
      * @param id 知识ID
      */
     void deleteWithFiles(Integer id);
+
+    /**
+     * 获取知识统计数据（使用SQL聚合查询，避免全表加载）
+     *
+     * @return 统计结果Map，包含total、therapyCategoryCount、diseaseCategoryCount、typeCount、totalViews、totalFavorites
+     */
+    Map<String, Object> getStats();
+
+    /**
+     * 获取知识筛选选项（使用SQL DISTINCT查询，避免全表加载）
+     *
+     * @return 筛选选项Map，包含therapyCategory、diseaseCategory、herbCategory
+     */
+    Map<String, List<String>> getFilterOptions();
 }

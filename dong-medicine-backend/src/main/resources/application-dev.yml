@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/dong_medicine?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:123456}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -44,7 +44,7 @@ jwt:
 
 app:
   security:
-    jwt-secret: ${JWT_SECRET:dev-secret-key-for-jwt-token-generation-must-be-at-least-64-characters-long-for-hs512}
+    jwt-secret: ${JWT_SECRET:}
     jwt-expiration: ${JWT_EXPIRATION:7200000}
     cors-allowed-origins:
       - http://localhost:5173
@@ -72,7 +72,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,caches
+        include: health,info
     jmx:
       exposure:
         include: '*'

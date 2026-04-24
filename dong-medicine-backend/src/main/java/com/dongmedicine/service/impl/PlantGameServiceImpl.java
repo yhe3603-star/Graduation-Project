@@ -19,16 +19,23 @@ public class PlantGameServiceImpl extends ServiceImpl<PlantGameRecordMapper, Pla
         PlantGameRecord record = new PlantGameRecord();
         record.setUserId(userId);
         record.setDifficulty(dto.getDifficulty());
-        record.setScore(dto.getScore());
-        record.setCorrectCount(dto.getCorrectCount());
-        record.setTotalCount(dto.getTotalCount());
+        int calculatedScore = dto.getTotalCount() > 0
+                ? (int) Math.round((double) dto.getCorrectCount() / dto.getTotalCount() * 100)
+                : 0;
+        record.setScore(calculatedScore);
+        record.setCorrectCount(Math.min(dto.getCorrectCount(), dto.getTotalCount()));
+        record.setTotalCount(Math.max(dto.getTotalCount(), 1));
         baseMapper.insert(record);
-        return dto.getScore();
+        return calculatedScore;
     }
 
     @Override
     public Integer calculateScore(PlantGameSubmitDTO dto) {
-        return dto.getScore();
+        int totalCount = Math.max(dto.getTotalCount(), 1);
+        int correctCount = Math.min(dto.getCorrectCount(), dto.getTotalCount());
+        return totalCount > 0
+                ? (int) Math.round((double) correctCount / totalCount * 100)
+                : 0;
     }
 
     @Override

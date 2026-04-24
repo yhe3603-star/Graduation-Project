@@ -62,13 +62,13 @@
                 {{ item.diseaseCategory }}
               </el-tag>
               <el-button
-                :type="favorites.includes(item.id) ? 'warning' : 'default'"
+                :type="isItemFavorited(item.id) ? 'warning' : 'default'"
                 size="small"
                 class="favorite-btn"
-                :class="{ favorited: favorites.includes(item.id) }"
+                :class="{ favorited: isItemFavorited(item.id) }"
                 @click.stop="toggleFavorite(item)"
               >
-                <el-icon><component :is="favorites.includes(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
+                <el-icon><component :is="isItemFavorited(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
               </el-button>
             </div>
           </div>
@@ -122,10 +122,10 @@ import Pagination from "@/components/business/display/Pagination.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import SkeletonGridCard from "@/components/common/SkeletonGridCard.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
-import { extractPageData, extractData, logFetchError } from "@/utils";
+import { extractPageData, logFetchError } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
-import { useUserStore } from "@/stores/user";
+import { useFavorite } from "@/composables/useFavorite";
 
 const PAGE_SIZE_OPTIONS = {
   DEFAULT: 12,
@@ -137,14 +137,13 @@ const DEBOUNCE_DELAY = 300;
 
 const route = useRoute();
 const request = inject("request");
-const userStore = useUserStore();
-const isLoggedIn = computed(() => userStore.isLoggedIn);
+
+const { items: favItems, isFavorited: isItemFavorited, loadFavorites, toggleFavorite: doToggleFavorite } = useFavorite('knowledge');
 
 const pageLoading = ref(false);
 const keyword = ref("");
 const allKnowledge = ref([]);
 const hotKnowledge = ref([]);
-const favorites = ref([]);
 const detailVisible = ref(false);
 const currentItem = ref(null);
 
@@ -210,7 +209,7 @@ const handleFilter = (filters) => {
   loadKnowledgeData();
 };
 
-const isFavorited = computed(() => currentItem.value && favorites.value.includes(currentItem.value.id));
+const isFavorited = computed(() => currentItem.value && isItemFavorited(currentItem.value.id));
 
 const showDetail = async (item) => {
   currentItem.value = item;
@@ -224,26 +223,8 @@ const showDetail = async (item) => {
   }
 };
 
-const toggleFavorite = async (item) => {
-  if (!isLoggedIn.value) { ElMessage.warning("请先登录"); return; }
-  try {
-    const idx = allKnowledge.value.findIndex(k => k.id === item.id);
-    const favIdx = favorites.value.indexOf(item.id);
-    if (favIdx > -1) {
-      await request.delete(`/favorites/knowledge/${item.id}`);
-      favorites.value.splice(favIdx, 1);
-      if (idx > -1) allKnowledge.value[idx].favoriteCount = Math.max(0, (allKnowledge.value[idx].favoriteCount || 1) - 1);
-      ElMessage.success("已取消收藏");
-    } else {
-      await request.post(`/favorites/knowledge/${item.id}`);
-      favorites.value.push(item.id);
-      if (idx > -1) allKnowledge.value[idx].favoriteCount = (allKnowledge.value[idx].favoriteCount || 0) + 1;
-      ElMessage.success("收藏成功");
-    }
-  } catch (e) {
-    logFetchError('收藏操作', e);
-    ElMessage.error("操作失败");
-  }
+const toggleFavorite = (item) => {
+  if (item) doToggleFavorite(item.id, isItemFavorited(item.id));
 };
 
 const toggleFavoriteDetail = () => { if (currentItem.value) toggleFavorite(currentItem.value); };
@@ -268,20 +249,14 @@ const loadKnowledgeData = async () => {
     
     const { records, total } = extractPageData(pageRes);
     allKnowledge.value = records;
+    favItems.value = allKnowledge.value;
     totalItems.value = total;
     hotKnowledge.value = allKnowledge.value.slice(0, 5);
     
     const sd = statsRes.data || statsRes || {};
     statsData.value = { total: sd.total || 0, therapyCategoryCount: sd.therapyCategoryCount || 0, diseaseCategoryCount: sd.diseaseCategoryCount || 0, typeCount: sd.typeCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0 };
     
-    if (isLoggedIn.value) {
-      try {
-        const favData = extractData(await request.get("/favorites/my"));
-        favorites.value = favData.filter(f => f.type === "knowledge").map(f => f.targetId);
-      } catch (e) {
-        console.debug('加载收藏失败:', e);
-      }
-    }
+    await loadFavorites();
   } catch (e) {
     logFetchError('知识数据', e);
     ElMessage.error("加载失败");

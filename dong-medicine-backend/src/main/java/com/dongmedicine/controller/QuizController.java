@@ -4,14 +4,18 @@ import cn.dev33.satoken.annotation.SaCheckRole;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dongmedicine.dto.QuizCreateDTO;
+import com.dongmedicine.dto.QuizQuestionDTO;
+import com.dongmedicine.dto.QuizSubmitDTO;
+import com.dongmedicine.dto.QuizUpdateDTO;
 import com.dongmedicine.entity.QuizQuestion;
 import com.dongmedicine.entity.QuizRecord;
 import com.dongmedicine.service.QuizService;
-import com.dongmedicine.dto.QuizQuestionDTO;
-import com.dongmedicine.dto.QuizSubmitDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,16 +69,27 @@ public class QuizController {
 
     @PostMapping("/add")
     @SaCheckRole("admin")
-    public R<String> add(@RequestBody QuizQuestion question) {
-        normalizeOptions(question);
+    public R<String> add(@RequestBody @Valid QuizCreateDTO dto) {
+        QuizQuestion question = new QuizQuestion();
+        BeanUtils.copyProperties(dto, question);
+        // DTO中的options是List<String>，需要通过setOptionList转换为JSON字符串
+        if (dto.getOptions() != null) {
+            question.setOptionList(dto.getOptions());
+        }
         service.addQuestionDirect(question);
         return R.ok("添加成功");
     }
 
     @PutMapping("/update")
     @SaCheckRole("admin")
-    public R<String> update(@RequestBody QuizQuestion question) {
-        normalizeOptions(question);
+    public R<String> update(@RequestBody @Valid QuizUpdateDTO dto) {
+        QuizQuestion question = new QuizQuestion();
+        BeanUtils.copyProperties(dto, question, "options");
+        question.setId(dto.getId());
+        // DTO中的options是List<String>，需要通过setOptionList转换为JSON字符串
+        if (dto.getOptions() != null) {
+            question.setOptionList(dto.getOptions());
+        }
         service.updateQuestionDirect(question);
         return R.ok("更新成功");
     }
@@ -84,11 +99,5 @@ public class QuizController {
     public R<String> delete(@PathVariable Integer id) {
         service.deleteQuestion(id);
         return R.ok("删除成功");
-    }
-
-    private void normalizeOptions(QuizQuestion question) {
-        if (question.getOptions() == null && question.getOptionList() != null) {
-            question.setOptionList(question.getOptionList());
-        }
     }
 }

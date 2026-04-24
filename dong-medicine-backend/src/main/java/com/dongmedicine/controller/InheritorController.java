@@ -2,6 +2,7 @@ package com.dongmedicine.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.service.InheritorService;
@@ -39,7 +40,9 @@ public class InheritorController {
 
     @GetMapping("/{id}")
     public R<Inheritor> detail(@PathVariable Integer id) {
-        return R.ok(service.getDetailWithExtras(id));
+        Inheritor in = service.getDetailWithExtras(id);
+        if (in == null) throw BusinessException.notFound("传承人不存在");
+        return R.ok(in);
     }
 
     @PostMapping("/{id}/view")

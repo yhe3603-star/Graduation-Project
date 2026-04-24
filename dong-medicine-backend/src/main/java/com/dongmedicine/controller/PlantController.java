@@ -2,6 +2,7 @@ package com.dongmedicine.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.service.PlantService;
@@ -47,7 +48,8 @@ public class PlantController {
     @GetMapping("/{id}")
     public R<Plant> detail(@PathVariable @NotNull Integer id) {
         Plant plant = service.getDetailWithStory(id);
-        return plant == null ? R.error("植物不存在") : R.ok(plant);
+        if (plant == null) throw BusinessException.notFound("植物不存在");
+        return R.ok(plant);
     }
 
     @GetMapping("/{id}/similar")

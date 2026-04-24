@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaService {
@@ -79,5 +81,22 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
         } catch (Exception e) {
             log.error("Failed to increment view count for qa id: {}", id, e);
         }
+    }
+
+    @Override
+    public Map<String, Object> getStats() {
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("total", count());
+        stats.put("categoryCount", qaMapper.countDistinctCategory());
+        stats.put("totalViews", qaMapper.sumViewCount());
+        stats.put("totalFavorites", qaMapper.sumFavoriteCount());
+        return stats;
+    }
+
+    @Override
+    public Map<String, List<String>> getFilterOptions() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        map.put("category", qaMapper.selectDistinctCategory());
+        return map;
     }
 }
