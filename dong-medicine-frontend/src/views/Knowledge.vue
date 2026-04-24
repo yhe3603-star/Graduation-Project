@@ -143,7 +143,6 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 const pageLoading = ref(false);
 const keyword = ref("");
 const allKnowledge = ref([]);
-const allKnowledgeForStats = ref([]);
 const hotKnowledge = ref([]);
 const favorites = ref([]);
 const detailVisible = ref(false);
@@ -156,12 +155,13 @@ const herbFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 const totalItems = ref(0);
+const statsData = ref({ total: 0, therapyCategoryCount: 0, diseaseCategoryCount: 0, typeCount: 0, totalFavorites: 0, totalViews: 0 });
 
-const filterConfig = [
-  { key: "therapy", label: "疗法", options: [{ label: "全部", value: "" }, { label: "药浴疗法", value: "药浴疗法" }, { label: "艾灸疗法", value: "艾灸疗法" }, { label: "推拿疗法", value: "推拿疗法" }] },
-  { key: "disease", label: "疾病", type: "success", options: [{ label: "全部", value: "" }, { label: "风湿骨痛", value: "风湿骨痛" }, { label: "妇科疾病", value: "妇科疾病" }, { label: "儿科疾病", value: "儿科疾病" }] },
-  { key: "herb", label: "药材", type: "warning", options: [{ label: "全部", value: "" }, { label: "根茎类", value: "根茎类" }, { label: "全草类", value: "全草类" }, { label: "叶类", value: "叶类" }, { label: "花类", value: "花类" }, { label: "果实种子类", value: "果实种子类" }] }
-];
+const filterConfig = ref([
+  { key: "therapy", label: "疗法", options: [{ label: "全部", value: "" }] },
+  { key: "disease", label: "疾病", type: "success", options: [{ label: "全部", value: "" }] },
+  { key: "herb", label: "药材", type: "warning", options: [{ label: "全部", value: "" }] }
+]);
 
 const { parseUpdateLog, stringifyUpdateLog, addLog, updateLog, deleteLog, formatLogTime } = useUpdateLog();
 
@@ -180,19 +180,14 @@ const allUpdateLogs = computed(() => {
   return logs.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
 });
 
-const stats = computed(() => {
-  const data = allKnowledgeForStats.value.length > 0 ? allKnowledgeForStats.value : allKnowledge.value;
-  const totalViews = data.reduce((sum, k) => sum + (k.viewCount || 0), 0);
-  const totalFavorites = data.reduce((sum, k) => sum + (k.favoriteCount || 0), 0);
-  return [
-    { value: data.length, label: "知识总数" },
-    { value: new Set(data.map(k => k.therapyCategory).filter(Boolean)).size, label: "疗法分类" },
-    { value: new Set(data.map(k => k.diseaseCategory).filter(Boolean)).size, label: "疾病分类" },
-    { value: new Set(data.map(k => k.type).filter(Boolean)).size, label: "类型" },
-    { value: totalFavorites, label: "收藏量" },
-    { value: totalViews, label: "浏览量" }
-  ];
-});
+const stats = computed(() => [
+  { value: statsData.value.total, label: "知识总数" },
+  { value: statsData.value.therapyCategoryCount, label: "疗法分类" },
+  { value: statsData.value.diseaseCategoryCount, label: "疾病分类" },
+  { value: statsData.value.typeCount, label: "类型" },
+  { value: statsData.value.totalFavorites, label: "收藏量" },
+  { value: statsData.value.totalViews, label: "浏览量" }
+]);
 
 const filteredList = computed(() => allKnowledge.value);
 
@@ -224,8 +219,6 @@ const showDetail = async (item) => {
     await request.post(`/knowledge/${item.id}/view`);
     const idx = allKnowledge.value.findIndex(k => k.id === item.id);
     if (idx > -1) allKnowledge.value[idx].viewCount = (allKnowledge.value[idx].viewCount || 0) + 1;
-    const statsIdx = allKnowledgeForStats.value.findIndex(k => k.id === item.id);
-    if (statsIdx > -1) allKnowledgeForStats.value[statsIdx].viewCount = (allKnowledgeForStats.value[statsIdx].viewCount || 0) + 1;
   } catch (e) {
     console.debug('浏览量更新失败:', e);
   }
@@ -258,8 +251,7 @@ const toggleFavoriteDetail = () => { if (currentItem.value) toggleFavorite(curre
 const loadKnowledgeData = async () => {
   pageLoading.value = true;
   try {
-    // 并行请求：获取分页数据和所有数据用于统计
-    const [pageRes, allRes] = await Promise.all([
+    const [pageRes, statsRes] = await Promise.all([
       request.get("/knowledge/list", {
         params: {
           page: currentPage.value,
@@ -271,13 +263,7 @@ const loadKnowledgeData = async () => {
           _t: Date.now()
         }
       }),
-      request.get("/knowledge/list", {
-        params: {
-          page: 1,
-          size: 9999, // 获取足够多的数据以确保包含所有记录
-          _t: Date.now()
-        }
-      })
+      request.get("/stats/knowledge")
     ]);
     
     const { records, total } = extractPageData(pageRes);
@@ -285,9 +271,8 @@ const loadKnowledgeData = async () => {
     totalItems.value = total;
     hotKnowledge.value = allKnowledge.value.slice(0, 5);
     
-    // 加载所有数据用于统计
-    const allData = extractPageData(allRes);
-    allKnowledgeForStats.value = allData.records;
+    const sd = statsRes.data || statsRes || {};
+    statsData.value = { total: sd.total || 0, therapyCategoryCount: sd.therapyCategoryCount || 0, diseaseCategoryCount: sd.diseaseCategoryCount || 0, typeCount: sd.typeCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0 };
     
     if (isLoggedIn.value) {
       try {
@@ -304,7 +289,23 @@ const loadKnowledgeData = async () => {
   finally { pageLoading.value = false; }
 };
 
-onMounted(loadKnowledgeData);
+const loadMetadata = async () => {
+  try {
+    const res = await request.get("/metadata/filters");
+    const data = res.data || res || {};
+    const knowledgeFilters = data.knowledge || {};
+    const therapyCategories = knowledgeFilters.therapyCategory || [];
+    const diseaseCategories = knowledgeFilters.diseaseCategory || [];
+    const herbCategories = knowledgeFilters.herbCategory || [];
+    filterConfig.value = [
+      { key: "therapy", label: "疗法", options: [{ label: "全部", value: "" }, ...therapyCategories.map(c => ({ label: c, value: c }))] },
+      { key: "disease", label: "疾病", type: "success", options: [{ label: "全部", value: "" }, ...diseaseCategories.map(c => ({ label: c, value: c }))] },
+      { key: "herb", label: "药材", type: "warning", options: [{ label: "全部", value: "" }, ...herbCategories.map(c => ({ label: c, value: c }))] }
+    ];
+  } catch {}
+};
+
+onMounted(() => { loadMetadata(); loadKnowledgeData(); });
 
 watch(() => route.path, (newPath) => {
   if (newPath === '/knowledge') loadKnowledgeData();

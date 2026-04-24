@@ -105,10 +105,10 @@ const FILE_TYPE_MAP = {
   image: { extensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'], icon: Picture, name: '图片' }
 };
 
-const filterConfig = [
-  { key: "category", label: "难度", options: [{ label: "全部", value: "" }, { label: "入门", value: "入门" }, { label: "进阶", value: "进阶" }, { label: "专业", value: "专业" }] },
+const filterConfig = ref([
+  { key: "category", label: "难度", options: [{ label: "全部", value: "" }] },
   { key: "type", label: "类型", type: "success", options: [{ label: "全部", value: "" }, { label: "视频", value: "video" }, { label: "文档", value: "document" }, { label: "图片", value: "image" }] }
-];
+]);
 
 const route = useRoute();
 const request = inject("request");
@@ -119,7 +119,6 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 const pageLoading = ref(false);
 const keyword = ref("");
 const allResources = ref([]);
-const allResourcesForStats = ref([]);
 const hotResources = ref([]);
 const previewVisible = ref(false);
 const currentResource = ref(null);
@@ -129,6 +128,7 @@ const typeFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(9);
 const totalItems = ref(0);
+const statsData = ref({ total: 0, videoCount: 0, documentCount: 0, imageCount: 0, totalFavorites: 0, totalViews: 0, totalDownloads: 0, totalSize: 0 });
 
 const { parseUpdateLog } = useUpdateLog();
 
@@ -145,24 +145,16 @@ const allUpdateLogs = computed(() => {
 const filteredResources = computed(() => allResources.value);
 const paginatedList = computed(() => allResources.value);
 
-const stats = computed(() => {
-  const data = allResourcesForStats.value.length > 0 ? allResourcesForStats.value : allResources.value;
-  const totalViews = data.reduce((sum, r) => sum + (r.viewCount || 0), 0);
-  const totalDownloads = data.reduce((sum, r) => sum + (r.downloadCount || 0), 0);
-  const totalFavorites = data.reduce((sum, r) => sum + (r.favoriteCount || 0), 0);
-  const totalSize = data.reduce((sum, r) => sum + (getFileInfo(r).size || 0), 0);
-  
-  return [
-    { value: data.length, label: "资源总数" },
-    { value: data.filter(r => getFileInfo(r).type === 'video').length, label: "视频数量" },
-    { value: data.filter(r => getFileInfo(r).type === 'document').length, label: "文档数量" },
-    { value: data.filter(r => getFileInfo(r).type === 'image').length, label: "图片数量" },
-    { value: totalFavorites, label: "收藏量" },
-    { value: totalViews, label: "浏览量" },
-    { value: totalDownloads, label: "下载量" },
-    { value: formatSize(totalSize), label: "总大小" }
-  ];
-});
+const stats = computed(() => [
+  { value: statsData.value.total, label: "资源总数" },
+  { value: statsData.value.videoCount, label: "视频数量" },
+  { value: statsData.value.documentCount, label: "文档数量" },
+  { value: statsData.value.imageCount, label: "图片数量" },
+  { value: statsData.value.totalFavorites, label: "收藏量" },
+  { value: statsData.value.totalViews, label: "浏览量" },
+  { value: statsData.value.totalDownloads, label: "下载量" },
+  { value: formatSize(statsData.value.totalSize), label: "总大小" }
+]);
 
 const getFileInfo = (item) => {
   if (!item.files) return { url: '', type: 'document', size: 0 };
@@ -220,8 +212,6 @@ const openResource = async (item) => {
     await request.post(`/resources/${item.id}/view`);
     const idx = allResources.value.findIndex(r => r.id === item.id);
     if (idx > -1) allResources.value[idx].viewCount = (allResources.value[idx].viewCount || 0) + 1;
-    const statsIdx = allResourcesForStats.value.findIndex(r => r.id === item.id);
-    if (statsIdx > -1) allResourcesForStats.value[statsIdx].viewCount = (allResourcesForStats.value[statsIdx].viewCount || 0) + 1;
   } catch {}
 };
 
@@ -287,9 +277,9 @@ const downloadCurrentResource = () => { if (currentResource.value) downloadResou
 const loadResourcesData = async () => {
   pageLoading.value = true;
   try {
-    const [pageRes, allRes] = await Promise.all([
+    const [pageRes, statsRes] = await Promise.all([
       request.get("/resources/list", { params: { page: currentPage.value, size: pageSize.value, keyword: keyword.value, fileType: typeFilter.value, category: categoryFilter.value, _t: Date.now() } }),
-      request.get("/resources/list", { params: { page: 1, size: 9999, _t: Date.now() } })
+      request.get("/stats/resources")
     ]);
     
     const { records, total } = extractPageData(pageRes);
@@ -297,8 +287,8 @@ const loadResourcesData = async () => {
     totalItems.value = total;
     hotResources.value = allResources.value.slice(0, 5);
     
-    const allData = extractPageData(allRes);
-    allResourcesForStats.value = allData.records;
+    const sd = statsRes.data || statsRes || {};
+    statsData.value = { total: sd.total || 0, videoCount: sd.videoCount || 0, documentCount: sd.documentCount || 0, imageCount: sd.imageCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0, totalDownloads: sd.totalDownloads || 0, totalSize: sd.totalSize || 0 };
     
     if (isLoggedIn.value) {
       try { favorites.value = extractData(await request.get("/favorites/my")); } catch {}
@@ -307,7 +297,20 @@ const loadResourcesData = async () => {
   finally { pageLoading.value = false; }
 };
 
-onMounted(loadResourcesData);
+const loadMetadata = async () => {
+  try {
+    const res = await request.get("/metadata/filters");
+    const data = res.data || res || {};
+    const resourcesFilters = data.resources || {};
+    const categories = resourcesFilters.category || [];
+    filterConfig.value = [
+      { key: "category", label: "难度", options: [{ label: "全部", value: "" }, ...categories.map(c => ({ label: c, value: c }))] },
+      { key: "type", label: "类型", type: "success", options: [{ label: "全部", value: "" }, { label: "视频", value: "video" }, { label: "文档", value: "document" }, { label: "图片", value: "image" }] }
+    ];
+  } catch {}
+};
+
+onMounted(() => { loadMetadata(); loadResourcesData(); });
 
 watch(() => route.path, (newPath) => {
   if (newPath === '/resources') loadResourcesData();

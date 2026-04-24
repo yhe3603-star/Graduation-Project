@@ -9,6 +9,14 @@ export default defineConfig({
       "@": resolve(__dirname, "src"),
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use "@/styles/scss/variables" as *;\n@use "@/styles/scss/mixins" as *;\n`,
+        api: "modern-compiler",
+      },
+    },
+  },
   build: {
     chunkSizeWarningLimit: 1500,
     sourcemap: false,

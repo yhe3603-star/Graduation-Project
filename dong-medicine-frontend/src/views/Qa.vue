@@ -97,6 +97,20 @@
         @hot-click="showDetail"
       >
         <AiChatCard />
+        <el-card
+          class="feedback-entry-card"
+          shadow="hover"
+          @click="$router.push('/feedback')"
+        >
+          <div class="feedback-entry">
+            <el-icon :size="24"><EditPen /></el-icon>
+            <div class="feedback-entry-text">
+              <span class="feedback-entry-title">有问题？反馈给我们</span>
+              <span class="feedback-entry-desc">提交建议或问题，我们会尽快处理</span>
+            </div>
+            <el-icon><ArrowRight /></el-icon>
+          </div>
+        </el-card>
       </PageSidebar>
     </div>
 
@@ -113,7 +127,7 @@
 import { computed, inject, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
-import { QuestionFilled, Star, View } from "@element-plus/icons-vue";
+import { QuestionFilled, Star, View, EditPen, ArrowRight } from "@element-plus/icons-vue";
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
 import QuizDetailDialog from "@/components/business/dialogs/QuizDetailDialog.vue";
@@ -140,7 +154,6 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 const pageLoading = ref(false);
 const keyword = ref("");
 const allQa = ref([]);
-const allQaForStats = ref([]);
 const hotQa = ref([]);
 const detailVisible = ref(false);
 const currentQa = ref(null);
@@ -149,22 +162,18 @@ const categoryFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 const totalItems = ref(0);
+const statsData = ref({ total: 0, categoryCount: 0, totalViews: 0, totalFavorites: 0 });
 
-const filterConfig = [
-  { key: "category", label: "分类", options: [{ label: "全部", value: "" }, { label: "侗药常识", value: "侗药常识" }, { label: "侗医疗法", value: "侗医疗法" }, { label: "文化背景", value: "文化背景" }] }
-];
+const filterConfig = ref([
+  { key: "category", label: "分类", options: [{ label: "全部", value: "" }] }
+]);
 
-const stats = computed(() => {
-  const data = allQaForStats.value.length > 0 ? allQaForStats.value : allQa.value;
-  const totalViews = data.reduce((sum, q) => sum + (q.viewCount || 0), 0);
-  const totalFavorites = data.reduce((sum, q) => sum + (q.favoriteCount || 0), 0);
-  return [
-    { value: data.length, label: "问题总数" },
-    { value: new Set(data.map(q => q.category).filter(Boolean)).size, label: "分类数" },
-    { value: totalViews, label: "浏览量" },
-    { value: totalFavorites, label: "收藏量" }
-  ];
-});
+const stats = computed(() => [
+  { value: statsData.value.total, label: "问题总数" },
+  { value: statsData.value.categoryCount, label: "分类数" },
+  { value: statsData.value.totalViews, label: "浏览量" },
+  { value: statsData.value.totalFavorites, label: "收藏量" }
+]);
 
 const filteredList = computed(() => allQa.value);
 
@@ -204,20 +213,21 @@ const toggleFavorite = async (item) => {
   if (!isLoggedIn.value) { ElMessage.warning("请先登录"); return; }
   try {
     const qaIdx = allQa.value.findIndex(q => q.id === item.id);
-    const favIdx = favorites.value.indexOf(item.id)
-    if (favIdx > -1) {
-      favorites.value.splice(favIdx, 1)
-      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = Math.max(0, (allQa.value[qaIdx].favoriteCount || 1) - 1)
-      ElMessage.success("已取消收藏")
+    const wasFav = isFavorited(item.id);
+    if (wasFav) {
+      await request.delete(`/favorites/qa/${item.id}`);
+      favorites.value = favorites.value.filter(f => !(f.targetId === item.id && f.type === "qa"));
+      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = Math.max(0, (allQa.value[qaIdx].favoriteCount || 1) - 1);
+      ElMessage.success("已取消收藏");
     } else {
-      await request.post(`/favorites/qa/${item.id}`)
-      favorites.value.push({ targetId: item.id, type: "qa" })
-      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = (allQa.value[qaIdx].favoriteCount || 1) + 1
-      ElMessage.success("收藏成功")
+      await request.post(`/favorites/qa/${item.id}`);
+      favorites.value.push({ targetId: item.id, type: "qa" });
+      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = (allQa.value[qaIdx].favoriteCount || 0) + 1;
+      ElMessage.success("收藏成功");
     }
   } catch (e) {
-    logFetchError('收藏操作', e)
-    ElMessage.error("操作失败")
+    console.error("收藏操作失败", e);
+    ElMessage.error("操作失败");
   }
 };
 
@@ -226,8 +236,7 @@ const toggleFavoriteDetail = () => { if (currentQa.value) toggleFavorite(current
 const loadQaData = async () => {
   pageLoading.value = true;
   try {
-    // 并行请求：获取分页数据和所有数据用于统计
-    const [pageRes, allRes] = await Promise.all([
+    const [pageRes, statsRes] = await Promise.all([
       request.get("/qa/list", {
         params: {
           page: currentPage.value,
@@ -237,13 +246,7 @@ const loadQaData = async () => {
           _t: Date.now()
         }
       }),
-      request.get("/qa/list", {
-        params: {
-          page: 1,
-          size: 9999, // 获取足够多的数据以确保包含所有记录
-          _t: Date.now()
-        }
-      })
+      request.get("/stats/qa")
     ]);
     
     const { records, total } = extractPageData(pageRes);
@@ -251,9 +254,8 @@ const loadQaData = async () => {
     totalItems.value = total;
     hotQa.value = allQa.value.slice(0, 5);
     
-    // 加载所有数据用于统计
-    const allData = extractPageData(allRes);
-    allQaForStats.value = allData.records;
+    const sd = statsRes.data || statsRes || {};
+    statsData.value = { total: sd.total || 0, categoryCount: sd.categoryCount || 0, totalViews: sd.totalViews || 0, totalFavorites: sd.totalFavorites || 0 };
     
     if (isLoggedIn.value) {
       try { favorites.value = extractData(await request.get("/favorites/my")); } catch {}
@@ -262,7 +264,19 @@ const loadQaData = async () => {
   finally { pageLoading.value = false; }
 };
 
-onMounted(loadQaData);
+const loadMetadata = async () => {
+  try {
+    const res = await request.get("/metadata/filters");
+    const data = res.data || res || {};
+    const qaFilters = data.qa || {};
+    const categories = qaFilters.category || [];
+    filterConfig.value = [
+      { key: "category", label: "分类", options: [{ label: "全部", value: "" }, ...categories.map(c => ({ label: c, value: c }))] }
+    ];
+  } catch {}
+};
+
+onMounted(() => { loadMetadata(); loadQaData(); });
 
 watch(() => route.path, (newPath) => {
   if (newPath === '/qa') loadQaData();
@@ -420,5 +434,42 @@ watch(() => route.path, (newPath) => {
   .qa-actions .el-button {
     flex: 1;
   }
+}
+
+.feedback-entry-card {
+  margin-top: var(--space-md);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--dong-indigo, #4A148C);
+  transition: all 0.25s ease;
+}
+
+.feedback-entry-card:hover {
+  border-style: solid;
+  box-shadow: 0 2px 12px rgba(74, 20, 140, 0.15);
+}
+
+.feedback-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--dong-indigo, #4A148C);
+}
+
+.feedback-entry-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feedback-entry-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.feedback-entry-desc {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 </style>

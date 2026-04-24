@@ -118,13 +118,49 @@
           </div>
         </div>
       </section>
+
+      <section class="about-section compliance-section">
+        <h2 class="section-title">
+          <el-icon><Warning /></el-icon> 合规与声明
+        </h2>
+        <div class="compliance-grid">
+          <div class="compliance-card">
+            <div class="compliance-icon privacy">
+              <el-icon :size="24"><Lock /></el-icon>
+            </div>
+            <h4>隐私保护</h4>
+            <p>本平台严格保护传承人及用户隐私，传承人联系方式不予公开展示。用户个人信息仅用于平台功能服务，不会向第三方泄露。</p>
+          </div>
+          <div class="compliance-card">
+            <div class="compliance-icon medical">
+              <el-icon :size="24"><FirstAidKit /></el-icon>
+            </div>
+            <h4>医疗免责声明</h4>
+            <p>本平台所有医药知识内容仅供科普学习，不构成医疗建议。如有健康问题，请前往正规医疗机构就诊，切勿自行用药。</p>
+          </div>
+          <div class="compliance-card">
+            <div class="compliance-icon copyright">
+              <el-icon :size="24"><Document /></el-icon>
+            </div>
+            <h4>版权声明</h4>
+            <p>平台图片、视频及文档资料均标注来源，尊重原作者知识产权。如涉及版权问题，请通过反馈渠道联系我们处理。</p>
+          </div>
+          <div class="compliance-card">
+            <div class="compliance-icon sustainable">
+              <el-icon :size="24"><RefreshRight /></el-icon>
+            </div>
+            <h4>可持续运营</h4>
+            <p>平台设有内容更新日志与后台运营管理功能，确保知识内容的持续维护与更新迭代，保障非遗数字资源的长期可用性。</p>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, inject, onMounted, ref } from "vue";
-import { Aim, ArrowRight, ChatDotRound, Collection, DataLine, Document, FirstAidKit, Grid, MagicStick, Picture, Sunny, User, Folder, Opportunity } from "@element-plus/icons-vue";
+import { Aim, ArrowRight, ChatDotRound, Collection, DataLine, Document, FirstAidKit, Grid, Lock, MagicStick, Picture, RefreshRight, Sunny, User, Warning, Folder, Opportunity } from "@element-plus/icons-vue";
 import { extractPageData } from "@/utils";
 import { logFetchError } from '@/utils/logger';
 
@@ -430,7 +466,8 @@ onMounted(async () => {
   .feature-grid,
   .culture-grid,
   .module-grid,
-  .stats-grid {
+  .stats-grid,
+  .compliance-grid {
     grid-template-columns: 1fr;
   }
   .about-hero {
@@ -438,6 +475,55 @@ onMounted(async () => {
   }
   .about-hero h1 {
     font-size: var(--font-size-2xl);
+  }
+}
+
+.compliance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xl);
+}
+
+.compliance-card {
+  text-align: center;
+  padding: var(--space-xl);
+  background: var(--bg-rice);
+  border-radius: var(--radius-md);
+  border-top: 3px solid transparent;
+}
+
+.compliance-card .privacy { background: linear-gradient(135deg, #667eea, #764ba2); }
+.compliance-card .medical { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.compliance-card .copyright { background: linear-gradient(135deg, #f39c12, #e67e22); }
+.compliance-card .sustainable { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+
+.compliance-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  margin: 0 auto var(--space-md);
+}
+
+.compliance-card h4 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-md);
+  color: var(--dong-indigo);
+}
+
+.compliance-card p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+@media (max-width: 1024px) {
+  .compliance-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

@@ -1,0 +1,167 @@
+@use "variables" as *;
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@mixin text-ellipsis($lines: 1) {
+  @if $lines == 1 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@mixin card-base($radius: $radius-lg, $shadow: $shadow-sm) {
+  background: $text-inverse;
+  border-radius: $radius;
+  box-shadow: $shadow;
+  transition: box-shadow $transition-normal, transform $transition-normal;
+}
+
+@mixin card-hover($shadow: $shadow-md, $lift: -2px) {
+  &:hover {
+    box-shadow: $shadow;
+    transform: translateY($lift);
+  }
+}
+
+@mixin gradient-brand {
+  background: linear-gradient(135deg, $dong-indigo, $dong-indigo-dark);
+}
+
+@mixin gradient-jade {
+  background: linear-gradient(135deg, $dong-jade, $dong-jade-dark);
+}
+
+@mixin gradient-gold {
+  background: linear-gradient(135deg, $dong-gold, $dong-gold-light);
+}
+
+@mixin gradient-danger {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+@mixin gradient-placeholder {
+  background: linear-gradient(135deg, #e8f4f8, #d4e8ed);
+}
+
+@mixin gradient-warm-bg {
+  background: linear-gradient(135deg, #f0f9f4, #e8f5e9);
+}
+
+@mixin section-title($color: $dong-indigo) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 0;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color;
+}
+
+@mixin stat-item {
+  @include flex-column-center;
+  gap: 4px;
+}
+
+@mixin stat-value($color: $dong-indigo) {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color;
+}
+
+@mixin stat-label {
+  font-size: $font-size-xs;
+  color: $text-muted;
+}
+
+@mixin responsive($breakpoint) {
+  @if $breakpoint == sm {
+    @media (max-width: $breakpoint-sm) { @content; }
+  } @else if $breakpoint == md {
+    @media (max-width: $breakpoint-md) { @content; }
+  } @else if $breakpoint == lg {
+    @media (max-width: $breakpoint-lg) { @content; }
+  } @else if $breakpoint == xl {
+    @media (max-width: $breakpoint-xl) { @content; }
+  }
+}
+
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@mixin focus-ring($color: $dong-indigo) {
+  &:focus-visible {
+    outline: 3px solid $color;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@mixin scrollable($direction: y) {
+  @if $direction == y {
+    overflow-y: auto;
+    overflow-x: hidden;
+  } @else {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  &::-webkit-scrollbar { width: 6px; height: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba($dong-indigo, 0.2); border-radius: $radius-full; }
+  &::-webkit-scrollbar-track { background: transparent; }
+}
+
+@mixin page-container {
+  max-width: $container-max;
+  margin: 0 auto;
+  padding: $space-xl;
+  min-height: calc(100vh - #{$header-height});
+}
+
+@mixin tag-variant($bg, $color, $border: transparent) {
+  background: $bg;
+  color: $color;
+  border-color: $border;
+}
+
+@mixin formula-box {
+  padding: 20px;
+  background: linear-gradient(135deg, #e8f4f8, #d4e8ed);
+  border-radius: $radius-md;
+  border-left: 4px solid $dong-indigo;
+  overflow-x: auto;
+}

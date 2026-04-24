@@ -80,6 +80,62 @@
         </section>
 
         <section
+          v-if="relatedPlants.length"
+          class="related-plants-section"
+        >
+          <h3 class="section-title">
+            <el-icon><Cherry /></el-icon>关联药材
+          </h3>
+          <div class="related-plants-grid">
+            <div
+              v-for="plant in relatedPlants"
+              :key="plant.id"
+              class="related-plant-card"
+              @click="goToPlant(plant.id)"
+            >
+              <div class="plant-avatar">
+                <el-image
+                  v-if="getPlantImage(plant)"
+                  :src="getPlantImage(plant)"
+                  fit="cover"
+                  lazy
+                >
+                  <template #error>
+                    <div class="plant-avatar-placeholder">
+                      <el-icon><Cherry /></el-icon>
+                    </div>
+                  </template>
+                </el-image>
+                <div
+                  v-else
+                  class="plant-avatar-placeholder"
+                >
+                  <el-icon><Cherry /></el-icon>
+                </div>
+              </div>
+              <div class="plant-info">
+                <div class="plant-name">
+                  {{ plant.nameCn }}
+                </div>
+                <div
+                  v-if="plant.nameDong"
+                  class="plant-dong-name"
+                >
+                  {{ plant.nameDong }}
+                </div>
+                <el-tag
+                  size="small"
+                  effect="plain"
+                  class="plant-category-tag"
+                >
+                  {{ plant.category || '药材' }}
+                </el-tag>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
           v-if="knowledge?.usageMethod"
           class="usage-section"
         >
@@ -103,16 +159,22 @@
           <h3 class="section-title">
             <el-icon><List /></el-icon>操作步骤
           </h3>
-          <div class="steps-list">
+          <div class="steps-flowchart">
             <div
               v-for="(step, index) in parsedSteps"
               :key="index"
-              class="step-item"
+              class="step-node"
             >
-              <div class="step-number">
-                {{ index + 1 }}
+              <div class="step-connector-area">
+                <div class="step-dot">
+                  <span class="step-num">{{ index + 1 }}</span>
+                </div>
+                <div
+                  v-if="index < parsedSteps.length - 1"
+                  class="step-line"
+                />
               </div>
-              <div class="step-content">
+              <div class="step-body">
                 <div
                   v-if="step.title"
                   class="step-title"
@@ -125,6 +187,19 @@
               </div>
             </div>
           </div>
+        </section>
+
+        <section
+          v-if="imageList.length"
+          class="images-section"
+        >
+          <h3 class="section-title">
+            <el-icon><Picture /></el-icon>步骤示意图
+          </h3>
+          <ImageCarousel
+            :images="imageList"
+            height="280px"
+          />
         </section>
 
         <section class="media-section">
@@ -194,11 +269,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { View, Star, Document, Memo, FirstAidKit, List, Film, VideoPlay } from '@element-plus/icons-vue';
+import { ref, computed, watch, inject } from 'vue';
+import { useRouter } from 'vue-router';
+import { View, Star, Document, Memo, FirstAidKit, List, Film, VideoPlay, Cherry, Picture } from '@element-plus/icons-vue';
 import VideoPlayer from '@/components/business/media/VideoPlayer.vue';
 import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
+import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
 
 const props = defineProps({
@@ -208,6 +285,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'toggle-favorite']);
+const router = useRouter();
+const request = inject('request');
 
 const activeMediaTab = ref('video');
 const documentList = ref([]);
@@ -215,6 +294,7 @@ const documentsLoading = ref(false);
 const previewVisible = ref(false);
 const previewDoc = ref(null);
 const videoPlayerRef = ref(null);
+const relatedPlants = ref([]);
 
 const parsedSteps = computed(() => {
   const steps = props.knowledge?.steps;
@@ -227,9 +307,45 @@ const parsedSteps = computed(() => {
   }
 });
 
+const imageList = computed(() => {
+  const images = props.knowledge?.images;
+  if (!images) return [];
+  const items = parseMediaList(images);
+  return items.map(item => typeof item === 'string' ? item : item.url);
+});
+
 const parseLines = (text) => text?.split('\n').filter(line => line.trim()) || [];
 const videoList = computed(() => parseMediaList(props.knowledge?.videoUrl));
 const isVideoTab = computed(() => activeMediaTab.value === 'video');
+
+const getPlantImage = (plant) => {
+  if (!plant.images) return null;
+  try {
+    const imgs = typeof plant.images === 'string' ? JSON.parse(plant.images) : plant.images;
+    if (Array.isArray(imgs) && imgs.length > 0) {
+      return imgs[0].url || imgs[0].path || imgs[0];
+    }
+  } catch {}
+  return null;
+};
+
+const loadRelatedPlants = async () => {
+  const rp = props.knowledge?.relatedPlants;
+  if (!rp) { relatedPlants.value = []; return; }
+  try {
+    const ids = typeof rp === 'string' ? JSON.parse(rp) : rp;
+    if (!Array.isArray(ids) || ids.length === 0) { relatedPlants.value = []; return; }
+    const res = await request.post('/plants/batch', ids);
+    relatedPlants.value = res.data || res || [];
+  } catch {
+    relatedPlants.value = [];
+  }
+};
+
+const goToPlant = (id) => {
+  handleDialogClose(false);
+  router.push(`/plants?id=${id}`);
+};
 
 const loadDocuments = () => {
   documentsLoading.value = true;
@@ -253,6 +369,7 @@ watch(() => props.visible, (newVal) => {
   if (newVal) {
     activeMediaTab.value = videoList.value.length > 0 ? 'video' : 'document';
     loadDocuments();
+    loadRelatedPlants();
   } else if (videoPlayerRef.value) {
     videoPlayerRef.value.pause();
   }
@@ -321,6 +438,145 @@ const handleDocumentDownload = downloadDocument;
   overflow-wrap: break-word;
 }
 
+.related-plants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.related-plant-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #f0f9f4, #e8f5e9);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
+}
+
+.related-plant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.15);
+  border-color: var(--dong-green, #2E7D32);
+}
+
+.plant-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #c8e6c9;
+}
+
+.plant-avatar .el-image {
+  width: 100%;
+  height: 100%;
+}
+
+.plant-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dong-green, #2E7D32);
+  font-size: 20px;
+  background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+}
+
+.plant-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.plant-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plant-dong-name {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plant-category-tag {
+  margin-top: 4px;
+}
+
+.steps-flowchart {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.step-node {
+  display: flex;
+  gap: 16px;
+  min-height: 56px;
+}
+
+.step-connector-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.step-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--dong-blue, #1A5276), #2980b9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(26, 82, 118, 0.3);
+}
+
+.step-num {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.step-line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: linear-gradient(to bottom, var(--dong-blue, #1A5276), #bdc3c7);
+  margin: 4px 0;
+}
+
+.step-body {
+  flex: 1;
+  padding: 6px 0 20px 0;
+}
+
+.step-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
 .usage-box {
   padding: 16px;
   background: #fff8e6;
@@ -337,6 +593,10 @@ const handleDocumentDownload = downloadDocument;
 
 .usage-box p:last-child {
   margin-bottom: 0;
+}
+
+.images-section {
+  margin-top: 4px;
 }
 
 .media-section {
@@ -372,6 +632,41 @@ const handleDocumentDownload = downloadDocument;
     line-height: 1.6;
   }
   
+  .related-plants-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  
+  .related-plant-card {
+    padding: 8px 10px;
+  }
+  
+  .plant-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .step-node {
+    gap: 10px;
+  }
+  
+  .step-dot {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .step-num {
+    font-size: 12px;
+  }
+  
+  .step-connector-area {
+    width: 30px;
+  }
+  
+  .step-body {
+    padding: 4px 0 14px 0;
+  }
+  
   .usage-box {
     padding: 12px;
   }
@@ -401,6 +696,10 @@ const handleDocumentDownload = downloadDocument;
   
   .formula-box pre {
     font-size: 11px;
+  }
+  
+  .related-plants-grid {
+    grid-template-columns: 1fr;
   }
   
   .usage-box {

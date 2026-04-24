@@ -176,7 +176,7 @@
               <span class="stat-label">总反馈</span>
             </div>
             <div class="stat-item">
-              <span class="stat-value">{{ stats.processed }}</span>
+              <span class="stat-value">{{ stats.resolved }}</span>
               <span class="stat-label">已处理</span>
             </div>
             <div class="stat-item">
@@ -205,7 +205,7 @@ const pageLoading = ref(false);
 const submitting = ref(false);
 const formRef = ref(null);
 const myFeedbacks = ref([]);
-const stats = ref({ total: 0, processed: 0, pending: 0 });
+const stats = ref({ total: 0, resolved: 0, pending: 0 });
 
 const feedbackForm = ref({ type: "建议", title: "", content: "", contact: "" });
 
@@ -254,8 +254,8 @@ const fetchMyFeedbacks = async () => {
 const fetchStats = async () => {
   try {
     const res = await request.get("/feedback/stats");
-    const data = res.data || res || { total: 0, processed: 0, pending: 0 };
-    stats.value = { total: data.total || 0, processed: data.processed || 0, pending: data.pending || 0 };
+    const data = res.data || res || { total: 0, resolved: 0, pending: 0 };
+    stats.value = { total: data.total || 0, resolved: data.resolved || 0, pending: data.pending || 0 };
   } catch {}
 };
 

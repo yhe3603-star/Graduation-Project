@@ -144,7 +144,6 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 const pageLoading = ref(false);
 const keyword = ref("");
 const allInheritors = ref([]);
-const allInheritorsForStats = ref([]);
 const featuredInheritors = ref([]);
 const detailVisible = ref(false);
 const currentInheritor = ref(null);
@@ -153,10 +152,11 @@ const levelFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 const totalItems = ref(0);
+const statsData = ref({ total: 0, regionLevelCount: 0, cityLevelCount: 0, countyLevelCount: 0, totalFavorites: 0, totalViews: 0 });
 
-const filterConfig = [
-  { key: "level", label: "级别", options: [{ label: "全部", value: "" }, { label: "国家级", value: "国家级" }, { label: "自治区级", value: "自治区级" }, { label: "市级", value: "市级" }, { label: "县级", value: "县级" }] }
-];
+const filterConfig = ref([
+  { key: "level", label: "级别", options: [{ label: "全部", value: "" }] }
+]);
 
 const { parseUpdateLog } = useUpdateLog();
 
@@ -175,20 +175,14 @@ const allUpdateLogs = computed(() => {
   return logs.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
 });
 
-const stats = computed(() => {
-  const data = allInheritorsForStats.value.length > 0 ? allInheritorsForStats.value : allInheritors.value;
-  const total = data.length;
-  const totalViews = data.reduce((sum, i) => sum + (i.viewCount || 0), 0);
-  const totalFavorites = data.reduce((sum, i) => sum + (i.favoriteCount || 0), 0);
-  return [
-    { value: total, label: "传承人总数" },
-    { value: data.filter(i => i.level === "自治区级").length, label: "自治区级" },
-    { value: data.filter(i => i.level === "市级").length, label: "市级" },
-    { value: data.filter(i => i.level === "县级").length, label: "县级" },
-    { value: totalFavorites, label: "收藏量" },
-    { value: totalViews, label: "浏览量" }
-  ];
-});
+const stats = computed(() => [
+  { value: statsData.value.total, label: "传承人总数" },
+  { value: statsData.value.regionLevelCount, label: "自治区级" },
+  { value: statsData.value.cityLevelCount, label: "市级" },
+  { value: statsData.value.countyLevelCount, label: "县级" },
+  { value: statsData.value.totalFavorites, label: "收藏量" },
+  { value: statsData.value.totalViews, label: "浏览量" }
+]);
 
 const filteredList = computed(() => allInheritors.value);
 
@@ -221,8 +215,6 @@ const showDetail = async (item) => {
     await request.post(`/inheritors/${item.id}/view`);
     const idx = allInheritors.value.findIndex(i => i.id === item.id);
     if (idx > -1) allInheritors.value[idx].viewCount = (allInheritors.value[idx].viewCount || 0) + 1;
-    const statsIdx = allInheritorsForStats.value.findIndex(i => i.id === item.id);
-    if (statsIdx > -1) allInheritorsForStats.value[statsIdx].viewCount = (allInheritorsForStats.value[statsIdx].viewCount || 0) + 1;
   } catch (e) {
     console.debug('浏览量更新失败:', e)
   }
@@ -261,8 +253,7 @@ const toggleFavoriteCard = (item) => { doToggleFavorite(item.id, isFavoritedCard
 const loadInheritorsData = async () => {
   pageLoading.value = true;
   try {
-    // 并行请求：获取分页数据和所有数据用于统计
-    const [pageRes, allRes] = await Promise.all([
+    const [pageRes, statsRes] = await Promise.all([
       request.get("/inheritors/list", {
         params: {
           page: currentPage.value,
@@ -272,13 +263,7 @@ const loadInheritorsData = async () => {
           _t: Date.now()
         }
       }),
-      request.get("/inheritors/list", {
-        params: {
-          page: 1,
-          size: 9999, // 获取足够多的数据以确保包含所有记录
-          _t: Date.now()
-        }
-      })
+      request.get("/stats/inheritors")
     ]);
     
     const { records, total } = extractPageData(pageRes);
@@ -286,9 +271,8 @@ const loadInheritorsData = async () => {
     totalItems.value = total;
     featuredInheritors.value = [...allInheritors.value].sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 5);
     
-    // 加载所有数据用于统计
-    const allData = extractPageData(allRes);
-    allInheritorsForStats.value = allData.records;
+    const sd = statsRes.data || statsRes || {};
+    statsData.value = { total: sd.total || 0, regionLevelCount: sd.regionLevelCount || 0, cityLevelCount: sd.cityLevelCount || 0, countyLevelCount: sd.countyLevelCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0 };
     
     if (isLoggedIn.value) {
       try { favorites.value = extractData(await request.get("/favorites/my")); } catch (e) { console.debug('加载收藏失败:', e); }
@@ -300,7 +284,19 @@ const loadInheritorsData = async () => {
   finally { pageLoading.value = false; }
 };
 
-onMounted(loadInheritorsData);
+const loadMetadata = async () => {
+  try {
+    const res = await request.get("/metadata/filters");
+    const data = res.data || res || {};
+    const inheritorsFilters = data.inheritors || {};
+    const levels = inheritorsFilters.level || [];
+    filterConfig.value = [
+      { key: "level", label: "级别", options: [{ label: "全部", value: "" }, ...levels.map(l => ({ label: l, value: l }))] }
+    ];
+  } catch {}
+};
+
+onMounted(() => { loadMetadata(); loadInheritorsData(); });
 
 watch(() => route.path, (newPath) => {
   if (newPath === '/inheritors') loadInheritorsData();

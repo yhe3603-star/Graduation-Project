@@ -62,6 +62,13 @@ public class PlantController {
         return R.ok(service.getRandomPlants(limit));
     }
 
+    @PostMapping("/batch")
+    public R<List<Plant>> batch(@RequestBody List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) return R.ok(List.of());
+        if (ids.size() > 50) return R.error("单次查询不能超过50条");
+        return R.ok(service.listByIds(ids));
+    }
+
     @PostMapping("/{id}/view")
     public R<String> incrementView(@PathVariable Integer id) {
         service.incrementViewCount(id);

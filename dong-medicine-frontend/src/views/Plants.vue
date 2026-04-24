@@ -125,7 +125,6 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 const pageLoading = ref(false);
 const keyword = ref("");
 const allPlants = ref([]);
-const allPlantsForStats = ref([]);
 const hotPlants = ref([]);
 const detailVisible = ref(false);
 const currentPlant = ref(null);
@@ -135,23 +134,19 @@ const useFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
 const totalItems = ref(0);
+const statsData = ref({ total: 0, categoryCount: 0, totalFavorites: 0, totalViews: 0 });
 
-const filterConfig = [
-  { key: "category", label: "类型", options: [{ label: "全部", value: "" }, { label: "根茎类", value: "根茎类" }, { label: "全草类", value: "全草类" }, { label: "藤本类", value: "藤本类" }, { label: "叶类", value: "叶类" }, { label: "花类", value: "花类" }, { label: "皮类", value: "皮类" }, { label: "菌类", value: "菌类" }] },
-  { key: "usage", label: "用法", type: "success", options: [{ label: "全部", value: "" }, { label: "内服", value: "内服" }, { label: "外用", value: "外用" }, { label: "药浴", value: "药浴" }] }
-];
+const filterConfig = ref([
+  { key: "category", label: "类型", options: [{ label: "全部", value: "" }] },
+  { key: "usage", label: "用法", type: "success", options: [{ label: "全部", value: "" }] }
+]);
 
-const stats = computed(() => {
-  const data = allPlantsForStats.value.length > 0 ? allPlantsForStats.value : allPlants.value;
-  const totalViews = data.reduce((sum, p) => sum + (p.viewCount || 0), 0);
-  const totalFavorites = data.reduce((sum, p) => sum + (p.favoriteCount || 0), 0);
-  return [
-    { value: data.length, label: "药材总数" },
-    { value: new Set(data.map(p => p.category)).size, label: "分类数" },
-    { value: totalFavorites, label: "收藏量" },
-    { value: totalViews, label: "浏览量" }
-  ];
-});
+const stats = computed(() => [
+  { value: statsData.value.total, label: "药材总数" },
+  { value: statsData.value.categoryCount, label: "分类数" },
+  { value: statsData.value.totalFavorites, label: "收藏量" },
+  { value: statsData.value.totalViews, label: "浏览量" }
+]);
 
 const { parseUpdateLog } = useUpdateLog();
 
@@ -196,8 +191,6 @@ const showDetail = async (plant) => {
     await request.post(`/plants/${plant.id}/view`);
     const idx = allPlants.value.findIndex(p => p.id === plant.id);
     if (idx > -1) allPlants.value[idx].viewCount = (allPlants.value[idx].viewCount || 0) + 1;
-    const statsIdx = allPlantsForStats.value.findIndex(p => p.id === plant.id);
-    if (statsIdx > -1) allPlantsForStats.value[statsIdx].viewCount = (allPlantsForStats.value[statsIdx].viewCount || 0) + 1;
   } catch (e) {
     console.debug('浏览量更新失败:', e);
   }
@@ -235,8 +228,7 @@ const toggleFavoriteCard = (item) => { doToggleFavorite(item.id, isFavoritedCard
 const loadPlantsData = async () => {
   pageLoading.value = true;
   try {
-    // 并行请求：获取分页数据和所有数据用于统计
-    const [pageRes, allRes] = await Promise.all([
+    const [pageRes, statsRes] = await Promise.all([
       request.get("/plants/list", {
         params: {
           page: currentPage.value,
@@ -247,13 +239,7 @@ const loadPlantsData = async () => {
           _t: Date.now()
         }
       }),
-      request.get("/plants/list", {
-        params: {
-          page: 1,
-          size: 9999, // 获取足够多的数据以确保包含所有记录
-          _t: Date.now()
-        }
-      })
+      request.get("/stats/plants")
     ]);
     
     const { records, total } = extractPageData(pageRes);
@@ -261,9 +247,8 @@ const loadPlantsData = async () => {
     totalItems.value = total;
     hotPlants.value = [...allPlants.value].sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 5);
     
-    // 加载所有数据用于统计
-    const allData = extractPageData(allRes);
-    allPlantsForStats.value = allData.records;
+    const sd = statsRes.data || statsRes || {};
+    statsData.value = { total: sd.total || 0, categoryCount: sd.categoryCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0 };
     
     if (isLoggedIn.value) {
       try { favorites.value = extractData(await request.get("/favorites/my")); } catch (e) { console.debug('加载收藏失败:', e); }
@@ -275,7 +260,21 @@ const loadPlantsData = async () => {
   finally { pageLoading.value = false; }
 };
 
-onMounted(loadPlantsData);
+const loadMetadata = async () => {
+  try {
+    const res = await request.get("/metadata/filters");
+    const data = res.data || res || {};
+    const plantsFilters = data.plants || {};
+    const categories = plantsFilters.category || [];
+    const usageWays = plantsFilters.usageWay || [];
+    filterConfig.value = [
+      { key: "category", label: "类型", options: [{ label: "全部", value: "" }, ...categories.map(c => ({ label: c, value: c }))] },
+      { key: "usage", label: "用法", type: "success", options: [{ label: "全部", value: "" }, ...usageWays.map(u => ({ label: u, value: u }))] }
+    ];
+  } catch {}
+};
+
+onMounted(() => { loadMetadata(); loadPlantsData(); });
 
 watch(() => route.path, (newPath) => {
   if (newPath === '/plants') loadPlantsData();
