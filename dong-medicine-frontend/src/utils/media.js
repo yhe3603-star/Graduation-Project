@@ -378,6 +378,7 @@ export function separateMediaByType(files) {
 export const parseMediaPaths = parseMediaList
 export const parseImageList = parseMediaList
 export const parseVideoList = parseMediaList
+/** @see parseMediaList - 解析文档列表，功能与 parseMediaList 相同 */
 export const parseDocumentList = parseMediaList
 
 export const stringifyImageList = stringifyMediaList

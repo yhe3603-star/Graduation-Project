@@ -135,56 +135,61 @@
 
         <div v-if="activeMenu === 'logs'" class="logs-section">
           <div class="logs-toolbar">
-            <el-button type="danger" :disabled="selectedLogs.length === 0" @click="batchDeleteLogs">
-              <el-icon><Delete /></el-icon>批量删除 ({{ selectedLogs.length }})
+            <el-checkbox v-model="isAllLogsChecked" :indeterminate="isLogsIndeterminate" @change="toggleAllLogs">全选</el-checkbox>
+            <el-button type="danger" :disabled="selectedLogIds.size === 0" @click="batchDeleteSelectedLogs">
+              <el-icon><Delete /></el-icon>批量删除 ({{ selectedLogIds.size }})
             </el-button>
             <el-button type="danger" plain @click="clearAllLogs">
               <el-icon><DeleteFilled /></el-icon>清空所有日志
             </el-button>
           </div>
-          <AdminDataTable
-            title="操作日志"
-            :data="logList"
-            :columns="logColumns"
-            :show-add="false"
-            :show-edit="false"
-            :show-title="false"
-            action-width="140"
-            @view="viewLog"
-            @delete="deleteLog"
-            @selection-change="handleLogSelectionChange"
-          >
-            <template #extraColumns>
-              <el-table-column type="selection" width="50" />
-              <el-table-column prop="module" label="模块" width="90">
-                <template #default="{ row }">
-                  <el-tag :type="getLogModuleTagType(row.module)" size="small">{{ row.module }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="type" label="类型" width="80">
-                <template #default="{ row }">
-                  <el-tag :type="getLogTypeTagType(row.type)" size="small">{{ row.type }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="duration" label="耗时" width="80">
-                <template #default="{ row }">
-                  <span :class="{ 'slow-request': row.duration > 1000 }">{{ row.duration }}ms</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="success" label="状态" width="70">
-                <template #default="{ row }">
-                  <el-tag :type="row.success ? 'success' : 'danger'" size="small">{{ row.success ? '成功' : '失败' }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="createdAt" label="时间" width="160">
-                <template #default="{ row }">{{ formatLogTime(row.createdAt) }}</template>
-              </el-table-column>
-            </template>
-            <template #actions="{ row }">
-              <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewLog(row)">查看</el-button>
-              <el-button type="danger" size="small" @click="deleteLog(row.id)">删除</el-button>
-            </template>
-          </AdminDataTable>
+          <div class="virtual-log-wrapper">
+            <div class="virtual-log-header">
+              <span class="vlc vlc-check"></span>
+              <span class="vlc vlc-module">模块</span>
+              <span class="vlc vlc-type">类型</span>
+              <span class="vlc vlc-user">用户</span>
+              <span class="vlc vlc-op">操作</span>
+              <span class="vlc vlc-ip">IP</span>
+              <span class="vlc vlc-dur">耗时</span>
+              <span class="vlc vlc-status">状态</span>
+              <span class="vlc vlc-time">时间</span>
+              <span class="vlc vlc-act">操作</span>
+            </div>
+            <VirtualList
+              :items="logList"
+              :item-size="48"
+              :buffer="8"
+              key-field="id"
+              class="virtual-log-body"
+            >
+              <template #default="{ item }">
+                <div class="virtual-log-row" :class="{ 'row-selected': selectedLogIds.has(item.id) }">
+                  <span class="vlc vlc-check">
+                    <el-checkbox :model-value="selectedLogIds.has(item.id)" @change="toggleLogSelect(item)" />
+                  </span>
+                  <span class="vlc vlc-module">
+                    <el-tag :type="getLogModuleTagType(item.module)" size="small">{{ item.module }}</el-tag>
+                  </span>
+                  <span class="vlc vlc-type">
+                    <el-tag :type="getLogTypeTagType(item.type)" size="small">{{ item.type }}</el-tag>
+                  </span>
+                  <span class="vlc vlc-user">{{ item.username || '-' }}</span>
+                  <span class="vlc vlc-op" :title="item.operation">{{ item.operation }}</span>
+                  <span class="vlc vlc-ip">{{ item.ip }}</span>
+                  <span class="vlc vlc-dur" :class="{ 'slow-request': item.duration > 1000 }">{{ item.duration }}ms</span>
+                  <span class="vlc vlc-status">
+                    <el-tag :type="item.success ? 'success' : 'danger'" size="small">{{ item.success ? '成功' : '失败' }}</el-tag>
+                  </span>
+                  <span class="vlc vlc-time">{{ formatLogTime(item.createdAt) }}</span>
+                  <span class="vlc vlc-act">
+                    <el-button type="info" size="small" @click="viewLog(item)">查看</el-button>
+                    <el-button type="danger" size="small" @click="deleteLog(item.id)">删除</el-button>
+                  </span>
+                </div>
+              </template>
+            </VirtualList>
+          </div>
         </div>
       </div>
     </div>
@@ -210,7 +215,7 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, inject, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, inject, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, DeleteFilled, HomeFilled } from '@element-plus/icons-vue'
@@ -218,6 +223,7 @@ import { useUserStore } from '@/stores/user'
 import AdminDashboard from '@/components/business/admin/AdminDashboard.vue'
 import AdminDataTable from '@/components/business/admin/AdminDataTable.vue'
 import AdminSidebar from '@/components/business/admin/AdminSidebar.vue'
+import VirtualList from '@/components/base/VirtualList.vue'
 
 const CommentDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/CommentDetailDialog.vue'))
 const FeedbackDetailDialog = defineAsyncComponent(() => import('@/components/business/admin/dialogs/FeedbackDetailDialog.vue'))
@@ -256,7 +262,7 @@ const {
   users, knowledgeList, inheritorsList, plantsList, qaList,
   resourcesList, feedbackList, quizList, commentsList, logList,
   adminStats, pagination, sortedComments, sortedFeedback, sortedUsers,
-  fetchData, handleAdminPage, handleAdminSize
+  fetchData, switchSection, handleAdminPage, handleAdminSize
 } = useAdminData(request)
 
 const {
@@ -265,9 +271,39 @@ const {
   logDetailVisible, currentLog, openDialog, viewDetail, editItem
 } = useAdminDialogs()
 
-const { selectedLogs, confirmDelete, approveComment: doApproveComment, rejectComment: doRejectComment,
-  handleLogSelectionChange, batchDeleteLogs, clearAllLogs, replyFeedback
+const { confirmDelete, approveComment: doApproveComment, rejectComment: doRejectComment,
+  clearAllLogs, replyFeedback
 } = useAdminActions(request, fetchData)
+
+watch(activeMenu, (menu) => {
+  if (menu !== 'dashboard') switchSection(menu)
+})
+
+const selectedLogIds = ref(new Set())
+const isAllLogsSelected = computed(() => logList.value.length > 0 && selectedLogIds.value.size === logList.value.length)
+const isAllLogsChecked = computed({
+  get: () => isAllLogsSelected.value,
+  set: () => {}
+})
+const isLogsIndeterminate = computed(() => selectedLogIds.value.size > 0 && selectedLogIds.value.size < logList.value.length)
+const toggleLogSelect = (item) => {
+  const s = new Set(selectedLogIds.value)
+  s.has(item.id) ? s.delete(item.id) : s.add(item.id)
+  selectedLogIds.value = s
+}
+const toggleAllLogs = (checked) => {
+  selectedLogIds.value = checked ? new Set(logList.value.map(l => l.id)) : new Set()
+}
+const batchDeleteSelectedLogs = async () => {
+  if (selectedLogIds.value.size === 0) return
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${selectedLogIds.value.size} 条日志？`, '提示', { type: 'warning' })
+    await request.delete('/admin/logs/batch', { data: [...selectedLogIds.value] })
+    ElMessage.success('批量删除成功')
+    selectedLogIds.value = new Set()
+    fetchData()
+  } catch (e) { if (e !== 'cancel') console.debug('批量删除日志失败:', e) }
+}
 
 const dataMap = computed(() => ({
   knowledge: knowledgeList.value,
@@ -285,12 +321,6 @@ const standardTables = [
   { key: 'qa', formType: 'qa', deletePath: '/admin/qa' },
   { key: 'resources', formType: 'resource', deletePath: '/admin/resources', extraData: (row) => ({ fileSize: row.fileSize || 0 }) },
   { key: 'quiz', formType: 'quiz', deletePath: '/quiz' }
-]
-
-const logColumns = [
-  { prop: 'username', label: '用户', width: 100 },
-  { prop: 'operation', label: '操作', minWidth: 150 },
-  { prop: 'ip', label: 'IP', width: 120 }
 ]
 
 const getTableConfig = (key) => {
@@ -414,6 +444,36 @@ onMounted(() => {
 .admin-content { flex: 1; padding: 24px; overflow-y: auto; }
 .slow-request { color: #f56c6c; font-weight: 500; }
 .logs-section { background: var(--text-inverse); border-radius: 8px; padding: 16px; }
-.logs-toolbar { display: flex; gap: 12px; margin-bottom: 16px; }
+.logs-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+.virtual-log-wrapper { border: 1px solid #ebeef5; border-radius: 6px; overflow: hidden; }
+.virtual-log-header {
+  display: grid;
+  grid-template-columns: 40px 90px 80px 100px 1fr 120px 80px 70px 160px 140px;
+  align-items: center;
+  padding: 0 12px;
+  height: 40px;
+  background: #f5f7fa;
+  font-size: 13px;
+  font-weight: 600;
+  color: #909399;
+  border-bottom: 1px solid #ebeef5;
+}
+.virtual-log-body { height: calc(100vh - 360px); }
+.virtual-log-row {
+  display: grid;
+  grid-template-columns: 40px 90px 80px 100px 1fr 120px 80px 70px 160px 140px;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #606266;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s;
+}
+.virtual-log-row:hover { background: #f5f7fa; }
+.virtual-log-row.row-selected { background: #ecf5ff; }
+.vlc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vlc-op { font-size: 12px; }
+.vlc-act { display: flex; gap: 4px; }
+.vlc-act .el-button { padding: 4px 8px; font-size: 12px; }
 :deep(.el-descriptions__body .el-descriptions__table .el-descriptions__cell) { word-break: break-all; }
 </style>

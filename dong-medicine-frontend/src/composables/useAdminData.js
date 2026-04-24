@@ -29,6 +29,8 @@ export function useAdminData(request) {
   const commentsList = ref([])
   const logList = ref([])
   const adminStats = ref(null)
+  const activeSection = ref('dashboard')
+  const loadedSections = new Set()
 
   const pagination = ref({
     users: { page: 1, size: 20, total: 0 },
@@ -39,7 +41,8 @@ export function useAdminData(request) {
     resources: { page: 1, size: 20, total: 0 },
     feedback: { page: 1, size: 20, total: 0 },
     comments: { page: 1, size: 20, total: 0 },
-    quiz: { page: 1, size: 20, total: 0 }
+    quiz: { page: 1, size: 20, total: 0 },
+    logs: { page: 1, size: 500, total: 0 }
   })
 
   const SECTIONS = {
@@ -51,7 +54,8 @@ export function useAdminData(request) {
     resources: { ref: resourcesList, path: '/admin/resources' },
     feedback: { ref: feedbackList, path: '/admin/feedback', extra: 'status=all' },
     comments: { ref: commentsList, path: '/admin/comments', extra: 'status=all' },
-    quiz: { ref: quizList, path: '/quiz/list' }
+    quiz: { ref: quizList, path: '/quiz/list' },
+    logs: { ref: logList, path: '/admin/logs/list', extra: 'limit=500', raw: true }
   }
 
   const sortedComments = computed(() => {
@@ -78,9 +82,20 @@ export function useAdminData(request) {
     adminStats.value = raw?.data ?? raw ?? {}
   }
 
-  async function loadSection(key) {
+  async function loadSection(key, force = false) {
+    if (!force && loadedSections.has(key)) return
     const cfg = SECTIONS[key]
     if (!cfg) return
+    loadedSections.add(key)
+
+    if (cfg.raw) {
+      const qs = cfg.extra || ''
+      const res = await request.get(`${cfg.path}?${qs}`).catch(() => ({}))
+      const raw = res?.data?.data ?? res?.data ?? res
+      cfg.ref.value = Array.isArray(raw) ? raw : []
+      return
+    }
+
     const p = pagination.value[key]
     let qs = `page=${p.page}&size=${p.size}`
     if (cfg.extra) qs += `&${cfg.extra}`
@@ -97,25 +112,29 @@ export function useAdminData(request) {
 
   async function handleAdminPage(key, page) {
     pagination.value[key] = { ...pagination.value[key], page }
-    await loadSection(key)
+    await loadSection(key, true)
   }
 
   async function handleAdminSize(key, size) {
     pagination.value[key] = { ...pagination.value[key], page: 1, size }
-    await loadSection(key)
+    await loadSection(key, true)
   }
 
   const fetchData = async () => {
     try {
       await fetchStats()
-      await Promise.all(Object.keys(SECTIONS).map(loadSection))
-      const logRes = await request.get('/admin/logs/list?limit=500').catch(() => ({}))
-      const logRaw = logRes?.data?.data ?? logRes?.data ?? logRes
-      logList.value = Array.isArray(logRaw) ? logRaw : []
+      if (activeSection.value !== 'dashboard') {
+        await loadSection(activeSection.value, true)
+      }
     } catch (e) {
       logFetchError('管理后台数据', e)
       ElMessage.error('数据加载失败')
     }
+  }
+
+  const switchSection = async (sectionKey) => {
+    activeSection.value = sectionKey
+    await loadSection(sectionKey)
   }
 
   return {
@@ -130,11 +149,13 @@ export function useAdminData(request) {
     commentsList,
     logList,
     adminStats,
+    activeSection,
     pagination,
     sortedComments,
     sortedFeedback,
     sortedUsers,
     fetchData,
+    switchSection,
     handleAdminPage,
     handleAdminSize
   }

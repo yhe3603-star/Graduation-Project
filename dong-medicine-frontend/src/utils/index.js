@@ -41,6 +41,18 @@
  * - DEFAULT_DOCUMENT: 默认文档图标
  */
 
+/**
+ * @typedef {Object} FormatTimeOptions
+ * @property {boolean} [relative=true] - 是否显示相对时间（如"3分钟前"）
+ * @property {'date'|'time'|'datetime'|'full'} [format] - 时间格式类型
+ */
+
+/**
+ * 格式化时间显示
+ * @param {string|number|Date} time - 待格式化的时间值
+ * @param {FormatTimeOptions} [options={}] - 格式化选项
+ * @returns {string} 格式化后的时间字符串
+ */
 export function formatTime(time, options = {}) {
   if (!time) return "-"
   const date = new Date(time)
@@ -62,6 +74,12 @@ export function formatTime(time, options = {}) {
   return formats[options.format]?.() ?? date.toLocaleString("zh-CN")
 }
 
+/**
+ * 从API响应中提取数据数组
+ * 支持多种响应结构的自动适配：res.data / res.records / res.data.data / res.data.list 等
+ * @param {Object|Array} res - API响应数据
+ * @returns {Array} 提取出的数据数组，无法提取时返回空数组
+ */
 export function extractData(res) {
   if (!res) return []
   if (Array.isArray(res)) return res
@@ -74,6 +92,20 @@ export function extractData(res) {
   return []
 }
 
+/**
+ * @typedef {Object} PageData
+ * @property {Array} records - 当前页数据列表
+ * @property {number} total - 数据总条数
+ * @property {number} page - 当前页码
+ * @property {number} size - 每页条数
+ */
+
+/**
+ * 从API响应中提取分页数据
+ * 自动适配 res.data.records / res.data.data.records 等多种分页结构
+ * @param {Object} res - API响应数据
+ * @returns {PageData} 分页数据对象，包含 records、total、page、size
+ */
 export function extractPageData(res) {
   if (!res) return { records: [], total: 0, page: 1, size: 12 }
   if (res.data?.records) {
@@ -137,6 +169,11 @@ export const getFirstImage = (images) => {
   return list.length > 0 ? getImageUrl(typeof list[0] === 'string' ? list[0] : (list[0].url || list[0].path)) : PLACEHOLDER_IMG
 }
 
+/**
+ * 格式化文件大小为人类可读字符串
+ * @param {number} bytes - 文件字节数
+ * @returns {string} 格式化后的文件大小字符串，如 "1.5 MB"
+ */
 export function formatFileSize(bytes) {
   if (!bytes) return "0 B"
   const units = ["B", "KB", "MB", "GB"]

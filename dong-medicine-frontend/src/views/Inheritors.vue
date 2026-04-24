@@ -63,13 +63,13 @@
               @click.stop
             >
               <el-button
-                :type="isFavoritedCard(item.id) ? 'warning' : 'default'"
+                :type="isItemFavorited(item.id) ? 'warning' : 'default'"
                 size="small"
                 class="favorite-btn"
-                :class="{ favorited: isFavoritedCard(item.id) }"
-                @click.stop="toggleFavoriteCard(item)"
+                :class="{ favorited: isItemFavorited(item.id) }"
+                @click.stop="doToggleFavorite(item.id, isItemFavorited(item.id))"
               >
-                <el-icon><component :is="isFavoritedCard(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
+                <el-icon><component :is="isItemFavorited(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
               </el-button>
             </div>
           </div>
@@ -123,10 +123,10 @@ import Pagination from "@/components/business/display/Pagination.vue";
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import SkeletonGridCard from "@/components/common/SkeletonGridCard.vue";
 import UpdateLogCard from "@/components/business/display/UpdateLogCard.vue";
-import { extractPageData, extractData } from "@/utils";
+import { extractPageData } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
-import { useUserStore } from "@/stores/user";
+import { useFavorite } from "@/composables/useFavorite";
 
 const PAGE_SIZE_OPTIONS = {
   DEFAULT: 12,
@@ -138,8 +138,8 @@ const DEBOUNCE_DELAY = 300;
 
 const route = useRoute();
 const request = inject("request");
-const userStore = useUserStore();
-const isLoggedIn = computed(() => userStore.isLoggedIn);
+
+const { isFavorited: isItemFavorited, loadFavorites, toggleFavorite: doToggleFavorite, items: favItems } = useFavorite('inheritor');
 
 const pageLoading = ref(false);
 const keyword = ref("");
@@ -147,7 +147,6 @@ const allInheritors = ref([]);
 const featuredInheritors = ref([]);
 const detailVisible = ref(false);
 const currentInheritor = ref(null);
-const favorites = ref([]);
 const levelFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
@@ -205,8 +204,7 @@ const handleFilter = (filters) => {
   loadInheritorsData();
 };
 
-const isFavorited = computed(() => currentInheritor.value && favorites.value.some(f => f.targetId === currentInheritor.value.id && f.type === "inheritor"));
-const isFavoritedCard = (id) => favorites.value.some(f => f.targetId === id && f.type === "inheritor");
+const isFavorited = computed(() => currentInheritor.value && isItemFavorited(currentInheritor.value.id));
 
 const showDetail = async (item) => {
   currentInheritor.value = item;
@@ -220,35 +218,7 @@ const showDetail = async (item) => {
   }
 };
 
-const updateFavorite = (id, delta) => {
-  const idx = allInheritors.value.findIndex(i => i.id === id);
-  if (idx > -1) allInheritors.value[idx].favoriteCount = Math.max(0, (allInheritors.value[idx].favoriteCount || 0) + delta);
-};
-
-const doToggleFavorite = async (id, isFav) => {
-  if (!isLoggedIn.value) { ElMessage.warning("请先登录"); return false; }
-  try {
-    if (isFav) {
-      await request.delete(`/favorites/inheritor/${id}`);
-      favorites.value = favorites.value.filter(f => !(f.targetId === id && f.type === "inheritor"));
-      updateFavorite(id, -1);
-      ElMessage.success("已取消收藏");
-    } else {
-      await request.post(`/favorites/inheritor/${id}`);
-      favorites.value.push({ targetId: id, type: "inheritor" });
-      updateFavorite(id, 1);
-      ElMessage.success("收藏成功");
-    }
-    return true;
-  } catch (e) {
-    console.error('收藏操作失败:', e);
-    ElMessage.error("操作失败");
-    return false;
-  }
-};
-
-const toggleFavorite = () => { if (currentInheritor.value) doToggleFavorite(currentInheritor.value.id, isFavorited.value); };
-const toggleFavoriteCard = (item) => { doToggleFavorite(item.id, isFavoritedCard(item.id)); };
+const toggleFavorite = () => { if (currentInheritor.value) doToggleFavorite(currentInheritor.value.id, isItemFavorited(currentInheritor.value.id)); };
 
 const loadInheritorsData = async () => {
   pageLoading.value = true;
@@ -268,15 +238,14 @@ const loadInheritorsData = async () => {
     
     const { records, total } = extractPageData(pageRes);
     allInheritors.value = records;
+    favItems.value = allInheritors.value;
     totalItems.value = total;
     featuredInheritors.value = [...allInheritors.value].sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 5);
     
     const sd = statsRes.data || statsRes || {};
     statsData.value = { total: sd.total || 0, regionLevelCount: sd.regionLevelCount || 0, cityLevelCount: sd.cityLevelCount || 0, countyLevelCount: sd.countyLevelCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0 };
     
-    if (isLoggedIn.value) {
-      try { favorites.value = extractData(await request.get("/favorites/my")); } catch (e) { console.debug('加载收藏失败:', e); }
-    }
+    await loadFavorites();
   } catch (e) {
     console.error('加载传承人数据失败:', e);
     ElMessage.error("加载失败");

@@ -1,20 +1,23 @@
 server:
   port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
-  application:
-    name: dong-medicine-backend
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:dong_medicine}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/dong_medicine?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
-      idle-timeout: 300000
+      idle-timeout: 600000
       connection-timeout: 30000
-      max-lifetime: 1200000
+      max-lifetime: 1800000
       connection-test-query: SELECT 1
       pool-name: DongMedicineHikariPool
   jackson:
@@ -22,81 +25,113 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 100MB
-      max-request-size: 100MB
+      max-file-size: 50MB
+      max-request-size: 50MB
       file-size-threshold: 2KB
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD}
       database: 0
       timeout: 10000ms
       lettuce:
         pool:
-          max-active: 16
+          max-active: 20
           max-wait: -1ms
-          max-idle: 8
-          min-idle: 2
+          max-idle: 10
+          min-idle: 5
 
 jwt:
   expiration: ${JWT_EXPIRATION:86400000}
 
+sa-token:
+  token-name: Authorization
+  timeout: ${SA_TOKEN_TIMEOUT:2592000}
+  active-timeout: -1
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: false
+  is-read-cookie: false
+  is-read-body: false
+  is-read-header: true
+  token-prefix: Bearer
+  jwt-secret-key: ${JWT_SECRET}
+
 app:
-  security:
-    jwt-secret: ${JWT_SECRET}
-    jwt-expiration: ${JWT_EXPIRATION:7200000}
-    cors-allowed-origins:
-      - ${CORS_ALLOWED_ORIGIN:https://your-domain.com}
+  cors:
+    allowed-origins:
+      - ${CORS_ORIGIN_1}
+      - ${CORS_ORIGIN_2}
   cache:
     enabled: true
     default-expire-time: 3600000
+    max-size: 1000
+    expire-minutes: 60
   logging:
-    performance-monitoring: true
+    performance-monitoring: false
     request-logging: true
-    database-monitoring: true
+    database-monitoring: false
+  search:
+    use-fulltext: true
+  websocket:
+    allowed-origins: ${WS_ALLOWED_ORIGINS:http://localhost}
+  request:
+    max-body-size: ${MAX_BODY_SIZE:10485760}
+
+file:
+  upload:
+    base-path: /app/public
+    image-max-size: 10485760
+    video-max-size: 52428800
+    document-max-size: 52428800
+    allowed-image-extensions: jpg,jpeg,png,gif,bmp,webp
+    allowed-video-extensions: mp4,avi,mov,wmv,flv,mkv
+    allowed-document-extensions: pdf,docx,doc,xlsx,xls,pptx,ppt,txt
+  kkfileview:
+    url: ${KKFILEVIEW_URL:http://localhost:8012}
 
 logging:
   level:
-    com.dongmedicine: INFO
-    org.springframework.security: WARN
-    org.springframework.web: INFO
+    com.dongmedicine: WARN
+    cn.dev33.satoken: ERROR
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/dong-medicine.log
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 30
+      total-size-cap: 1GB
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
-    jmx:
-      exposure:
-        include: health,info
+      base-path: /actuator
   endpoint:
     health:
-      show-details: never
-      show-components: never
+      show-details: when_authorized
+      show-components: when_authorized
       probes:
         enabled: true
+  health:
+    db:
+      enabled: true
+    caches:
+      enabled: true
+    diskspace:
+      enabled: true
 
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 
-file:
-  upload:
-    base-path: ${FILE_UPLOAD_PATH:/app/public}
-    image-max-size: 10485760
-    video-max-size: 104857600
-    document-max-size: 52428800
-    allowed-image-extensions: jpg,jpeg,png,gif,bmp,webp
-    allowed-video-extensions: mp4,avi,mov,wmv,flv,mkv
-    allowed-document-extensions: pdf,docx,doc,xlsx,xls,pptx,ppt,txt
-  kkfileview:
-    url: ${KKFILEVIEW_URL:http://kkfileview:8012}
-
 deepseek:
   api-key: ${DEEPSEEK_API_KEY:}
-  base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
-  model: ${DEEPSEEK_MODEL:deepseek-chat}
+  base-url: https://api.deepseek.com
+  model: deepseek-chat

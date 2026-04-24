@@ -2,6 +2,24 @@ import { ref, computed, inject } from 'vue'
 import { ElMessage } from 'element-plus'
 import { extractData, logFetchError, logOperationWarn } from '@/utils'
 
+/**
+ * @typedef {Object} UseFavoriteReturn
+ * @property {import('vue').Ref<Array>} favorites - 收藏列表
+ * @property {import('vue').Ref<Array>} items - 关联的数据列表
+ * @property {import('vue').ComputedRef<boolean>} isLoggedIn - 是否已登录
+ * @property {function(number): boolean} isFavorited - 判断是否已收藏
+ * @property {import('vue').ComputedRef<function>} isFavoritedObject - 判断对象是否已收藏
+ * @property {function(): Promise<void>} loadFavorites - 加载收藏列表
+ * @property {function(number, boolean): Promise<boolean>} toggleFavorite - 切换收藏状态
+ * @property {function(number, number): void} updateItemCount - 更新收藏计数
+ * @property {function(number): Promise<void>} incrementViewCount - 增加浏览量
+ */
+
+/**
+ * 收藏功能组合式函数
+ * @param {string} type - 收藏目标类型 (plant|knowledge|inheritor|resource|qa)
+ * @returns {UseFavoriteReturn}
+ */
 export const useFavorite = (type) => {
   const request = inject('request')
   const isLoggedIn = computed(() => !!sessionStorage.getItem('token'))

@@ -58,6 +58,24 @@ function removePendingRequest(config) {
   }
 }
 
+/**
+ * @typedef {Object} ApiResponse
+ * @property {number} code - 响应状态码（200表示成功）
+ * @property {string} msg - 响应消息
+ * @property {*} data - 响应数据
+ */
+
+/**
+ * @typedef {Object} RequestConfig
+ * @property {boolean} [skipAuthRefresh=false] - 是否跳过令牌自动刷新
+ * @property {boolean} [enableCancel=true] - 是否启用请求取消（重复请求自动取消）
+ * @property {number} [__retryCount=0] - 当前重试次数（内部使用）
+ */
+
+/**
+ * 取消所有待处理请求
+ * @returns {void}
+ */
 export function cancelAllRequests() {
   pendingRequests.forEach((cancel, key) => {
     cancel('请求被取消: 页面切换')
@@ -65,6 +83,11 @@ export function cancelAllRequests() {
   pendingRequests.clear()
 }
 
+/**
+ * 根据URL取消匹配的待处理请求
+ * @param {string} url - 需要取消的请求URL
+ * @returns {void}
+ */
 export function cancelRequestByUrl(url) {
   pendingRequests.forEach((cancel, key) => {
     if (key.includes(url)) {
@@ -172,6 +195,30 @@ async function refreshToken() {
   }
 }
 
+/**
+ * Axios 请求实例，封装了认证、重试、防重复提交、XSS防护等拦截器
+ * 
+ * 支持的请求方法：
+ * - request.get<T>(url, config?): Promise<T> - GET 请求
+ * - request.post<T>(url, data?, config?): Promise<T> - POST 请求
+ * - request.put<T>(url, data?, config?): Promise<T> - PUT 请求
+ * - request.delete<T>(url, config?): Promise<T> - DELETE 请求
+ * - request.patch<T>(url, data?, config?): Promise<T> - PATCH 请求
+ * 
+ * @type {import('axios').AxiosInstance}
+ * 
+ * @example
+ * // GET 请求
+ * const data = await request.get('/api/plants')
+ * 
+ * @example
+ * // POST 请求
+ * const result = await request.post('/user/login', { username, password })
+ * 
+ * @example
+ * // 带配置的请求（跳过令牌刷新）
+ * await request.post('/user/logout', {}, { skipAuthRefresh: true })
+ */
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   timeout: 60000

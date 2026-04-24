@@ -58,10 +58,10 @@
               <div class="qa-actions">
                 <el-button
                   size="small"
-                  :type="isFavorited(item.id) ? 'warning' : 'default'"
-                  @click.stop="toggleFavorite(item)"
+                  :type="isItemFavorited(item.id) ? 'warning' : 'default'"
+                  @click.stop="doToggleFavorite(item.id, isItemFavorited(item.id))"
                 >
-                  <el-icon><Star /></el-icon>{{ isFavorited(item.id) ? '已收藏' : '收藏' }}
+                  <el-icon><Star /></el-icon>{{ isItemFavorited(item.id) ? '已收藏' : '收藏' }}
                 </el-button>
                 <el-button
                   size="small"
@@ -134,9 +134,9 @@ import QuizDetailDialog from "@/components/business/dialogs/QuizDetailDialog.vue
 import SearchFilter from "@/components/business/display/SearchFilter.vue";
 import SkeletonListQa from "@/components/common/SkeletonListQa.vue";
 import AiChatCard from "@/components/business/display/AiChatCard.vue";
-import { extractPageData, extractData } from "@/utils";
+import { extractPageData } from "@/utils";
 import { useDebounceFn } from "@/composables/useDebounce";
-import { useUserStore } from "@/stores/user";
+import { useFavorite } from "@/composables/useFavorite";
 
 const PAGE_SIZE_OPTIONS = {
   DEFAULT: 6,
@@ -148,8 +148,8 @@ const DEBOUNCE_DELAY = 300;
 
 const route = useRoute();
 const request = inject("request");
-const userStore = useUserStore();
-const isLoggedIn = computed(() => userStore.isLoggedIn);
+
+const { isFavorited: isItemFavorited, loadFavorites, toggleFavorite: doToggleFavorite, items: favItems } = useFavorite('qa');
 
 const pageLoading = ref(false);
 const keyword = ref("");
@@ -157,7 +157,6 @@ const allQa = ref([]);
 const hotQa = ref([]);
 const detailVisible = ref(false);
 const currentQa = ref(null);
-const favorites = ref([]);
 const categoryFilter = ref("");
 const currentPage = ref(1);
 const pageSize = ref(PAGE_SIZE_OPTIONS.DEFAULT);
@@ -194,8 +193,7 @@ const handleFilter = (filters) => {
   loadQaData();
 };
 
-const isFavorited = (id) => favorites.value.some(f => f.targetId === id && f.type === "qa");
-const isCurrentFavorited = computed(() => currentQa.value && isFavorited(currentQa.value.id));
+const isCurrentFavorited = computed(() => currentQa.value && isItemFavorited(currentQa.value.id));
 
 const showDetail = async (item) => {
   currentQa.value = item;
@@ -204,34 +202,10 @@ const showDetail = async (item) => {
     await request.post(`/qa/${item.id}/view`);
     const qaIdx = allQa.value.findIndex(q => q.id === item.id);
     if (qaIdx > -1) allQa.value[qaIdx].viewCount = (allQa.value[qaIdx].viewCount || 0) + 1;
-    const statsIdx = allQaForStats.value.findIndex(q => q.id === item.id);
-    if (statsIdx > -1) allQaForStats.value[statsIdx].viewCount = (allQaForStats.value[statsIdx].viewCount || 0) + 1;
   } catch {}
 };
 
-const toggleFavorite = async (item) => {
-  if (!isLoggedIn.value) { ElMessage.warning("请先登录"); return; }
-  try {
-    const qaIdx = allQa.value.findIndex(q => q.id === item.id);
-    const wasFav = isFavorited(item.id);
-    if (wasFav) {
-      await request.delete(`/favorites/qa/${item.id}`);
-      favorites.value = favorites.value.filter(f => !(f.targetId === item.id && f.type === "qa"));
-      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = Math.max(0, (allQa.value[qaIdx].favoriteCount || 1) - 1);
-      ElMessage.success("已取消收藏");
-    } else {
-      await request.post(`/favorites/qa/${item.id}`);
-      favorites.value.push({ targetId: item.id, type: "qa" });
-      if (qaIdx > -1) allQa.value[qaIdx].favoriteCount = (allQa.value[qaIdx].favoriteCount || 0) + 1;
-      ElMessage.success("收藏成功");
-    }
-  } catch (e) {
-    console.error("收藏操作失败", e);
-    ElMessage.error("操作失败");
-  }
-};
-
-const toggleFavoriteDetail = () => { if (currentQa.value) toggleFavorite(currentQa.value); };
+const toggleFavoriteDetail = () => { if (currentQa.value) doToggleFavorite(currentQa.value.id, isItemFavorited(currentQa.value.id)); };
 
 const loadQaData = async () => {
   pageLoading.value = true;
@@ -251,15 +225,14 @@ const loadQaData = async () => {
     
     const { records, total } = extractPageData(pageRes);
     allQa.value = records;
+    favItems.value = allQa.value;
     totalItems.value = total;
     hotQa.value = allQa.value.slice(0, 5);
     
     const sd = statsRes.data || statsRes || {};
     statsData.value = { total: sd.total || 0, categoryCount: sd.categoryCount || 0, totalViews: sd.totalViews || 0, totalFavorites: sd.totalFavorites || 0 };
     
-    if (isLoggedIn.value) {
-      try { favorites.value = extractData(await request.get("/favorites/my")); } catch {}
-    }
+    await loadFavorites();
   } catch { ElMessage.error("加载失败"); }
   finally { pageLoading.value = false; }
 };
