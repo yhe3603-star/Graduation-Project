@@ -51,13 +51,14 @@ services:
     networks:
       - dong-medicine-network
 
-  # kkFileView 文档预览服务
+  # kkFileView 文档预览服务（可选，启动命令: docker compose up -d kkfileview）
   kkfileview:
     image: keking/kkfileview:4.4.0
     container_name: dong-medicine-kkfileview
     restart: unless-stopped
     profiles:
       - full
+      - preview
     environment:
       - KK_OFFICE_PREVIEW_TYPE=image
       - KK_CONTEXT_PATH=/kkfileview

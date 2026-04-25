@@ -49,14 +49,18 @@ public class WebSocketConfig implements WebSocketConfigurer {
                         Object loginId = StpUtil.getLoginIdByToken(pureToken);
                         if (loginId != null) {
                             attributes.put("userId", Integer.parseInt(loginId.toString()));
+                            log.info("WebSocket握手成功: userId={}", loginId);
                             return true;
                         }
                     } catch (Exception e) {
                         log.warn("WebSocket握手认证失败: {}", e.getMessage());
                     }
                 }
+                attributes.put("userId", null);
+                log.info("WebSocket握手成功: 匿名用户");
+                return true;
             }
-            log.warn("WebSocket握手拒绝: 无有效Token");
+            log.warn("WebSocket握手拒绝: 无效请求");
             return false;
         }
 
