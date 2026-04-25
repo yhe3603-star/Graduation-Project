@@ -121,7 +121,9 @@ if command -v lsof &> /dev/null; then
         PID=$(lsof -t -i:$port 2>/dev/null || true)
         if [ -n "$PID" ]; then
             print_info "释放端口 $port (PID: $PID)"
-            kill $PID 2>/dev/null; sleep 1; kill -9 $PID 2>/dev/null || true
+            kill $PID 2>/dev/null || true
+            sleep 1
+            kill -9 $PID 2>/dev/null || true
         fi
     done
 fi
