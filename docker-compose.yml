@@ -56,6 +56,8 @@ services:
     image: keking/kkfileview:4.4.0
     container_name: dong-medicine-kkfileview
     restart: unless-stopped
+    profiles:
+      - full
     environment:
       - KK_OFFICE_PREVIEW_TYPE=image
       - KK_CONTEXT_PATH=/kkfileview
@@ -112,8 +114,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kkfileview:
-        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s

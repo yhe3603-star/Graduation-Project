@@ -21,8 +21,8 @@ ENV VITE_KKFILEVIEW_FILE_HOST=$VITE_KKFILEVIEW_FILE_HOST
 # 复制package.json
 COPY package*.json ./
 
-# 安装依赖
-RUN npm ci --legacy-peer-deps
+# 安装依赖（带重试）
+RUN npm ci --legacy-peer-deps || npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 # 复制源代码
 COPY . .
@@ -39,6 +39,11 @@ COPY default.conf /etc/nginx/conf.d/default.conf
 
 # 从构建阶段复制构建产物
 COPY --from=builder /build/dist /usr/share/nginx/html
+
+# 创建nginx缓存目录并设置权限（必须在切换用户之前）
+RUN mkdir -p /var/cache/nginx && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /usr/share/nginx/html
 
 # 暴露端口
 EXPOSE 80
