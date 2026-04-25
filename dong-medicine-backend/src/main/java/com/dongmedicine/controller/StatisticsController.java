@@ -58,31 +58,26 @@ public class StatisticsController {
     }
 
     @GetMapping("/plants")
-    @Cacheable(value = "hotData", key = "'stats:plants'")
     public R<Map<String, Object>> plantStats() {
         return R.ok(plantService.getStats());
     }
 
     @GetMapping("/knowledge")
-    @Cacheable(value = "hotData", key = "'stats:knowledge'")
     public R<Map<String, Object>> knowledgeStats() {
         return R.ok(knowledgeService.getStats());
     }
 
     @GetMapping("/qa")
-    @Cacheable(value = "hotData", key = "'stats:qa'")
     public R<Map<String, Object>> qaStats() {
         return R.ok(qaService.getStats());
     }
 
     @GetMapping("/inheritors")
-    @Cacheable(value = "hotData", key = "'stats:inheritors'")
     public R<Map<String, Object>> inheritorStats() {
         return R.ok(inheritorService.getStats());
     }
 
     @GetMapping("/resources")
-    @Cacheable(value = "hotData", key = "'stats:resources'")
     public R<Map<String, Object>> resourceStats() {
         return R.ok(resourceService.getStats());
     }

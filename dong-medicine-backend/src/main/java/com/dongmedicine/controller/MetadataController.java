@@ -27,14 +27,18 @@ public class MetadataController {
     private final ResourceService resourceService;
 
     @GetMapping("/filters")
-    @Cacheable(value = "hotData", key = "'allFilters'")
     public R<Map<String, Object>> getAllFilters() {
+        return R.ok(getAllFiltersData());
+    }
+
+    @Cacheable(value = "hotData", key = "'allFilters'")
+    public Map<String, Object> getAllFiltersData() {
         Map<String, Object> filters = new LinkedHashMap<>();
         filters.put("plants", plantService.getFilterOptions());
         filters.put("knowledge", knowledgeService.getFilterOptions());
         filters.put("qa", qaService.getFilterOptions());
         filters.put("inheritors", inheritorService.getFilterOptions());
         filters.put("resources", resourceService.getFilterOptions());
-        return R.ok(filters);
+        return filters;
     }
 }
