@@ -60,6 +60,7 @@ services:
       - KK_OFFICE_PREVIEW_TYPE=image
       - KK_CONTEXT_PATH=/kkfileview
       - KK_FILE_UPLOAD_MAX_SIZE=104857600
+      - KK_DOMAIN=${KKFILEVIEW_DOMAIN:-http://localhost:3000}
     ports:
       - "${KKFILEVIEW_PORT:-8012}:8012"
     volumes:
