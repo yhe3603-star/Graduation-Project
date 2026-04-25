@@ -76,7 +76,7 @@ app:
   search:
     use-fulltext: true
   websocket:
-    allowed-origins: ${WS_ALLOWED_ORIGINS:http://localhost}
+    allowed-origins: ${WS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost,http://127.0.0.1:3000}
   request:
     max-body-size: ${MAX_BODY_SIZE:10485760}
 

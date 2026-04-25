@@ -81,41 +81,21 @@ onUnmounted(() => {
 .search-filter { margin-bottom: 24px; }
 .search-input { margin-bottom: 12px; }
 .search-input :deep(.el-input__wrapper) { border-radius: 12px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); }
-.filter-row { display: flex; flex-wrap: wrap; gap: 16px; }
-.filter-group { display: flex; align-items: center; gap: 8px; }
-.filter-label { font-size: 14px; color: #666; flex-shrink: 0; }
+.filter-row { display: flex; flex-direction: column; gap: 10px; }
+.filter-group { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.filter-label { font-size: 14px; color: #666; flex-shrink: 0; line-height: 32px; }
 .filter-tag { cursor: pointer; transition: all 0.2s; }
 .filter-tag:hover { transform: translateY(-1px); }
 
 @media (max-width: 768px) {
-  .search-filter {
-    margin-bottom: var(--space-lg);
-  }
-  
-  .filter-row {
-    gap: var(--space-md);
-  }
-  
-  .filter-group {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-  
-  .filter-label {
-    width: 100%;
-    margin-bottom: var(--space-xs);
-    font-size: var(--font-size-sm);
-  }
-  
-  .filter-tag {
-    font-size: var(--font-size-xs);
-    padding: 4px 10px;
-  }
+  .search-filter { margin-bottom: var(--space-lg); }
+  .filter-row { gap: var(--space-md); }
+  .filter-group { width: 100%; flex-wrap: wrap; }
+  .filter-label { width: 100%; margin-bottom: var(--space-xs); font-size: var(--font-size-sm); line-height: 1.4; }
+  .filter-tag { font-size: var(--font-size-xs); padding: 4px 10px; }
 }
 
 @media (max-width: 480px) {
-  .filter-tag {
-    padding: 3px 8px;
-  }
+  .filter-tag { padding: 3px 8px; }
 }
 </style>
