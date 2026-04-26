@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.LinkedHashMap;
@@ -102,9 +103,10 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
         if (!StringUtils.hasText(keyword)) {
             throw BusinessException.badRequest("搜索关键词不能为空");
         }
+        String escaped = PageUtils.escapeLike(keyword);
         return list(new LambdaQueryWrapper<Inheritor>()
-                .like(Inheritor::getName, keyword)
-                .or().like(Inheritor::getSpecialties, keyword)
+                .like(Inheritor::getName, escaped)
+                .or().like(Inheritor::getSpecialties, escaped)
                 .orderByDesc(Inheritor::getExperienceYears));
     }
 
@@ -125,16 +127,17 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = "inheritors", allEntries = true)
     public void deleteWithFiles(Integer id) {
         Inheritor inheritor = getById(id);
         if (inheritor == null) {
             return;
         }
+        removeById(id);
         fileCleanupHelper.deleteFilesFromJson(inheritor.getImages());
         fileCleanupHelper.deleteFilesFromJson(inheritor.getVideos());
         fileCleanupHelper.deleteFilesFromJson(inheritor.getDocuments());
-        removeById(id);
         log.info("Deleted inheritor {} with associated files", id);
     }
 

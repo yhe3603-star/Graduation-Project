@@ -20,8 +20,6 @@ public interface ResourceMapper extends BaseMapper<Resource> {
     @Update("UPDATE resources SET download_count = IFNULL(download_count, 0) + 1 WHERE id = #{id}")
     void incrementDownloadCount(Integer id);
 
-    // ===== 统计查询方法 =====
-
     @Select("SELECT IFNULL(SUM(view_count), 0) FROM resources")
     long sumViewCount();
 
@@ -34,8 +32,14 @@ public interface ResourceMapper extends BaseMapper<Resource> {
     @Select("SELECT files FROM resources WHERE files IS NOT NULL AND files != ''")
     List<String> selectAllFiles();
 
-    // ===== 去重查询方法（用于筛选器） =====
-
     @Select("SELECT DISTINCT category FROM resources WHERE category IS NOT NULL AND category != '' ORDER BY category")
     List<String> selectDistinctCategory();
+
+    @Select("SELECT COUNT(*) FROM resources WHERE files IS NOT NULL AND JSON_SEARCH(files, 'one', #{mimeType}, NULL, '$[*].type') IS NOT NULL")
+    long countByFileType(String mimeType);
+
+    @Select("SELECT IFNULL(SUM(CAST(JSON_EXTRACT(item, '$.size') AS UNSIGNED)), 0) " +
+            "FROM resources, JSON_TABLE(files, '$[*]' COLUMNS (item JSON PATH '$')) AS jt " +
+            "WHERE files IS NOT NULL AND files != ''")
+    long sumFileSize();
 }

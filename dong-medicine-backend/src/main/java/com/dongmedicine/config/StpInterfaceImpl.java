@@ -23,9 +23,19 @@ public class StpInterfaceImpl implements StpInterface {
     @Override
     public List<String> getRoleList(Object loginId, String loginType) {
         List<String> roleList = new ArrayList<>();
-        User user = userService.getUserInfo((Integer) loginId);
-        if (user != null && user.getRole() != null) {
-            roleList.add(user.getRole());
+        try {
+            Integer userId;
+            if (loginId instanceof Integer) {
+                userId = (Integer) loginId;
+            } else {
+                userId = Integer.parseInt(loginId.toString());
+            }
+            User user = userService.getUserInfo(userId);
+            if (user != null && user.getRole() != null) {
+                roleList.add(user.getRole());
+            }
+        } catch (Exception e) {
+            // ignore
         }
         return roleList;
     }

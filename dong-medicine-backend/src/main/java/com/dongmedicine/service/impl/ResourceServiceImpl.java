@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.LinkedHashMap;
@@ -52,7 +53,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
     }
 
     @Override
-    @Cacheable(value = "resources", key = "'list:' + (#category ?: 'all') + ':' + (#keyword ?: 'all') + ':' + (#fileType ?: 'all')")
+    @Cacheable(value = "searchResults", key = "'resources:' + (#category ?: 'all') + ':' + (#keyword ?: 'all') + ':' + (#fileType ?: 'all')")
     public List<Resource> listByCategoryAndKeywordAndType(String category, String keyword, String fileType) {
         LambdaQueryWrapper<Resource> qw = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(category)) {
@@ -78,31 +79,14 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
             qw.and(wrapper -> wrapper.like(Resource::getTitle, escapedKeyword).or().like(Resource::getDescription, escapedKeyword));
         }
         if (StringUtils.hasText(fileType)) {
-            String escapedFileType = PageUtils.escapeLike(fileType);
-            if ("document".equals(fileType)) {
-                qw.and(wrapper -> wrapper
-                    .like(Resource::getFiles, "\"type\":\"document\"")
-                    .or().like(Resource::getFiles, "\"type\":\"pdf\"")
-                    .or().like(Resource::getFiles, "\"type\":\"docx\"")
-                    .or().like(Resource::getFiles, "\"type\":\"doc\"")
-                    .or().like(Resource::getFiles, "\"type\":\"pptx\"")
-                    .or().like(Resource::getFiles, "\"type\":\"xlsx\"")
-                    .or().like(Resource::getFiles, "\"type\":\"txt\""));
-            } else if ("video".equals(fileType)) {
-                qw.and(wrapper -> wrapper
-                    .like(Resource::getFiles, "\"type\":\"video\"")
-                    .or().like(Resource::getFiles, "\"type\":\"mp4\"")
-                    .or().like(Resource::getFiles, "\"type\":\"avi\"")
-                    .or().like(Resource::getFiles, "\"type\":\"mov\""));
-            } else if ("image".equals(fileType)) {
-                qw.and(wrapper -> wrapper
-                    .like(Resource::getFiles, "\"type\":\"image\"")
-                    .or().like(Resource::getFiles, "\"type\":\"jpg\"")
-                    .or().like(Resource::getFiles, "\"type\":\"png\"")
-                    .or().like(Resource::getFiles, "\"type\":\"gif\""));
-            } else {
-                qw.like(Resource::getFiles, "\"type\":\"" + escapedFileType + "\"");
-            }
+            String engType = switch (fileType) {
+                case "视频", "video" -> "video";
+                case "文档", "document" -> "document";
+                case "图片", "image" -> "image";
+                default -> fileType;
+            };
+            qw.and(wrapper -> wrapper
+                .apply("files IS NOT NULL AND JSON_SEARCH(files, 'one', {0}, NULL, '$[*].type') IS NOT NULL", engType + "/%"));
         }
         qw.orderByDesc(Resource::getDownloadCount);
         return page(pageParam, qw);
@@ -140,47 +124,30 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = "resources", allEntries = true)
     public void deleteWithFiles(Integer id) {
         Resource resource = getById(id);
         if (resource == null) {
             return;
         }
-        fileCleanupHelper.deleteFilesFromJson(resource.getFiles());
         removeById(id);
+        fileCleanupHelper.deleteFilesFromJson(resource.getFiles());
         log.info("Deleted resource {} with associated files", id);
     }
 
     @Override
     public Map<String, Object> getStats() {
-        // 使用SQL聚合查询获取数值统计
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("total", count());
         stats.put("totalFavorites", resourceMapper.sumFavoriteCount());
         stats.put("totalViews", resourceMapper.sumViewCount());
         stats.put("totalDownloads", resourceMapper.sumDownloadCount());
 
-        // 解析files JSON统计文件类型数量和总大小（仅查询files字段，避免全表加载）
-        long videoCount = 0, documentCount = 0, imageCount = 0, totalSize = 0;
-        List<String> filesList = resourceMapper.selectAllFiles();
-        com.fasterxml.jackson.databind.ObjectMapper jsonMapper = new com.fasterxml.jackson.databind.ObjectMapper();
-        for (String files : filesList) {
-            try {
-                List<Map<String, Object>> fileList = jsonMapper.readValue(files, List.class);
-                for (Map<String, Object> f : fileList) {
-                    String type = f.get("type") != null ? f.get("type").toString() : "";
-                    long size = f.get("size") != null ? Long.parseLong(f.get("size").toString()) : 0;
-                    totalSize += size;
-                    if (type.startsWith("video/")) videoCount++;
-                    else if (type.startsWith("image/")) imageCount++;
-                    else documentCount++;
-                }
-            } catch (Exception ignored) {}
-        }
-        stats.put("videoCount", videoCount);
-        stats.put("documentCount", documentCount);
-        stats.put("imageCount", imageCount);
-        stats.put("totalSize", totalSize);
+        stats.put("videoCount", resourceMapper.countByFileType("video/"));
+        stats.put("imageCount", resourceMapper.countByFileType("image/"));
+        stats.put("documentCount", resourceMapper.countByFileType("application/"));
+        stats.put("totalSize", resourceMapper.sumFileSize());
         return stats;
     }
 
@@ -188,6 +155,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
     public Map<String, List<String>> getFilterOptions() {
         Map<String, List<String>> map = new LinkedHashMap<>();
         map.put("category", resourceMapper.selectDistinctCategory());
+        map.put("type", List.of("视频", "文档", "图片"));
         return map;
     }
 }

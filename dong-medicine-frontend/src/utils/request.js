@@ -281,22 +281,7 @@ request.interceptors.response.use(
     }
 
     if (status === 403) {
-      const token = getToken()
-      
-      if (token && !config._retry) {
-        config._retry = true
-        
-        const newToken = await getOrRefreshToken()
-        
-        if (newToken) {
-          config.headers.Authorization = "Bearer " + newToken
-          return request(config)
-        }
-      }
-      
-      onRefreshFailed()
-      logAuthWarn(msg)
-      ElMessage.warning("权限不足或登录已过期，请重新登录")
+      ElMessage.warning("权限不足，无法执行此操作")
       return Promise.reject(err.response?.data || err)
     }
 
@@ -377,12 +362,13 @@ function sanitizeRequestData(data) {
 
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string') {
-      if (containsXss(value) || containsSqlInjection(value)) {
+      if (containsXss(value)) {
         logSecurityWarn(key, sanitizeForLog(value))
-        sanitized[key] = sanitize(value)
-      } else {
-        sanitized[key] = value
       }
+      if (containsSqlInjection(value)) {
+        logSecurityWarn(key, sanitizeForLog(value))
+      }
+      sanitized[key] = value
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeRequestData(value)
     } else {

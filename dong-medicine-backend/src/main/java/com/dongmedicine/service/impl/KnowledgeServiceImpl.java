@@ -83,7 +83,7 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     }
 
     @Override
-    @Cacheable(value = "knowledges", key = "'search:' + #keyword + ':' + #therapy + ':' + #disease + ':' + #herb + ':' + #sortBy")
+    @Cacheable(value = "searchResults", key = "'knowledges:' + #keyword + ':' + #therapy + ':' + #disease + ':' + #herb + ':' + #sortBy")
     public List<Knowledge> advancedSearch(String keyword, String therapy, String disease, String herb, String sortBy) {
         LambdaQueryWrapper<Knowledge> qw = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -222,15 +222,16 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = "knowledges", allEntries = true)
     public void deleteWithFiles(Integer id) {
         Knowledge knowledge = getById(id);
         if (knowledge == null) {
             return;
         }
+        removeById(id);
         fileCleanupHelper.deleteFilesFromJson(knowledge.getVideos());
         fileCleanupHelper.deleteFilesFromJson(knowledge.getDocuments());
-        removeById(id);
         log.info("Deleted knowledge {} with associated files", id);
     }
 

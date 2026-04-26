@@ -76,7 +76,10 @@ export function useComments(request, isLoggedIn) {
       const data = res?.data || {}
       comments.value = data.records || data || []
       totalItems.value = data.total || comments.value.length
-    } catch {
+    } catch (err) {
+      logFetchError('评论列表', err)
+      comments.value = []
+      totalItems.value = 0
     } finally {
       commentLoading.value = false
     }

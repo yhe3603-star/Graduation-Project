@@ -29,7 +29,13 @@ public class XssFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String contentType = httpRequest.getContentType();
-        
+        String requestURI = httpRequest.getRequestURI();
+
+        if (requestURI != null && requestURI.startsWith("/api/admin/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         if (contentType != null && contentType.contains("application/json")) {
             chain.doFilter(new XssJsonRequestWrapper(httpRequest), response);
         } else {

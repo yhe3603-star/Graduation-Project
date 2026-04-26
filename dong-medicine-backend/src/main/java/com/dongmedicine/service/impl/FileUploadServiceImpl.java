@@ -220,12 +220,17 @@ public class FileUploadServiceImpl implements FileUploadService {
         
         try {
             boolean isValid = FileTypeUtils.validateFileContent(inputStream, extension);
-            log.info("文件内容验证: extension={}, isValid={}", extension, isValid);
             if (!isValid) {
-                log.warn("文件内容校验失败: 扩展名 {} 与内容不匹配，允许上传但记录警告", extension);
+                log.warn("文件内容校验失败: 扩展名 {} 与实际内容不匹配，拒绝上传", extension);
+                throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, 
+                    "文件扩展名 " + extension + " 与实际内容不匹配，疑似伪造文件类型");
             }
+            log.info("文件内容验证通过: extension={}", extension);
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
             log.error("文件内容校验异常: extension={}, error={}", extension, e.getMessage(), e);
+            throw new BusinessException(ErrorCode.FILE_TYPE_NOT_ALLOWED, "文件内容校验失败，无法确认文件类型");
         }
     }
     

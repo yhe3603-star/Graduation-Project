@@ -27,8 +27,8 @@ export const useFavorite = (type) => {
   const items = ref([])
 
   const isFavorited = (id) => favorites.value.some(f => f.targetId === id && f.type === type)
-  
-  const isFavoritedObject = computed(() => (item) => item && isFavorited(item.id))
+
+  const isFavoritedObject = (item) => item && isFavorited(item.id)
 
   const loadFavorites = async () => {
     if (!isLoggedIn.value) return

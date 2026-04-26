@@ -434,6 +434,15 @@ onUnmounted(() => {
   flex: 1;
 }
 
+.chat-input :deep(.el-input__wrapper) {
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--el-border-color) inset;
+}
+
+.chat-input :deep(.el-input__wrapper:focus) {
+  box-shadow: 0 0 0 1px var(--el-color-primary) inset !important;
+}
+
 .chat-input .el-button--primary {
   color: var(--text-inverse);
 }

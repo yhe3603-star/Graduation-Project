@@ -5,6 +5,7 @@ import com.dongmedicine.common.R;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.FileTypeUtils;
 import com.dongmedicine.common.util.PageUtils;
+import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Resource;
 import com.dongmedicine.service.ResourceService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -77,6 +78,7 @@ public class ResourceController {
     }
 
     @PostMapping("/{id}/view")
+    @RateLimit(value = 10, key = "resource_view")
     public R<String> incrementView(@PathVariable Integer id) {
         service.incrementViewCount(id);
         return R.ok("ok");

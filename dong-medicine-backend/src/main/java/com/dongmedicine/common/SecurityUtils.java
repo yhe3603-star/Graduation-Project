@@ -12,7 +12,15 @@ public final class SecurityUtils {
         if (!StpUtil.isLogin()) {
             return null;
         }
-        return StpUtil.getLoginIdAsInt();
+        try {
+            Object loginId = StpUtil.getLoginId();
+            if (loginId instanceof Integer) {
+                return (Integer) loginId;
+            }
+            return Integer.parseInt(loginId.toString());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static String getCurrentUsername() {

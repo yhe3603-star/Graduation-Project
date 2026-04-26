@@ -9,7 +9,7 @@ WORKDIR /build
 RUN npm config set registry https://registry.npmmirror.com
 
 # 构建参数
-ARG VITE_API_BASE_URL=http://localhost:8080/api
+ARG VITE_API_BASE_URL=/api
 ARG VITE_KKFILEVIEW_URL=/kkfileview
 ARG VITE_KKFILEVIEW_FILE_HOST=http://backend:8080
 

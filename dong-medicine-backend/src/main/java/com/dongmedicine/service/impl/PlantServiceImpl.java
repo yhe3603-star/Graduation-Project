@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.LinkedHashMap;
@@ -41,7 +42,7 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     private boolean useFullTextSearch;
 
     @Override
-    @Cacheable(value = "plants", key = "'list:' + (#keyword ?: 'all') + ':' + (#category ?: 'all') + ':' + (#usageWay ?: 'all')")
+    @Cacheable(value = "searchResults", key = "'plants:' + (#keyword ?: 'all') + ':' + (#category ?: 'all') + ':' + (#usageWay ?: 'all')")
     public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
         LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -176,16 +177,17 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = "plants", allEntries = true)
     public void deleteWithFiles(Integer id) {
         Plant plant = getById(id);
         if (plant == null) {
             return;
         }
+        removeById(id);
         fileCleanupHelper.deleteFilesFromJson(plant.getImages());
         fileCleanupHelper.deleteFilesFromJson(plant.getVideos());
         fileCleanupHelper.deleteFilesFromJson(plant.getDocuments());
-        removeById(id);
         log.info("Deleted plant {} with associated files", id);
     }
 

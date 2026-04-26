@@ -6,6 +6,7 @@ import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
+import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.service.KnowledgeService;
 import jakarta.validation.constraints.NotBlank;
@@ -61,6 +62,7 @@ public class KnowledgeController {
     }
 
     @PostMapping("/{id}/view")
+    @RateLimit(value = 10, key = "knowledge_view")
     public R<String> incrementView(@PathVariable @NotNull(message = "ID不能为空") Integer id) {
         service.incrementViewCount(id);
         return R.ok("ok");

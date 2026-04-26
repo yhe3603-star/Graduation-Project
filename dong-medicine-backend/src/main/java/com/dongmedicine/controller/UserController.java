@@ -106,7 +106,7 @@ public class UserController {
         if (!StpUtil.isLogin()) {
             throw BusinessException.badRequest("Token无法刷新");
         }
-        Integer userId = StpUtil.getLoginIdAsInt();
+        Integer userId = SecurityUtils.getCurrentUserId();
         String username = (String) StpUtil.getSession().get("username");
         String role = (String) StpUtil.getSession().get("role");
 

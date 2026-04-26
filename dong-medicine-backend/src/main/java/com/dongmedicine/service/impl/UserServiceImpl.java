@@ -42,7 +42,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw BusinessException.passwordWrong();
         }
 
-        StpUtil.login(user.getId());
+        StpUtil.login(String.valueOf(user.getId()));
         StpUtil.getSession().set("username", user.getUsername());
         StpUtil.getSession().set("role", user.getRole());
 
@@ -131,7 +131,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public List<User> getAllUsers() {
         return list(new LambdaQueryWrapper<User>()
-                .select(User::getId, User::getUsername, User::getPasswordHash, User::getRole, User::getStatus, User::getCreatedAt)
+                .select(User::getId, User::getUsername, User::getRole, User::getStatus, User::getCreatedAt)
                 .orderByDesc(User::getCreatedAt));
     }
 
@@ -232,7 +232,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw BusinessException.userNotFound();
         }
-        StpUtil.login(user.getId());
+        StpUtil.login(String.valueOf(user.getId()));
         StpUtil.getSession().set("username", user.getUsername());
         StpUtil.getSession().set("role", user.getRole());
         return StpUtil.getTokenValue();

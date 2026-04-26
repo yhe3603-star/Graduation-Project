@@ -17,46 +17,92 @@ function parsePageResponse(res) {
   return { records: arr, total: arr.length, page: 1, size: arr.length }
 }
 
+export function useAdminSection(request, path, options = {}) {
+  const { pageSize = 20, extra = '', raw = false } = options
+  const list = ref([])
+  const pagination = ref({ page: 1, size: pageSize, total: 0 })
+  const loaded = ref(false)
+
+  const load = async (force = false) => {
+    if (!force && loaded.value) return
+    loaded.value = true
+
+    if (raw) {
+      const qs = extra || ''
+      const res = await request.get(`${path}?${qs}`).catch(() => ({}))
+      const rawData = res?.data?.data ?? res?.data ?? res
+      list.value = Array.isArray(rawData) ? rawData : []
+      return
+    }
+
+    const p = pagination.value
+    let qs = `page=${p.page}&size=${p.size}`
+    if (extra) qs += `&${extra}`
+    const res = await request.get(`${path}?${qs}`).catch(() => ({}))
+    const parsed = parsePageResponse(res)
+    pagination.value = { ...pagination.value, total: parsed.total, page: parsed.page, size: parsed.size }
+    list.value = parsed.records
+  }
+
+  const setPage = async (page) => {
+    pagination.value = { ...pagination.value, page }
+    await load(true)
+  }
+
+  const setSize = async (size) => {
+    pagination.value = { ...pagination.value, page: 1, size }
+    await load(true)
+  }
+
+  return { list, pagination, loaded, load, setPage, setSize }
+}
+
 export function useAdminData(request) {
-  const users = ref([])
-  const knowledgeList = ref([])
-  const inheritorsList = ref([])
-  const plantsList = ref([])
-  const qaList = ref([])
-  const resourcesList = ref([])
-  const feedbackList = ref([])
-  const quizList = ref([])
-  const commentsList = ref([])
-  const logList = ref([])
+  const usersSection = useAdminSection(request, '/admin/users')
+  const knowledgeSection = useAdminSection(request, '/admin/knowledge')
+  const inheritorsSection = useAdminSection(request, '/admin/inheritors')
+  const plantsSection = useAdminSection(request, '/admin/plants')
+  const qaSection = useAdminSection(request, '/admin/qa')
+  const resourcesSection = useAdminSection(request, '/admin/resources')
+  const feedbackSection = useAdminSection(request, '/admin/feedback', { extra: 'status=all' })
+  const commentsSection = useAdminSection(request, '/admin/comments', { extra: 'status=all' })
+  const quizSection = useAdminSection(request, '/quiz/list')
+  const logsSection = useAdminSection(request, '/admin/logs/list', { pageSize: 500, extra: 'limit=500', raw: true })
+
+  const sections = {
+    users: usersSection,
+    knowledge: knowledgeSection,
+    inheritors: inheritorsSection,
+    plants: plantsSection,
+    qa: qaSection,
+    resources: resourcesSection,
+    feedback: feedbackSection,
+    comments: commentsSection,
+    quiz: quizSection,
+    logs: logsSection
+  }
+
   const adminStats = ref(null)
   const activeSection = ref('dashboard')
-  const loadedSections = new Set()
 
-  const pagination = ref({
-    users: { page: 1, size: 20, total: 0 },
-    knowledge: { page: 1, size: 20, total: 0 },
-    inheritors: { page: 1, size: 20, total: 0 },
-    plants: { page: 1, size: 20, total: 0 },
-    qa: { page: 1, size: 20, total: 0 },
-    resources: { page: 1, size: 20, total: 0 },
-    feedback: { page: 1, size: 20, total: 0 },
-    comments: { page: 1, size: 20, total: 0 },
-    quiz: { page: 1, size: 20, total: 0 },
-    logs: { page: 1, size: 500, total: 0 }
+  const users = computed(() => usersSection.list.value)
+  const knowledgeList = computed(() => knowledgeSection.list.value)
+  const inheritorsList = computed(() => inheritorsSection.list.value)
+  const plantsList = computed(() => plantsSection.list.value)
+  const qaList = computed(() => qaSection.list.value)
+  const resourcesList = computed(() => resourcesSection.list.value)
+  const feedbackList = computed(() => feedbackSection.list.value)
+  const quizList = computed(() => quizSection.list.value)
+  const commentsList = computed(() => commentsSection.list.value)
+  const logList = computed(() => logsSection.list.value)
+
+  const pagination = computed(() => {
+    const result = {}
+    for (const [key, section] of Object.entries(sections)) {
+      result[key] = section.pagination.value
+    }
+    return result
   })
-
-  const SECTIONS = {
-    users: { ref: users, path: '/admin/users' },
-    knowledge: { ref: knowledgeList, path: '/admin/knowledge' },
-    inheritors: { ref: inheritorsList, path: '/admin/inheritors' },
-    plants: { ref: plantsList, path: '/admin/plants' },
-    qa: { ref: qaList, path: '/admin/qa' },
-    resources: { ref: resourcesList, path: '/admin/resources' },
-    feedback: { ref: feedbackList, path: '/admin/feedback', extra: 'status=all' },
-    comments: { ref: commentsList, path: '/admin/comments', extra: 'status=all' },
-    quiz: { ref: quizList, path: '/quiz/list' },
-    logs: { ref: logList, path: '/admin/logs/list', extra: 'limit=500', raw: true }
-  }
 
   const sortedComments = computed(() => {
     const list = commentsList.value || []
@@ -83,41 +129,18 @@ export function useAdminData(request) {
   }
 
   async function loadSection(key, force = false) {
-    if (!force && loadedSections.has(key)) return
-    const cfg = SECTIONS[key]
-    if (!cfg) return
-    loadedSections.add(key)
-
-    if (cfg.raw) {
-      const qs = cfg.extra || ''
-      const res = await request.get(`${cfg.path}?${qs}`).catch(() => ({}))
-      const raw = res?.data?.data ?? res?.data ?? res
-      cfg.ref.value = Array.isArray(raw) ? raw : []
-      return
-    }
-
-    const p = pagination.value[key]
-    let qs = `page=${p.page}&size=${p.size}`
-    if (cfg.extra) qs += `&${cfg.extra}`
-    const res = await request.get(`${cfg.path}?${qs}`).catch(() => ({}))
-    const parsed = parsePageResponse(res)
-    pagination.value[key] = {
-      ...pagination.value[key],
-      total: parsed.total,
-      page: parsed.page,
-      size: parsed.size
-    }
-    cfg.ref.value = parsed.records
+    const section = sections[key]
+    if (section) await section.load(force)
   }
 
   async function handleAdminPage(key, page) {
-    pagination.value[key] = { ...pagination.value[key], page }
-    await loadSection(key, true)
+    const section = sections[key]
+    if (section) await section.setPage(page)
   }
 
   async function handleAdminSize(key, size) {
-    pagination.value[key] = { ...pagination.value[key], page: 1, size }
-    await loadSection(key, true)
+    const section = sections[key]
+    if (section) await section.setSize(size)
   }
 
   const fetchData = async () => {
@@ -156,6 +179,7 @@ export function useAdminData(request) {
     sortedUsers,
     fetchData,
     switchSection,
+    loadSection,
     handleAdminPage,
     handleAdminSize
   }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
+import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.service.PlantService;
 import lombok.RequiredArgsConstructor;
@@ -72,6 +73,7 @@ public class PlantController {
     }
 
     @PostMapping("/{id}/view")
+    @RateLimit(value = 10, key = "plant_view")
     public R<String> incrementView(@PathVariable Integer id) {
         service.incrementViewCount(id);
         return R.ok("ok");

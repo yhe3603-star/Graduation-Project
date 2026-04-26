@@ -44,6 +44,7 @@ public class AdminController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
         Page<User> pageResult = userService.page(PageUtils.getPage(page, size));
+        pageResult.getRecords().forEach(u -> u.setPasswordHash(null));
         return R.ok(PageUtils.toMap(pageResult));
     }
 

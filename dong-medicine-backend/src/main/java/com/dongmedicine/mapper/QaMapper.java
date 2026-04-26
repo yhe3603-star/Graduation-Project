@@ -3,10 +3,12 @@ package com.dongmedicine.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.dongmedicine.entity.Qa;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface QaMapper extends BaseMapper<Qa> {
@@ -32,4 +34,7 @@ public interface QaMapper extends BaseMapper<Qa> {
 
     @Select("SELECT DISTINCT category FROM qa WHERE category IS NOT NULL AND category != '' ORDER BY category")
     List<String> selectDistinctCategory();
+
+    @Select("SELECT category AS name, IFNULL(SUM(popularity), 0) AS value FROM qa WHERE category IS NOT NULL AND category != '' GROUP BY category ORDER BY value DESC LIMIT #{limit}")
+    List<Map<String, Object>> topCategoryByPopularity(@Param("limit") int limit);
 }

@@ -48,18 +48,15 @@
       </div>
 
       <div
-        v-if="total > 0"
+        v-if="searched && total > 0"
         class="search-stats"
       >
         <span>找到 <strong>{{ total }}</strong> 条结果</span>
-        <span
-          v-if="searched"
-          class="search-keyword"
-        >关键词：{{ lastKeyword }}</span>
+        <span class="search-keyword">关键词：{{ lastKeyword }}</span>
       </div>
 
       <el-tabs
-        v-if="total > 0"
+        v-if="searched || total > 0"
         v-model="activeTab"
         class="result-tabs"
         @tab-change="onTabChange"
@@ -68,7 +65,10 @@
           label="全部"
           name="all"
         >
-          <div class="result-grid">
+          <div
+            v-if="allResults.length > 0"
+            class="result-grid"
+          >
             <div
               v-for="item in paginatedResults"
               :key="item.id + item.type"
@@ -90,6 +90,10 @@
               </el-tag>
             </div>
           </div>
+          <el-empty
+            v-else
+            description="未找到相关结果"
+          />
         </el-tab-pane>
         <el-tab-pane
           v-for="type in typeList"
@@ -97,7 +101,10 @@
           :label="getTypeName(type) + ' (' + typeCounts[type] + ')'"
           :name="type"
         >
-          <div class="result-list">
+          <div
+            v-if="searchResults.length > 0"
+            class="result-list"
+          >
             <div
               v-for="item in searchResults"
               :key="item.id"
@@ -108,6 +115,10 @@
               <span class="result-desc">{{ (item.description || item.bio || item.efficacy || item.answer || '').substring(0, 40) }}...</span>
             </div>
           </div>
+          <el-empty
+            v-else
+            description="该类型暂无搜索结果"
+          />
         </el-tab-pane>
       </el-tabs>
 
@@ -125,11 +136,6 @@
           @current-change="onPageChange"
         />
       </div>
-
-      <el-empty
-        v-if="searched && total === 0"
-        description="未找到相关结果"
-      />
     </div>
   </div>
 </template>
@@ -176,21 +182,33 @@ const onTabChange = () => {
     searchResults.value = [];
     total.value = allResults.value.length;
   } else {
-    loadSingleType();
+    if (searched.value && keyword.value.trim()) {
+      loadSingleTypeSearch();
+    } else {
+      loadSingleType();
+    }
   }
 };
 
 const onPageChange = () => {
   window.scrollTo({ top: 300, behavior: 'smooth' });
   if (activeTab.value !== "all") {
-    loadSingleType();
+    if (searched.value && keyword.value.trim()) {
+      loadSingleTypeSearch();
+    } else {
+      loadSingleType();
+    }
   }
 };
 
 const onPageSizeChange = () => {
   currentPage.value = 1;
   if (activeTab.value !== "all") {
-    loadSingleType();
+    if (searched.value && keyword.value.trim()) {
+      loadSingleTypeSearch();
+    } else {
+      loadSingleType();
+    }
   }
 };
 

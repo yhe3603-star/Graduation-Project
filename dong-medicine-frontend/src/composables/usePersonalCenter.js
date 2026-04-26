@@ -2,7 +2,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Avatar, ChatDotRound, Document, EditPen, Folder, Lock, Picture, Setting, Star, SwitchButton, User } from '@element-plus/icons-vue'
-import { logFetchError, logOperationWarn } from '@/utils'
+import { logFetchError, logOperationWarn, extractData } from '@/utils'
 
 export const actions = [
   { key: 'favorites', icon: Star, label: '我的收藏' },

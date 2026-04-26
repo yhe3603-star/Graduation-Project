@@ -3,6 +3,7 @@ package com.dongmedicine.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.util.PageUtils;
+import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Qa;
 import com.dongmedicine.service.QaService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class QaController {
     }
 
     @PostMapping("/{id}/view")
+    @RateLimit(value = 10, key = "qa_view")
     public R<String> incrementView(@PathVariable Integer id) {
         service.incrementViewCount(id);
         return R.ok("ok");

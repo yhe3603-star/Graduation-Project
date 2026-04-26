@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface PlantMapper extends BaseMapper<Plant> {
@@ -50,4 +51,10 @@ public interface PlantMapper extends BaseMapper<Plant> {
 
     @Select("SELECT DISTINCT usage_way FROM plants WHERE usage_way IS NOT NULL AND usage_way != '' ORDER BY usage_way")
     List<String> selectDistinctUsageWay();
+
+    @Select("SELECT category AS name, COUNT(*) AS value FROM plants WHERE category IS NOT NULL AND category != '' GROUP BY category ORDER BY value DESC LIMIT #{limit}")
+    List<Map<String, Object>> countByCategory(@Param("limit") int limit);
+
+    @Select("SELECT distribution AS name, COUNT(*) AS value FROM plants WHERE distribution IS NOT NULL AND distribution != '' GROUP BY distribution ORDER BY value DESC LIMIT #{limit}")
+    List<Map<String, Object>> countByDistribution(@Param("limit") int limit);
 }

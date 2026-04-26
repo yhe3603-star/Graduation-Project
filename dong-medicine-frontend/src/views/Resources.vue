@@ -108,7 +108,7 @@ const FILE_TYPE_MAP = {
 
 const filterConfig = ref([
   { key: "category", label: "难度", options: [{ label: "全部", value: "" }] },
-  { key: "type", label: "类型", type: "success", options: [{ label: "全部", value: "" }, { label: "视频", value: "video" }, { label: "文档", value: "document" }, { label: "图片", value: "image" }] }
+  { key: "type", label: "类型", type: "success", options: [{ label: "全部", value: "" }] }
 ]);
 
 const route = useRoute();
@@ -289,9 +289,10 @@ const loadMetadata = async () => {
     const data = res.data || res || {};
     const resourcesFilters = data.resources || {};
     const categories = resourcesFilters.category || [];
+    const types = resourcesFilters.type || [];
     filterConfig.value = [
       { key: "category", label: "难度", options: [{ label: "全部", value: "" }, ...categories.map(c => ({ label: c, value: c }))] },
-      { key: "type", label: "类型", type: "success", options: [{ label: "全部", value: "" }, { label: "视频", value: "video" }, { label: "文档", value: "document" }, { label: "图片", value: "image" }] }
+      { key: "type", label: "类型", type: "success", options: [{ label: "全部", value: "" }, ...types.map(t => ({ label: t, value: t }))] }
     ];
   } catch {}
 };

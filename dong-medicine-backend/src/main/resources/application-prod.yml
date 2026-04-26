@@ -62,8 +62,8 @@ sa-token:
 app:
   cors:
     allowed-origins:
-      - ${CORS_ORIGIN_1}
-      - ${CORS_ORIGIN_2}
+      - ${CORS_ALLOWED_ORIGIN:http://localhost:3000}
+      - http://localhost:5173
   cache:
     enabled: true
     default-expire-time: 3600000
@@ -94,7 +94,7 @@ file:
 
 logging:
   level:
-    com.dongmedicine: WARN
+    com.dongmedicine: DEBUG
     cn.dev33.satoken: ERROR
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
@@ -130,6 +130,12 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
 deepseek:
   api-key: ${DEEPSEEK_API_KEY:}

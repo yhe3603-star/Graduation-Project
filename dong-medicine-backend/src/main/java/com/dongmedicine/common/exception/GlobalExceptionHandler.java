@@ -258,11 +258,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public R<?> handleRuntimeException(RuntimeException e) {
-        if (isProd()) {
-            log.error("运行时异常: {}", e.getClass().getSimpleName());
-        } else {
-            log.error("运行时异常: ", e);
-        }
+        log.error("运行时异常: {}", e.getClass().getSimpleName(), e);
         return R.error(ErrorCode.SYSTEM_ERROR);
     }
 

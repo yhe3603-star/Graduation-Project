@@ -31,7 +31,7 @@ function getTokenExpiryTime(token) {
 function isTokenExpired(token, options = {}) {
   const { useBuffer = true, bufferMs = TOKEN_EXPIRY_BUFFER_MS } = options
   const expiryTime = getTokenExpiryTime(token)
-  if (!expiryTime) return true
+  if (!expiryTime) return false
   
   const now = Date.now()
   return useBuffer ? now >= expiryTime - bufferMs : now >= expiryTime
@@ -106,11 +106,19 @@ export const useUserStore = defineStore('user', () => {
   
   const isLoggedIn = computed(() => {
     if (!token.value) return false
+    const payload = decodeJwtPayload(token.value)
+    if (!payload) return true
     return !isTokenExpired(token.value, { useBuffer: false })
   })
   const userName = computed(() => username.value)
   const isAdmin = computed(() => {
-    if (!token.value || isTokenExpired(token.value, { useBuffer: false })) return false
+    if (!token.value) return false
+    const payload = decodeJwtPayload(token.value)
+    if (!payload) {
+      const r = role.value
+      return !!(r && r.toLowerCase() === 'admin')
+    }
+    if (isTokenExpired(token.value, { useBuffer: false })) return false
     const r = role.value
     return !!(r && r.toLowerCase() === 'admin')
   })
@@ -123,14 +131,23 @@ export const useUserStore = defineStore('user', () => {
     initializeFromStorage()
     checkTokenExpiry()
     
-    window.addEventListener('auth-expired', () => {
-      clearAuth()
-    })
+    window.addEventListener('auth-expired', handleAuthExpired)
+  }
+
+  function handleAuthExpired() {
+    clearAuth()
+  }
+
+  function destroy() {
+    window.removeEventListener('auth-expired', handleAuthExpired)
   }
   
   function checkTokenExpiry() {
-    if (token.value && isTokenExpired(token.value)) {
-      clearAuth()
+    if (token.value) {
+      const payload = decodeJwtPayload(token.value)
+      if (payload && isTokenExpired(token.value)) {
+        clearAuth()
+      }
     }
   }
   
@@ -173,13 +190,19 @@ export const useUserStore = defineStore('user', () => {
    * @returns {Promise<UserInfo|null>} 用户信息对象，未登录或请求失败时返回 null
    */
   async function fetchUserInfo() {
-    if (!token.value || isTokenExpired(token.value)) {
+    if (!token.value) {
+      clearAuth()
+      return null
+    }
+    
+    const payload = decodeJwtPayload(token.value)
+    if (payload && isTokenExpired(token.value)) {
       clearAuth()
       return null
     }
     
     try {
-      const res = await request.get('/user/me')
+      const res = await request.get('/user/me', { skipAuthRefresh: true })
       if (res.code === 200) {
         userInfo.value = res.data
         return res.data
@@ -201,13 +224,14 @@ export const useUserStore = defineStore('user', () => {
       return false
     }
 
-    if (isTokenExpired(token.value, { useBuffer: false })) {
+    const payload = decodeJwtPayload(token.value)
+    if (payload && isTokenExpired(token.value, { useBuffer: false })) {
       clearAuth()
       return false
     }
 
     try {
-      const res = await request.get('/user/validate')
+      const res = await request.get('/user/validate', { skipAuthRefresh: true })
       if (res.code === 200 && res.data) {
         userId.value = res.data.id
         username.value = res.data.username
@@ -290,13 +314,16 @@ export const useUserStore = defineStore('user', () => {
     const storedUsername = safeGetItem('userName')
     const storedRole = safeGetItem('role')
     
-    if (storedToken && !isTokenExpired(storedToken, { useBuffer: false })) {
-      token.value = storedToken
-      userId.value = storedUserId || ''
-      username.value = storedUsername || ''
-      role.value = storedRole || ''
-    } else {
-      clearAuth()
+    if (storedToken) {
+      const payload = decodeJwtPayload(storedToken)
+      if (!payload || !isTokenExpired(storedToken, { useBuffer: false })) {
+        token.value = storedToken
+        userId.value = storedUserId || ''
+        username.value = storedUsername || ''
+        role.value = storedRole || ''
+      } else {
+        clearAuth()
+      }
     }
   }
   
@@ -318,6 +345,7 @@ export const useUserStore = defineStore('user', () => {
     changePassword,
     initialize,
     initializeFromStorage,
-    getTokenRemainingTime
+    getTokenRemainingTime,
+    destroy
   }
 })

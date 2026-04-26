@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface KnowledgeMapper extends BaseMapper<Knowledge> {
@@ -48,4 +49,16 @@ public interface KnowledgeMapper extends BaseMapper<Knowledge> {
 
     @Select("SELECT DISTINCT herb_category FROM knowledge WHERE herb_category IS NOT NULL AND herb_category != '' ORDER BY herb_category")
     List<String> selectDistinctHerbCategory();
+
+    @Select("SELECT therapy_category AS name, COUNT(*) AS value FROM knowledge WHERE therapy_category IS NOT NULL AND therapy_category != '' GROUP BY therapy_category ORDER BY value DESC LIMIT #{limit}")
+    List<Map<String, Object>> countByTherapyCategory(@Param("limit") int limit);
+
+    @Select("SELECT title AS name, popularity AS value FROM knowledge WHERE popularity > 0 ORDER BY popularity DESC LIMIT #{limit}")
+    List<Map<String, Object>> topByPopularity(@Param("limit") int limit);
+
+    @Select("SELECT title AS name, view_count AS value FROM knowledge WHERE (type = '药方' OR title LIKE '%方%') AND view_count > 0 ORDER BY view_count DESC LIMIT #{limit}")
+    List<Map<String, Object>> topFormulaByViewCount(@Param("limit") int limit);
+
+    @Select("SELECT title AS name, view_count AS value FROM knowledge WHERE view_count > 0 ORDER BY view_count DESC LIMIT #{limit}")
+    List<Map<String, Object>> topByViewCount(@Param("limit") int limit);
 }

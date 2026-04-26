@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.*;
 
@@ -39,18 +40,16 @@ public class AiChatServiceImpl implements AiChatService {
         "请用专业、友好的语气回答用户的问题，如果问题超出侗族医药范围，请礼貌说明。" +
         "回答时可以适当介绍侗族医药的特点、常用药物、传统疗法等知识。";
 
-    private WebClient getWebClient() {
-        if (webClient == null) {
-            HttpClient httpClient = HttpClient.create()
-                    .responseTimeout(Duration.ofSeconds(120));
-            webClient = WebClient.builder()
-                    .baseUrl(deepSeekConfig.getBaseUrl())
-                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + deepSeekConfig.getApiKey())
-                    .clientConnector(new ReactorClientHttpConnector(httpClient))
-                    .build();
-        }
-        return webClient;
+    @PostConstruct
+    private void initWebClient() {
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(120));
+        webClient = WebClient.builder()
+                .baseUrl(deepSeekConfig.getBaseUrl())
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + deepSeekConfig.getApiKey())
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
     }
 
     @Override
@@ -120,7 +119,7 @@ public class AiChatServiceImpl implements AiChatService {
                 return;
             }
 
-            log.debug("[{}] 调用AI流式服务开始", requestId);
+            log.info("[{}] 调用AI流式服务开始, message={}", requestId, message.substring(0, Math.min(50, message.length())));
 
             List<Map<String, String>> messages = buildMessagesFromJson(message, history);
 
@@ -133,28 +132,68 @@ public class AiChatServiceImpl implements AiChatService {
 
             StringBuilder fullReply = new StringBuilder();
 
-            getWebClient()
+            webClient
                     .post()
                     .uri("/chat/completions")
                     .bodyValue(requestBody)
                     .accept(MediaType.TEXT_EVENT_STREAM)
                     .retrieve()
                     .bodyToFlux(String.class)
-                    .filter(line -> !line.isBlank() && line.startsWith("data:"))
-                    .map(line -> line.substring(5).trim())
-                    .filter(data -> !"[DONE]".equals(data))
+                    .doOnNext(line -> log.debug("[{}] SSE原始数据: {}", requestId, line))
+                    .filter(line -> !line.isBlank() && !line.equals("[DONE]"))
+                    .map(line -> {
+                        String data = line.trim();
+                        if (data.startsWith("data:")) {
+                            return data.substring(5).trim();
+                        }
+                        return data;
+                    })
                     .subscribe(
                             data -> {
                                 try {
+                                    log.info("[{}] SSE数据块: {}", requestId, data);
                                     JsonNode chunk = objectMapper.readTree(data);
-                                    String content = chunk.path("choices").get(0)
-                                            .path("delta").path("content").asText("");
+                                    
+                                    if (chunk.has("error")) {
+                                        String errorMsg = chunk.path("error").path("message").asText("未知错误");
+                                        log.error("[{}] API返回错误: {}", requestId, errorMsg);
+                                        callback.onError("AI服务错误: " + errorMsg);
+                                        return;
+                                    }
+                                    
+                                    JsonNode choices = chunk.path("choices");
+                                    if (choices == null || choices.isEmpty() || !choices.isArray()) {
+                                        log.warn("[{}] 无choices字段: {}", requestId, data);
+                                        return;
+                                    }
+                                    
+                                    JsonNode choice0 = choices.get(0);
+                                    if (choice0 == null) {
+                                        log.warn("[{}] choices[0]为null: {}", requestId, data);
+                                        return;
+                                    }
+                                    
+                                    JsonNode delta = choice0.path("delta");
+                                    if (delta == null) {
+                                        log.warn("[{}] 无delta字段: {}", requestId, data);
+                                        JsonNode msgNode = choice0.path("message");
+                                        if (msgNode != null && msgNode.has("content")) {
+                                            String content = msgNode.path("content").asText("");
+                                            if (!content.isEmpty()) {
+                                                fullReply.append(content);
+                                                callback.onToken(content);
+                                            }
+                                        }
+                                        return;
+                                    }
+                                    
+                                    String content = delta.path("content").asText("");
                                     if (!content.isEmpty()) {
                                         fullReply.append(content);
                                         callback.onToken(content);
                                     }
                                 } catch (Exception e) {
-                                    log.warn("[{}] 解析SSE数据块失败: {}", requestId, e.getMessage());
+                                    log.error("[{}] 解析SSE数据块失败: {}, 数据={}", requestId, e.getMessage(), data);
                                 }
                             },
                             error -> {
@@ -164,7 +203,7 @@ public class AiChatServiceImpl implements AiChatService {
                             },
                             () -> {
                                 long elapsed = System.currentTimeMillis() - startTime;
-                                log.debug("[{}] AI流式服务完成, 耗时={}ms, 回复长度={}",
+                                log.info("[{}] AI流式服务完成, 耗时={}ms, 回复长度={}",
                                         requestId, elapsed, fullReply.length());
                                 callback.onComplete(fullReply.toString());
                             }
