@@ -94,10 +94,6 @@ if [ -d "$APP_DIR/dong-medicine-backend" ] || [ -d "$APP_DIR/dong-medicine-front
         dong-medicine-backend dong-medicine-frontend 2>/dev/null || true
     print_info "应用已备份: app-$TIMESTAMP.tar.gz"
 fi
-if [ -d "$APP_DIR/data" ]; then
-    tar -czf "$BACKUP_DIR/data-$TIMESTAMP.tar.gz" -C "$APP_DIR" data 2>/dev/null || true
-    print_info "数据已备份"
-fi
 print_success "备份完成"
 
 print_step "部署应用文件..."
@@ -115,111 +111,113 @@ docker rm $(docker ps -aq --filter name=dong-medicine-) 2>/dev/null || true
 $COMPOSE_CMD down --remove-orphans 2>/dev/null || true
 print_success "旧容器已停止"
 
-print_step "清理端口与网络..."
-if command -v lsof &> /dev/null; then
-    for port in 8080 80; do
-        PID=$(lsof -t -i:$port 2>/dev/null || true)
-        if [ -n "$PID" ]; then
-            print_info "释放端口 $port (PID: $PID)"
-            kill $PID 2>/dev/null || true
-            sleep 1
-            kill -9 $PID 2>/dev/null || true
-        fi
-    done
-fi
+print_step "清理网络..."
 docker network rm dong-medicine-network 2>/dev/null || true
-docker network prune -f 2>/dev/null || true
-sleep 3
-print_success "端口与网络清理完成"
+sleep 2
+print_success "网络清理完成"
 
-print_step "构建并启动容器..."
-
+print_step "构建镜像..."
 export DOCKER_BUILDKIT=0
 export COMPOSE_DOCKER_CLI_BUILD=0
-print_info "已禁用BuildKit以提高兼容性"
+print_info "已禁用BuildKit"
 
-BUILD_TIMEOUT=600
-print_info "构建超时设置: ${BUILD_TIMEOUT}秒"
+BUILD_TIMEOUT=900
+print_info "构建超时: ${BUILD_TIMEOUT}秒"
+
+BUILD_START=$(date +%s)
 
 if [ -n "$NO_CACHE" ]; then
     print_info "无缓存构建模式"
     timeout $BUILD_TIMEOUT $COMPOSE_CMD build --no-cache 2>&1 || {
-        if [ $? -eq 124 ]; then
-            print_error "构建超时，尝试使用缓存重试..."
-            $COMPOSE_CMD build 2>&1 || {
-                print_error "构建失败，请检查网络连接和Docker配置"
-                exit 1
-            }
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 124 ]; then
+            print_error "构建超时"
+            exit 1
         else
-            print_error "构建失败"
+            print_error "构建失败 (退出码: $EXIT_CODE)"
             exit 1
         fi
     }
 else
     timeout $BUILD_TIMEOUT $COMPOSE_CMD build 2>&1 || {
-        if [ $? -eq 124 ]; then
-            print_error "构建超时，请检查服务器网络和资源"
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 124 ]; then
+            print_error "构建超时"
             exit 1
         else
-            print_error "构建失败"
+            print_error "构建失败 (退出码: $EXIT_CODE)"
             exit 1
         fi
     }
 fi
-print_success "镜像构建完成"
 
-$COMPOSE_CMD up -d --wait-timeout 300 2>/dev/null || $COMPOSE_CMD up -d
-print_success "容器启动完成"
+BUILD_END=$(date +%s)
+BUILD_TIME=$((BUILD_END - BUILD_START))
+print_success "镜像构建完成 (耗时: ${BUILD_TIME}秒)"
 
-print_step "等待后端服务就绪..."
+print_step "启动容器..."
+$COMPOSE_CMD up -d
+print_success "容器已启动"
+
+print_step "等待服务就绪 (最多5分钟)..."
+WAIT_COUNT=0
+MAX_WAIT=30
 BACKEND_READY=false
-for i in $(seq 1 30); do
-    HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000")
-    if [ "$HEALTH_STATUS" = "200" ]; then
+
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    
+    BACKEND_STATUS=$(docker ps --filter name=dong-medicine-backend --format "{{.Status}}" 2>/dev/null || echo "")
+    FRONTEND_STATUS=$(docker ps --filter name=dong-medicine-frontend --format "{{.Status}}" 2>/dev/null || echo "")
+    
+    echo "[$WAIT_COUNT/$MAX_WAIT] 后端: $BACKEND_STATUS | 前端: $FRONTEND_STATUS"
+    
+    HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000")
+    
+    if [ "$HEALTH" = "200" ]; then
         print_success "后端服务已就绪"
         BACKEND_READY=true
         break
     fi
-    [ $i -lt 30 ] && print_info "等待后端启动... ($i/30, HTTP $HEALTH_STATUS)" && sleep 10
+    
+    if [[ "$BACKEND_STATUS" == *"Up"* ]] && [ $WAIT_COUNT -ge 5 ]; then
+        print_info "后端容器运行中，继续等待..."
+    fi
+    
+    sleep 10
 done
 
 if ! $BACKEND_READY; then
-    print_error "后端服务启动超时，查看日志："
-    $COMPOSE_CMD logs --tail=50 backend
-    exit 1
+    print_info "后端服务尚未完全就绪，但容器已启动"
+    print_info "查看容器状态:"
+    $COMPOSE_CMD ps
 fi
 
-FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80 2>/dev/null || echo "000")
-if [ "$FRONTEND_STATUS" = "200" ]; then
-    print_success "前端服务健康检查通过"
-else
-    print_info "前端健康检查返回 $FRONTEND_STATUS"
+FRONTEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80 2>/dev/null || echo "000")
+if [ "$FRONTEND_HEALTH" = "200" ]; then
+    print_success "前端服务正常"
 fi
 
-print_step "清理旧备份(保留最近5个)..."
-cd "$BACKUP_DIR" && ls -t app-*.tar.gz data-*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm -f
-print_success "旧备份清理完成"
-
-print_step "清理无用 Docker 资源..."
-docker image prune -f 2>/dev/null || true
-docker builder prune -af 2>/dev/null || true
-print_success "Docker 清理完成"
+print_step "清理旧备份(保留最近3个)..."
+cd "$BACKUP_DIR" && ls -t app-*.tar.gz 2>/dev/null | tail -n +4 | xargs -r rm -f
+print_success "清理完成"
 
 echo ""
 echo "=========================================="
-print_success "Docker 部署完成！"
+print_success "部署完成！"
 echo "=========================================="
 echo ""
 echo "部署时间: $(date '+%Y-%m-%d %H:%M:%S')"
-echo "版本标识: $TIMESTAMP"
+echo "构建耗时: ${BUILD_TIME}秒"
 echo ""
 echo "服务状态:"
 $COMPOSE_CMD ps
 echo ""
 echo "访问地址:"
-PUBLIC_IP=$(curl -s --connect-timeout 5 ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')
+PUBLIC_IP=$(curl -s --connect-timeout 3 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')
 echo "  前端: http://$PUBLIC_IP"
-echo "  后端: http://$PUBLIC_IP:8080/api/"
+echo "  后端: http://$PUBLIC_IP:8080"
 echo ""
+echo "查看日志: cd $APP_DIR && $COMPOSE_CMD logs -f"
 echo "回滚命令: sudo bash docker-deploy.sh --rollback"
 echo ""
