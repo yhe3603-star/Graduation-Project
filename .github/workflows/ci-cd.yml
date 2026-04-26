@@ -13,6 +13,8 @@ env:
   JAVA_VERSION: '17'
   NODE_VERSION: '20'
   DEPLOY_DIR: /opt/dong-medicine
+  SSH_TIMEOUT: 30
+  SSH_RETRIES: 5
 
 jobs:
   build-and-test:
@@ -116,22 +118,54 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           cat > ~/.ssh/config << EOF
-          Host *
-            ServerAliveInterval 60
+          Host server
+            HostName ${{ secrets.SERVER_HOST }}
+            User ${{ secrets.SERVER_USER }}
+            IdentityFile ~/.ssh/id_rsa
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            ConnectTimeout 30
+            ServerAliveInterval 30
             ServerAliveCountMax 10
+            TCPKeepAlive yes
+            IdentitiesOnly yes
           EOF
           chmod 600 ~/.ssh/config
 
+      - name: Test SSH connection
+        run: |
+          echo "Testing SSH connection with retries..."
+          for i in 1 2 3 4 5; do
+            echo "Attempt $i of 5..."
+            if ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'" 2>&1; then
+              echo "SSH connection established!"
+              exit 0
+            fi
+            echo "Connection failed, waiting 10 seconds before retry..."
+            sleep 10
+          done
+          echo "All SSH connection attempts failed!"
+          exit 1
+
       - name: Upload files to server
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /tmp/deploy"
-          scp -r deploy-package/. ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/deploy/
+          echo "Uploading files with retry..."
+          for i in 1 2 3; do
+            if ssh server "mkdir -p /tmp/deploy" && scp -r deploy-package/. server:/tmp/deploy/; then
+              echo "Files uploaded successfully!"
+              exit 0
+            fi
+            echo "Upload attempt $i failed, retrying in 5 seconds..."
+            sleep 5
+          done
+          echo "Failed to upload files after 3 attempts"
+          exit 1
 
       - name: Initialize Server (Install Docker)
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash -s' << 'SCRIPT'
+          ssh server 'bash -s' << 'SCRIPT'
           if ! command -v docker &> /dev/null; then
             echo "Docker not installed, running initialization..."
             cd /tmp/deploy && sudo bash init-server.sh
@@ -142,7 +176,7 @@ jobs:
 
       - name: Deploy Application
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash -s' << 'SCRIPT'
+          ssh server 'bash -s' << 'SCRIPT'
           set -e
           cd /tmp/deploy
           chmod +x docker-deploy.sh
@@ -159,30 +193,20 @@ jobs:
           echo "Waiting for services to start..."
           sleep 60
 
-          SERVER_HEALTH=$(ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            'curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000"')
-          echo "Server health check: HTTP $SERVER_HEALTH"
-
-          if [ "$SERVER_HEALTH" = "200" ]; then
-            echo "Health check passed!"
-            exit 0
-          fi
-
-          echo "Initial check failed, retrying..."
-          for i in 1 2 3 4 5; do
-            sleep 15
-            HEALTH=$(ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-              'curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000"')
-            echo "Retry $i: HTTP $HEALTH"
+          for attempt in 1 2 3 4 5 6; do
+            HEALTH=$(ssh server 'curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000"')
+            echo "Health check attempt $attempt: HTTP $HEALTH"
+            
             if [ "$HEALTH" = "200" ]; then
               echo "Health check passed!"
               exit 0
             fi
+            
+            [ $attempt -lt 6 ] && sleep 15
           done
 
           echo "Health check failed, checking container status..."
-          CONTAINER_STATUS=$(ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            'docker ps -a --filter name=dong-medicine-backend --format "{{.Status}}"')
+          CONTAINER_STATUS=$(ssh server 'docker ps -a --filter name=dong-medicine-backend --format "{{.Status}}"')
           echo "Backend container: $CONTAINER_STATUS"
 
           if [[ "$CONTAINER_STATUS" == *"Up"* ]]; then
@@ -190,8 +214,7 @@ jobs:
             exit 0
           else
             echo "Container not running. Deployment failed."
-            ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-              "cd /opt/dong-medicine && docker compose logs --tail=50 backend 2>/dev/null || docker logs dong-medicine-backend 2>/dev/null"
+            ssh server "cd /opt/dong-medicine && docker compose logs --tail=50 backend 2>/dev/null || docker logs dong-medicine-backend 2>/dev/null"
             exit 1
           fi
 
