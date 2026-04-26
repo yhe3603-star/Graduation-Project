@@ -53,7 +53,7 @@ services:
 
   # kkFileView 文档预览服务
   kkfileview:
-    image: keking/kkfileview:4.4.0
+    image: keking/kkfileview:latest
     container_name: dong-medicine-kkfileview
     restart: unless-stopped
     environment:
