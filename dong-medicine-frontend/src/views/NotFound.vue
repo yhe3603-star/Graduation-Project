@@ -1,24 +1,9 @@
 <template>
   <div class="not-found-page">
     <div class="not-found-content">
-      <div class="error-code">
-404
-</div>
-      <h1 class="error-title">
-页面未找到
-</h1>
-      <p class="error-description">
-抱歉，您访问的页面不存在或已被移除
-</p>
-
-      <div class="suggestions">
-        <h3>您可以尝试：</h3>
-        <ul>
-          <li>检查网址是否正确</li>
-          <li>返回首页重新浏览</li>
-          <li>使用搜索功能查找内容</li>
-        </ul>
-      </div>
+      <div class="error-code">404</div>
+      <h1 class="error-title">页面未找到</h1>
+      <p class="error-description">抱歉，您访问的页面不存在或已被移除</p>
     </div>
     <div class="decoration">
       <div class="circle circle-1" />
@@ -34,13 +19,6 @@ import { HomeFilled, Back } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
-const goHome = () => {
-  router.push('/')
-}
-
-const goBack = () => {
-  router.go(-1)
-}
 </script>
 
 <style scoped>

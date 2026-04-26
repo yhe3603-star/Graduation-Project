@@ -133,12 +133,41 @@ sleep 3
 print_success "端口与网络清理完成"
 
 print_step "构建并启动容器..."
+
+export DOCKER_BUILDKIT=0
+export COMPOSE_DOCKER_CLI_BUILD=0
+print_info "已禁用BuildKit以提高兼容性"
+
+BUILD_TIMEOUT=600
+print_info "构建超时设置: ${BUILD_TIMEOUT}秒"
+
 if [ -n "$NO_CACHE" ]; then
     print_info "无缓存构建模式"
-    $COMPOSE_CMD build --no-cache
+    timeout $BUILD_TIMEOUT $COMPOSE_CMD build --no-cache 2>&1 || {
+        if [ $? -eq 124 ]; then
+            print_error "构建超时，尝试使用缓存重试..."
+            $COMPOSE_CMD build 2>&1 || {
+                print_error "构建失败，请检查网络连接和Docker配置"
+                exit 1
+            }
+        else
+            print_error "构建失败"
+            exit 1
+        fi
+    }
 else
-    $COMPOSE_CMD build
+    timeout $BUILD_TIMEOUT $COMPOSE_CMD build 2>&1 || {
+        if [ $? -eq 124 ]; then
+            print_error "构建超时，请检查服务器网络和资源"
+            exit 1
+        else
+            print_error "构建失败"
+            exit 1
+        fi
+    }
 fi
+print_success "镜像构建完成"
+
 $COMPOSE_CMD up -d --wait-timeout 300 2>/dev/null || $COMPOSE_CMD up -d
 print_success "容器启动完成"
 
