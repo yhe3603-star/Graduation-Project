@@ -146,7 +146,12 @@ export function useAdminData(request) {
   const fetchData = async () => {
     try {
       await fetchStats()
-      if (activeSection.value !== 'dashboard') {
+      if (activeSection.value === 'dashboard') {
+        await Promise.all([
+          loadSection('feedback'),
+          loadSection('comments')
+        ])
+      } else {
         await loadSection(activeSection.value, true)
       }
     } catch (e) {
