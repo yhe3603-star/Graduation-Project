@@ -54,11 +54,10 @@ USER appuser
 EXPOSE 8080
 
 # 健康检查
-HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+HEALTHCHECK --interval=15s --timeout=10s --start-period=180s --retries=10 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-# JVM参数
-ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
 
 # 启动命令
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

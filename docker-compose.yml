@@ -116,15 +116,15 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
-      start_period: 120s
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
     deploy:
       resources:
         limits:
           cpus: '1'
-          memory: 1G
+          memory: 2G
     networks:
       - dong-medicine-network
 

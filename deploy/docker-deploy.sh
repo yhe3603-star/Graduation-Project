@@ -139,27 +139,25 @@ if [ -n "$NO_CACHE" ]; then
 else
     $COMPOSE_CMD build
 fi
-$COMPOSE_CMD up -d
+$COMPOSE_CMD up -d --wait-timeout 300 2>/dev/null || $COMPOSE_CMD up -d
 print_success "容器启动完成"
 
-print_step "等待服务启动..."
-sleep 30
-
-print_step "健康检查..."
-HEALTH_OK=false
-for i in 1 2 3 4 5 6; do
+print_step "等待后端服务就绪..."
+BACKEND_READY=false
+for i in $(seq 1 30); do
     HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000")
     if [ "$HEALTH_STATUS" = "200" ]; then
-        print_success "后端服务健康检查通过"
-        HEALTH_OK=true
+        print_success "后端服务已就绪"
+        BACKEND_READY=true
         break
     fi
-    [ $i -lt 6 ] && print_info "健康检查返回 $HEALTH_STATUS，等待重试 ($i/6)..." && sleep 10
+    [ $i -lt 30 ] && print_info "等待后端启动... ($i/30, HTTP $HEALTH_STATUS)" && sleep 10
 done
 
-if ! $HEALTH_OK; then
-    print_error "后端健康检查失败"
+if ! $BACKEND_READY; then
+    print_error "后端服务启动超时，查看日志："
     $COMPOSE_CMD logs --tail=50 backend
+    exit 1
 fi
 
 FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80 2>/dev/null || echo "000")
