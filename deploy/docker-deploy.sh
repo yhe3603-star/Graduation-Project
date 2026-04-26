@@ -121,33 +121,18 @@ export DOCKER_BUILDKIT=0
 export COMPOSE_DOCKER_CLI_BUILD=0
 print_info "已禁用BuildKit"
 
-BUILD_TIMEOUT=900
-print_info "构建超时: ${BUILD_TIMEOUT}秒"
-
 BUILD_START=$(date +%s)
 
 if [ -n "$NO_CACHE" ]; then
     print_info "无缓存构建模式"
-    timeout $BUILD_TIMEOUT $COMPOSE_CMD build --no-cache 2>&1 || {
-        EXIT_CODE=$?
-        if [ $EXIT_CODE -eq 124 ]; then
-            print_error "构建超时"
-            exit 1
-        else
-            print_error "构建失败 (退出码: $EXIT_CODE)"
-            exit 1
-        fi
+    $COMPOSE_CMD build --no-cache 2>&1 || {
+        print_error "构建失败"
+        exit 1
     }
 else
-    timeout $BUILD_TIMEOUT $COMPOSE_CMD build 2>&1 || {
-        EXIT_CODE=$?
-        if [ $EXIT_CODE -eq 124 ]; then
-            print_error "构建超时"
-            exit 1
-        else
-            print_error "构建失败 (退出码: $EXIT_CODE)"
-            exit 1
-        fi
+    $COMPOSE_CMD build 2>&1 || {
+        print_error "构建失败"
+        exit 1
     }
 fi
 
@@ -159,44 +144,10 @@ print_step "启动容器..."
 $COMPOSE_CMD up -d
 print_success "容器已启动"
 
-print_step "等待服务就绪 (最多5分钟)..."
-WAIT_COUNT=0
-MAX_WAIT=30
-BACKEND_READY=false
+sleep 5
 
-while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
-    WAIT_COUNT=$((WAIT_COUNT + 1))
-    
-    BACKEND_STATUS=$(docker ps --filter name=dong-medicine-backend --format "{{.Status}}" 2>/dev/null || echo "")
-    FRONTEND_STATUS=$(docker ps --filter name=dong-medicine-frontend --format "{{.Status}}" 2>/dev/null || echo "")
-    
-    echo "[$WAIT_COUNT/$MAX_WAIT] 后端: $BACKEND_STATUS | 前端: $FRONTEND_STATUS"
-    
-    HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health 2>/dev/null || echo "000")
-    
-    if [ "$HEALTH" = "200" ]; then
-        print_success "后端服务已就绪"
-        BACKEND_READY=true
-        break
-    fi
-    
-    if [[ "$BACKEND_STATUS" == *"Up"* ]] && [ $WAIT_COUNT -ge 5 ]; then
-        print_info "后端容器运行中，继续等待..."
-    fi
-    
-    sleep 10
-done
-
-if ! $BACKEND_READY; then
-    print_info "后端服务尚未完全就绪，但容器已启动"
-    print_info "查看容器状态:"
-    $COMPOSE_CMD ps
-fi
-
-FRONTEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80 2>/dev/null || echo "000")
-if [ "$FRONTEND_HEALTH" = "200" ]; then
-    print_success "前端服务正常"
-fi
+print_step "检查容器状态..."
+$COMPOSE_CMD ps
 
 print_step "清理旧备份(保留最近3个)..."
 cd "$BACKUP_DIR" && ls -t app-*.tar.gz 2>/dev/null | tail -n +4 | xargs -r rm -f
