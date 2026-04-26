@@ -71,7 +71,7 @@ jobs:
     name: Deploy to Server
     needs: build-and-test
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout code
@@ -90,8 +90,7 @@ jobs:
           cp -r dong-medicine-backend deploy-package/
           cp -r dong-medicine-frontend deploy-package/
           cp deploy/docker-deploy.sh deploy-package/
-          cp deploy/init-server.sh deploy-package/
-          chmod +x deploy-package/docker-deploy.sh deploy-package/init-server.sh
+          chmod +x deploy-package/docker-deploy.sh
 
       - name: Create production .env file
         run: |
@@ -111,86 +110,48 @@ jobs:
           KKFILEVIEW_PORT=8012
           EOF
 
-      - name: Setup SSH key
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           cat > ~/.ssh/config << EOF
           Host server
             HostName ${{ secrets.SERVER_HOST }}
             User ${{ secrets.SERVER_USER }}
             IdentityFile ~/.ssh/id_rsa
             StrictHostKeyChecking no
-            UserKnownHostsFile /dev/null
             ConnectTimeout 30
             ServerAliveInterval 30
-            ServerAliveCountMax 10
-            TCPKeepAlive yes
-            IdentitiesOnly yes
+            ServerAliveCountMax 5
           EOF
           chmod 600 ~/.ssh/config
 
-      - name: Test SSH connection
-        run: |
-          echo "Testing SSH connection..."
-          for i in 1 2 3; do
-            if ssh server "echo 'SSH OK'" 2>&1; then
-              echo "SSH connection established!"
-              exit 0
-            fi
-            echo "Retry $i..."
-            sleep 5
-          done
-          exit 1
-
-      - name: Upload files to server
+      - name: Deploy
         run: |
           ssh server "mkdir -p /tmp/deploy"
           scp -r deploy-package/. server:/tmp/deploy/
-          echo "Files uploaded!"
-
-      - name: Deploy Application
-        run: |
+          
           ssh server 'bash -s' << 'SCRIPT'
           set -e
           cd /tmp/deploy
           chmod +x docker-deploy.sh
-          
           export DOCKER_BUILDKIT=0
-          export COMPOSE_DOCKER_CLI_BUILD=0
-          
-          sudo -E bash docker-deploy.sh --no-cache
+          sudo -E bash docker-deploy.sh
           SCRIPT
 
-      - name: Verify deployment
+      - name: Verify
         run: |
-          echo "Checking container status..."
-          CONTAINERS=$(ssh server 'docker ps --filter name=dong-medicine --format "{{.Names}}: {{.Status}}"')
-          echo "$CONTAINERS"
-          
-          if echo "$CONTAINERS" | grep -q "dong-medicine-backend.*Up"; then
-            echo "Backend is running!"
-          else
-            echo "Warning: Backend may not be running"
-          fi
-          
-          if echo "$CONTAINERS" | grep -q "dong-medicine-frontend.*Up"; then
-            echo "Frontend is running!"
-          else
-            echo "Warning: Frontend may not be running"
-          fi
+          sleep 10
+          ssh server 'docker ps --filter name=dong-medicine --format "table {{.Names}}\t{{.Status}}"'
 
-      - name: Cleanup SSH
+      - name: Cleanup
         if: always()
         run: rm -f ~/.ssh/id_rsa
 
-      - name: Deployment Summary
+      - name: Summary
         if: always()
         run: |
-          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Complete" >> $GITHUB_STEP_SUMMARY
           echo "- **Frontend**: http://${{ secrets.SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Backend API**: http://${{ secrets.SERVER_HOST }}:8080/api/" >> $GITHUB_STEP_SUMMARY
-          echo "- **Swagger**: http://${{ secrets.SERVER_HOST }}:8080/swagger-ui/" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend**: http://${{ secrets.SERVER_HOST }}:8080" >> $GITHUB_STEP_SUMMARY
