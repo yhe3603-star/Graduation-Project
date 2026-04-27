@@ -1,6 +1,5 @@
 # 多阶段构建
 
-# 构建阶段
 FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /build
@@ -60,7 +59,6 @@ RUN mvn clean package -Dmaven.test.skip=true -B -T 1C \
      -Dmaven.wagon.http.connectionTimeout=120000 \
      -Dmaven.wagon.http.readTimeout=300000)
 
-# 运行阶段
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
@@ -68,14 +66,18 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+    apt-get install -y --no-install-recommends curl default-mysql-client && \
     rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-RUN mkdir -p /app/public && chown -R appuser:appgroup /app
-
 COPY --from=builder /build/target/*.jar app.jar
+COPY sql/dong_medicine.sql /app/init.sql
+
+RUN mkdir -p /app/public /app/logs && chown -R appuser:appgroup /app
+
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 USER appuser
 
@@ -86,4 +88,4 @@ HEALTHCHECK --interval=15s --timeout=10s --start-period=180s --retries=10 \
 
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]
