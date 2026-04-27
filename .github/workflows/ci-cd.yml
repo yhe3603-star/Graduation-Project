@@ -60,6 +60,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -76,13 +79,18 @@ jobs:
             ServerAliveCountMax 40
           EOF
 
+      - name: Upload SQL init file
+        run: |
+          ssh server "mkdir -p /opt/dong-medicine/sql"
+          scp dong-medicine-backend/sql/dong_medicine.sql server:/opt/dong-medicine/sql/
+
       - name: Deploy
         run: |
           ssh server 'bash -s' << 'SCRIPT'
           set -e
           mkdir -p /opt/dong-medicine /etc/docker
           cd /opt/dong-medicine
-          
+
           # 配置Docker镜像加速器
           cat > /etc/docker/daemon.json << 'DAEMON'
           {
@@ -97,7 +105,7 @@ jobs:
           DAEMON
           systemctl restart docker || true
           sleep 3
-          
+
           cat > docker-compose.yml << 'EOF'
           services:
             mysql:
@@ -110,6 +118,7 @@ jobs:
                 TZ: Asia/Shanghai
               volumes:
                 - mysql_data:/var/lib/mysql
+                - ./sql/dong_medicine.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
               command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
               networks:
                 - app-net
@@ -184,6 +193,23 @@ jobs:
             app-net:
               driver: bridge
           EOF
+
+          # 检查数据库是否需要重新初始化
+          NEED_INIT=false
+          if ! docker volume ls | grep -q dong-medicine_mysql_data; then
+            NEED_INIT=true
+            echo "New installation detected, MySQL will be initialized with SQL file"
+          else
+            # 检查数据库是否有表
+            TABLE_COUNT=$(docker exec dong-medicine-mysql mysql -uroot -proot123 dong_medicine -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='dong_medicine'" -s -N 2>/dev/null || echo "0")
+            if [ "$TABLE_COUNT" = "0" ] || [ -z "$TABLE_COUNT" ]; then
+              NEED_INIT=true
+              echo "Database is empty, will re-initialize"
+              # 删除旧的数据卷让MySQL重新初始化
+              docker compose down 2>/dev/null || true
+              docker volume rm dong-medicine_mysql_data 2>/dev/null || true
+            fi
+          fi
 
           docker compose pull || docker compose pull
           docker compose up -d
