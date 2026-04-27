@@ -78,8 +78,23 @@ jobs:
         run: |
           ssh server 'bash -s' << 'SCRIPT'
           set -e
-          mkdir -p /opt/dong-medicine
+          mkdir -p /opt/dong-medicine /etc/docker
           cd /opt/dong-medicine
+          
+          # 配置Docker镜像加速器
+          cat > /etc/docker/daemon.json << 'DAEMON'
+          {
+            "registry-mirrors": [
+              "https://docker.1ms.run",
+              "https://docker.rainbond.cc",
+              "https://do.nark.eu.org"
+            ],
+            "log-driver": "json-file",
+            "log-opts": {"max-size": "100m", "max-file": "3"}
+          }
+          DAEMON
+          systemctl restart docker || true
+          sleep 3
           
           cat > docker-compose.yml << 'EOF'
           services:
@@ -167,7 +182,7 @@ jobs:
               driver: bridge
           EOF
 
-          docker compose pull
+          docker compose pull || docker compose pull
           docker compose up -d
           docker compose ps
           SCRIPT
