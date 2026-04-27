@@ -153,6 +153,7 @@ jobs:
                 REDIS_PORT: 6379
                 REDIS_PASSWORD: redis123
                 JWT_SECRET: dong-medicine-jwt-secret-key-2024
+                DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
               ports:
                 - "8080:8080"
               depends_on:
