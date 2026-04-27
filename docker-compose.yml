@@ -4,7 +4,7 @@ services:
     container_name: dong-medicine-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
       MYSQL_DATABASE: dong_medicine
       TZ: Asia/Shanghai
     volumes:
@@ -16,7 +16,7 @@ services:
       - --default-authentication-plugin=mysql_native_password
       - --max_connections=500
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,7 +25,7 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 2G
+          memory: 1G
     networks:
       - dong-medicine-network
 
@@ -33,11 +33,11 @@ services:
     image: redis:7-alpine
     container_name: dong-medicine-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -45,7 +45,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
     networks:
       - dong-medicine-network
 
@@ -68,8 +68,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 2G
+          cpus: '0.5'
+          memory: 1G
     networks:
       - dong-medicine-network
 
@@ -85,11 +85,11 @@ services:
       DB_PORT: 3306
       DB_NAME: dong_medicine
       DB_USERNAME: root
-      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:3000}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
@@ -106,7 +106,7 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 2G
+          memory: 1G
     networks:
       - dong-medicine-network
 
