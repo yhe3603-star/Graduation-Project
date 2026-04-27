@@ -79,17 +79,20 @@ jobs:
             ServerAliveCountMax 40
           EOF
 
-      - name: Upload SQL init file
-        run: |
-          ssh server "mkdir -p /opt/dong-medicine/sql"
-          scp dong-medicine-backend/sql/dong_medicine.sql server:/opt/dong-medicine/sql/
-
       - name: Deploy
         run: |
-          ssh server 'bash -s' << 'SCRIPT'
+          # 读取SQL文件内容
+          SQL_CONTENT=$(cat dong-medicine-backend/sql/dong_medicine.sql)
+          
+          ssh server 'bash -s' << SCRIPT
           set -e
-          mkdir -p /opt/dong-medicine /etc/docker
+          mkdir -p /opt/dong-medicine/sql /etc/docker
           cd /opt/dong-medicine
+
+          # 写入SQL文件
+          cat > sql/dong_medicine.sql << 'SQLEOF'
+          ${SQL_CONTENT}
+          SQLEOF
 
           # 配置Docker镜像加速器
           cat > /etc/docker/daemon.json << 'DAEMON'
