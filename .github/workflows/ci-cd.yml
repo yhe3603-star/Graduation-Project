@@ -37,7 +37,7 @@ jobs:
         with:
           context: ./dong-medicine-backend
           push: true
-          tags: ghcr.io/${{ github.repository }}/backend:latest
+          tags: ghcr.io/${{ github.repository_owner }}/dong-medicine-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -46,7 +46,7 @@ jobs:
         with:
           context: ./dong-medicine-frontend
           push: true
-          tags: ghcr.io/${{ github.repository }}/frontend:latest
+          tags: ghcr.io/${{ github.repository_owner }}/dong-medicine-frontend:latest
           build-args: |
             VITE_API_BASE_URL=/api
             VITE_KKFILEVIEW_URL=/kkfileview
@@ -108,7 +108,7 @@ jobs:
                 - app-net
 
             backend:
-              image: ghcr.io/yhe3603-star/graduation-project/backend:latest
+              image: ghcr.io/yhe3603-star/dong-medicine-backend:latest
               container_name: dong-medicine-backend
               restart: unless-stopped
               environment:
@@ -131,7 +131,7 @@ jobs:
                 - app-net
 
             frontend:
-              image: ghcr.io/yhe3603-star/graduation-project/frontend:latest
+              image: ghcr.io/yhe3603-star/dong-medicine-frontend:latest
               container_name: dong-medicine-frontend
               restart: unless-stopped
               ports:
