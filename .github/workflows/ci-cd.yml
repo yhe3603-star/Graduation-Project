@@ -107,6 +107,22 @@ jobs:
               networks:
                 - app-net
 
+            kkfileview:
+              image: keking/kkfileview:latest
+              container_name: dong-medicine-kkfileview
+              restart: unless-stopped
+              environment:
+                - KK_OFFICE_PREVIEW_TYPE=image
+                - KK_CONTEXT_PATH=/kkfileview
+                - KK_FILE_UPLOAD_MAX_SIZE=104857600
+                - base.url=/kkfileview
+              ports:
+                - "8012:8012"
+              volumes:
+                - kkfileview_data:/opt/kkFileView-4.1.0/file
+              networks:
+                - app-net
+
             backend:
               image: ghcr.io/yhe3603-star/dong-medicine-backend:latest
               container_name: dong-medicine-backend
@@ -144,6 +160,7 @@ jobs:
           volumes:
             mysql_data:
             redis_data:
+            kkfileview_data:
 
           networks:
             app-net:
