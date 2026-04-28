@@ -17,46 +17,22 @@ jobs:
   build-and-push:
     name: Build and Push Images
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Build Backend JAR
-        working-directory: dong-medicine-backend
-        run: mvn clean package -DskipTests -B
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: dong-medicine-frontend/package-lock.json
-
-      - name: Build Frontend
-        working-directory: dong-medicine-frontend
-        run: |
-          npm ci
-          VITE_API_BASE_URL=/api VITE_KKFILEVIEW_URL=/kkfileview npm run build
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GHCR
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push backend image
+      - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
           context: ./dong-medicine-backend
@@ -65,12 +41,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build and push frontend image
+      - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
           context: ./dong-medicine-frontend
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/dong-medicine-frontend:latest
+          build-args: |
+            VITE_API_BASE_URL=/api
+            VITE_KKFILEVIEW_URL=/kkfileview
+            VITE_KKFILEVIEW_FILE_HOST=http://${{ secrets.SERVER_HOST }}:8080
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -98,33 +78,12 @@ jobs:
 
       - name: Deploy
         run: |
-          # 等待服务器恢复
-          echo "Waiting 60 seconds for server to be ready..."
-          sleep 60
-          
-          # SSH连接重试
-          for i in 1 2 3 4 5 6; do
-            echo "SSH attempt $i/6..."
-            if ssh -o ConnectTimeout=60 -o ServerAliveInterval=15 -o ServerAliveCountMax=40 server 'echo "SSH connected"' 2>&1; then
-              echo "SSH connection established!"
-              break
-            fi
-            if [ $i -eq 6 ]; then
-              echo "All SSH attempts failed!"
-              exit 1
-            fi
-            WAIT=$((30 * i))
-            echo "Connection failed, waiting ${WAIT} seconds..."
-            sleep $WAIT
-          done
-
           ssh server 'bash -s' << 'SCRIPT'
           set -e
-          mkdir -p /opt/dong-medicine/sql /etc/docker
+          mkdir -p /opt/dong-medicine /etc/docker
           cd /opt/dong-medicine
-
-          curl -sL https://raw.githubusercontent.com/yhe3603-star/Graduation-Project/main/dong-medicine-backend/sql/dong_medicine.sql -o sql/dong_medicine.sql
-
+          
+          # 配置Docker镜像加速器
           cat > /etc/docker/daemon.json << 'DAEMON'
           {
             "registry-mirrors": [
@@ -138,7 +97,7 @@ jobs:
           DAEMON
           systemctl restart docker || true
           sleep 3
-
+          
           cat > docker-compose.yml << 'EOF'
           services:
             mysql:
@@ -151,7 +110,6 @@ jobs:
                 TZ: Asia/Shanghai
               volumes:
                 - mysql_data:/var/lib/mysql
-                - ./sql/dong_medicine.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
               command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
               networks:
                 - app-net
@@ -167,7 +125,7 @@ jobs:
                 - app-net
 
             kkfileview:
-              image: keking/kkfileview:4.4.0
+              image: keking/kkfileview:latest
               container_name: dong-medicine-kkfileview
               restart: unless-stopped
               environment:
@@ -226,13 +184,6 @@ jobs:
             app-net:
               driver: bridge
           EOF
-
-          TABLE_COUNT=$(docker exec dong-medicine-mysql mysql -uroot -proot123 dong_medicine -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='dong_medicine'" -s -N 2>/dev/null || echo "0")
-          if [ "$TABLE_COUNT" = "0" ] || [ -z "$TABLE_COUNT" ]; then
-            echo "Database is empty, will re-initialize"
-            docker compose down 2>/dev/null || true
-            docker volume rm dong-medicine_mysql_data 2>/dev/null || true
-          fi
 
           docker compose pull || docker compose pull
           docker compose up -d
