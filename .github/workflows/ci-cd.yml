@@ -98,15 +98,24 @@ jobs:
 
       - name: Deploy
         run: |
+          # 等待服务器恢复
+          echo "Waiting 60 seconds for server to be ready..."
+          sleep 60
+          
           # SSH连接重试
-          for i in 1 2 3 4 5; do
-            echo "SSH attempt $i/5..."
-            if ssh -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=40 server 'echo "SSH connected"' 2>&1; then
+          for i in 1 2 3 4 5 6; do
+            echo "SSH attempt $i/6..."
+            if ssh -o ConnectTimeout=60 -o ServerAliveInterval=15 -o ServerAliveCountMax=40 server 'echo "SSH connected"' 2>&1; then
               echo "SSH connection established!"
               break
             fi
-            echo "Connection failed, waiting 30 seconds..."
-            sleep 30
+            if [ $i -eq 6 ]; then
+              echo "All SSH attempts failed!"
+              exit 1
+            fi
+            WAIT=$((30 * i))
+            echo "Connection failed, waiting ${WAIT} seconds..."
+            sleep $WAIT
           done
 
           ssh server 'bash -s' << 'SCRIPT'
