@@ -85,6 +85,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -96,19 +99,28 @@ jobs:
             User ${{ secrets.SERVER_USER }}
             IdentityFile ~/.ssh/id_rsa
             StrictHostKeyChecking no
-            ConnectTimeout 30
-            ServerAliveInterval 15
-            ServerAliveCountMax 40
+            ConnectTimeout 60
+            ServerAliveInterval 10
+            ServerAliveCountMax 120
           EOF
+
+      - name: Copy SQL file
+        run: |
+          ssh server 'mkdir -p /opt/dong-medicine/sql'
+          scp dong-medicine-backend/sql/dong_medicine.sql server:/opt/dong-medicine/sql/
 
       - name: Deploy
         run: |
           ssh server 'bash -s' << 'SCRIPT'
           set -e
+          
+          echo "========== 开始部署 =========="
+          date
+          
           mkdir -p /opt/dong-medicine /etc/docker
           cd /opt/dong-medicine
           
-          # 配置Docker镜像加速器（仅在需要时更新）
+          echo "========== 配置Docker镜像加速器 =========="
           if [ ! -f /etc/docker/daemon.json ] || ! grep -q "docker.1ms.run" /etc/docker/daemon.json 2>/dev/null; then
             cat > /etc/docker/daemon.json << 'DAEMON'
           {
@@ -120,10 +132,14 @@ jobs:
             "log-opts": {"max-size": "100m", "max-file": "3"}
           }
           DAEMON
+            echo "重启Docker服务..."
             systemctl restart docker || true
-            sleep 5
+            sleep 3
+          else
+            echo "Docker镜像加速器已配置，跳过"
           fi
           
+          echo "========== 创建docker-compose.yml =========="
           cat > docker-compose.yml << 'EOF'
           services:
             mysql:
@@ -136,7 +152,14 @@ jobs:
                 TZ: Asia/Shanghai
               volumes:
                 - mysql_data:/var/lib/mysql
+                - ./sql/dong_medicine.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
               command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+              healthcheck:
+                test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+                interval: 10s
+                timeout: 5s
+                retries: 10
+                start_period: 30s
               networks:
                 - app-net
 
@@ -147,6 +170,11 @@ jobs:
               command: redis-server --appendonly yes --requirepass redis123
               volumes:
                 - redis_data:/data
+              healthcheck:
+                test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
               networks:
                 - app-net
 
@@ -185,8 +213,16 @@ jobs:
               ports:
                 - "8080:8080"
               depends_on:
-                - mysql
-                - redis
+                mysql:
+                  condition: service_healthy
+                redis:
+                  condition: service_healthy
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+                interval: 15s
+                timeout: 10s
+                retries: 10
+                start_period: 60s
               networks:
                 - app-net
 
@@ -197,7 +233,8 @@ jobs:
               ports:
                 - "80:80"
               depends_on:
-                - backend
+                backend:
+                  condition: service_healthy
               networks:
                 - app-net
 
@@ -211,15 +248,71 @@ jobs:
               driver: bridge
           EOF
 
-          # 拉取所有镜像（带超时）
-          timeout 600 docker compose pull || echo "Pull timeout or partial failure, continuing..."
+          echo "========== 拉取镜像 =========="
           
-          # 启动所有服务
+          pull_with_retry() {
+            local image=$1
+            local max_retries=3
+            local retry=0
+            while [ $retry -lt $max_retries ]; do
+              echo "拉取镜像: $image (尝试 $((retry+1))/$max_retries)"
+              if docker pull "$image"; then
+                echo "成功: $image"
+                return 0
+              fi
+              retry=$((retry+1))
+              echo "失败，等待10秒后重试..."
+              sleep 10
+            done
+            echo "警告: $image 拉取失败，继续部署"
+            return 1
+          }
+          
+          echo ">>> 拉取基础镜像..."
+          pull_with_retry mysql:8.0 &
+          pull_with_retry redis:7-alpine &
+          wait
+          
+          echo ">>> 拉取应用镜像..."
+          pull_with_retry ghcr.io/yhe3603-star/dong-medicine-backend:latest &
+          pull_with_retry ghcr.io/yhe3603-star/dong-medicine-frontend:latest &
+          wait
+          
+          echo ">>> 拉取kkfileview镜像..."
+          pull_with_retry keking/kkfileview:4.1.0 || true
+          
+          echo "========== 停止旧容器 =========="
+          docker compose down --remove-orphans 2>/dev/null || true
+          
+          echo "========== 启动服务 =========="
           docker compose up -d
           
-          # 简单验证
-          sleep 3
+          echo "========== 等待服务启动 =========="
+          echo "等待MySQL..."
+          for i in {1..30}; do
+            if docker exec dong-medicine-mysql mysqladmin ping -h localhost -uroot -proot123 2>/dev/null; then
+              echo "MySQL就绪"
+              break
+            fi
+            echo "等待MySQL... ($i/30)"
+            sleep 2
+          done
+          
+          echo "等待后端..."
+          for i in {1..40}; do
+            if curl -sf http://localhost:8080/actuator/health >/dev/null 2>&1; then
+              echo "后端就绪"
+              break
+            fi
+            echo "等待后端... ($i/40)"
+            sleep 3
+          done
+          
+          echo "========== 部署状态 =========="
           docker compose ps
+          
+          echo "========== 部署完成 =========="
+          date
           SCRIPT
 
       - name: Cleanup
