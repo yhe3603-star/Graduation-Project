@@ -150,7 +150,7 @@ jobs:
                 - app-net
 
             kkfileview:
-              image: registry.cn-hangzhou.aliyuncs.com/zhengqing/kkfileview:4.4.0
+              image: kkfileview/kkfileview:latest
               container_name: dong-medicine-kkfileview
               restart: unless-stopped
               environment:
@@ -164,6 +164,11 @@ jobs:
                 - kkfileview_data:/opt/kkFileView-4.1.0/file
               networks:
                 - app-net
+              deploy:
+                restart_policy:
+                  condition: on-failure
+                  delay: 5s
+                  max_attempts: 3
 
             backend:
               image: ghcr.io/yhe3603-star/dong-medicine-backend:latest
@@ -210,8 +215,16 @@ jobs:
               driver: bridge
           EOF
 
-          docker compose pull || docker compose pull
-          docker compose up -d
+          # 拉取镜像，忽略kkfileview的错误
+          docker compose pull mysql redis backend frontend || true
+          docker compose pull kkfileview 2>/dev/null || echo "kkfileview pull failed, continuing..."
+          
+          # 启动核心服务
+          docker compose up -d mysql redis backend frontend
+          
+          # 尝试启动kkfileview（可选）
+          docker compose up -d kkfileview 2>/dev/null || echo "kkfileview not available, skipping..."
+          
           sleep 5
           docker compose ps
           SCRIPT
