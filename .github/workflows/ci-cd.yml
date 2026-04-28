@@ -150,7 +150,7 @@ jobs:
                 - app-net
 
             kkfileview:
-              image: kkfileview/kkfileview:latest
+              image: kkfileview:4.4.0
               container_name: dong-medicine-kkfileview
               restart: unless-stopped
               environment:
@@ -164,11 +164,6 @@ jobs:
                 - kkfileview_data:/opt/kkFileView-4.1.0/file
               networks:
                 - app-net
-              deploy:
-                restart_policy:
-                  condition: on-failure
-                  delay: 5s
-                  max_attempts: 3
 
             backend:
               image: ghcr.io/yhe3603-star/dong-medicine-backend:latest
@@ -215,15 +210,28 @@ jobs:
               driver: bridge
           EOF
 
-          # 拉取镜像，忽略kkfileview的错误
-          docker compose pull mysql redis backend frontend || true
-          docker compose pull kkfileview 2>/dev/null || echo "kkfileview pull failed, continuing..."
+          # 拉取核心服务镜像
+          docker compose pull mysql redis backend frontend
           
-          # 启动核心服务
-          docker compose up -d mysql redis backend frontend
+          # 构建kkfileview镜像（确保一定可用）
+          echo "Building kkfileview from source..."
+          cat > /tmp/kkfileview/Dockerfile << 'KKFILEVIEW_DOCKERFILE'
+FROM openjdk:8-jdk-alpine
+WORKDIR /opt
+RUN apk add --no-cache curl unzip && \
+    curl -sL https://github.com/kekingcn/file-online-preview/releases/download/V4.4.0/keking-file-online-preview-4.4.0.zip -o kkfileview.zip && \
+    unzip kkfileview.zip && \
+    rm kkfileview.zip && \
+    mv keking-file-online-preview-4.4.0 kkFileView-4.4.0 && \
+    apk del curl unzip
+EXPOSE 8012
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-jar", "/opt/kkFileView-4.4.0/lib/file-online-preview.jar"]
+KKFILEVIEW_DOCKERFILE
+          mkdir -p /tmp/kkfileview
+          docker build -t kkfileview:4.4.0 /tmp/kkfileview
           
-          # 尝试启动kkfileview（可选）
-          docker compose up -d kkfileview 2>/dev/null || echo "kkfileview not available, skipping..."
+          # 启动所有服务
+          docker compose up -d
           
           sleep 5
           docker compose ps
