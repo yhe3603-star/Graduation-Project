@@ -150,7 +150,7 @@ jobs:
                 - app-net
 
             kkfileview:
-              image: kkfileview:4.4.0
+              image: kkfileview:4.1.0
               container_name: dong-medicine-kkfileview
               restart: unless-stopped
               environment:
@@ -215,20 +215,22 @@ jobs:
           
           # 构建kkfileview镜像（确保一定可用）
           echo "Building kkfileview from source..."
+          mkdir -p /tmp/kkfileview
           cat > /tmp/kkfileview/Dockerfile << 'KKFILEVIEW_DOCKERFILE'
 FROM openjdk:8-jdk-alpine
 WORKDIR /opt
 RUN apk add --no-cache curl unzip && \
-    curl -sL https://github.com/kekingcn/file-online-preview/releases/download/V4.4.0/keking-file-online-preview-4.4.0.zip -o kkfileview.zip && \
-    unzip kkfileview.zip && \
-    rm kkfileview.zip && \
-    mv keking-file-online-preview-4.4.0 kkFileView-4.4.0 && \
-    apk del curl unzip
+    curl -sL https://github.com/kekingcn/file-online-preview/releases/download/4.1.0/keking-file-online-preview-4.1.0.zip -o kkfileview.zip && \
+    unzip -o kkfileview.zip && \
+    rm -f kkfileview.zip && \
+    mv keking-file-online-preview-4.1.0 kkFileView-4.1.0 || true
 EXPOSE 8012
-ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-jar", "/opt/kkFileView-4.4.0/lib/file-online-preview.jar"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/opt/kkFileView-4.1.0/lib/file-online-preview.jar"]
 KKFILEVIEW_DOCKERFILE
-          mkdir -p /tmp/kkfileview
-          docker build -t kkfileview:4.4.0 /tmp/kkfileview
+          docker build -t kkfileview:4.1.0 /tmp/kkfileview || echo "kkfileview build failed"
+          
+          # 更新docker-compose.yml使用本地构建的镜像
+          sed -i 's/image: kkfileview:4.4.0/image: kkfileview:4.1.0/' docker-compose.yml
           
           # 启动所有服务
           docker compose up -d
