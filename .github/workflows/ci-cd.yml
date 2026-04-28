@@ -17,7 +17,7 @@ jobs:
   build-and-push:
     name: Build and Push Images
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,16 +76,6 @@ jobs:
             VITE_API_BASE_URL=/api
             VITE_KKFILEVIEW_URL=/kkfileview
             VITE_KKFILEVIEW_FILE_HOST=http://${{ secrets.SERVER_HOST }}:8080
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push kkfileview
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.kkfileview
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/kkfileview:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -160,7 +150,7 @@ jobs:
                 - app-net
 
             kkfileview:
-              image: ghcr.io/yhe3603-star/kkfileview:latest
+              image: keking/kkfileview:4.4.0
               container_name: dong-medicine-kkfileview
               restart: unless-stopped
               environment:
