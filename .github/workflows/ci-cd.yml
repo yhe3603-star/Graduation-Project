@@ -83,7 +83,7 @@ jobs:
     name: Deploy to Server
     needs: build-and-push
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Setup SSH
         run: |
@@ -108,20 +108,21 @@ jobs:
           mkdir -p /opt/dong-medicine /etc/docker
           cd /opt/dong-medicine
           
-          # 配置Docker镜像加速器
-          cat > /etc/docker/daemon.json << 'DAEMON'
+          # 配置Docker镜像加速器（仅在需要时更新）
+          if [ ! -f /etc/docker/daemon.json ] || ! grep -q "docker.1ms.run" /etc/docker/daemon.json 2>/dev/null; then
+            cat > /etc/docker/daemon.json << 'DAEMON'
           {
             "registry-mirrors": [
               "https://docker.1ms.run",
-              "https://docker.rainbond.cc",
-              "https://do.nark.eu.org"
+              "https://docker.rainbond.cc"
             ],
             "log-driver": "json-file",
             "log-opts": {"max-size": "100m", "max-file": "3"}
           }
           DAEMON
-          systemctl restart docker || true
-          sleep 3
+            systemctl restart docker || true
+            sleep 5
+          fi
           
           cat > docker-compose.yml << 'EOF'
           services:
@@ -210,13 +211,14 @@ jobs:
               driver: bridge
           EOF
 
-          # 拉取所有镜像
-          docker compose pull
+          # 拉取所有镜像（带超时）
+          timeout 600 docker compose pull || echo "Pull timeout or partial failure, continuing..."
           
           # 启动所有服务
           docker compose up -d
           
-          sleep 5
+          # 简单验证
+          sleep 3
           docker compose ps
           SCRIPT
 
