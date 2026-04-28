@@ -150,7 +150,7 @@ jobs:
                 - app-net
 
             kkfileview:
-              image: keking/kkfileview:4.4.0
+              image: registry.cn-hangzhou.aliyuncs.com/zhengqing/kkfileview:4.4.0
               container_name: dong-medicine-kkfileview
               restart: unless-stopped
               environment:
