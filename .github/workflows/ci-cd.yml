@@ -150,7 +150,7 @@ jobs:
                 - app-net
 
             kkfileview:
-              image: keking/kkfileview:4.4.0
+              image: keking/kkfileview:4.1.0
               container_name: dong-medicine-kkfileview
               restart: unless-stopped
               environment:
@@ -161,7 +161,7 @@ jobs:
               ports:
                 - "8012:8012"
               volumes:
-                - kkfileview_data:/opt/kkFileView-4.4.0/file
+                - kkfileview_data:/opt/kkFileView-4.1.0/file
               networks:
                 - app-net
 
