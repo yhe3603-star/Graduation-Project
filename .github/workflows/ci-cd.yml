@@ -158,7 +158,7 @@ jobs:
                 - app-net
 
             kkfileview:
-              image: keking/kkfileview:latest
+              image: keking/kkfileview:4.4.0
               container_name: dong-medicine-kkfileview
               restart: unless-stopped
               environment:
