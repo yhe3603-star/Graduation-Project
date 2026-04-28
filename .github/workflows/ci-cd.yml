@@ -98,6 +98,17 @@ jobs:
 
       - name: Deploy
         run: |
+          # SSH连接重试
+          for i in 1 2 3 4 5; do
+            echo "SSH attempt $i/5..."
+            if ssh -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=40 server 'echo "SSH connected"' 2>&1; then
+              echo "SSH connection established!"
+              break
+            fi
+            echo "Connection failed, waiting 30 seconds..."
+            sleep 30
+          done
+
           ssh server 'bash -s' << 'SCRIPT'
           set -e
           mkdir -p /opt/dong-medicine/sql /etc/docker
