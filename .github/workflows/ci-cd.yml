@@ -252,6 +252,7 @@ jobs:
                 RABBITMQ_PORT: 5672
                 RABBITMQ_USER: ${{ secrets.RABBITMQ_USER || 'admin' }}
                 RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD || 'rabbitmq123' }}
+                APP_RABBITMQ_ENABLED: "true"
                 JWT_SECRET: ${{ secrets.JWT_SECRET }}
                 JWT_EXPIRATION: 86400000
                 DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
@@ -271,7 +272,7 @@ jobs:
               ports:
                 - "8080:8080"
               healthcheck:
-                test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness"]
+                test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
                 interval: 10s
                 timeout: 5s
                 retries: 15

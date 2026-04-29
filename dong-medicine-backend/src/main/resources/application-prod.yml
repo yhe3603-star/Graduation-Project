@@ -136,13 +136,6 @@ management:
     health:
       show-details: when_authorized
       show-components: when_authorized
-      probes:
-        enabled: true
-      group:
-        liveness:
-          include: livenessIndicator,diskSpace
-        readiness:
-          include: readinessIndicator,db,diskSpace
   health:
     db:
       enabled: true
