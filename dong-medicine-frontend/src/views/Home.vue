@@ -148,12 +148,12 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import request from '@/utils/request'
 import { Aim, ArrowRight, ChatDotRound, Compass, DataLine, Document, Folder, InfoFilled, Medal, Picture, User } from '@element-plus/icons-vue'
 import { quickEntries, coreModules, extendModules, getLevelClass, createHeroStats } from '@/config/homeConfig'
 import { extractPageData, logFetchError } from "@/utils";
 
-const request = inject('request')
 const stats = ref({ plants: 21, formulas: 12, inheritors: 10, therapies: 6 })
 const featuredInheritors = ref([])
 

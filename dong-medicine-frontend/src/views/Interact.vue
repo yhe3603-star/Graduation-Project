@@ -103,6 +103,7 @@
 
 <script setup>
 import { inject, onMounted, ref } from "vue";
+import request from '@/utils/request';
 import { ElMessage } from "element-plus";
 import { ChatDotRound, EditPen, Picture } from "@element-plus/icons-vue";
 import CommentSection from "@/components/business/interact/CommentSection.vue";
@@ -113,7 +114,6 @@ import { useComments } from "@/composables/useInteraction";
 import { usePlantGame } from "@/composables/usePlantGame";
 import { useQuiz } from "@/composables/useQuiz";
 
-const request = inject("request");
 const isLoggedIn = inject("isLoggedIn");
 const userName = inject("userName");
 

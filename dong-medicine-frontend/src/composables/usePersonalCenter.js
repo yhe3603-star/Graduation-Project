@@ -3,6 +3,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Avatar, ChatDotRound, Document, EditPen, Folder, Lock, Picture, Setting, Star, SwitchButton, User } from '@element-plus/icons-vue'
 import { logFetchError, logOperationWarn, extractData } from '@/utils'
+import { useUserStore } from '@/stores/user'
+import { createPasswordValidator } from '@/utils/validators'
 
 export const actions = [
   { key: 'favorites', icon: Star, label: '我的收藏' },
@@ -37,13 +39,11 @@ export const typeNameMap = {
 
 export function usePersonalCenter(request, updateUserState) {
   const router = useRouter()
+  const userStore = useUserStore()
 
-  const isLoggedIn = computed(() => !!sessionStorage.getItem('token'))
-  const userName = computed(() => sessionStorage.getItem('userName') || '')
-  const isAdmin = computed(() => {
-    const role = sessionStorage.getItem('role') || ''
-    return role === 'ADMIN' || role === 'admin'
-  })
+  const isLoggedIn = computed(() => userStore.isLoggedIn)
+  const userName = computed(() => userStore.userName || '')
+  const isAdmin = computed(() => userStore.isAdmin)
 
   const pageLoading = ref(false)
   const activeTab = ref('favorites')
@@ -72,34 +72,13 @@ export function usePersonalCenter(request, updateUserState) {
     captchaCode: ''
   })
 
+  const { password: newPasswordRules, confirmPassword: confirmPasswordRules } = createPasswordValidator()
+
   const passwordRules = {
     currentPassword: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
-    newPassword: [
-      { required: true, message: '请输入新密码', trigger: 'blur' },
-      { min: 8, max: 50, message: '密码长度为8-50位', trigger: 'blur' },
-      { 
-        validator: (rule, value, callback) => {
-          if (!/[a-zA-Z]/.test(value)) {
-            callback(new Error('密码必须包含字母'))
-          } else if (!/[0-9]/.test(value)) {
-            callback(new Error('密码必须包含数字'))
-          } else if (/\s/.test(value)) {
-            callback(new Error('密码不能包含空格'))
-          } else {
-            callback()
-          }
-        }, 
-        trigger: 'blur' 
-      }
-    ],
-    confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
+    newPassword: newPasswordRules,
+    confirmPassword: confirmPasswordRules(passwordFormRef, 'newPassword'),
     captchaCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
-  }
-
-  function validateConfirmPassword(rule, value, callback) {
-    if (value === '') callback(new Error('请再次输入新密码'))
-    else if (value !== passwordForm.value.newPassword) callback(new Error('两次输入的密码不一致'))
-    else callback()
   }
 
   const filteredFavorites = computed(() => {
@@ -202,13 +181,8 @@ export function usePersonalCenter(request, updateUserState) {
     }
     logoutLoading.value = true
     try {
-      await request.post('/user/logout').catch(() => {})
+      await userStore.logout()
     } finally {
-      sessionStorage.removeItem('token')
-      sessionStorage.removeItem('userName')
-      sessionStorage.removeItem('userId')
-      sessionStorage.removeItem('role')
-      sessionStorage.removeItem('userInfo')
       updateUserState()
       ElMessage.success('已退出登录')
       router.push('/')

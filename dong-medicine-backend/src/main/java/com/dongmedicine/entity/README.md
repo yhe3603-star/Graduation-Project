@@ -381,3 +381,18 @@ public class QuizRecord {
 名字对不上别慌张，@TableField 来帮忙
 日期就用 LocalDateTime，JSON 字段用 String 存
 ```
+
+---
+
+## 代码审查与改进建议
+
+- **[结构] @NotBlank注解在Entity层无效**：Plant、Knowledge、Inheritor、Resource、Qa五个Entity在字段上使用了`@NotBlank`注解，但Bean Validation注解在MyBatis-Plus操作时不会生效，应放在DTO层
+- **[结构] 时间字段命名不一致**：User/Plant/Knowledge等Entity使用`createdAt`，而Feedback/QuizRecord/PlantGameRecord使用`createTime`，但数据库列名都是`created_at`
+- **[结构] 多字段声明在同一行**：Plant、Knowledge、Inheritor、Resource中存在`private Integer viewCount, favoriteCount, popularity;`这样的多字段单行声明
+- **[结构] JSON字段处理方式不统一**：QuizQuestion提供了`getOptionList()`/`setOptionList()`转换方法，但其他Entity的images/videos/documents字段都是裸String
+- **[结构] 缺少updatedAt字段**：大部分Entity只有createdAt没有updatedAt
+- **[结构] id使用Integer而非Long**：所有Entity的id都使用Integer类型，对于数据增长较快的表可能不足
+- **[结构] 缺少通用基类**：多个Entity有共同字段(id, createdAt, viewCount, favoriteCount, popularity)，可通过抽取BaseEntity减少重复
+- **[安全] Comment冗余存储username**：评论表同时存储userId和username，用户名修改时数据不一致
+- **[安全] QuizQuestion答案字段未加@JsonIgnore**：answer字段暴露给前端破坏测验公平性
+- **[安全] OperationLog的params字段可能记录敏感数据**

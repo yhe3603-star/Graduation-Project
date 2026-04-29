@@ -93,7 +93,8 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import request from '@/utils/request';
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Location, Star, StarFilled, View } from "@element-plus/icons-vue";
@@ -118,7 +119,6 @@ const PAGE_SIZE_OPTIONS = {
 const DEBOUNCE_DELAY = 300;
 
 const route = useRoute();
-const request = inject("request");
 
 const { items: favItems, isFavorited: isItemFavorited, loadFavorites, toggleFavorite: doToggleFavorite } = useFavorite('plant');
 
@@ -188,7 +188,10 @@ const showDetail = async (plant) => {
   try {
     await request.post(`/plants/${plant.id}/view`);
     const idx = allPlants.value.findIndex(p => p.id === plant.id);
-    if (idx > -1) allPlants.value[idx].viewCount = (allPlants.value[idx].viewCount || 0) + 1;
+    if (idx > -1) {
+      allPlants.value[idx].viewCount = (allPlants.value[idx].viewCount || 0) + 1;
+      statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
+    }
   } catch (e) {
     console.debug('浏览量更新失败:', e);
   }

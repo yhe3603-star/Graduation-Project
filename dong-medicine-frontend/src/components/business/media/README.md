@@ -232,3 +232,10 @@ const loadDocs = async () => {
 }
 </script>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [安全] DocumentPreview.vue中Base64编码URL未做安全校验，可能被利用实现SSRF攻击
+- [逻辑] ImageCarousel.vue中watch immediate触发autoplay但DOM可能未就绪

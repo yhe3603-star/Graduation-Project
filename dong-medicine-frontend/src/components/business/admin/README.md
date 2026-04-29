@@ -230,3 +230,11 @@ const handleEdit = async (data) => {
 }
 </script>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [组件设计] AdminDataTable.vue搜索逻辑硬编码字段名(title/nameCn/name/question/content)，无法根据数据类型自定义
+- [组件设计] AdminDataTable.vue状态映射(TAG_TYPES)硬编码在通用组件中，违反组件通用性原则
+- [性能] AdminDashboard.vue全量导入echarts，ECharts实例未在组件卸载时dispose

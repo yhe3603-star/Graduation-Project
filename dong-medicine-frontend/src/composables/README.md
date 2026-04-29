@@ -611,3 +611,12 @@ export function usePolling() {
   onUnmounted(() => clearInterval(timer))
 }
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [响应性] useMedia.js中对computed结果立即.value解构，导致images/videos/documents变成普通值而非响应式引用
+- [响应性] useFavorite.js和usePersonalCenter.js直接读取sessionStorage而非使用Pinia Store，sessionStorage不是响应式的
+- [安全] useDebounce.js中onUnmounted在setup外调用会崩溃，应添加调用环境检查
+- [一致性] useInteraction.js和useAdminData.js对同一工具函数(logFetchError)使用不同导入路径

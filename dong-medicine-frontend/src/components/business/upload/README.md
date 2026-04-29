@@ -271,3 +271,9 @@ const handleFilesChange = async (files) => {
 }
 </script>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [代码重复] 三个上传组件中uploadUrl、headers计算逻辑、handleBeforeUpload校验逻辑、handleRemove删除逻辑、updateModelValue转换逻辑几乎完全相同，应抽取为useFileUpload(config) composable

@@ -1,10 +1,14 @@
 package com.dongmedicine.config;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.dongmedicine.common.util.IpUtils;
 import com.dongmedicine.entity.OperationLog;
 import com.dongmedicine.service.OperationLogService;
+import com.dongmedicine.service.RabbitMQOperationLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -14,16 +18,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class OperationLogAspect {
 
-    @Autowired
-    private OperationLogService logService;
+    private final OperationLogService logService;
+    private final RabbitMQOperationLogService rabbitMQOperationLogService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -57,18 +62,18 @@ public class OperationLogAspect {
 
             HttpServletRequest request = attributes.getRequest();
 
-            OperationLog log = new OperationLog();
-            log.setIp(getClientIp(request));
-            log.setMethod(request.getMethod() + " " + request.getRequestURI());
-            log.setDuration((int) duration);
-            log.setSuccess(success);
-            log.setErrorMsg(errorMsg);
-            log.setUsername(StpUtil.isLogin() ? StpUtil.getSession().get("username", "anonymous").toString() : "anonymous");
+            OperationLog operationLog = new OperationLog();
+            operationLog.setIp(IpUtils.getClientIp(request));
+            operationLog.setMethod(request.getMethod() + " " + request.getRequestURI());
+            operationLog.setDuration((int) duration);
+            operationLog.setSuccess(success);
+            operationLog.setErrorMsg(errorMsg);
+            operationLog.setUsername(StpUtil.isLogin() ? StpUtil.getSession().get("username", "anonymous").toString() : "anonymous");
 
             String className = point.getTarget().getClass().getSimpleName();
-            log.setModule(getModuleFromController(className));
-            log.setOperation(point.getSignature().getName());
-            log.setType(getOperationType(request.getMethod()));
+            operationLog.setModule(getModuleFromController(className));
+            operationLog.setOperation(point.getSignature().getName());
+            operationLog.setType(getOperationType(request.getMethod()));
 
             Object[] args = point.getArgs();
             if (args != null && args.length > 0) {
@@ -79,23 +84,19 @@ public class OperationLogAspect {
                             params.put("arg" + i, args[i]);
                         }
                     }
-                    log.setParams(objectMapper.writeValueAsString(params));
+                    operationLog.setParams(objectMapper.writeValueAsString(params));
                 } catch (Exception ignored) {}
             }
 
-            logService.save(log);
-        } catch (Exception ignored) {}
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
+            try {
+                    rabbitMQOperationLogService.saveLogAsync(operationLog);
+                } catch (Exception e) {
+                    log.warn("RabbitMQ 保存操作日志失败, 降级为同步保存, error={}", e.getMessage());
+                    logService.save(operationLog);
+                }
+            } catch (Exception e) {
+                log.error("保存操作日志失败, error={}", e.getMessage());
+            }
     }
 
     private String getModuleFromController(String className) {

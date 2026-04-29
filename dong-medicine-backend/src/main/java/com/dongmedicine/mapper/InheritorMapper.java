@@ -18,6 +18,9 @@ public interface InheritorMapper extends BaseMapper<Inheritor> {
     @Update("UPDATE inheritors SET favorite_count = IFNULL(favorite_count, 0) + #{delta} WHERE id = #{id}")
     void incrementFavoriteCount(Integer id, int delta);
 
+    @Update("UPDATE inheritors SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
+    void incrementPopularity(Integer id);
+
     // ===== 统计查询方法 =====
 
     @Select("SELECT COUNT(*) FROM inheritors WHERE level = #{level}")

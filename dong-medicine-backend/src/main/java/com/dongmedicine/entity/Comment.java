@@ -1,19 +1,13 @@
 package com.dongmedicine.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("comments")
-public class Comment {
-    @TableId(type = IdType.AUTO)
-    private Integer id;
+public class Comment extends BaseEntity {
     private Integer userId;
     private String username;
     private String targetType;
@@ -25,8 +19,4 @@ public class Comment {
     private Integer likes;
     private Integer replyCount;
     private String status;
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
 }

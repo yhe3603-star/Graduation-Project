@@ -1,20 +1,14 @@
 package com.dongmedicine.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("qa")
-public class Qa {
-    @TableId(type = IdType.AUTO)
-    private Integer id;
+public class Qa extends BaseEntity {
     private String category;
     
     @NotBlank(message = "问题不能为空")
@@ -23,6 +17,4 @@ public class Qa {
     private Integer popularity;
     private Integer viewCount;
     private Integer favoriteCount;
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
 }

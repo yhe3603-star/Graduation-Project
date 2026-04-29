@@ -101,3 +101,11 @@ PlantPage
   ├── PlantDetail（由 PlantPage 控制显示）
   └── PlantComment（由 PlantPage 控制显示）
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [代码重复] 上传组件(ImageUploader/VideoUploader/DocumentUploader)中handleBeforeUpload、handleSuccess、handleError、handleRemove、updateModelValue等方法几乎完全相同，应抽取useFileUpload composable
+- [代码重复] PlantGame.vue和QuizSection.vue中难度选择、倒计时、结果展示等UI结构大量重复，应抽取GameLayout、DifficultySelector、CountdownTimer、ResultDisplay等公共组件
+- [组件设计] App.vue承担过多职责，登录/注册对话框应抽取为独立组件

@@ -42,6 +42,9 @@ spring:
 jwt:
   expiration: ${JWT_EXPIRATION:86400000}
 
+sa-token:
+  jwt-secret-key: ${JWT_SECRET:dev-only-secret-key-please-change-in-production-32chars}
+
 app:
   security:
     jwt-secret: ${JWT_SECRET:}

@@ -222,3 +222,9 @@ const handleClose = () => {
   </el-dialog>
 </template>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [结构] 详情弹窗组件与admin/dialogs下的组件存在功能重叠，可考虑统一

@@ -7,30 +7,36 @@ import com.dongmedicine.entity.User;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.mapper.FeedbackMapper;
 import com.dongmedicine.mapper.UserMapper;
+import com.dongmedicine.mq.producer.FeedbackProducer;
+import com.dongmedicine.mq.producer.NotificationProducer;
 import com.dongmedicine.service.FeedbackService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> implements FeedbackService {
 
-    @Autowired
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
+    private final FeedbackProducer feedbackProducer;
+    private final NotificationProducer notificationProducer;
 
     @Override
     public List<Feedback> listByStatus(String status) {
         return list(new LambdaQueryWrapper<Feedback>()
                 .eq(Feedback::getStatus, status)
-                .orderByDesc(Feedback::getCreateTime));
+                .orderByDesc(Feedback::getCreatedAt));
     }
 
     @Override
     public List<Feedback> listByUserId(Integer userId) {
         return list(new LambdaQueryWrapper<Feedback>()
                 .eq(Feedback::getUserId, userId)
-                .orderByDesc(Feedback::getCreateTime));
+                .orderByDesc(Feedback::getCreatedAt));
     }
 
     @Override
@@ -43,8 +49,17 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
             if (user != null) {
                 feedback.setUserName(user.getUsername());
             }
+        } else {
+            feedback.setUserName("anonymous");
         }
-        save(feedback);
+        
+        try {
+            feedbackProducer.sendFeedback(feedback);
+            log.debug("反馈已通过 RabbitMQ 异步提交, userId={}", userId);
+        } catch (Exception e) {
+            log.warn("RabbitMQ 提交反馈失败, 降级为同步保存, error={}", e.getMessage());
+            save(feedback);
+        }
     }
 
     @Override
@@ -56,6 +71,19 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
         feedback.setReply(reply);
         feedback.setStatus("resolved");
         updateById(feedback);
+        
+        if (feedback.getUserId() != null) {
+            try {
+                notificationProducer.sendFeedbackReplyNotification(
+                        feedback.getUserId(),
+                        feedback.getTitle(),
+                        reply
+                );
+                log.debug("反馈回复通知已发送, feedbackId={}, userId={}", id, feedback.getUserId());
+            } catch (Exception e) {
+                log.warn("发送反馈回复通知失败, feedbackId={}, error={}", id, e.getMessage());
+            }
+        }
     }
 
     @Override

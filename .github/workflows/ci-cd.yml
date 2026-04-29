@@ -98,7 +98,7 @@ jobs:
             HostName ${{ secrets.SERVER_HOST }}
             User ${{ secrets.SERVER_USER }}
             IdentityFile ~/.ssh/id_rsa
-            StrictHostKeyChecking no
+            StrictHostKeyChecking accept-new
             ConnectTimeout 60
             ServerAliveInterval 10
             ServerAliveCountMax 120
@@ -147,7 +147,7 @@ jobs:
               container_name: dong-medicine-mysql
               restart: unless-stopped
               environment:
-                MYSQL_ROOT_PASSWORD: root123
+                MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
                 MYSQL_DATABASE: dong_medicine
                 TZ: Asia/Shanghai
               volumes:
@@ -155,7 +155,7 @@ jobs:
                 - ./sql/dong_medicine.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
               command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
               healthcheck:
-                test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+                test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${{ secrets.MYSQL_ROOT_PASSWORD }}"]
                 interval: 10s
                 timeout: 5s
                 retries: 10
@@ -167,11 +167,11 @@ jobs:
               image: redis:7-alpine
               container_name: dong-medicine-redis
               restart: unless-stopped
-              command: redis-server --appendonly yes --requirepass redis123
+              command: redis-server --appendonly yes --requirepass ${{ secrets.REDIS_PASSWORD }}
               volumes:
                 - redis_data:/data
               healthcheck:
-                test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+                test: ["CMD", "redis-cli", "-a", "${{ secrets.REDIS_PASSWORD }}", "ping"]
                 interval: 10s
                 timeout: 5s
                 retries: 5
@@ -204,11 +204,11 @@ jobs:
                 DB_PORT: 3306
                 DB_NAME: dong_medicine
                 DB_USERNAME: root
-                DB_PASSWORD: root123
+                DB_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
                 REDIS_HOST: redis
                 REDIS_PORT: 6379
-                REDIS_PASSWORD: redis123
-                JWT_SECRET: dong-medicine-jwt-secret-key-2024
+                REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+                JWT_SECRET: ${{ secrets.JWT_SECRET }}
                 DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
               ports:
                 - "8080:8080"
@@ -290,7 +290,7 @@ jobs:
           echo "========== 等待服务启动 =========="
           echo "等待MySQL..."
           for i in {1..30}; do
-            if docker exec dong-medicine-mysql mysqladmin ping -h localhost -uroot -proot123 2>/dev/null; then
+            if docker exec dong-medicine-mysql mysqladmin ping -h localhost -uroot -p${{ secrets.MYSQL_ROOT_PASSWORD }} 2>/dev/null; then
               echo "MySQL就绪"
               break
             fi

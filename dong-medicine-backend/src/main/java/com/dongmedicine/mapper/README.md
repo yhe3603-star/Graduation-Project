@@ -474,3 +474,21 @@ Mapper 继承 BaseMapper，CRUD 方法全都有
 查询条件用 Lambda，类型安全不怕错
 分页就用 Page<T>，current 和 size 搞定它
 ```
+
+---
+
+## 十一、代码审查与改进建议
+
+以下是对 Mapper 层代码的审查发现：
+
+### 安全级别
+
+| # | 级别 | 问题 | 涉及 Mapper | 说明 |
+|---|------|------|-----------|------|
+| 1 | 安全 | `searchByFullText()` 中 `keyword` 直接传入全文搜索 | `PlantMapper` | `keyword` 参数直接传入 `MATCH ... AGAINST(#{keyword} ...)` 语句。虽然 MyBatis 使用 `#{}` 占位符是参数化查询，不会产生 SQL 注入，但全文搜索的 `AGAINST` 子句对特殊字符和布尔操作符有特殊解析逻辑，恶意构造的关键词可能改变搜索行为。需确认 Mapper XML（如果存在）中使用的是 `#{keyword}` 参数化查询而非 `${keyword}` 字符串拼接，后者会导致 SQL 注入。 |
+
+### 结构级别
+
+| # | 级别 | 问题 | 涉及 Mapper | 说明 |
+|---|------|------|-----------|------|
+| 2 | 结构 | 缺少 Mapper XML 文件 | 全部 Mapper | 当前所有自定义 SQL 均使用 `@Select`/`@Update` 注解写在 Java 接口中。对于简单查询这没有问题，但复杂查询（如全文搜索 `MATCH AGAINST`、`JSON_SEARCH` 等）使用注解方式可读性差、难以维护，且无法实现动态 SQL。应创建对应的 Mapper XML 文件（如 `PlantMapper.xml`），将复杂查询迁移到 XML 中，利用 MyBatis 的 `<script>`、`<if>`、`<where>` 等标签实现动态条件查询，提高代码可维护性。 |

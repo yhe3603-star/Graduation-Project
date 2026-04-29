@@ -23,5 +23,5 @@ public class Feedback {
     private String status;
     private String reply;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 }

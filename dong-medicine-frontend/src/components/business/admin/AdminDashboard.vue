@@ -113,8 +113,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
-import * as echarts from "echarts";
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import * as echarts from 'echarts/core'
+import { PieChart, BarChart } from 'echarts/charts'
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([
+  PieChart,
+  BarChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  CanvasRenderer
+])
 import { logPermissionWarn } from '@/utils/logger'
 import { DataLine, User, Document, Avatar, Picture, ChatDotRound, Folder, EditPen, Tickets, List, Message, Comment } from "@element-plus/icons-vue";
 import request from "@/utils/request";
@@ -141,6 +159,7 @@ const logCount = ref(0);
 
 const plantChartRef = ref(null);
 const knowledgeChartRef = ref(null);
+const chartInstances = [];
 
 const formatTime = (time) => time ? new Date(time).toLocaleString('zh-CN') : '无';
 
@@ -164,6 +183,7 @@ const loadCharts = async () => {
     
     if (plantChartRef.value) {
       const plantChart = echarts.init(plantChartRef.value);
+      chartInstances.push(plantChart);
       const data = plantRes.data || plantRes;
       plantChart.setOption({
         tooltip: { trigger: 'item' },
@@ -179,6 +199,7 @@ const loadCharts = async () => {
 
     if (knowledgeChartRef.value) {
       const knowChart = echarts.init(knowledgeChartRef.value);
+      chartInstances.push(knowChart);
       const data = knowRes.data || knowRes;
       const names = data.map(item => (item.name || '').substring(0, 10));
       const values = data.map(item => item.value);
@@ -199,6 +220,11 @@ onMounted(() => {
   nextTick(() => {
     loadCharts();
   });
+});
+
+onUnmounted(() => {
+  chartInstances.forEach(chart => chart?.dispose())
+  chartInstances.length = 0
 });
 
 const n = (key, fallbackArr) => {

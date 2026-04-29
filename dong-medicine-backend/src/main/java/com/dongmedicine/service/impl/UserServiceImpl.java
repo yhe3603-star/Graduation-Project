@@ -11,6 +11,7 @@ import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.exception.ErrorCode;
 import com.dongmedicine.common.util.PasswordValidator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,6 +22,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
@@ -225,6 +227,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public String getUserToken(Integer userId) {
+        // 管理员权限检查：仅admin角色可获取其他用户Token
+        StpUtil.checkRole("admin");
+
         if (userId == null) {
             throw BusinessException.badRequest("用户ID不能为空");
         }
@@ -235,6 +240,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         StpUtil.login(String.valueOf(user.getId()));
         StpUtil.getSession().set("username", user.getUsername());
         StpUtil.getSession().set("role", user.getRole());
+
+        // 安全审计日志：记录管理员获取用户Token的操作
+        log.warn("[安全审计] 管理员获取用户Token - 操作人ID:{}, 目标用户ID:{}, 目标用户名:{}",
+            StpUtil.getLoginIdAsString(), user.getId(), user.getUsername());
+
         return StpUtil.getTokenValue();
     }
 }

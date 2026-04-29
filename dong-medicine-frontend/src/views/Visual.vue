@@ -124,7 +124,8 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import request from '@/utils/request';
 import { ElMessage } from "element-plus";
 import { ChatDotRound, DataAnalysis, Document, Picture, Refresh, User } from "@element-plus/icons-vue";
 import ChartCard from "@/components/business/display/ChartCard.vue";
@@ -136,7 +137,6 @@ import {
 } from "@/utils/chartConfig";
 import "@/styles/Visual.css";
 
-const request = inject("request");
 const { loading: chartLoading, stats, chartData, regionList, fetchData } = useVisualData(request);
 
 const pageLoading = ref(false);

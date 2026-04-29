@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
@@ -41,7 +41,7 @@ public class CaptchaService {
     // 噪点数量
     private static final int NOISE_DOTS = 50;
 
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
 
     /**
      * 生成验证码

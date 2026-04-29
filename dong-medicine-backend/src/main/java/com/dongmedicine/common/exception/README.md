@@ -506,3 +506,9 @@ A: 检查以下几点：
 1. 类上是否有 `@RestControllerAdvice` 注解
 2. 异常是否在 Controller 之前就被处理了（如 Filter 中的异常）
 3. 异常类型是否和 `@ExceptionHandler` 中声明的一致（注意子类关系）
+
+---
+
+## 代码审查与改进建议
+
+- **[性能] ErrorCode.getByCode()线性查找效率低**：应使用`static final Map`缓存

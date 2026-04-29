@@ -175,12 +175,12 @@
 
 <script setup>
 import { inject, watch } from 'vue'
+import request from '@/utils/request'
 import { Lock, SwitchButton, User } from '@element-plus/icons-vue'
 import Pagination from '@/components/business/display/Pagination.vue'
 import CaptchaInput from '@/components/business/interact/CaptchaInput.vue'
 import { usePersonalCenter, actions, typeIconMap, typeTagMap, typeNameMap } from '@/composables/usePersonalCenter'
 
-const request = inject('request')
 const updateUserState = inject('updateUserState')
 
 const {

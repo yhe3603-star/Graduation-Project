@@ -10,6 +10,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./dong-medicine-backend/sql/dong_medicine.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    ports:
+      - "3307:3306"
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -49,6 +51,31 @@ services:
     networks:
       - dong-medicine-network
 
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: dong-medicine-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-rabbitmq123}
+      RABBITMQ_DEFAULT_VHOST: /
+      TZ: Asia/Shanghai
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - dong-medicine-network
+
   kkfileview:
     image: keking/kkfileview:latest
     container_name: dong-medicine-kkfileview
@@ -57,10 +84,8 @@ services:
       - KK_OFFICE_PREVIEW_TYPE=image
       - KK_CONTEXT_PATH=/kkfileview
       - KK_FILE_UPLOAD_MAX_SIZE=104857600
-      - base.url=/kkfileview
+      - base.url=http://localhost:3000/kkfileview
       - KK_DOMAIN=http://localhost:3000
-    ports:
-      - "${KKFILEVIEW_PORT:-8012}:8012"
     volumes:
       - kkfileview_data:/opt/kkFileView-4.1.0/file
     extra_hosts:
@@ -89,19 +114,25 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-rabbitmq123}
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:3000}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       FILE_UPLOAD_PATH: /app/public
       KKFILEVIEW_URL: http://kkfileview:8012
-    ports:
-      - "${BACKEND_PORT:-8080}:8080"
     volumes:
       - ./dong-medicine-backend/public:/app/public
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -123,7 +154,8 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -136,6 +168,8 @@ volumes:
   mysql_data:
     driver: local
   redis_data:
+    driver: local
+  rabbitmq_data:
     driver: local
   kkfileview_data:
     driver: local

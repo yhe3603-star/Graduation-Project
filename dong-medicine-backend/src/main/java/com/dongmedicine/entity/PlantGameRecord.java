@@ -20,5 +20,5 @@ public class PlantGameRecord {
     private Integer correctCount;
     private Integer totalCount;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 }

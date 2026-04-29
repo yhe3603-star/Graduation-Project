@@ -19,6 +19,9 @@ public interface PlantMapper extends BaseMapper<Plant> {
     @Update("UPDATE plants SET favorite_count = IFNULL(favorite_count, 0) + #{delta} WHERE id = #{id}")
     void incrementFavoriteCount(Integer id, int delta);
 
+    @Update("UPDATE plants SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
+    void incrementPopularity(Integer id);
+
     @Select("SELECT * FROM plants WHERE id >= (SELECT FLOOR(RAND() * (SELECT MAX(id) FROM plants)) + 1) LIMIT #{limit}")
     List<Plant> selectRandomPlants(@Param("limit") int limit);
 

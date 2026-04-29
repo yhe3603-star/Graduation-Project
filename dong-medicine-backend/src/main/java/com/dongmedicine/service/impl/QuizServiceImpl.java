@@ -68,6 +68,7 @@ public class QuizServiceImpl implements QuizService {
         List<Integer> questionIds = answers.stream()
                 .map(AnswerDTO::getQuestionId)
                 .filter(Objects::nonNull)
+                .distinct()
                 .collect(Collectors.toList());
 
         if (questionIds.isEmpty()) {
@@ -84,7 +85,8 @@ public class QuizServiceImpl implements QuizService {
                 continue;
             }
             QuizQuestion q = questionMap.get(dto.getQuestionId());
-            if (q != null && q.getAnswer().equals(dto.getAnswer())) {
+            if (q != null && q.getCorrectAnswer() != null
+                    && q.getCorrectAnswer().trim().equalsIgnoreCase(dto.getAnswer() != null ? dto.getAnswer().trim() : "")) {
                 score += actualScorePerQuestion;
             }
         }
@@ -98,7 +100,7 @@ public class QuizServiceImpl implements QuizService {
         }
         return recordMapper.selectList(new LambdaQueryWrapper<QuizRecord>()
                 .eq(QuizRecord::getUserId, userId)
-                .orderByDesc(QuizRecord::getCreateTime));
+                .orderByDesc(QuizRecord::getCreatedAt));
     }
 
     @Override

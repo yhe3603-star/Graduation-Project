@@ -123,14 +123,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref } from 'vue'
 import { Document, Upload, UploadFilled, Delete, View, Download } from '@element-plus/icons-vue'
-import { getResourceUrl, getMediaType, parseDocumentList, getFileIcon, getFileColor, logDeleteWarn } from '@/utils'
+import { getFileIcon, getFileColor } from '@/utils'
 import { formatFileSize } from '@/utils/adminUtils'
+import { useFileUpload } from '@/composables/useFileUpload'
 import DocumentPreview from '../media/DocumentPreview.vue'
-
-const request = inject('request')
 
 const props = defineProps({
   modelValue: { type: [String, Array], default: '' },
@@ -148,132 +146,42 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'change', 'success', 'error', 'remove'])
 
 const uploadRef = ref(null)
-const documentList = ref([])
-const uploading = ref(false)
-const uploadProgress = ref(0)
 const previewVisible = ref(false)
 const previewDocument = ref(null)
 
-const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}/upload/document`)
-const headers = computed(() => ({ Authorization: sessionStorage.getItem('token') ? `Bearer ${sessionStorage.getItem('token')}` : '' }))
-const limitReached = computed(() => documentList.value.length >= props.limit)
-const tipText = computed(() => `支持 pdf/docx/doc/xlsx/xls/pptx/ppt/txt 格式，单个文档不超过 ${props.maxSize}MB，最多 ${props.limit} 个`)
+const {
+  fileList: documentList,
+  uploading,
+  uploadProgress,
+  uploadUrl,
+  headers,
+  limitReached,
+  tipText,
+  handleBeforeUpload,
+  handleProgress,
+  handleSuccess,
+  handleError,
+  handleRemove,
+  clearFiles: clearDocuments,
+} = useFileUpload({
+  type: 'document',
+  extensions: ['pdf', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt'],
+  extensionLabel: 'pdf/docx/doc/xlsx/xls/pptx/ppt/txt',
+  uploadPath: '/upload/document',
+  simulateProgress: false,
+  props,
+  emit,
+})
 
+// 文档特有：图标和格式化
 const getIcon = (type) => getFileIcon(type)
 const getIconColor = (type) => getFileColor(type)
 const formatSize = (bytes) => formatFileSize(bytes)
 
-watch(() => props.modelValue, (newVal) => {
-  if (!newVal) { documentList.value = []; return }
-  const items = parseDocumentList(newVal)
-  documentList.value = items.map(item => ({
-    url: item.url,
-    path: item.path,
-    name: item.name,
-    type: item.type,
-    size: item.size
-  }))
-}, { immediate: true })
-
-const handleBeforeUpload = async (file) => {
-  const extension = file.name.split('.').pop().toLowerCase()
-  if (!['pdf', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt'].includes(extension)) {
-    ElMessage.error(`不支持的文档格式: ${extension}`)
-    return false
-  }
-  if (file.size > props.maxSize * 1024 * 1024) {
-    ElMessage.error(`文档大小不能超过 ${props.maxSize}MB`)
-    return false
-  }
-  
-  if (props.replaceConfirm && documentList.value.length > 0) {
-    try {
-      await ElMessageBox.confirm(
-        '已存在上传的文件，是否替换为新文件？',
-        '替换确认',
-        {
-          confirmButtonText: '替换',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
-      for (const doc of documentList.value) {
-        if (doc?.path && request) {
-          try {
-            await request.delete('/upload', { params: { filePath: doc.path } })
-          } catch {
-            logDeleteWarn('文档', doc.path)
-          }
-        }
-      }
-      documentList.value = []
-    } catch {
-      return false
-    }
-  }
-  
-  if (documentList.value.length >= props.limit) {
-    ElMessage.warning(`最多只能上传 ${props.limit} 个文档`)
-    return false
-  }
-  uploading.value = true
-  uploadProgress.value = 0
-  return true
-}
-
-const handleProgress = (event) => {
-  uploadProgress.value = Math.round(event.percent)
-}
-
-const handleSuccess = (response, file) => {
-  uploading.value = false
-  uploadProgress.value = 0
-  if (response.code === 200 && response.data) {
-    const filePath = response.data.filePath || response.data.fileUrl
-    documentList.value.push({
-      url: getResourceUrl(response.data.fileUrl || filePath),
-      path: filePath,
-      name: response.data.originalFileName || file.name,
-      type: getMediaType(filePath),
-      size: response.data.fileSize || file.size
-    })
-    updateModelValue()
-    emit('success', response.data)
-    ElMessage.success('文档上传成功')
-  } else {
-    ElMessage.error(response.msg || '上传失败')
-    emit('error', response.msg)
-  }
-}
-
-const handleError = (error) => {
-  uploading.value = false
-  uploadProgress.value = 0
-  console.error('文档上传失败:', error)
-  ElMessage.error('文档上传失败，请重试')
-  emit('error', error)
-}
-
-const handleRemove = async (index) => {
-  const removed = documentList.value[index]
-  if (removed?.path && request) {
-    const isExternalUrl = removed.path.startsWith('http://') || removed.path.startsWith('https://')
-    if (!isExternalUrl) {
-      try {
-        await request.delete('/upload', { params: { filePath: removed.path } })
-      } catch {
-        logDeleteWarn('文档', removed.path)
-      }
-    }
-  }
-  documentList.value.splice(index, 1)
-  updateModelValue()
-  emit('remove', removed)
-}
-
+// 文档预览（组件特有逻辑）
 const handlePreview = (doc) => {
   previewDocument.value = {
-    url: getResourceUrl(doc.url || doc.path),
+    url: doc.url || doc.path,
     path: doc.path || doc.url,
     name: doc.name,
     size: doc.size,
@@ -281,32 +189,6 @@ const handlePreview = (doc) => {
     originalFileName: doc.name
   }
   previewVisible.value = true
-}
-
-const downloadFile = (url, filename) => {
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
-
-const updateModelValue = () => {
-  const docs = documentList.value.map(d => ({
-    path: d.path,
-    name: d.name,
-    size: d.size,
-    type: d.type
-  }))
-  emit('update:modelValue', props.multiple ? docs : docs[0] || null)
-  emit('change', docs)
-}
-
-const clearDocuments = () => {
-  documentList.value = []
-  emit('update:modelValue', props.multiple ? [] : '')
-  emit('change', [])
 }
 
 defineExpose({ clearDocuments, getDocuments: () => documentList.value })

@@ -2,9 +2,7 @@ package com.dongmedicine.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -19,29 +17,17 @@ public class SecurityConfigValidator {
     @Value("${app.security.jwt-secret:}")
     private String appJwtSecret;
 
-    @Autowired
-    private Environment environment;
-
     @PostConstruct
     public void validateSecurityConfig() {
-        boolean isProduction = !environment.acceptsProfiles("dev");
-
         String effectiveSecret = saTokenJwtSecret != null && !saTokenJwtSecret.isBlank()
                 ? saTokenJwtSecret : appJwtSecret;
 
         if (effectiveSecret == null || effectiveSecret.trim().isEmpty()) {
-            if (isProduction) {
-                throw new IllegalStateException(
-                    "【严重安全警告】生产环境JWT密钥未配置！\n" +
-                    "请通过环境变量 JWT_SECRET 设置安全的密钥（至少32字符）"
-                );
-            } else {
-                log.warn("========================================");
-                log.warn("【安全警告】JWT密钥未配置，使用开发默认密钥");
-                log.warn("生产环境必须设置 JWT_SECRET 环境变量");
-                log.warn("========================================");
-                return;
-            }
+            throw new IllegalStateException(
+                "【严重安全警告】JWT密钥未配置！\n" +
+                "请通过环境变量 JWT_SECRET 设置安全的密钥（至少32字符）\n" +
+                "开发环境可在 application-dev.yml 中配置默认密钥"
+            );
         }
 
         if (effectiveSecret.length() < MIN_JWT_SECRET_LENGTH) {
@@ -51,8 +37,6 @@ public class SecurityConfigValidator {
             );
         }
 
-        log.info("安全配置校验通过 - JWT密钥长度: {}, 环境: {}",
-            effectiveSecret.length(),
-            isProduction ? "生产环境" : "开发环境");
+        log.info("安全配置校验通过 - JWT密钥长度: {}", effectiveSecret.length());
     }
 }

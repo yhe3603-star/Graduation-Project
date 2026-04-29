@@ -534,3 +534,15 @@ public R<Plant> detail(@PathVariable Integer id) {
 .requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
 .requestMatchers("/api/admin/recipes/**").hasRole("ADMIN")
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [严重-安全] ResourceController存在路径遍历风险，未对文件路径做规范化处理
+- [严重-安全] FileUploadController的文件删除接口存在路径注入风险
+- [严重-安全] AdminController角色白名单缺失，仅检查角色是否为admin但未限制可分配的角色值
+- [中等-缓存] MetadataController的@Cacheable因同类内部调用而完全无效（Spring AOP代理机制）
+- [中等-路由] StatisticsController与StatsController映射到同一/api/stats前缀，存在路由冲突
+- [中等-设计] 多个Controller缺少统一的异常处理模式，部分方法直接try-catch返回R.error()
+- [低-规范] 部分Controller使用@Autowired字段注入而非构造器注入

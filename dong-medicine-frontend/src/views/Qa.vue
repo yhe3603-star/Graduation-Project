@@ -124,7 +124,8 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import request from '@/utils/request';
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { QuestionFilled, Star, View, EditPen, ArrowRight } from "@element-plus/icons-vue";
@@ -147,7 +148,6 @@ const PAGE_SIZE_OPTIONS = {
 const DEBOUNCE_DELAY = 300;
 
 const route = useRoute();
-const request = inject("request");
 
 const { isFavorited: isItemFavorited, loadFavorites, toggleFavorite: doToggleFavorite, items: favItems } = useFavorite('qa');
 
@@ -201,7 +201,10 @@ const showDetail = async (item) => {
   try {
     await request.post(`/qa/${item.id}/view`);
     const qaIdx = allQa.value.findIndex(q => q.id === item.id);
-    if (qaIdx > -1) allQa.value[qaIdx].viewCount = (allQa.value[qaIdx].viewCount || 0) + 1;
+    if (qaIdx > -1) {
+      allQa.value[qaIdx].viewCount = (allQa.value[qaIdx].viewCount || 0) + 1;
+      statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
+    }
   } catch {}
 };
 

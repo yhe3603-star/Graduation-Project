@@ -92,7 +92,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ChatDotRound } from '@element-plus/icons-vue'
 import { marked } from 'marked'
@@ -271,6 +271,20 @@ const renderMarkdown = (text) => {
 
 onMounted(() => {
   connectWebSocket()
+})
+
+onActivated(() => {
+  if (!ws || ws.readyState === WebSocket.CLOSED) {
+    connectWebSocket()
+  }
+})
+
+onDeactivated(() => {
+  if (ws) {
+    ws.close()
+    ws = null
+    wsConnected.value = false
+  }
 })
 
 onUnmounted(() => {

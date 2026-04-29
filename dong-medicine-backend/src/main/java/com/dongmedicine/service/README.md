@@ -955,3 +955,45 @@ public Plant getById(Integer id) {
     return plantMapper.selectById(id);
 }
 ```
+
+---
+
+## 十、代码审查与改进建议
+
+以下是对 Service 层代码的审查发现，按严重程度排序：
+
+### 严重级别
+
+| # | 级别 | 问题 | 说明 |
+|---|------|------|------|
+| 1 | 严重-安全 | `UserServiceImpl.getUserToken()` 允许通过用户ID直接生成登录Token | 完全绕过身份验证，是严重权限提升漏洞。任何知道用户ID的人都可以伪造登录态。 |
+| 2 | 严重-安全 | `PlantGameServiceImpl.submit()` 中 `correctCount` 和 `totalCount` 完全由客户端提供 | 恶意用户可提交任意分数，破坏游戏公平性。应在服务端根据题目答案重新计算得分。 |
+| 3 | 严重-安全 | `CaptchaService` 使用 `java.util.Random` 而非 `SecureRandom` | 验证码可预测，攻击者可推算出验证码内容，使验证码机制形同虚设。 |
+
+### 高级别
+
+| # | 级别 | 问题 | 说明 |
+|---|------|------|------|
+| 4 | 高-并发 | `FavoriteServiceImpl.addFavorite()` 先查询后插入不是原子操作 | 并发场景下多个请求可能同时通过唯一性检查，导致重复收藏。应使用数据库唯一索引或分布式锁保证原子性。 |
+| 5 | 高-逻辑 | `KnowledgeServiceImpl` 中 `@Async` 自调用失效 | `incrementPopularityAsync()` 在同类内部调用，Spring AOP 基于代理机制，内部调用绕过代理，`@Async` 注解不生效，实际仍为同步执行。 |
+| 6 | 高-安全 | `UserServiceImpl.login()` 无登录失败次数限制 | 容易遭受暴力破解攻击。应增加失败计数和锁定机制，如5次失败后锁定账号15分钟。 |
+| 7 | 高-安全 | `UserServiceImpl` 中 Sa-Token 的 `kickout` 参数类型与 `login` 参数类型不匹配 | `kickout` 参数为 `Integer` 类型，而 `login` 参数为 `String` 类型，类型不一致可能导致踢人功能异常。 |
+| 8 | 高-逻辑 | `ResourceServiceImpl.listByCategoryAndKeywordAndType()` 忽略了 `fileType` 参数 | 方法签名接收 `fileType` 但查询逻辑未使用该参数进行过滤，而缓存 key 却包含了 `fileType`，导致不同 `fileType` 的请求缓存了相同的错误结果。 |
+
+### 中等级别
+
+| # | 级别 | 问题 | 说明 |
+|---|------|------|------|
+| 9 | 中等-性能 | `OperationLogServiceImpl` 每次 `save` 都触发全表 `COUNT(*)` 查询 | 用于检查日志数量是否超限，高频操作场景下性能极差。应改用定时任务异步清理，或缓存总数。 |
+| 10 | 中等-内存 | `CommentServiceImpl.listAllDTO()` 和 `listAllApproved()` 无分页限制 | 查询全部数据转为 DTO 列表，数据量大时可能导致 OOM（内存溢出）。应强制分页或限制最大返回条数。 |
+| 11 | 中等-安全 | `FileUploadServiceImpl` 异常信息泄露文件系统路径 | 异常消息中包含服务器文件路径信息，攻击者可利用此信息进行路径遍历攻击。应返回通用错误信息，将详细路径仅记录到日志。 |
+| 12 | 中等-逻辑 | `QuizServiceImpl` 答案比较使用 `equals` 过于严格 | 不考虑空格和大小写差异，用户输入 "钩藤 " 或 "钩藤" 应视为相同答案但会被判错。应先 `trim()` 并忽略大小写后再比较。 |
+| 13 | 中等-逻辑 | `RabbitMQOperationLogServiceImpl` 日志说"降级为同步保存"但实际只是抛出异常 | 日志信息具有误导性，实际并未实现降级逻辑，RabbitMQ 不可用时日志会丢失。应真正实现同步降级写入数据库。 |
+
+### 低级别
+
+| # | 级别 | 问题 | 说明 |
+|---|------|------|------|
+| 14 | 低-规范 | 依赖注入方式不一致 | 部分类使用 `@Autowired` 字段注入，部分类使用 `@RequiredArgsConstructor` 构造器注入。应统一为构造器注入（Spring 官方推荐）。 |
+| 15 | 低-规范 | 冗余 Mapper 注入 | 多个 `ServiceImpl` 在继承 `ServiceImpl<Mapper, Entity>` 的同时额外 `@Autowired` 注入了相同的 Mapper。`ServiceImpl` 已内置 `baseMapper`，无需重复注入。 |
+| 16 | 低-规范 | 缓存策略不一致 | 部分查询方法有 `@Cacheable` 注解，但对应的分页版本方法却没有缓存，导致分页请求每次都查数据库。缓存策略应保持一致。 |

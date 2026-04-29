@@ -16,12 +16,17 @@
     />
 
     <main class="dong-main">
-      <router-view v-slot="{ Component }">
+      <router-view v-slot="{ Component, route }">
         <transition
           name="page-fade"
           mode="out-in"
         >
-          <ErrorBoundary>
+          <keep-alive v-if="route.meta.keepAlive">
+            <ErrorBoundary>
+              <component :is="Component" />
+            </ErrorBoundary>
+          </keep-alive>
+          <ErrorBoundary v-else>
             <component :is="Component" />
           </ErrorBoundary>
         </transition>
@@ -155,6 +160,7 @@ import PageLoading from "@/components/common/PageLoading.vue"
 import request from "@/utils/request"
 import { useUserStore } from "@/stores/user"
 import { logFetchError } from "@/utils"
+import { createPasswordValidator } from "@/utils/validators"
 
 const router = useRouter()
 const route = useRoute()
@@ -189,7 +195,6 @@ watch(() => userStore.isLoggedIn, (newVal) => {
   }
 })
 
-provide("request", request)
 provide("isLoggedIn", isLoggedIn)
 provide("userName", userName)
 provide("updateUserState", () => userStore.initialize())
@@ -214,25 +219,12 @@ const loginRules = {
   password: [{ required: true, message: "请输入密码", trigger: "blur" }],
   captchaCode: [{ required: true, message: "请输入验证码", trigger: "blur" }]
 }
+const { password: passwordRules, confirmPassword: confirmPasswordRules } = createPasswordValidator()
+
 const registerRules = {
   username: [{ required: true, message: "请输入用户名", trigger: "blur" }, { min: 3, max: 20, message: "用户名长度3-20个字符", trigger: "blur" }],
-  password: [
-    { required: true, message: "请输入密码", trigger: "blur" }, 
-    { min: 8, max: 50, message: "密码长度为8-50位", trigger: "blur" },
-    { 
-      validator: (_, v, cb) => {
-        if (!/[a-zA-Z]/.test(v)) cb(new Error("密码必须包含字母"))
-        else if (!/[0-9]/.test(v)) cb(new Error("密码必须包含数字"))
-        else if (/\s/.test(v)) cb(new Error("密码不能包含空格"))
-        else cb()
-      },
-      trigger: "blur"
-    }
-  ],
-  confirmPassword: [{ required: true, message: "请确认密码", trigger: "blur" }, {
-    validator: (_, v, cb) => v !== registerForm.value.password ? cb(new Error("两次密码不一致")) : cb(),
-    trigger: "blur"
-  }],
+  password: passwordRules,
+  confirmPassword: confirmPasswordRules(registerFormRef, 'password'),
   captchaCode: [{ required: true, message: "请输入验证码", trigger: "blur" }]
 }
 

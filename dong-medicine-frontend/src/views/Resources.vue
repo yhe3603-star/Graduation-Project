@@ -84,6 +84,7 @@
 
 <script setup>
 import { computed, inject, onMounted, ref, watch } from "vue";
+import request from '@/utils/request';
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Document, Download, Picture, Star, VideoPlay, View } from "@element-plus/icons-vue";
@@ -112,7 +113,6 @@ const filterConfig = ref([
 ]);
 
 const route = useRoute();
-const request = inject("request");
 const showLoginDialog = inject("showLoginDialog");
 const userStore = useUserStore();
 const isLoggedIn = computed(() => userStore.isLoggedIn);
@@ -213,7 +213,10 @@ const openResource = async (item) => {
   try {
     await request.post(`/resources/${item.id}/view`);
     const idx = allResources.value.findIndex(r => r.id === item.id);
-    if (idx > -1) allResources.value[idx].viewCount = (allResources.value[idx].viewCount || 0) + 1;
+    if (idx > -1) {
+      allResources.value[idx].viewCount = (allResources.value[idx].viewCount || 0) + 1;
+      statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
+    }
   } catch {}
 };
 

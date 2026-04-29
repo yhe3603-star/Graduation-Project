@@ -19,5 +19,5 @@ public class QuizRecord {
     private Integer totalQuestions;
     private Integer correctAnswers;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 }

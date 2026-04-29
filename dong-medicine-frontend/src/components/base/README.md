@@ -244,3 +244,9 @@ onErrorCaptured((err) => {
   <VirtualList :items="data" style="height: 500px; overflow-y: auto;" />
 </template>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [逻辑] VirtualList.vue中展开item添加_index可能覆盖原始数据中的同名属性，应使用Symbol或不可枚举属性

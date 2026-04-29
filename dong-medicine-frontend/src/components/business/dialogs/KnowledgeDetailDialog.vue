@@ -269,7 +269,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from 'vue';
+import { ref, computed, watch } from 'vue';
+import request from '@/utils/request';
 import { useRouter } from 'vue-router';
 import { View, Star, Document, Memo, FirstAidKit, List, Film, VideoPlay, Cherry, Picture } from '@element-plus/icons-vue';
 import VideoPlayer from '@/components/business/media/VideoPlayer.vue';
@@ -286,7 +287,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'toggle-favorite']);
 const router = useRouter();
-const request = inject('request');
 
 const activeMediaTab = ref('video');
 const documentList = ref([]);

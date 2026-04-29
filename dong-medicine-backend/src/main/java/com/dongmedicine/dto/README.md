@@ -466,3 +466,26 @@ DTO 是快递包，只装需要的东西
 Controller 加 @Valid，校验才能生效
 Entity 转 DTO，fromEntity 来帮忙
 ```
+
+---
+
+## 十、代码审查与改进建议
+
+以下是对 DTO 层代码的审查发现：
+
+### 安全级别
+
+| # | 级别 | 问题 | 涉及 DTO | 说明 |
+|---|------|------|---------|------|
+| 1 | 安全 | 密码最大长度限制不一致 | `ChangePasswordDTO` / `RegisterDTO` / `PasswordValidator` | `ChangePasswordDTO` 密码 `max=20`，`RegisterDTO` 密码 `max=50`，`PasswordValidator` 中 `MAX_LENGTH=50`，三处密码长度限制不一致。攻击者可通过修改密码接口提交超过20字符的密码（绕过前端校验），导致修改密码时被截断或校验失败。应统一为 `PasswordValidator.MAX_LENGTH=50`，所有 DTO 的 `@Size(max=50)` 保持一致。 |
+| 2 | 安全 | `LoginDTO` 密码只有 `min=6` 没有 `max` 限制 | `LoginDTO` | 登录时密码字段只校验了最小长度6位，没有最大长度限制。恶意用户可提交超长密码（如百万字符），BCrypt 加密会消耗大量 CPU 资源，造成拒绝服务攻击（DoS）。应添加 `@Size(max = 50)` 限制，与注册密码长度保持一致。 |
+| 3 | 安全 | `ChatRequest.Message` 的 `role` 字段没有验证 | `ChatRequest` | `role` 字段没有任何校验注解，用户可传入 `"system"` 角色，绕过 AI 系统的安全限制提示词，诱导模型输出不当内容。应使用 `@Pattern(regexp = "^(user|assistant)$")` 限制 `role` 只能为 `"user"` 或 `"assistant"`。 |
+| 4 | 安全 | `CommentAddDTO` 的 `replyToUsername` 可被客户端伪造 | `CommentAddDTO` | `replyToUsername` 字段由客户端直接提供，恶意用户可伪造被回复人的用户名，造成误导。应从数据库根据 `replyToId` 查询对应的用户名，而非信任客户端提交的值。 |
+
+### 结构级别
+
+| # | 级别 | 问题 | 涉及 DTO | 说明 |
+|---|------|------|---------|------|
+| 5 | 结构 | 响应 DTO 不应包含验证注解 | `PlantDTO` / `KnowledgeDTO` / `InheritorDTO` 等 | 这些 DTO 同时用于新增/编辑请求和响应返回，包含了 `@NotBlank`、`@Size` 等验证注解。验证注解应只在请求 DTO 上使用，响应 DTO 不需要验证。应将请求和响应 DTO 拆分为两个类（如 `PlantCreateDTO` 和 `PlantResponseDTO`），职责分离更清晰。 |
+| 6 | 结构 | `QuizCreateDTO` 同时存在 `answer` 和 `correctAnswer` 两个字段 | `QuizCreateDTO` | 两个字段语义混淆，不清楚哪个是正确答案。应统一为一个字段（如 `correctAnswer`），删除冗余的 `answer` 字段，避免使用时产生歧义。 |
+| 7 | 结构 | `PlantGameSubmitDTO` 缺少分数范围校验 | `PlantGameSubmitDTO` | `score`、`correctCount`、`totalCount` 字段只有 `@NotNull` 校验，没有范围限制。客户端可提交不合理的数据（如负数分数、`correctCount > totalCount` 等）。应添加 `@Min(0)` 和逻辑校验确保数据合理性。 |

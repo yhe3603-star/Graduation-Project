@@ -630,3 +630,11 @@ const windHerbs = computed(() => plants.value.filter(p => p.category === '祛风
   </div>
 </template>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [状态管理] 状态获取方式不统一：Pinia Store、provide/inject、sessionStorage三种方式并存
+- [性能] echarts全量导入导致打包体积过大
+- [错误处理] 部分composable静默吞没API错误

@@ -8,9 +8,8 @@ import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Qa;
 import com.dongmedicine.mapper.QaMapper;
 import com.dongmedicine.service.QaService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -18,13 +17,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaService {
-
-    private static final Logger log = LoggerFactory.getLogger(QaServiceImpl.class);
-
-    @Autowired
-    private QaMapper qaMapper;
 
     @Override
     public List<Qa> listByCategory(String category) {
@@ -76,7 +72,7 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
     @Override
     public void incrementViewCount(Integer id) {
         try {
-            qaMapper.incrementViewCount(id);
+            baseMapper.incrementViewCount(id);
             log.debug("Qa view count incremented for id: {}", id);
         } catch (Exception e) {
             log.error("Failed to increment view count for qa id: {}", id, e);
@@ -87,16 +83,16 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
     public Map<String, Object> getStats() {
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("total", count());
-        stats.put("categoryCount", qaMapper.countDistinctCategory());
-        stats.put("totalViews", qaMapper.sumViewCount());
-        stats.put("totalFavorites", qaMapper.sumFavoriteCount());
+        stats.put("categoryCount", baseMapper.countDistinctCategory());
+        stats.put("totalViews", baseMapper.sumViewCount());
+        stats.put("totalFavorites", baseMapper.sumFavoriteCount());
         return stats;
     }
 
     @Override
     public Map<String, List<String>> getFilterOptions() {
         Map<String, List<String>> map = new LinkedHashMap<>();
-        map.put("category", qaMapper.selectDistinctCategory());
+        map.put("category", baseMapper.selectDistinctCategory());
         return map;
     }
 }

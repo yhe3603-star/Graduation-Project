@@ -5,6 +5,8 @@ import com.dongmedicine.common.exception.ErrorCode;
 import com.dongmedicine.common.util.FileTypeUtils;
 import com.dongmedicine.config.FileUploadProperties;
 import com.dongmedicine.dto.FileUploadResult;
+import com.dongmedicine.mq.producer.FileProcessProducer;
+import com.dongmedicine.mq.producer.FileProcessProducer.FileProcessTask;
 import com.dongmedicine.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ import java.util.UUID;
 public class FileUploadServiceImpl implements FileUploadService {
     
     private final FileUploadProperties properties;
+    private final FileProcessProducer fileProcessProducer;
     
     @Override
     public FileUploadResult uploadImage(MultipartFile file, String category) {
@@ -127,6 +130,8 @@ public class FileUploadServiceImpl implements FileUploadService {
             
             String storedPath = "/" + (relativePath + "/" + fileName).replace("\\", "/");
             log.info("文件上传成功: {} -> {}", originalFileName, storedPath);
+            
+            submitFileProcessTask(fileName, filePath.toString(), originalFileName, fileType, file.getSize());
             
             return FileUploadResult.success(fileName, originalFileName, storedPath, storedPath, fileType, file.getSize());
             
@@ -265,5 +270,34 @@ public class FileUploadServiceImpl implements FileUploadService {
         if (size < 1024 * 1024) return String.format("%.2f KB", size / 1024.0);
         if (size < 1024 * 1024 * 1024) return String.format("%.2f MB", size / (1024.0 * 1024));
         return String.format("%.2f GB", size / (1024.0 * 1024 * 1024));
+    }
+    
+    private void submitFileProcessTask(String fileName, String filePath, String originalFileName, String fileType, long fileSize) {
+        try {
+            String processType = determineProcessType(fileType);
+            
+            FileProcessTask task = new FileProcessTask();
+            task.setFileId(UUID.randomUUID().toString());
+            task.setFilePath(filePath);
+            task.setFileName(fileName);
+            task.setFileType(fileType);
+            task.setProcessType(processType);
+            task.setOriginalFileName(originalFileName);
+            task.setFileSize(fileSize);
+            
+            fileProcessProducer.sendFileProcessTask(task);
+            log.debug("文件处理任务已发送到 RabbitMQ, fileName={}, processType={}", fileName, processType);
+            
+        } catch (Exception e) {
+            log.warn("发送文件处理任务到 RabbitMQ 失败, fileName={}, error={}", fileName, e.getMessage());
+        }
+    }
+    
+    private String determineProcessType(String fileType) {
+        return switch (fileType.toLowerCase()) {
+            case "image" -> "image-compress";
+            case "document" -> "document-convert";
+            default -> "file-validate";
+        };
     }
 }

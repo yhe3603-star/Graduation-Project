@@ -614,3 +614,13 @@ public List<Plant> advancedSearch(String keyword, String category, String usageW
     return list(qw);
 }
 ```
+
+---
+
+## 八、代码审查与改进建议
+
+- [结构] 时间字段命名不一致：部分Entity使用createdAt，部分使用createTime，但数据库列名都是created_at
+- [结构] 依赖注入方式不一致：部分类用@Autowired字段注入，部分用@RequiredArgsConstructor构造器注入
+- [安全] SaTokenConfig中大量写操作API路径绕过认证
+- [安全] XssFilter对管理员路径完全跳过XSS过滤
+- [性能] LoggingAspect和OperationLogAspect功能重叠，每个请求被AOP处理两次

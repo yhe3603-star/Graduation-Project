@@ -248,7 +248,7 @@ public class AdminController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
         LambdaQueryWrapper<Feedback> wrapper = new LambdaQueryWrapper<Feedback>()
-                .orderByDesc(Feedback::getCreateTime);
+                .orderByDesc(Feedback::getCreatedAt);
         if (!"all".equalsIgnoreCase(status)) {
             wrapper.eq(Feedback::getStatus, status);
         }

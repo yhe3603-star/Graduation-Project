@@ -1,20 +1,14 @@
 package com.dongmedicine.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("inheritors")
-public class Inheritor {
-    @TableId(type = IdType.AUTO)
-    private Integer id;
+public class Inheritor extends BaseEntity {
     
     @NotBlank(message = "传承人姓名不能为空")
     private String name;
@@ -27,6 +21,4 @@ public class Inheritor {
     private String honors;
     private String updateLog;
     private Integer viewCount, favoriteCount, popularity;
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
 }

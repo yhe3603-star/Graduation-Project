@@ -92,13 +92,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject, onUnmounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref } from 'vue'
 import { Plus, Picture, Delete, Rank } from '@element-plus/icons-vue'
 import draggable from 'vuedraggable'
-import { getResourceUrl, getFileName, parseMediaList, logUploadError, logDeleteWarn } from '@/utils'
-
-const request = inject('request')
+import { useFileUpload } from '@/composables/useFileUpload'
 
 const props = defineProps({
   modelValue: { type: [String, Array], default: '' },
@@ -115,125 +112,29 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'change', 'success', 'error', 'remove'])
 
 const uploadRef = ref(null)
-const imageList = ref([])
-const uploading = ref(false)
-const uploadProgress = ref(0)
-const pendingFile = ref(null)
-const progressInterval = ref(null)
 
-const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}/upload/image`)
-const headers = computed(() => ({ Authorization: sessionStorage.getItem('token') ? `Bearer ${sessionStorage.getItem('token')}` : '' }))
-const limitReached = computed(() => imageList.value.length >= props.limit)
-const tipText = computed(() => `支持 jpg/jpeg/png/gif/bmp/webp 格式，单张不超过 ${props.maxSize}MB，最多 ${props.limit} 张`)
-
-watch(() => props.modelValue, (newVal) => {
-  if (!newVal) { imageList.value = []; return }
-  const items = parseMediaList(newVal)
-  imageList.value = items.map(item => ({
-    url: item.url,
-    path: item.path,
-    name: item.name || item.originalFileName
-  }))
-}, { immediate: true })
-
-const handleBeforeUpload = async (file) => {
-  const extension = file.name.split('.').pop().toLowerCase()
-  if (!['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) { ElMessage.error(`不支持的图片格式: ${extension}`); return false }
-  if (file.size > props.maxSize * 1024 * 1024) { ElMessage.error(`图片大小不能超过 ${props.maxSize}MB`); return false }
-  
-  if (props.replaceConfirm && imageList.value.length > 0) {
-    try {
-      await ElMessageBox.confirm(
-        '已存在上传的文件，是否替换为新文件？',
-        '替换确认',
-        {
-          confirmButtonText: '替换',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
-      for (const img of imageList.value) {
-        if (img?.path && request) {
-          try {
-            await request.delete('/upload', { params: { filePath: img.path } })
-          } catch {
-            logDeleteWarn('图片', img.path)
-          }
-        }
-      }
-      imageList.value = []
-    } catch {
-      return false
-    }
-  }
-  
-  if (imageList.value.length >= props.limit) { ElMessage.warning(`最多只能上传 ${props.limit} 张图片`); return false }
-  uploading.value = true
-  uploadProgress.value = 0
-  progressInterval.value = setInterval(() => { if (uploadProgress.value < 90) uploadProgress.value += 10 }, 100)
-  return true
-}
-
-const handleSuccess = (response, file) => {
-  if (progressInterval.value) { clearInterval(progressInterval.value); progressInterval.value = null }
-  uploadProgress.value = 100
-  setTimeout(() => { uploading.value = false; uploadProgress.value = 0 }, 500)
-  if (response.code === 200 && response.data) {
-    imageList.value.push({ 
-      url: getResourceUrl(response.data.fileUrl || response.data.filePath), 
-      path: response.data.filePath || response.data.fileUrl, 
-      name: response.data.originalFileName || file.name,
-      size: response.data.fileSize || file.size || 0
-    })
-    updateModelValue()
-    emit('success', response.data)
-    ElMessage.success('图片上传成功')
-  } else { ElMessage.error(response.msg || '上传失败'); emit('error', response.msg) }
-}
-
-const handleError = (error, file) => {
-  if (progressInterval.value) { clearInterval(progressInterval.value); progressInterval.value = null }
-  uploading.value = false
-  uploadProgress.value = 0
-  console.error('图片上传失败:', error)
-  ElMessage.error('图片上传失败，请重试')
-  emit('error', error)
-}
-
-const handleRemove = async (index) => {
-  const removed = imageList.value[index]
-  if (removed?.path && request) {
-    const isExternalUrl = removed.path.startsWith('http://') || removed.path.startsWith('https://')
-    if (!isExternalUrl) {
-      try {
-        await request.delete('/upload', { params: { filePath: removed.path } })
-      } catch {
-        logDeleteWarn('图片', removed.path)
-      }
-    }
-  }
-  imageList.value.splice(index, 1)
-  updateModelValue()
-  emit('remove', removed)
-}
-
-const updateModelValue = () => {
-  const images = imageList.value.map(img => ({ path: img.path, name: img.name, size: img.size }))
-  emit('update:modelValue', props.multiple ? images : images[0] || null)
-  emit('change', images)
-}
-
-const clearImages = () => {
-  imageList.value = []
-  emit('update:modelValue', props.multiple ? [] : '')
-  emit('change', [])
-}
-
-onUnmounted(() => {
-  if (progressInterval.value) {
-    clearInterval(progressInterval.value)
-    progressInterval.value = null
-  }
+const {
+  fileList: imageList,
+  uploading,
+  uploadProgress,
+  uploadUrl,
+  headers,
+  limitReached,
+  tipText,
+  handleBeforeUpload,
+  handleSuccess,
+  handleError,
+  handleRemove,
+  updateModelValue,
+  clearFiles: clearImages,
+} = useFileUpload({
+  type: 'image',
+  extensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
+  extensionLabel: 'jpg/jpeg/png/gif/bmp/webp',
+  uploadPath: '/upload/image',
+  simulateProgress: true,
+  props,
+  emit,
 })
 
 defineExpose({ clearImages, getImages: () => imageList.value })

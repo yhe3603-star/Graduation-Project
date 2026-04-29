@@ -5,31 +5,29 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.entity.*;
 import com.dongmedicine.mapper.*;
+import com.dongmedicine.mq.producer.StatisticsProducer;
+import com.dongmedicine.mq.producer.StatisticsProducer.StatisticsTask;
 import com.dongmedicine.service.FavoriteService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> implements FavoriteService {
 
-    private static final Logger log = LoggerFactory.getLogger(FavoriteServiceImpl.class);
-
-    @Autowired
-    private PlantMapper plantMapper;
-    @Autowired
-    private KnowledgeMapper knowledgeMapper;
-    @Autowired
-    private InheritorMapper inheritorMapper;
-    @Autowired
-    private ResourceMapper resourceMapper;
-    @Autowired
-    private QaMapper qaMapper;
+    private final PlantMapper plantMapper;
+    private final KnowledgeMapper knowledgeMapper;
+    private final InheritorMapper inheritorMapper;
+    private final ResourceMapper resourceMapper;
+    private final QaMapper qaMapper;
+    private final StatisticsProducer statisticsProducer;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -41,12 +39,17 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         if (count > 0) {
             throw BusinessException.conflict("已经收藏过了");
         }
-        Favorite f = new Favorite();
-        f.setUserId(userId);
-        f.setTargetType(targetType);
-        f.setTargetId(targetId);
-        save(f);
+        try {
+            Favorite f = new Favorite();
+            f.setUserId(userId);
+            f.setTargetType(targetType);
+            f.setTargetId(targetId);
+            save(f);
+        } catch (DuplicateKeyException e) {
+            throw BusinessException.conflict("已经收藏过了");
+        }
         incrementFavoriteCount(targetType, targetId, 1);
+        sendStatisticsMessage(targetType, targetId, "favorite", "add");
         log.info("User {} added favorite: type={}, id={}", userId, targetType, targetId);
     }
 
@@ -60,6 +63,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         if (favorite != null) {
             removeById(favorite.getId());
             incrementFavoriteCount(targetType, targetId, -1);
+            sendStatisticsMessage(targetType, targetId, "favorite", "remove");
             log.info("User {} removed favorite: type={}, id={}", userId, targetType, targetId);
         }
     }
@@ -72,6 +76,21 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
             case "resource" -> resourceMapper.incrementFavoriteCount(targetId, delta);
             case "qa" -> qaMapper.incrementFavoriteCount(targetId, delta);
             default -> throw BusinessException.badRequest("不支持的收藏类型: " + targetType);
+        }
+    }
+
+    private void sendStatisticsMessage(String targetType, Integer targetId, String statisticsType, String actionType) {
+        try {
+            StatisticsTask task = new StatisticsTask();
+            task.setStatisticsType(statisticsType);
+            task.setTargetType(targetType);
+            task.setTargetId(targetId);
+            task.setActionType(actionType);
+            task.setTimestamp(System.currentTimeMillis());
+            statisticsProducer.sendStatisticsTask(task);
+            log.debug("统计消息已发送, type={}, target={}:{}", statisticsType, targetType, targetId);
+        } catch (Exception e) {
+            log.warn("发送统计消息失败, type={}, error={}", statisticsType, e.getMessage());
         }
     }
 

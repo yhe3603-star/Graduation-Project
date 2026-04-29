@@ -230,3 +230,12 @@ const verifyCaptcha = async (userInput) => {
 }
 </script>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [安全] CommentSection.vue显示500字符限制但el-input未设置maxlength属性
+- [组件设计] CommentSection.vue通过emit传递成功/失败回调函数是Vue反模式
+- [错误处理] CaptchaInput.vue验证码加载失败无用户提示
+- [输入验证] SearchFilter.vue手动实现防抖而非使用已有的useDebounceFn composable

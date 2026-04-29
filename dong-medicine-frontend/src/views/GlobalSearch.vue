@@ -141,13 +141,13 @@
 </template>
 
 <script setup>
-import { inject, onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed } from "vue";
+import request from '@/utils/request';
 import { useRoute, useRouter } from "vue-router";
 import { ChatDotRound, Document, FolderOpened, Picture, Search, User } from "@element-plus/icons-vue";
 
 const router = useRouter();
 const route = useRoute();
-const request = inject("request");
 
 const keyword = ref("");
 const lastKeyword = ref("");

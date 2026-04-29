@@ -10,9 +10,8 @@ import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.mapper.PlantMapper;
 import com.dongmedicine.service.PlantService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,19 +23,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements PlantService {
-
-    private static final Logger log = LoggerFactory.getLogger(PlantServiceImpl.class);
 
     private static final int MIN_PAGE_SIZE = 1;
     private static final int MAX_PAGE_SIZE = 100;
     private static final int DEFAULT_SEARCH_LIMIT = 50;
 
-    @Autowired
-    private PlantMapper plantMapper;
-    @Autowired
-    private FileCleanupHelper fileCleanupHelper;
+    private final FileCleanupHelper fileCleanupHelper;
 
     @Value("${app.search.use-fulltext:true}")
     private boolean useFullTextSearch;
@@ -120,7 +116,7 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
 
         try {
             if (useFullTextSearch) {
-                List<Plant> results = plantMapper.searchByFullText(keyword, limit);
+                List<Plant> results = baseMapper.searchByFullText(keyword, limit);
                 if (!results.isEmpty()) {
                     log.debug("全文搜索找到 {} 条结果: {}", results.size(), keyword);
                     return results;
@@ -130,7 +126,7 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
             log.warn("全文搜索失败，回退到LIKE搜索: {}", e.getMessage());
         }
 
-        List<Plant> results = plantMapper.searchByLike(escapedKeyword, limit);
+        List<Plant> results = baseMapper.searchByLike(escapedKeyword, limit);
         log.debug("LIKE搜索找到 {} 条结果: {}", results.size(), keyword);
         return results;
     }
@@ -157,13 +153,13 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
             throw new BusinessException(ErrorCode.PARAM_ERROR, 
                     String.format("限制数量必须在%d-%d之间", MIN_PAGE_SIZE, MAX_PAGE_SIZE));
         }
-        return plantMapper.selectRandomPlants(limit);
+        return baseMapper.selectRandomPlants(limit);
     }
 
     @Override
     public void incrementViewCount(Integer id) {
         try {
-            plantMapper.incrementViewCount(id);
+            baseMapper.incrementViewCount(id);
             log.debug("Plant view count incremented for id: {}", id);
         } catch (Exception e) {
             log.error("Failed to increment view count for plant id: {}", id, e);
@@ -195,17 +191,17 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     public Map<String, Object> getStats() {
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("total", count());
-        stats.put("categoryCount", plantMapper.countDistinctCategory());
-        stats.put("totalViews", plantMapper.sumViewCount());
-        stats.put("totalFavorites", plantMapper.sumFavoriteCount());
+        stats.put("categoryCount", baseMapper.countDistinctCategory());
+        stats.put("totalViews", baseMapper.sumViewCount());
+        stats.put("totalFavorites", baseMapper.sumFavoriteCount());
         return stats;
     }
 
     @Override
     public Map<String, List<String>> getFilterOptions() {
         Map<String, List<String>> map = new LinkedHashMap<>();
-        map.put("category", plantMapper.selectDistinctCategory());
-        map.put("usageWay", plantMapper.selectDistinctUsageWay());
+        map.put("category", baseMapper.selectDistinctCategory());
+        map.put("usageWay", baseMapper.selectDistinctUsageWay());
         return map;
     }
 }

@@ -404,3 +404,10 @@ AssertionError: expected "500 B" to be "500.0 B"
 | `npm run test` | 监听模式，文件变化自动重跑 | 开发时 |
 | `npm run test:run` | 跑一次就结束 | CI/CD 或最终检查 |
 | `npm run test:coverage` | 跑一次并生成覆盖率报告 | 检查测试质量 |
+
+---
+
+## 代码审查与改进建议
+
+- [覆盖度] 测试文件仅覆盖adminUtils和resource，缺少对核心composable(useFavorite/useInteraction/useMedia等)的测试
+- [覆盖度] 缺少对关键组件(AiChatCard/CommentSection/PlantGame等)的测试

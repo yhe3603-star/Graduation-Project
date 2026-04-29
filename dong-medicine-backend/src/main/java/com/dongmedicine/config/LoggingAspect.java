@@ -1,5 +1,6 @@
 package com.dongmedicine.config;
 
+import com.dongmedicine.common.util.IpUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -47,7 +48,7 @@ public class LoggingAspect {
 
         HttpServletRequest request = getRequest();
         String requestInfo = getRequestInfo(request);
-        String clientIp = getClientIp(request);
+        String clientIp = IpUtils.getClientIp(request);
         String userId = getUserId();
         
         String argsStr = safeArgsToString(args);
@@ -106,23 +107,6 @@ public class LoggingAspect {
             return String.format("%s %s", request.getMethod(), request.getRequestURI());
         }
         return "UNKNOWN";
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        if (request == null) {
-            return "unknown";
-        }
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-        return ip;
     }
 
     private String getUserId() {

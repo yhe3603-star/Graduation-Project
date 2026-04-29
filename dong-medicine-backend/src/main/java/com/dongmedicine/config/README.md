@@ -413,3 +413,22 @@ A: 不会。CacheConfig 会自动检测 Redis 连接，失败时降级到 Caffei
 
 **Q: 为什么 JWT 过期了还能刷新？**
 A: 设计了7天宽限期（`refreshGraceDays`）。Token 过期后7天内，用户可以用旧 Token 换新 Token，避免用户突然掉线需要重新登录。但超过7天就必须重新登录了。
+
+---
+
+## 代码审查与改进建议
+
+- [严重-安全] SaTokenConfig中大量API路径绕过认证：/api/quiz/submit、/api/plant-game/submit等写操作免认证，攻击者可无限刷分；/api/chat免认证可被滥用消耗DeepSeek API额度
+- [严重-安全] SaInterceptor的lambda处理器为空，整个认证体系仅依赖路径排除列表，没有实际权限检查逻辑
+- [严重-安全] XssFilter对管理员路径(/api/admin/)完全跳过XSS过滤，攻击者可注入恶意脚本
+- [严重-安全] XssFilter对所有HTTP Header都做XSS清洗，可能破坏Authorization头中的Bearer Token
+- [严重-线程安全] RateLimitAspect中Redis的increment和expire不是原子操作，应用崩溃时key将永不过期
+- [严重-线程安全] RateLimitAspect中localBuckets只有put没有remove，导致内存泄漏
+- [中等-配置] AsyncConfig线程池拒绝策略静默丢弃任务，没有任何日志记录
+- [中等-配置] CacheConfig同时设置expireAfterWrite和expireAfterAccess且值相同是冗余的
+- [中等-安全] CacheConfig中Redis序列化使用LaissezFaireSubTypeValidator允许所有子类型反序列化，存在远程代码执行风险
+- [中等-性能] RedisHealthIndicator每次健康检查创建两个Redis连接且未关闭
+- [中等-错误] StpInterfaceImpl中获取用户角色时异常被完全忽略(// ignore)，应至少记录warn日志
+- [中等-代码重复] getClientIp方法在LoggingAspect、OperationLogAspect、RateLimitAspect中重复实现3次
+- [低-配置] OpenApiConfig中生产服务器IP硬编码在Swagger配置中
+- [低-配置] SecurityConfigValidator中环境判断逻辑有误：!acceptsProfiles("dev")不等于isProduction

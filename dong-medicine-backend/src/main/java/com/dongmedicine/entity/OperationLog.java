@@ -1,19 +1,13 @@
 package com.dongmedicine.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("operation_log")
-public class OperationLog {
-    @TableId(type = IdType.AUTO)
-    private Integer id;
+public class OperationLog extends BaseEntity {
     private Integer userId;
     private String username;
     private String module;
@@ -25,6 +19,4 @@ public class OperationLog {
     private Integer duration;
     private Boolean success;
     private String errorMsg;
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
 }

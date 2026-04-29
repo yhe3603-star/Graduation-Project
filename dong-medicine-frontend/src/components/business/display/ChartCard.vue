@@ -27,7 +27,29 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from "vue"
-import * as echarts from "echarts"
+import * as echarts from 'echarts/core'
+import { BarChart, LineChart, PieChart, RadarChart } from 'echarts/charts'
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  RadarComponent
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([
+  BarChart,
+  LineChart,
+  PieChart,
+  RadarChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  RadarComponent,
+  CanvasRenderer
+])
 
 const props = defineProps({
   title: String,

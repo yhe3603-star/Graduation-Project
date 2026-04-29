@@ -17,6 +17,7 @@
  * 
  * 3. 媒体功能
  * - useMedia: 媒体相关（文档预览、媒体显示）
+ * - useFileUpload: 文件上传通用逻辑
  * 
  * 4. 通用功能
  * - useFavorite: 收藏功能
@@ -33,3 +34,4 @@ export * from './usePlantGame'
 export * from './useQuiz'
 export * from './useInteraction'
 export * from './useMedia'
+export * from './useFileUpload'

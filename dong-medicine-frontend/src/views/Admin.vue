@@ -216,6 +216,7 @@
 
 <script setup>
 import { computed, defineAsyncComponent, inject, onMounted, ref, watch } from 'vue'
+import request from '@/utils/request'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, DeleteFilled, HomeFilled } from '@element-plus/icons-vue'
@@ -250,7 +251,6 @@ import {
 import { parseMediaList, getMediaType } from '@/utils/media'
 
 const router = useRouter()
-const request = inject('request')
 const updateUserState = inject('updateUserState')
 const userStore = useUserStore()
 

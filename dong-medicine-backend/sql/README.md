@@ -722,3 +722,16 @@ utf8mb4 不能忘，中文 Emoji 都支持
 JSON 字段存复杂数据，前端解析最方便
 备份恢复要常做，数据安全最重要
 ```
+
+---
+
+## 十四、代码审查与改进建议
+
+- [数据完整性] comments、favorites、feedback、plant_game_record、quiz_record、operation_log等表的user_id缺少外键约束，可插入不存在的用户ID
+- [数据完整性] comments表的likes和reply_count缺少CHECK约束(>=0)，plant_game_record的score/correct_count/total_count缺少合理性约束
+- [结构] JSON数据存储在TEXT字段中而非MySQL 8.0原生的JSON类型，无法在数据库层面验证JSON格式有效性，也无法使用JSON函数高效查询
+- [结构] 冗余数据：comments表冗余存储username和reply_to_username，feedback表冗余存储user_name，用户名修改时数据不一致
+- [结构] 重复索引：knowledge表的idx_popularity和idx_knowledge_popularity重复，plants表的idx_category和idx_plants_category重复
+- [结构] users表字段过少，缺少email、phone、avatar、last_login_at等常见字段
+- [安全] 初始化脚本使用DROP TABLE IF EXISTS，生产环境可能导致数据丢失
+- [性能] operation_log表会无限增长，缺少分区或定期清理机制

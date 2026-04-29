@@ -642,3 +642,22 @@ docker compose up -d --build
 # 查看资源使用情况
 docker stats
 ```
+
+---
+
+## 十二、代码审查与改进建议
+
+- [安全] docker-compose.yml中默认密码过于简单：MYSQL_ROOT_PASSWORD默认root123，REDIS_PASSWORD默认redis123，JWT_SECRET默认your-secret-key-change-in-production
+- [安全] RabbitMQ端口(5672/15672)、kkfileview端口(8012)、backend端口(8080)不必要地暴露到宿主机，应仅在内网通信
+- [安全] CI/CD(ci-cd.yml)中硬编码了所有密码，未使用GitHub Secrets
+- [安全] entrypoint.sh中通过命令行参数传递MySQL密码，会出现在ps aux进程列表中
+- [配置] docker-compose.yml的depends_on未使用condition: service_healthy，不保证服务就绪
+- [配置] 前端Dockerfile HEALTHCHECK依赖curl但nginx:1.25-alpine镜像默认不包含curl
+- [配置] 后端Dockerfile的ENTRYPOINT与entrypoint.sh冲突，entrypoint.sh中的数据库初始化逻辑永远不会执行
+- [配置] 后端Dockerfile中SQL初始化文件被COPY但未使用
+- [安全] init-server.sh防火墙开放了8080端口，后端API应通过Nginx反向代理访问
+- [安全] Nginx配置(default.conf)中安全头在location块中被覆盖，导致部分响应丢失X-Frame-Options等安全头
+- [安全] Nginx配置缺少HSTS和Referrer-Policy安全头
+- [安全] /health端点暴露后端健康信息
+- [配置] proxy_cache_valid未配合proxy_cache_path，代理缓存不生效
+- [配置] docker-deploy.sh禁用了BuildKit(DOCKER_BUILDKIT=0)，导致构建缓存无法有效利用

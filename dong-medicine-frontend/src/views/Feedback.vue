@@ -191,13 +191,13 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import request from '@/utils/request';
 import { ElMessage } from "element-plus";
 import { Check, Clock, DataLine, EditPen, InfoFilled } from "@element-plus/icons-vue";
-import { extractData } from "@/utils";
+import { extractData, logFetchError } from "@/utils";
 import { useUserStore } from "@/stores/user";
 
-const request = inject("request");
 const userStore = useUserStore();
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 

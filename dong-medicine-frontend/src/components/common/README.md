@@ -189,3 +189,9 @@ const fetchData = async () => {
   </div>
 </template>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [可访问性] 骨架屏组件应添加aria-busy="true"属性

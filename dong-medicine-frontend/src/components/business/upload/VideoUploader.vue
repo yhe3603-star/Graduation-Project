@@ -96,12 +96,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref } from 'vue'
 import { VideoPlay, VideoCamera, Delete } from '@element-plus/icons-vue'
-import { getResourceUrl, getFileName, parseMediaList, logUploadError, logDeleteWarn } from '@/utils'
-
-const request = inject('request')
+import { useFileUpload } from '@/composables/useFileUpload'
 
 const props = defineProps({
   modelValue: { type: [String, Array], default: '' },
@@ -117,122 +114,37 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'change', 'success', 'error', 'remove'])
 
 const uploadRef = ref(null)
-const videoList = ref([])
-const uploading = ref(false)
-const uploadProgress = ref(0)
 const previewVisible = ref(false)
 const previewUrl = ref('')
 
-const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}/upload/video`)
-const headers = computed(() => ({ Authorization: sessionStorage.getItem('token') ? `Bearer ${sessionStorage.getItem('token')}` : '' }))
-const limitReached = computed(() => videoList.value.length >= props.limit)
-const tipText = computed(() => `支持 mp4/avi/mov/wmv/flv/mkv 格式，单个视频不超过 ${props.maxSize}MB，最多 ${props.limit} 个`)
+const {
+  fileList: videoList,
+  uploading,
+  uploadProgress,
+  uploadUrl,
+  headers,
+  limitReached,
+  tipText,
+  handleBeforeUpload,
+  handleProgress,
+  handleSuccess,
+  handleError,
+  handleRemove,
+  clearFiles: clearVideos,
+} = useFileUpload({
+  type: 'video',
+  extensions: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'],
+  extensionLabel: 'mp4/avi/mov/wmv/flv/mkv',
+  uploadPath: '/upload/video',
+  simulateProgress: false,
+  props,
+  emit,
+})
 
-watch(() => props.modelValue, (newVal) => {
-  if (!newVal) { videoList.value = []; return }
-  const items = parseMediaList(newVal)
-  videoList.value = items.map(item => ({
-    url: item.url,
-    path: item.path,
-    name: item.name || item.originalFileName
-  }))
-}, { immediate: true })
-
-const handleBeforeUpload = async (file) => {
-  const extension = file.name.split('.').pop().toLowerCase()
-  if (!['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'].includes(extension)) { ElMessage.error(`不支持的视频格式: ${extension}`); return false }
-  if (file.size > props.maxSize * 1024 * 1024) { ElMessage.error(`视频大小不能超过 ${props.maxSize}MB`); return false }
-  
-  if (props.replaceConfirm && videoList.value.length > 0) {
-    try {
-      await ElMessageBox.confirm(
-        '已存在上传的文件，是否替换为新文件？',
-        '替换确认',
-        {
-          confirmButtonText: '替换',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
-      for (const video of videoList.value) {
-        if (video?.path && request) {
-          try {
-            await request.delete('/upload', { params: { filePath: video.path } })
-          } catch {
-            logDeleteWarn('视频', video.path)
-          }
-        }
-      }
-      videoList.value = []
-    } catch {
-      return false
-    }
-  }
-  
-  if (videoList.value.length >= props.limit) { ElMessage.warning(`最多只能上传 ${props.limit} 个视频`); return false }
-  uploading.value = true
-  uploadProgress.value = 0
-  return true
-}
-
-const handleProgress = (event) => { uploadProgress.value = Math.round(event.percent) }
-
-const handleSuccess = (response, file) => {
-  uploading.value = false
-  uploadProgress.value = 0
-  if (response.code === 200 && response.data) {
-    videoList.value.push({ 
-      url: getResourceUrl(response.data.fileUrl || response.data.filePath), 
-      path: response.data.filePath || response.data.fileUrl, 
-      name: response.data.originalFileName || file.name,
-      size: response.data.fileSize || file.size || 0
-    })
-    updateModelValue()
-    emit('success', response.data)
-    ElMessage.success('视频上传成功')
-  } else { ElMessage.error(response.msg || '上传失败'); emit('error', response.msg) }
-}
-
-const handleError = (error) => {
-  uploading.value = false
-  uploadProgress.value = 0
-  console.error('视频上传失败:', error)
-  ElMessage.error('视频上传失败，请重试')
-  emit('error', error)
-}
-
-const handleRemove = async (index) => {
-  const removed = videoList.value[index]
-  if (removed?.path && request) {
-    const isExternalUrl = removed.path.startsWith('http://') || removed.path.startsWith('https://')
-    if (!isExternalUrl) {
-      try {
-        await request.delete('/upload', { params: { filePath: removed.path } })
-      } catch {
-        logDeleteWarn('视频', removed.path)
-      }
-    }
-  }
-  videoList.value.splice(index, 1)
-  updateModelValue()
-  emit('remove', removed)
-}
-
+// 视频预览（组件特有逻辑）
 const handlePreview = (video) => {
   previewUrl.value = video.url
   previewVisible.value = true
-}
-
-const updateModelValue = () => {
-  const videos = videoList.value.map(v => ({ path: v.path, name: v.name, size: v.size }))
-  emit('update:modelValue', props.multiple ? videos : videos[0] || null)
-  emit('change', videos)
-}
-
-const clearVideos = () => {
-  videoList.value = []
-  emit('update:modelValue', props.multiple ? [] : '')
-  emit('change', [])
 }
 
 defineExpose({ clearVideos, getVideos: () => videoList.value })

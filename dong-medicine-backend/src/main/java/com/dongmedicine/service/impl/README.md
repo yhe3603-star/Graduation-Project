@@ -898,3 +898,45 @@ public User getUserInfo(Integer userId) {
    TokenBlacklistServiceImpl  (操作 Redis 和 Caffeine，不操作数据库)
    AiChatServiceImpl  (调用外部 API，不操作数据库)
 ```
+
+---
+
+## 七、代码审查与改进建议
+
+以下是对 Service 实现层代码的审查发现，按严重程度排序：
+
+### 严重级别
+
+| # | 级别 | 问题 | 涉及实现类 | 说明 |
+|---|------|------|-----------|------|
+| 1 | 严重-安全 | `getUserToken()` 允许通过用户ID直接生成登录Token | `UserServiceImpl` | 完全绕过身份验证，是严重权限提升漏洞。任何知道用户ID的人都可以伪造登录态，应删除此方法或增加严格的权限校验。 |
+| 2 | 严重-安全 | `submit()` 中 `correctCount` 和 `totalCount` 完全由客户端提供 | `PlantGameServiceImpl` | 恶意用户可提交任意分数，破坏游戏公平性。应在服务端根据题目答案重新计算正确数量和总数，而非信任客户端提交的值。 |
+| 3 | 严重-安全 | 验证码生成使用 `java.util.Random` 而非 `SecureRandom` | `CaptchaService` | `java.util.Random` 是伪随机数生成器，种子可被推算，验证码可预测。应替换为 `java.security.SecureRandom`，确保验证码的不可预测性。 |
+
+### 高级别
+
+| # | 级别 | 问题 | 涉及实现类 | 说明 |
+|---|------|------|-----------|------|
+| 4 | 高-并发 | `addFavorite()` 先查询后插入不是原子操作 | `FavoriteServiceImpl` | 并发场景下多个请求可能同时通过 `getOne()` 唯一性检查，然后都执行 `save()`，导致重复收藏。应依赖数据库唯一索引（user_id + target_type + target_id）来保证原子性，或在 Service 层使用分布式锁。 |
+| 5 | 高-逻辑 | `@Async` 自调用失效 | `KnowledgeServiceImpl` | `incrementPopularityAsync()` 在同类内部被调用，Spring AOP 基于代理机制，内部调用 `this.incrementPopularityAsync()` 绕过了代理，`@Async` 注解不生效，实际仍为同步执行。解决方式：将异步方法提取到独立的 Service 类中，或通过 `ApplicationContext` 获取代理对象调用。 |
+| 6 | 高-安全 | `login()` 无登录失败次数限制 | `UserServiceImpl` | 没有对登录失败进行计数和限制，攻击者可无限次尝试密码，容易遭受暴力破解。应增加失败计数机制，如5次失败后锁定账号15分钟，或引入验证码二次验证。 |
+| 7 | 高-安全 | Sa-Token 的 `kickout` 参数类型(Integer)与 `login` 参数类型(String)不匹配 | `UserServiceImpl` | `StpUtil.login()` 接收的参数类型为 `Object`，但 `StpUtil.kickout()` 期望的参数类型与登录时传入的类型一致。若 `login` 传入 `String` 而 `kickout` 传入 `Integer`，会导致踢人功能失效，用户无法被正确踢下线。 |
+| 8 | 高-逻辑 | `listByCategoryAndKeywordAndType()` 忽略了 `fileType` 参数 | `ResourceServiceImpl` | 方法签名接收 `fileType` 参数，但查询逻辑中未使用该参数构建过滤条件。而缓存 key 却包含了 `fileType`，导致不同 `fileType` 的请求缓存了相同的错误结果，且缓存 key 不同造成缓存浪费。 |
+
+### 中等级别
+
+| # | 级别 | 问题 | 涉及实现类 | 说明 |
+|---|------|------|-----------|------|
+| 9 | 中等-性能 | 每次 `save` 都触发全表 `COUNT(*)` 查询 | `OperationLogServiceImpl` | 在保存日志时调用 `count()` 检查日志总数是否超限，高频操作场景下每次都执行 `SELECT COUNT(*) FROM operation_log`，性能极差。应改用定时任务异步清理超限日志，或将总数缓存到 Redis 中。 |
+| 10 | 中等-内存 | `listAllDTO()` 和 `listAllApproved()` 无分页限制 | `CommentServiceImpl` | 查询全部评论数据并转为 DTO 列表返回，没有分页限制。当评论数据量增长到数万条时，可能导致 OOM（内存溢出）。应强制分页查询或限制最大返回条数。 |
+| 11 | 中等-安全 | 异常信息泄露文件系统路径 | `FileUploadServiceImpl` | 文件上传失败时，异常消息中包含服务器文件系统的完整路径信息（如 `d:\uploads\...`），攻击者可利用此信息进行路径遍历攻击。应返回通用错误信息如"文件上传失败"，将详细路径仅记录到服务器日志。 |
+| 12 | 中等-逻辑 | 答案比较使用 `equals` 过于严格 | `QuizServiceImpl` | 测验评分时直接使用 `String.equals()` 比较用户答案与正确答案，不考虑前后空格和大小写差异。用户输入 "钩藤 " 或 "钩藤"（含空格）会被判错。应先 `trim()` 并统一转为小写后再比较。 |
+| 13 | 中等-逻辑 | 日志说"降级为同步保存"但实际只是抛出异常 | `RabbitMQOperationLogServiceImpl` | 当 RabbitMQ 不可用时，日志记录"降级为同步保存"，但实际代码只是抛出异常，并未真正实现同步降级写入数据库。日志信息具有误导性，且 RabbitMQ 不可用时操作日志会丢失。应真正实现降级逻辑，回退到直接调用 `OperationLogService.save()` 同步写入。 |
+
+### 低级别
+
+| # | 级别 | 问题 | 涉及实现类 | 说明 |
+|---|------|------|-----------|------|
+| 14 | 低-规范 | 依赖注入方式不一致 | 多个 `ServiceImpl` | 部分类使用 `@Autowired` 字段注入（如 `PlantServiceImpl`、`UserServiceImpl`），部分类使用 `@RequiredArgsConstructor` 构造器注入（如 `FileUploadServiceImpl`）。应统一为构造器注入（Spring 官方推荐），确保依赖不可变且便于测试。 |
+| 15 | 低-规范 | 冗余 Mapper 注入 | 多个 `ServiceImpl` | 如 `PlantServiceImpl` 继承了 `ServiceImpl<PlantMapper, Plant>`，同时 `@Autowired` 注入了 `PlantMapper`。`ServiceImpl` 已内置 `baseMapper` 字段提供相同的 Mapper 实例，无需重复注入。 |
+| 16 | 低-规范 | 缓存策略不一致 | 多个 `ServiceImpl` | 部分查询方法有 `@Cacheable` 注解（如 `advancedSearch()`），但对应的分页版本方法（如 `advancedSearchPaged()`）却没有缓存，导致分页请求每次都查数据库。同一业务场景的缓存策略应保持一致。 |

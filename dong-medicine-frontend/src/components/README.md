@@ -192,3 +192,11 @@ export default {
   <AppHeader />
 </template>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [代码重复] 上传组件重复逻辑应抽取为composable
+- [代码重复] PlantGame和QuizSection重复UI结构应抽取公共组件
+- [可访问性] 多处使用div+@click缺少键盘交互支持

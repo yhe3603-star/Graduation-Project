@@ -102,11 +102,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from "vue";
+import { ref, computed, onMounted } from "vue";
+import request from '@/utils/request';
 import { logFetchError } from '@/utils/logger'
 import { Trophy, Medal } from "@element-plus/icons-vue";
-
-const request = inject("request");
 
 const props = defineProps({
   quizCount: { type: Number, default: 0 },

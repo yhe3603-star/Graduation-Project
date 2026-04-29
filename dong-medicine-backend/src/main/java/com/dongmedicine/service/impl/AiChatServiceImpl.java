@@ -6,8 +6,8 @@ import com.dongmedicine.dto.ChatResponse;
 import com.dongmedicine.service.AiChatService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -22,16 +22,12 @@ import java.util.*;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AiChatServiceImpl implements AiChatService {
 
-    @Autowired
-    private DeepSeekConfig deepSeekConfig;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final DeepSeekConfig deepSeekConfig;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     private WebClient webClient;
 

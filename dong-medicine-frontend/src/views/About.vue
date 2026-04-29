@@ -159,12 +159,12 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import request from '@/utils/request';
 import { Aim, ArrowRight, ChatDotRound, Collection, DataLine, Document, FirstAidKit, Grid, Lock, MagicStick, Picture, RefreshRight, Sunny, User, Warning, Folder, Opportunity } from "@element-plus/icons-vue";
 import { extractPageData } from "@/utils";
 import { logFetchError } from '@/utils/logger';
 
-const request = inject("request");
 const pageLoading = ref(false);
 const stats = ref({ plants: 0, formulas: 12, therapies: 6, inheritors: 0, qa: 0, resources: 0 });
 

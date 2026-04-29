@@ -1,20 +1,18 @@
 package com.dongmedicine.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("plants")
-public class Plant {
-    @TableId(type = IdType.AUTO)
-    private Integer id;
+public class Plant extends BaseEntity {
     
     @NotBlank(message = "中文名称不能为空")
     private String nameCn;
@@ -30,7 +28,5 @@ public class Plant {
     private String documents;
     private String distribution;
     private String updateLog;
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
     private Integer viewCount, favoriteCount, popularity;
 }

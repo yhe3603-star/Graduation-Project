@@ -31,11 +31,6 @@ public class XssFilter implements Filter {
         String contentType = httpRequest.getContentType();
         String requestURI = httpRequest.getRequestURI();
 
-        if (requestURI != null && requestURI.startsWith("/api/admin/")) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         if (contentType != null && contentType.contains("application/json")) {
             chain.doFilter(new XssJsonRequestWrapper(httpRequest), response);
         } else {
@@ -84,7 +79,7 @@ public class XssFilter implements Filter {
 
         @Override
         public String getHeader(String name) {
-            return sanitizeValue(super.getHeader(name));
+            return super.getHeader(name);
         }
 
         String sanitizeValue(String value) {

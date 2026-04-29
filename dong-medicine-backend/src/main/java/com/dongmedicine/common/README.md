@@ -398,3 +398,10 @@ A: 简单的参数校验可以直接在 Controller 中返回 `R.badRequest()`。
 
 **Q: SecurityUtils.getCurrentUserId() 返回 null 怎么办？**
 A: 说明当前请求没有登录。如果这个接口需要登录，应该抛出 `BusinessException(ErrorCode.LOGIN_REQUIRED)`。如果接口是可选登录的，要做 null 判断。
+
+---
+
+## 代码审查与改进建议
+
+- **[安全] SecurityUtils中获取当前用户ID的方式需确保Sa-Token会话有效**
+- **[结构] R类的静态工厂方法应增加更多语义化方法**：如`R.created()`、`R.noContent()`等

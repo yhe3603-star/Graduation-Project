@@ -5,15 +5,17 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+    apt-get install -y --no-install-recommends curl default-mysql-client && \
     rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 COPY target/*.jar app.jar
 COPY sql/dong_medicine.sql /app/init.sql
+COPY entrypoint.sh /app/entrypoint.sh
 
-RUN mkdir -p /app/public /app/logs && chown -R appuser:appgroup /app
+RUN chmod +x /app/entrypoint.sh && \
+    mkdir -p /app/public /app/logs && chown -R appuser:appgroup /app
 
 USER appuser
 
@@ -24,4 +26,4 @@ HEALTHCHECK --interval=15s --timeout=10s --start-period=180s --retries=10 \
 
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -41,6 +41,16 @@ spring:
           max-wait: -1ms
           max-idle: 10
           min-idle: 5
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:admin}
+    password: ${RABBITMQ_PASSWORD:rabbitmq123}
+    virtual-host: /
+    connection-timeout: 10000
+    requested-heartbeat: 60
+    publisher-confirm-type: correlated
+    publisher-returns: true
 
 jwt:
   expiration: ${JWT_EXPIRATION:86400000}

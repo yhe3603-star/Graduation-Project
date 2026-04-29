@@ -12,12 +12,11 @@ import com.dongmedicine.mapper.KnowledgeMapper;
 import com.dongmedicine.service.FavoriteService;
 import com.dongmedicine.service.FeedbackService;
 import com.dongmedicine.service.KnowledgeService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.dongmedicine.service.PopularityAsyncService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,19 +26,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge> implements KnowledgeService {
 
-    private static final Logger log = LoggerFactory.getLogger(KnowledgeServiceImpl.class);
-
-    @Autowired
-    private KnowledgeMapper knowledgeMapper;
-    @Autowired
-    private FavoriteService favoriteService;
-    @Autowired
-    private FeedbackService feedbackService;
-    @Autowired
-    private FileCleanupHelper fileCleanupHelper;
+    private final FavoriteService favoriteService;
+    private final FeedbackService feedbackService;
+    private final FileCleanupHelper fileCleanupHelper;
+    private final PopularityAsyncService popularityAsyncService;
 
     @Override
     public List<Knowledge> getAllTherapies() {
@@ -149,19 +144,9 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     public Knowledge getDetailWithRelated(Integer id) {
         Knowledge knowledge = getById(id);
         if (knowledge != null) {
-            incrementPopularityAsync(id);
+            popularityAsyncService.incrementKnowledgePopularity(id);
         }
         return knowledge;
-    }
-
-    @Async("popularityExecutor")
-    public void incrementPopularityAsync(Integer id) {
-        try {
-            knowledgeMapper.incrementPopularity(id);
-            log.debug("Knowledge popularity incremented async for id: {}", id);
-        } catch (Exception e) {
-            log.error("Failed to increment popularity for knowledge id: {}", id, e);
-        }
     }
 
     @Override
@@ -208,7 +193,7 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     @Override
     public void incrementViewCount(Integer id) {
         try {
-            knowledgeMapper.incrementViewCount(id);
+            baseMapper.incrementViewCount(id);
             log.debug("Knowledge view count incremented for id: {}", id);
         } catch (Exception e) {
             log.error("Failed to increment view count for knowledge id: {}", id, e);
@@ -239,20 +224,20 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     public Map<String, Object> getStats() {
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("total", count());
-        stats.put("therapyCategoryCount", knowledgeMapper.countDistinctTherapyCategory());
-        stats.put("diseaseCategoryCount", knowledgeMapper.countDistinctDiseaseCategory());
-        stats.put("typeCount", knowledgeMapper.countDistinctType());
-        stats.put("totalViews", knowledgeMapper.sumViewCount());
-        stats.put("totalFavorites", knowledgeMapper.sumFavoriteCount());
+        stats.put("therapyCategoryCount", baseMapper.countDistinctTherapyCategory());
+        stats.put("diseaseCategoryCount", baseMapper.countDistinctDiseaseCategory());
+        stats.put("typeCount", baseMapper.countDistinctType());
+        stats.put("totalViews", baseMapper.sumViewCount());
+        stats.put("totalFavorites", baseMapper.sumFavoriteCount());
         return stats;
     }
 
     @Override
     public Map<String, List<String>> getFilterOptions() {
         Map<String, List<String>> map = new LinkedHashMap<>();
-        map.put("therapyCategory", knowledgeMapper.selectDistinctTherapyCategory());
-        map.put("diseaseCategory", knowledgeMapper.selectDistinctDiseaseCategory());
-        map.put("herbCategory", knowledgeMapper.selectDistinctHerbCategory());
+        map.put("therapyCategory", baseMapper.selectDistinctTherapyCategory());
+        map.put("diseaseCategory", baseMapper.selectDistinctDiseaseCategory());
+        map.put("herbCategory", baseMapper.selectDistinctHerbCategory());
         return map;
     }
 }

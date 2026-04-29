@@ -206,3 +206,14 @@ const prevPage = () => {
 }
 </script>
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [安全] AiChatCard.vue使用v-html渲染AI返回内容，虽然使用了DOMPurify.sanitize()但marked配置未禁用HTML标签
+- [安全] AiChatCard.vue聊天消息无长度限制，可能触发WebSocket传输问题
+- [性能] CardGrid.vue每次渲染重复JSON.parse，应使用computed缓存
+- [性能] AdminDashboard.vue全量导入echarts约1MB+，应按需导入
+- [性能] AdminDashboard.vue中ECharts实例未在组件卸载时销毁，导致内存泄漏
+- [API] AdminDashboard.vue和CaptchaInput.vue直接import request绕过inject依赖注入体系

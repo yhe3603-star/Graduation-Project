@@ -447,3 +447,12 @@ public class PlantServiceImpl implements PlantService {
 | PasswordValidator | 密码强度验证 | `validate()`, `isValid()` |
 | SensitiveDataUtils | 敏感数据脱敏 | `autoMask()`, `mask()`, `maskJson()` |
 | FileCleanupHelper | 文件清理 | `deleteFilesFromJson()`, `deleteSingleFile()` |
+
+---
+
+## 代码审查与改进建议
+
+- **[性能] PasswordValidator.calculateStrength()中重复编译正则表达式**：应提取为`static final Pattern`常量
+- **[性能] SensitiveDataUtils.autoMask()对每条日志执行6次正则匹配**：高吞吐量场景性能影响显著
+- **[安全] XssUtils.sanitizeHtml()正则替换不彻底**：黑名单方式容易被绕过
+- **[结构] sanitizeFileName方法在XssUtils和FileTypeUtils中重复实现**

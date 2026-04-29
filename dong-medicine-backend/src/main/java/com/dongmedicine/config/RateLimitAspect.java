@@ -3,6 +3,7 @@ package com.dongmedicine.config;
 import cn.dev33.satoken.stp.StpUtil;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.exception.ErrorCode;
+import com.dongmedicine.common.util.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -11,13 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Aspect
@@ -27,13 +29,22 @@ public class RateLimitAspect {
     private static final Logger logger = LoggerFactory.getLogger(RateLimitAspect.class);
     private static final String RATE_LIMIT_PREFIX = "rate_limit:";
     
+    private static final String RATE_LIMIT_LUA_SCRIPT = 
+        "local current = redis.call('INCR', KEYS[1]) " +
+        "if current == 1 then " +
+        "  redis.call('EXPIRE', KEYS[1], ARGV[1]) " +
+        "end " +
+        "return current";
+    
     private static final int LOCAL_BUCKET_CAPACITY = 100;
     private static final long LOCAL_BUCKET_REFILL_RATE_MS = 1000;
     
     private final Map<String, LocalTokenBucket> localBuckets = new ConcurrentHashMap<>();
     private volatile boolean redisAvailable = true;
-    private long lastRedisCheckTime = 0;
+    private volatile long lastRedisCheckTime = 0;
     private static final long REDIS_CHECK_INTERVAL = 30000;
+    private static final long CLEANUP_INTERVAL = 100;
+    private long checkCount = 0;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -48,13 +59,18 @@ public class RateLimitAspect {
         
         boolean useLocalFallback = false;
         
+        // 定期清理过期的本地令牌桶，防止内存泄漏
+        if (++checkCount % CLEANUP_INTERVAL == 0) {
+            cleanupStaleBuckets();
+        }
+        
         if (redisAvailable && shouldTryRedis()) {
             try {
-                Long currentCount = stringRedisTemplate.opsForValue().increment(redisKey);
-
-                if (currentCount != null && currentCount == 1) {
-                    stringRedisTemplate.expire(redisKey, windowSeconds, TimeUnit.SECONDS);
-                }
+                Long currentCount = stringRedisTemplate.execute(
+                    new DefaultRedisScript<>(RATE_LIMIT_LUA_SCRIPT, Long.class),
+                    List.of(redisKey),
+                    String.valueOf(windowSeconds)
+                );
 
                 if (currentCount != null && currentCount > limit) {
                     logger.warn("请求过于频繁(Redis): {} (限制: {}/秒, 当前: {})", key, limit, currentCount);
@@ -104,6 +120,12 @@ public class RateLimitAspect {
         lastRedisCheckTime = System.currentTimeMillis();
     }
 
+    private void cleanupStaleBuckets() {
+        long now = System.currentTimeMillis();
+        localBuckets.entrySet().removeIf(entry -> 
+            now - entry.getValue().getLastAccessTime() > 30 * 60 * 1000L);
+    }
+
     private String generateKey(ProceedingJoinPoint joinPoint, RateLimit rateLimit) {
         StringBuilder key = new StringBuilder();
         key.append(rateLimit.key().isEmpty() ? joinPoint.getSignature().getName() : rateLimit.key());
@@ -111,33 +133,22 @@ public class RateLimitAspect {
         if (StpUtil.isLogin()) {
             key.append(":").append(StpUtil.getLoginIdAsString());
         } else {
-            key.append(":").append(getClientIp());
+            key.append(":").append(IpUtils.getClientIp(getRequest()));
         }
 
         return key.toString();
     }
 
-    private String getClientIp() {
+    private HttpServletRequest getRequest() {
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes != null) {
-                HttpServletRequest request = attributes.getRequest();
-                String ip = request.getHeader("X-Forwarded-For");
-                if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-                    ip = request.getHeader("X-Real-IP");
-                }
-                if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-                    ip = request.getRemoteAddr();
-                }
-                if (ip != null && ip.contains(",")) {
-                    ip = ip.split(",")[0].trim();
-                }
-                return ip;
+                return attributes.getRequest();
             }
         } catch (Exception e) {
-            logger.debug("获取客户端IP失败", e);
+            logger.debug("获取HttpServletRequest失败", e);
         }
-        return "unknown";
+        return null;
     }
     
     private static class LocalTokenBucket {
@@ -145,21 +156,28 @@ public class RateLimitAspect {
         private final long refillRateMs;
         private final AtomicLong tokens;
         private volatile long lastRefillTime;
+        private volatile long lastAccessTime;
         
         public LocalTokenBucket(int capacity, long refillRateMs) {
             this.capacity = capacity;
             this.refillRateMs = refillRateMs;
             this.tokens = new AtomicLong(capacity);
             this.lastRefillTime = System.currentTimeMillis();
+            this.lastAccessTime = System.currentTimeMillis();
         }
         
         public synchronized boolean tryAcquire() {
+            lastAccessTime = System.currentTimeMillis();
             refill();
             if (tokens.get() > 0) {
                 tokens.decrementAndGet();
                 return true;
             }
             return false;
+        }
+        
+        public long getLastAccessTime() {
+            return lastAccessTime;
         }
         
         private void refill() {

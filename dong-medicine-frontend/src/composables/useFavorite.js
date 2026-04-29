@@ -1,6 +1,8 @@
-import { ref, computed, inject } from 'vue'
+import { ref, computed } from 'vue'
+import request from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import { extractData, logFetchError, logOperationWarn } from '@/utils'
+import { useUserStore } from '@/stores/user'
 
 /**
  * @typedef {Object} UseFavoriteReturn
@@ -21,8 +23,8 @@ import { extractData, logFetchError, logOperationWarn } from '@/utils'
  * @returns {UseFavoriteReturn}
  */
 export const useFavorite = (type) => {
-  const request = inject('request')
-  const isLoggedIn = computed(() => !!sessionStorage.getItem('token'))
+  const userStore = useUserStore()
+  const isLoggedIn = computed(() => userStore.isLoggedIn)
   const favorites = ref([])
   const items = ref([])
 

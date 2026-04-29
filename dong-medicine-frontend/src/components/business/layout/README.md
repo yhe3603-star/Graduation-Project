@@ -233,3 +233,10 @@ const isActive = (path) => {
   flex: 1;  /* 自动填满 header 和 footer 之间的空间 */
 }
 ```
+
+---
+
+## 代码审查与改进建议
+
+- [可访问性] AppHeader.vue中Logo区域使用div+@click而非router-link，键盘用户无法聚焦
+- [数据] AppFooter.vue中邮箱地址格式错误：1805369567qq.com缺少@符号

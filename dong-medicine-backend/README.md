@@ -118,6 +118,7 @@ public interface PlantMapper extends BaseMapper<Plant> {
 | MyBatis-Plus | 3.5.9 | 数据库操作 | 仓库管理员 |
 | MySQL | 8.0+ | 关系型数据库 | 仓库 |
 | Redis | 7.0+ | 分布式缓存 | 厨房旁边的调料架 |
+| RabbitMQ | 3.x | 消息队列 | 快递中转站（异步处理） |
 | Caffeine | -- | 本地缓存（降级用） | 厨师口袋里的小本子 |
 | SpringDoc | 2.2.0 | API文档 | 菜单 |
 | Lombok | 1.18.38 | 简化代码 | 自动写手 |
