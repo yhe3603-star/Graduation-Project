@@ -21,8 +21,8 @@ USER appuser
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=15s --timeout=10s --start-period=180s --retries=10 \
-  CMD curl -f http://localhost:8080/actuator/health || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --start-period=300s --retries=10 \
+  CMD curl -f http://localhost:8080/actuator/health/liveness || exit 1
 
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"
 
