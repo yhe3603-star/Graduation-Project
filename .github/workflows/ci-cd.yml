@@ -164,7 +164,7 @@ jobs:
                 resources:
                   limits:
                     cpus: '1'
-                    memory: 1G
+                    memory: 1536M
               networks:
                 - app-net
 
@@ -293,7 +293,7 @@ jobs:
                 - "80:80"
               depends_on:
                 backend:
-                  condition: service_healthy
+                  condition: service_started
               deploy:
                 resources:
                   limits:
@@ -352,20 +352,31 @@ jobs:
           docker compose down --remove-orphans 2>/dev/null || true
           
           echo "========== 启动服务 =========="
-          docker compose up -d
+          COMPOSE_HTTP_TIMEOUT=120 docker compose up -d --timeout 120
           
           echo "========== 等待后端启动 =========="
-          for i in {1..90}; do
+          for i in {1..60}; do
             STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
-            echo "后端状态: $STATUS ($i/90)"
+            RUNNING=$(docker inspect --format='{{.State.Running}}' dong-medicine-backend 2>/dev/null || echo "false")
+            echo "后端状态: $STATUS, 运行中: $RUNNING ($i/60)"
+            
             if [ "$STATUS" = "healthy" ]; then
               echo "后端就绪!"
               break
             fi
-            if [ "$i" -eq 30 ] || [ "$i" -eq 60 ]; then
+            
+            if [ "$RUNNING" = "false" ]; then
+              echo "========== 后端容器已停止! 日志: =========="
+              docker logs dong-medicine-backend --tail 100 2>&1 || true
+              echo "ERROR: 后端容器崩溃"
+              exit 1
+            fi
+            
+            if [ "$i" -eq 15 ] || [ "$i" -eq 30 ] || [ "$i" -eq 45 ]; then
               echo "========== 后端日志 (最近50行) =========="
               docker logs dong-medicine-backend --tail 50 2>&1 || true
             fi
+            
             sleep 5
           done
           
