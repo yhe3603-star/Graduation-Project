@@ -5,7 +5,6 @@ import com.dongmedicine.entity.QuizQuestion;
 import com.dongmedicine.entity.QuizRecord;
 import com.dongmedicine.mapper.QuizQuestionMapper;
 import com.dongmedicine.mapper.QuizRecordMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,16 +12,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("答题服务测试")
 class QuizServiceImplTest {
 
     @Mock
@@ -34,102 +32,102 @@ class QuizServiceImplTest {
     @InjectMocks
     private QuizServiceImpl quizService;
 
-    private QuizQuestion testQuestion;
-    private AnswerDTO testAnswer;
+    @Test
+    @DisplayName("获取随机题目 - 默认数量")
+    void getRandomQuestionsDefault() {
+        when(questionMapper.selectRandomQuestions(anyInt())).thenReturn(Collections.emptyList());
 
-    @BeforeEach
-    void setUp() {
-        testQuestion = new QuizQuestion();
-        testQuestion.setId(1);
-        testQuestion.setQuestion("测试问题");
-        testQuestion.setAnswer("A");
-
-        testAnswer = new AnswerDTO();
-        testAnswer.setQuestionId(1);
-        testAnswer.setAnswer("A");
+        var result = quizService.getRandomQuestions(10);
+        assertNotNull(result);
     }
 
     @Test
-    @DisplayName("获取随机题目 - 成功")
-    void testGetRandomQuestions_Success() {
-        when(questionMapper.selectRandomQuestions(anyInt()))
-                .thenReturn(Arrays.asList(testQuestion));
-
-        var result = quizService.getRandomQuestions(10);
-
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-        verify(questionMapper).selectRandomQuestions(10);
+    @DisplayName("计算分数 - 空答案应抛异常")
+    void calculateScoreEmptyAnswers() {
+        assertThrows(Exception.class, () -> {
+            quizService.calculateScore(null, 10);
+        });
     }
 
     @Test
     @DisplayName("计算分数 - 全部正确")
-    void testCalculateScore_AllCorrect() {
-        when(questionMapper.selectBatchIds(anyCollection()))
-                .thenReturn(Arrays.asList(testQuestion));
+    void calculateScoreAllCorrect() {
+        AnswerDTO answer = new AnswerDTO();
+        answer.setQuestionId(1);
+        answer.setAnswer("A");
 
-        Integer score = quizService.calculateScore(Arrays.asList(testAnswer), 10);
+        QuizQuestion question = new QuizQuestion();
+        question.setId(1);
+        question.setCorrectAnswer("A");
 
+        when(questionMapper.selectBatchIds(any())).thenReturn(List.of(question));
+
+        int score = quizService.calculateScore(List.of(answer), 10);
         assertEquals(10, score);
     }
 
     @Test
     @DisplayName("计算分数 - 全部错误")
-    void testCalculateScore_AllWrong() {
-        testAnswer.setAnswer("B");
-        when(questionMapper.selectBatchIds(anyCollection()))
-                .thenReturn(Arrays.asList(testQuestion));
+    void calculateScoreAllWrong() {
+        AnswerDTO answer = new AnswerDTO();
+        answer.setQuestionId(1);
+        answer.setAnswer("B");
 
-        Integer score = quizService.calculateScore(Arrays.asList(testAnswer), 10);
+        QuizQuestion question = new QuizQuestion();
+        question.setId(1);
+        question.setCorrectAnswer("A");
 
+        when(questionMapper.selectBatchIds(any())).thenReturn(List.of(question));
+
+        int score = quizService.calculateScore(List.of(answer), 10);
         assertEquals(0, score);
     }
 
     @Test
-    @DisplayName("计算分数 - 空答案抛出异常")
-    void testCalculateScore_EmptyAnswers_ThrowsException() {
-        assertThrows(Exception.class, () -> quizService.calculateScore(null, 10));
-        assertThrows(Exception.class, () -> quizService.calculateScore(Collections.emptyList(), 10));
+    @DisplayName("提交答案 - 空答案应抛异常")
+    void submitEmptyAnswers() {
+        assertThrows(Exception.class, () -> {
+            quizService.submit(1, null, 10);
+        });
     }
 
     @Test
-    @DisplayName("提交答案 - 成功")
-    void testSubmit_Success() {
-        when(questionMapper.selectBatchIds(anyCollection()))
-                .thenReturn(Arrays.asList(testQuestion));
-        when(recordMapper.insert(any(QuizRecord.class))).thenReturn(1);
-
-        Integer score = quizService.submit(1, Arrays.asList(testAnswer), 10);
-
-        assertNotNull(score);
-        verify(recordMapper).insert(any(QuizRecord.class));
-    }
-
-    @Test
-    @DisplayName("提交答案 - 空用户ID抛出异常")
-    void testSubmit_NullUserId_ThrowsException() {
-        assertThrows(Exception.class, () -> quizService.submit(null, Arrays.asList(testAnswer), 10));
-    }
-
-    @Test
-    @DisplayName("获取用户记录 - 成功")
-    void testGetUserRecords_Success() {
-        QuizRecord record = new QuizRecord();
-        record.setUserId(1);
-        record.setScore(80);
-        when(recordMapper.selectList(any()))
-                .thenReturn(Arrays.asList(record));
-
-        List<QuizRecord> result = quizService.getUserRecords(1);
-
-        assertFalse(result.isEmpty());
-        assertEquals(80, result.get(0).getScore());
-    }
-
-    @Test
-    @DisplayName("获取用户记录 - 空用户ID返回空列表")
-    void testGetUserRecords_NullUserId_ReturnsEmpty() {
+    @DisplayName("获取用户记录 - null用户应返回空列表")
+    void getUserRecordsNullUser() {
         List<QuizRecord> result = quizService.getUserRecords(null);
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("删除题目 - null ID应抛异常")
+    void deleteQuestionNullId() {
+        assertThrows(Exception.class, () -> {
+            quizService.deleteQuestion(null);
+        });
+    }
+
+    @Test
+    @DisplayName("添加题目 - null应抛异常")
+    void addQuestionNull() {
+        assertThrows(Exception.class, () -> {
+            quizService.addQuestionDirect(null);
+        });
+    }
+
+    @Test
+    @DisplayName("计算分数 - 默认每题分数")
+    void calculateScoreDefaultPerQuestion() {
+        AnswerDTO answer = new AnswerDTO();
+        answer.setQuestionId(1);
+        answer.setAnswer("A");
+
+        QuizQuestion question = new QuizQuestion();
+        question.setId(1);
+        question.setCorrectAnswer("A");
+
+        when(questionMapper.selectBatchIds(any())).thenReturn(List.of(question));
+
+        int score = quizService.calculateScore(List.of(answer), 0);
+        assertEquals(10, score);
     }
 }

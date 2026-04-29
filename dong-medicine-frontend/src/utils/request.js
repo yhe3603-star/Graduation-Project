@@ -22,7 +22,7 @@ function onRefreshFailed() {
   const keysToRemove = ["token", "userId", "userName", "role"]
   keysToRemove.forEach(key => {
     try {
-      sessionStorage.removeItem(key)
+      localStorage.removeItem(key)
     } catch {
       // ignore
     }
@@ -131,7 +131,7 @@ function sleep(ms) {
 
 function getToken() {
   try {
-    return sessionStorage.getItem("token")
+    return localStorage.getItem("token")
   } catch {
     return null
   }
@@ -139,7 +139,7 @@ function getToken() {
 
 function setToken(token) {
   try {
-    sessionStorage.setItem("token", token)
+    localStorage.setItem("token", token)
   } catch {
     // ignore
   }
@@ -147,10 +147,10 @@ function setToken(token) {
 
 function setAuthData(data) {
   try {
-    sessionStorage.setItem("token", data.token)
-    sessionStorage.setItem("userId", data.id)
-    sessionStorage.setItem("userName", data.username)
-    sessionStorage.setItem("role", data.role)
+    localStorage.setItem("token", data.token)
+    localStorage.setItem("userId", data.id)
+    localStorage.setItem("userName", data.username)
+    localStorage.setItem("role", data.role)
   } catch {
     // ignore
   }
@@ -310,7 +310,7 @@ request.interceptors.response.use(
       
       ["token", "userId", "userName", "role"].forEach(key => {
         try {
-          sessionStorage.removeItem(key)
+          localStorage.removeItem(key)
         } catch {
           // ignore
         }

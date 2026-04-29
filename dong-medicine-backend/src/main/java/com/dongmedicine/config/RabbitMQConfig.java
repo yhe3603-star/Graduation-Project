@@ -2,6 +2,7 @@ package com.dongmedicine.config;
 
 import com.dongmedicine.common.constant.RabbitMQConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration
+@ConditionalOnProperty(name = "app.rabbitmq.enabled", havingValue = "true", matchIfMissing = true)
 public class RabbitMQConfig {
 
     @Value("${rabbitmq.queue.operation-log:operation.log.queue}")

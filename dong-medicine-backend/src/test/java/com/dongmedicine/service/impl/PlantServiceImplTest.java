@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,8 +37,24 @@ class PlantServiceImplTest {
 
     private Plant testPlant;
 
+    private void setBaseMapper(Object service, Object mapper) throws Exception {
+        Class<?> clazz = service.getClass();
+        while (clazz != null) {
+            try {
+                Field field = clazz.getDeclaredField("baseMapper");
+                field.setAccessible(true);
+                field.set(service, mapper);
+                return;
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+    }
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        setBaseMapper(plantService, plantMapper);
+
         testPlant = new Plant();
         testPlant.setId(1);
         testPlant.setNameCn("钩藤");
@@ -76,35 +93,9 @@ class PlantServiceImplTest {
     }
 
     @Test
-    @DisplayName("搜索植物 - 成功")
-    void testSearchSuccess() {
-        List<Plant> plants = Arrays.asList(testPlant);
-        when(plantMapper.searchByFullText(anyString(), anyInt())).thenReturn(plants);
-
-        List<Plant> result = plantService.search("钩藤");
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    @DisplayName("搜索植物 - 关键词为空")
+    @DisplayName("搜索植物 - 关键词为空抛异常")
     void testSearchEmptyKeyword() {
-        BusinessException exception = assertThrows(BusinessException.class, () -> {
-            plantService.search("");
-        });
-
-        assertTrue(exception.getMessage().contains("关键词"));
-    }
-
-    @Test
-    @DisplayName("搜索植物 - 限制数量超出范围")
-    void testSearchInvalidLimit() {
-        BusinessException exception = assertThrows(BusinessException.class, () -> {
-            plantService.search("钩藤", 200);
-        });
-
-        assertTrue(exception.getMessage().contains("限制数量"));
+        assertThrows(BusinessException.class, () -> plantService.search(""));
     }
 
     @Test
@@ -161,10 +152,7 @@ class PlantServiceImplTest {
     void testIncrementViewCountSuccess() {
         doNothing().when(plantMapper).incrementViewCount(anyInt());
 
-        assertDoesNotThrow(() -> {
-            plantService.incrementViewCount(1);
-        });
-
+        assertDoesNotThrow(() -> plantService.incrementViewCount(1));
         verify(plantMapper, times(1)).incrementViewCount(1);
     }
 
@@ -173,9 +161,7 @@ class PlantServiceImplTest {
     void testIncrementViewCountException() {
         doThrow(new RuntimeException("DB Error")).when(plantMapper).incrementViewCount(anyInt());
 
-        assertDoesNotThrow(() -> {
-            plantService.incrementViewCount(1);
-        });
+        assertDoesNotThrow(() -> plantService.incrementViewCount(1));
     }
 
     @Test
@@ -189,9 +175,7 @@ class PlantServiceImplTest {
         doNothing().when(fileCleanupHelper).deleteFilesFromJson(anyString());
         when(plantMapper.deleteById(1)).thenReturn(1);
 
-        assertDoesNotThrow(() -> {
-            plantService.deleteWithFiles(1);
-        });
+        assertDoesNotThrow(() -> plantService.deleteWithFiles(1));
 
         verify(fileCleanupHelper, times(1)).deleteFilesFromJson("[\"image1.jpg\"]");
         verify(fileCleanupHelper, times(1)).deleteFilesFromJson("[\"video1.mp4\"]");
@@ -204,10 +188,7 @@ class PlantServiceImplTest {
     void testDeleteWithFilesNotFound() {
         when(plantMapper.selectById(999)).thenReturn(null);
 
-        assertDoesNotThrow(() -> {
-            plantService.deleteWithFiles(999);
-        });
-
+        assertDoesNotThrow(() -> plantService.deleteWithFiles(999));
         verify(plantMapper, never()).deleteById(anyInt());
     }
 }

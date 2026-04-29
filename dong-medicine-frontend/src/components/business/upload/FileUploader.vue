@@ -142,7 +142,7 @@ const CONFIG = {
 
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}/upload/${props.fileType === 'all' ? 'file' : props.fileType}`)
 
-const headers = computed(() => ({ Authorization: sessionStorage.getItem('token') ? `Bearer ${sessionStorage.getItem('token')}` : '' }))
+const headers = computed(() => ({ Authorization: localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '' }))
 
 const acceptTypes = computed(() => CONFIG.accept[props.fileType] || CONFIG.accept.all)
 

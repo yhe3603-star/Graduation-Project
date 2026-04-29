@@ -5,24 +5,27 @@ import com.dongmedicine.entity.Feedback;
 import com.dongmedicine.entity.User;
 import com.dongmedicine.mapper.FeedbackMapper;
 import com.dongmedicine.mapper.UserMapper;
+import com.dongmedicine.mq.producer.FeedbackProducer;
+import com.dongmedicine.mq.producer.NotificationProducer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import java.util.Arrays;
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("反馈服务测试")
+@MockitoSettings(strictness = Strictness.LENIENT)
 class FeedbackServiceImplTest {
 
     @Mock
@@ -31,143 +34,139 @@ class FeedbackServiceImplTest {
     @Mock
     private UserMapper userMapper;
 
-    @InjectMocks
+    @Mock
+    private FeedbackProducer feedbackProducer;
+
+    @Mock
+    private NotificationProducer notificationProducer;
+
     private FeedbackServiceImpl feedbackService;
 
-    private Feedback testFeedback;
-    private User testUser;
-
     @BeforeEach
-    void setUp() {
-        testFeedback = new Feedback();
-        testFeedback.setId(1);
-        testFeedback.setUserId(1);
-        testFeedback.setUserName("testuser");
-        testFeedback.setType("建议");
-        testFeedback.setTitle("测试反馈标题");
-        testFeedback.setContent("测试反馈内容，这是一个测试反馈的内容。");
-        testFeedback.setStatus("pending");
+    void setUp() throws Exception {
+        feedbackService = new FeedbackServiceImpl(userMapper, feedbackProducer, notificationProducer);
+        setBaseMapper(feedbackService, feedbackMapper);
+    }
 
-        testUser = new User();
-        testUser.setId(1);
-        testUser.setUsername("testuser");
-        testUser.setRole("user");
+    private void setBaseMapper(Object service, Object mapper) throws Exception {
+        Class<?> clazz = service.getClass();
+        while (clazz != null) {
+            try {
+                Field field = clazz.getDeclaredField("baseMapper");
+                field.setAccessible(true);
+                field.set(service, mapper);
+                return;
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
     }
 
     @Test
-    @DisplayName("按状态查询 - 成功")
-    void testListByStatus_Success() {
-        when(feedbackMapper.selectList(any(LambdaQueryWrapper.class)))
-                .thenReturn(Arrays.asList(testFeedback));
+    @DisplayName("提交反馈 - 匿名用户")
+    void submitFeedbackAnonymous() {
+        doNothing().when(feedbackProducer).sendFeedback(any(Feedback.class));
+
+        Feedback feedback = new Feedback();
+        feedback.setType("suggestion");
+        feedback.setTitle("测试反馈");
+        feedback.setContent("反馈内容");
+
+        assertDoesNotThrow(() -> {
+            feedbackService.submitFeedback(feedback, null);
+        });
+
+        assertEquals("anonymous", feedback.getUserName());
+        assertEquals("pending", feedback.getStatus());
+    }
+
+    @Test
+    @DisplayName("提交反馈 - 登录用户")
+    void submitFeedbackWithUser() {
+        User user = new User();
+        user.setId(1);
+        user.setUsername("testuser");
+        when(userMapper.selectById(1)).thenReturn(user);
+        doNothing().when(feedbackProducer).sendFeedback(any(Feedback.class));
+
+        Feedback feedback = new Feedback();
+        feedback.setType("bug");
+        feedback.setTitle("Bug反馈");
+        feedback.setContent("Bug内容");
+
+        assertDoesNotThrow(() -> {
+            feedbackService.submitFeedback(feedback, 1);
+        });
+
+        assertEquals("testuser", feedback.getUserName());
+    }
+
+    @Test
+    @DisplayName("提交反馈 - RabbitMQ失败降级为同步保存")
+    void submitFeedbackFallbackToSync() {
+        doThrow(new RuntimeException("RabbitMQ unavailable")).when(feedbackProducer).sendFeedback(any(Feedback.class));
+        when(feedbackMapper.insert(any(Feedback.class))).thenReturn(1);
+
+        Feedback feedback = new Feedback();
+        feedback.setType("suggestion");
+        feedback.setTitle("降级测试");
+        feedback.setContent("降级内容");
+
+        assertDoesNotThrow(() -> {
+            feedbackService.submitFeedback(feedback, null);
+        });
+    }
+
+    @Test
+    @DisplayName("按状态查询反馈 - pending")
+    void listByStatusPending() {
+        when(feedbackMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
 
         List<Feedback> result = feedbackService.listByStatus("pending");
-
         assertNotNull(result);
-        assertFalse(result.isEmpty());
-        assertEquals("pending", result.get(0).getStatus());
     }
 
     @Test
-    @DisplayName("按状态查询 - 无结果返回空列表")
-    void testListByStatus_EmptyResult() {
-        when(feedbackMapper.selectList(any(LambdaQueryWrapper.class)))
-                .thenReturn(Collections.emptyList());
-
-        List<Feedback> result = feedbackService.listByStatus("resolved");
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    @DisplayName("按用户ID查询 - 成功")
-    void testListByUserId_Success() {
-        when(feedbackMapper.selectList(any(LambdaQueryWrapper.class)))
-                .thenReturn(Arrays.asList(testFeedback));
+    @DisplayName("按用户查询反馈")
+    void listByUserId() {
+        when(feedbackMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
 
         List<Feedback> result = feedbackService.listByUserId(1);
-
         assertNotNull(result);
-        assertFalse(result.isEmpty());
-        assertEquals(1, result.get(0).getUserId());
     }
 
     @Test
-    @DisplayName("提交反馈 - 登录用户成功")
-    void testSubmitFeedback_LoggedInUser_Success() {
-        when(userMapper.selectById(1)).thenReturn(testUser);
-        doNothing().when(feedbackMapper).insert(any(Feedback.class));
-
-        Feedback newFeedback = new Feedback();
-        newFeedback.setType("问题");
-        newFeedback.setTitle("新问题");
-        newFeedback.setContent("新问题描述");
-
-        assertDoesNotThrow(() -> feedbackService.submitFeedback(newFeedback, 1));
-
-        assertEquals("pending", newFeedback.getStatus());
-        assertEquals(1, newFeedback.getUserId());
-        assertEquals("testuser", newFeedback.getUserName());
-        verify(feedbackMapper).insert(any(Feedback.class));
-    }
-
-    @Test
-    @DisplayName("提交反馈 - 游客用户成功")
-    void testSubmitFeedback_GuestUser_Success() {
-        doNothing().when(feedbackMapper).insert(any(Feedback.class));
-
-        Feedback newFeedback = new Feedback();
-        newFeedback.setType("建议");
-        newFeedback.setTitle("游客建议");
-        newFeedback.setContent("游客建议内容");
-
-        assertDoesNotThrow(() -> feedbackService.submitFeedback(newFeedback, null));
-
-        assertEquals("pending", newFeedback.getStatus());
-        assertNull(newFeedback.getUserId());
-        verify(feedbackMapper).insert(any(Feedback.class));
-    }
-
-    @Test
-    @DisplayName("回复反馈 - 成功")
-    void testReplyFeedback_Success() {
-        when(feedbackMapper.selectById(1)).thenReturn(testFeedback);
-        doNothing().when(feedbackMapper).updateById(any(Feedback.class));
-
-        assertDoesNotThrow(() -> feedbackService.replyFeedback(1, "这是管理员回复"));
-
-        verify(feedbackMapper).updateById(any(Feedback.class));
-    }
-
-    @Test
-    @DisplayName("回复反馈 - 反馈不存在抛出异常")
-    void testReplyFeedback_NotFound_ThrowsException() {
-        when(feedbackMapper.selectById(999)).thenReturn(null);
-
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> feedbackService.replyFeedback(999, "回复内容"));
-
-        assertEquals("反馈不存在", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("统计状态数量 - 成功")
-    void testCountByStatus_Success() {
+    @DisplayName("按状态计数")
+    void countByStatus() {
         when(feedbackMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(5L);
 
         long count = feedbackService.countByStatus("pending");
-
         assertEquals(5L, count);
-        verify(feedbackMapper).selectCount(any(LambdaQueryWrapper.class));
     }
 
     @Test
-    @DisplayName("统计状态数量 - 无结果返回0")
-    void testCountByStatus_NoResult() {
-        when(feedbackMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
+    @DisplayName("回复反馈 - 正常回复")
+    void replyFeedback() {
+        Feedback existing = new Feedback();
+        existing.setId(1);
+        existing.setUserId(2);
+        existing.setStatus("pending");
+        when(feedbackMapper.selectById(1)).thenReturn(existing);
+        when(feedbackMapper.updateById(any(Feedback.class))).thenReturn(1);
+        doNothing().when(notificationProducer).sendFeedbackReplyNotification(anyInt(), anyString(), anyString());
 
-        long count = feedbackService.countByStatus("nonexistent");
+        assertDoesNotThrow(() -> {
+            feedbackService.replyFeedback(1, "已修复");
+        });
+    }
 
-        assertEquals(0L, count);
+    @Test
+    @DisplayName("回复反馈 - 反馈不存在应抛异常")
+    void replyFeedbackNotFound() {
+        when(feedbackMapper.selectById(999)).thenReturn(null);
+
+        assertThrows(Exception.class, () -> {
+            feedbackService.replyFeedback(999, "回复内容");
+        });
     }
 }

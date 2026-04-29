@@ -138,6 +138,7 @@
 | **MyBatis-Plus** | 3.5.9 | ORM框架 | 用Java代码操作数据库，不用写SQL | 翻译官 |
 | **MySQL** | 8.0+ | 关系型数据库 | 存储所有永久数据 | 仓库 |
 | **Redis** | 7.0+ | 内存数据库 | 缓存热点数据，加速访问 | 展示柜（比仓库快） |
+| **RabbitMQ** | 3.x | 消息队列 | 异步处理操作日志、热度计算 | 快递中转站 |
 | **Sa-Token JWT** | 1.37.0 | JWT模式 | Sa-Token整合JWT，无状态Token认证 | 电子门禁卡 |
 | **SpringDoc** | 2.2.0 | API文档 | 自动生成接口文档 | 说明书 |
 
@@ -147,7 +148,7 @@
 |------|--------|-----------|
 | **Docker** | 容器化工具 | 把应用打包成容器，在哪都能运行 |
 | **Docker Compose** | 编排工具 | 一条命令启动所有服务 |
-| **Nginx** | Web服务器 | 反向代理、静态资源服务、负载均衡 |
+| **Nginx** | Web服务器 | 反向代理、静态资源服务、负载均衡、kkfileview代理 |
 | **GitHub Actions** | CI/CD工具 | 推送代码自动构建部署 |
 
 ---
@@ -346,9 +347,41 @@ npm run dev
 
 | 地址 | 说明 |
 |------|------|
-| http://localhost:5173 | 前端页面 |
+| http://localhost:5173 | 前端页面（开发模式） |
 | http://localhost:8080/swagger-ui.html | 后端API文档 |
 | http://localhost:8080/api/plants/list?page=1&size=10 | 直接测试API |
+
+### Docker Compose 一键部署（推荐）
+
+```bash
+# 1. 确保已安装 Docker Desktop
+docker --version
+docker-compose --version
+
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，填入实际配置
+
+# 3. 一键启动所有服务
+docker-compose up -d
+
+# 4. 查看服务状态
+docker-compose ps
+```
+
+Docker Compose 会自动启动以下6个服务：
+
+| 服务 | 容器名 | 端口 | 说明 |
+|------|--------|------|------|
+| MySQL | dong-medicine-mysql | 3307→3306 | 数据库（宿主机3307，避免与本机MySQL冲突） |
+| Redis | dong-medicine-redis | -- | 缓存（仅内部网络访问） |
+| RabbitMQ | dong-medicine-rabbitmq | -- | 消息队列（仅内部网络访问） |
+| Backend | dong-medicine-backend | -- | Spring Boot后端（仅内部网络访问） |
+| Frontend | dong-medicine-frontend | 3000→80 | Nginx前端+反向代理 |
+| KKFileView | dong-medicine-kkfileview | -- | 文档预览（通过Nginx代理访问） |
+
+> 💡 所有服务通过Docker内部网络通信，只有前端(3000)和MySQL(3307)暴露到宿主机。
+> 使用Navicat连接MySQL时：主机`localhost`，端口`3307`，用户名`root`，密码见`.env`文件。
 
 ### 默认管理员账号
 

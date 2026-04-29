@@ -183,7 +183,7 @@ const emit = defineEmits(['update:modelValue', 'download', 'close'])
 const visible = computed({ get: () => props.modelValue, set: (val) => emit('update:modelValue', val) })
 const documentUrl = computed(() => normalizeUrl(props.document?.url || props.document?.path || ''))
 const isTxt = computed(() => props.document?.type?.toLowerCase() === 'txt')
-const isLoggedIn = computed(() => !!sessionStorage.getItem('token'))
+const isLoggedIn = computed(() => !!localStorage.getItem('token'))
 const showLoginDialog = inject('showLoginDialog')
 
 const getFileExtension = (url) => {
@@ -296,7 +296,7 @@ const handleDownload = async () => {
   }
   
   try {
-    const token = sessionStorage.getItem('token')
+    const token = localStorage.getItem('token')
     const response = await fetch(`/api/resources/download/${doc.id}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -304,7 +304,7 @@ const handleDownload = async () => {
     if (!response.ok) {
       if (response.status === 401) {
         ElMessage.warning('登录已过期，请重新登录')
-        sessionStorage.removeItem('token')
+        localStorage.removeItem('token')
         window.location.href = '/'
       } else {
         throw new Error('下载失败')

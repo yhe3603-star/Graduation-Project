@@ -32,9 +32,16 @@ public class FeedbackController {
 
     @GetMapping("/my")
     @SaCheckLogin
-    public R<List<Feedback>> myFeedbacks() {
+    public R<List<Feedback>> myFeedbacks(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
         Integer userId = SecurityUtils.getCurrentUserId();
-        return R.ok(userId == null ? List.of() : feedbackService.listByUserId(userId));
+        if (userId == null) return R.ok(List.of());
+        int safeSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
+        List<Feedback> all = feedbackService.listByUserId(userId);
+        int start = (Math.max(page, 1) - 1) * safeSize;
+        int end = Math.min(start + safeSize, all.size());
+        return R.ok(start < all.size() ? all.subList(start, end) : List.of());
     }
 
     @GetMapping("/stats")

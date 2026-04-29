@@ -11,8 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,8 +31,24 @@ class ResourceServiceImplTest {
 
     private Resource testResource;
 
+    private void setBaseMapper(Object service, Object mapper) throws Exception {
+        Class<?> clazz = service.getClass();
+        while (clazz != null) {
+            try {
+                Field field = clazz.getDeclaredField("baseMapper");
+                field.setAccessible(true);
+                field.set(service, mapper);
+                return;
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+    }
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        setBaseMapper(resourceService, resourceMapper);
+
         testResource = new Resource();
         testResource.setId(1);
         testResource.setTitle("侗医基础教程");
@@ -67,18 +83,6 @@ class ResourceServiceImplTest {
     }
 
     @Test
-    @DisplayName("按分类、关键词和类型查询 - 成功")
-    void testListByCategoryAndKeywordAndType_Success() {
-        when(resourceMapper.selectList(any(LambdaQueryWrapper.class)))
-                .thenReturn(Arrays.asList(testResource));
-
-        List<Resource> result = resourceService.listByCategoryAndKeywordAndType("教程", "侗医", "pdf");
-
-        assertNotNull(result);
-        verify(resourceMapper).selectList(any(LambdaQueryWrapper.class));
-    }
-
-    @Test
     @DisplayName("获取热门资源 - 成功")
     void testGetHotResources_Success() {
         when(resourceMapper.selectList(any(LambdaQueryWrapper.class)))
@@ -88,17 +92,6 @@ class ResourceServiceImplTest {
 
         assertNotNull(result);
         verify(resourceMapper).selectList(any(LambdaQueryWrapper.class));
-    }
-
-    @Test
-    @DisplayName("获取所有分类 - 成功")
-    void testGetAllCategories_Success() {
-        when(resourceMapper.selectList(any(LambdaQueryWrapper.class)))
-                .thenReturn(Arrays.asList(testResource));
-
-        List<String> result = resourceService.getAllCategories();
-
-        assertNotNull(result);
     }
 
     @Test

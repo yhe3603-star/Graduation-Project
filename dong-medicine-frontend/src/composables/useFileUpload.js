@@ -70,7 +70,7 @@ export function useFileUpload(config) {
   const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}${uploadPath}`)
 
   const headers = computed(() => ({
-    Authorization: sessionStorage.getItem('token') ? `Bearer ${sessionStorage.getItem('token')}` : ''
+    Authorization: localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : ''
   }))
 
   const limitReached = computed(() => fileList.value.length >= props.limit)

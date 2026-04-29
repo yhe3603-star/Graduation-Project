@@ -16,6 +16,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
+import io.netty.channel.ChannelOption;
+import reactor.core.scheduler.Schedulers;
+
+import reactor.core.Disposable;
+
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.*;
@@ -39,6 +44,7 @@ public class AiChatServiceImpl implements AiChatService {
     @PostConstruct
     private void initWebClient() {
         HttpClient httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10_000)
                 .responseTimeout(Duration.ofSeconds(120));
         webClient = WebClient.builder()
                 .baseUrl(deepSeekConfig.getBaseUrl())
@@ -104,7 +110,7 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     @Override
-    public void chatStream(String message, JsonNode history, StreamCallback callback) {
+    public Disposable chatStream(String message, JsonNode history, StreamCallback callback) {
         long startTime = System.currentTimeMillis();
         String requestId = java.util.UUID.randomUUID().toString().substring(0, 8);
 
@@ -112,7 +118,7 @@ public class AiChatServiceImpl implements AiChatService {
             if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().isEmpty()) {
                 log.warn("[{}] AI服务未配置", requestId);
                 callback.onError("AI服务未配置，请联系管理员");
-                return;
+                return () -> {};
             }
 
             log.info("[{}] 调用AI流式服务开始, message={}", requestId, message.substring(0, Math.min(50, message.length())));
@@ -128,14 +134,13 @@ public class AiChatServiceImpl implements AiChatService {
 
             StringBuilder fullReply = new StringBuilder();
 
-            webClient
+            return webClient
                     .post()
                     .uri("/chat/completions")
                     .bodyValue(requestBody)
                     .accept(MediaType.TEXT_EVENT_STREAM)
                     .retrieve()
                     .bodyToFlux(String.class)
-                    .doOnNext(line -> log.debug("[{}] SSE原始数据: {}", requestId, line))
                     .filter(line -> !line.isBlank() && !line.equals("[DONE]"))
                     .map(line -> {
                         String data = line.trim();
@@ -144,34 +149,31 @@ public class AiChatServiceImpl implements AiChatService {
                         }
                         return data;
                     })
+                    .publishOn(Schedulers.boundedElastic())
                     .subscribe(
                             data -> {
                                 try {
-                                    log.info("[{}] SSE数据块: {}", requestId, data);
                                     JsonNode chunk = objectMapper.readTree(data);
-                                    
+
                                     if (chunk.has("error")) {
                                         String errorMsg = chunk.path("error").path("message").asText("未知错误");
                                         log.error("[{}] API返回错误: {}", requestId, errorMsg);
                                         callback.onError("AI服务错误: " + errorMsg);
                                         return;
                                     }
-                                    
+
                                     JsonNode choices = chunk.path("choices");
                                     if (choices == null || choices.isEmpty() || !choices.isArray()) {
-                                        log.warn("[{}] 无choices字段: {}", requestId, data);
                                         return;
                                     }
-                                    
+
                                     JsonNode choice0 = choices.get(0);
                                     if (choice0 == null) {
-                                        log.warn("[{}] choices[0]为null: {}", requestId, data);
                                         return;
                                     }
-                                    
+
                                     JsonNode delta = choice0.path("delta");
                                     if (delta == null) {
-                                        log.warn("[{}] 无delta字段: {}", requestId, data);
                                         JsonNode msgNode = choice0.path("message");
                                         if (msgNode != null && msgNode.has("content")) {
                                             String content = msgNode.path("content").asText("");
@@ -182,14 +184,14 @@ public class AiChatServiceImpl implements AiChatService {
                                         }
                                         return;
                                     }
-                                    
+
                                     String content = delta.path("content").asText("");
                                     if (!content.isEmpty()) {
                                         fullReply.append(content);
                                         callback.onToken(content);
                                     }
                                 } catch (Exception e) {
-                                    log.error("[{}] 解析SSE数据块失败: {}, 数据={}", requestId, e.getMessage(), data);
+                                    log.error("[{}] 解析SSE数据块失败: {}", requestId, e.getMessage());
                                 }
                             },
                             error -> {
@@ -209,6 +211,7 @@ public class AiChatServiceImpl implements AiChatService {
             long elapsed = System.currentTimeMillis() - startTime;
             log.error("[{}] AI流式服务调用异常, 耗时={}ms", requestId, elapsed, e);
             callback.onError("AI服务暂时不可用，请稍后重试");
+            return () -> {};
         }
     }
 

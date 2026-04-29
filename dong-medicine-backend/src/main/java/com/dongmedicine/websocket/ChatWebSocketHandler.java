@@ -10,10 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import reactor.core.Disposable;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Component
@@ -26,6 +29,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private ObjectMapper objectMapper;
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, Disposable> activeSubscriptions = new ConcurrentHashMap<>();
+    private final ExecutorService chatExecutor = Executors.newFixedThreadPool(
+            Runtime.getRuntime().availableProcessors(),
+            r -> {
+                Thread t = new Thread(r, "ws-chat");
+                t.setDaemon(true);
+                return t;
+            });
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -59,36 +70,60 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
+        String sessionId = session.getId();
+        Disposable prev = activeSubscriptions.get(sessionId);
+        if (prev != null && !prev.isDisposed()) {
+            prev.dispose();
+            log.info("取消前一次AI请求: sessionId={}", sessionId);
+        }
+
         String userId = getUserId(session);
         log.info("WebSocket聊天请求: sessionId={}, userId={}, messageLength={}",
-                session.getId(), userId, userMessage.length());
+                sessionId, userId, userMessage.length());
 
         sendJson(session, Map.of("type", "start"));
 
-        aiChatService.chatStream(userMessage, json.path("history"), new AiChatService.StreamCallback() {
-            @Override
-            public void onToken(String token) {
-                sendJson(session, Map.of("type", "token", "content", token));
-            }
+        chatExecutor.submit(() -> {
+            try {
+                Disposable subscription = aiChatService.chatStream(userMessage, json.path("history"), new AiChatService.StreamCallback() {
+                    @Override
+                    public void onToken(String token) {
+                        sendJson(session, Map.of("type", "token", "content", token));
+                    }
 
-            @Override
-            public void onComplete(String fullReply) {
-                sendJson(session, Map.of("type", "done", "content", fullReply));
-                ChatController.recordRequest(true);
-                log.info("WebSocket聊天完成: sessionId={}, replyLength={}",
-                        session.getId(), fullReply.length());
-            }
+                    @Override
+                    public void onComplete(String fullReply) {
+                        activeSubscriptions.remove(sessionId);
+                        sendJson(session, Map.of("type", "done", "content", fullReply));
+                        ChatController.recordRequest(true);
+                        log.info("WebSocket聊天完成: sessionId={}, replyLength={}",
+                                sessionId, fullReply.length());
+                    }
 
-            @Override
-            public void onError(String error) {
-                sendError(session, error);
-                ChatController.recordRequest(false);
+                    @Override
+                    public void onError(String error) {
+                        activeSubscriptions.remove(sessionId);
+                        sendError(session, error);
+                        ChatController.recordRequest(false);
+                    }
+                });
+                activeSubscriptions.put(sessionId, subscription);
+            } catch (Exception e) {
+                log.error("WebSocket聊天提交失败: sessionId={}", sessionId, e);
+                sendError(session, "聊天服务异常");
             }
         });
     }
 
     private void handleStop(WebSocketSession session) {
-        log.info("WebSocket停止生成: sessionId={}", session.getId());
+        String sessionId = session.getId();
+        Disposable subscription = activeSubscriptions.remove(sessionId);
+        if (subscription != null && !subscription.isDisposed()) {
+            subscription.dispose();
+            log.info("WebSocket停止生成(已取消AI请求): sessionId={}", sessionId);
+        } else {
+            log.info("WebSocket停止生成(无活跃请求): sessionId={}", sessionId);
+        }
         sendJson(session, Map.of("type", "stopped"));
     }
 
@@ -96,6 +131,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         String sessionId = session.getId();
         sessions.remove(sessionId);
+        Disposable subscription = activeSubscriptions.remove(sessionId);
+        if (subscription != null && !subscription.isDisposed()) {
+            subscription.dispose();
+            log.info("WebSocket连接关闭，取消AI请求: sessionId={}", sessionId);
+        }
         log.info("WebSocket连接关闭: sessionId={}, status={}", sessionId, status);
     }
 
@@ -104,6 +144,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String sessionId = session.getId();
         log.error("WebSocket传输错误: sessionId={}", sessionId, exception);
         sessions.remove(sessionId);
+        Disposable subscription = activeSubscriptions.remove(sessionId);
+        if (subscription != null && !subscription.isDisposed()) {
+            subscription.dispose();
+        }
     }
 
     private String getUserId(WebSocketSession session) {

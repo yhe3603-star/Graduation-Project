@@ -33,5 +33,21 @@ else
   echo "Database already has $TABLE_COUNT tables, skipping initialization."
 fi
 
+echo "Waiting for RabbitMQ..."
+RABBITMQ_READY=false
+for i in $(seq 1 30); do
+  if curl -sf "http://${RABBITMQ_HOST:-localhost}:15672" >/dev/null 2>&1; then
+    echo "RabbitMQ is ready!"
+    RABBITMQ_READY=true
+    break
+  fi
+  echo "Waiting for RabbitMQ... ($i/30)"
+  sleep 2
+done
+
+if [ "$RABBITMQ_READY" = "false" ]; then
+  echo "WARNING: RabbitMQ management interface not reachable, continuing anyway..."
+fi
+
 echo "Starting application..."
 exec java $JAVA_OPTS -jar app.jar

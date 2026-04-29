@@ -29,7 +29,10 @@ export function useAdminSection(request, path, options = {}) {
 
     if (raw) {
       const qs = extra || ''
-      const res = await request.get(`${path}?${qs}`).catch(() => ({}))
+      const res = await request.get(`${path}?${qs}`).catch(e => {
+        logFetchError(`加载${path}数据`, e)
+        return {}
+      })
       const rawData = res?.data?.data ?? res?.data ?? res
       list.value = Array.isArray(rawData) ? rawData : []
       return
@@ -38,7 +41,10 @@ export function useAdminSection(request, path, options = {}) {
     const p = pagination.value
     let qs = `page=${p.page}&size=${p.size}`
     if (extra) qs += `&${extra}`
-    const res = await request.get(`${path}?${qs}`).catch(() => ({}))
+    const res = await request.get(`${path}?${qs}`).catch(e => {
+      logFetchError(`加载${path}数据`, e)
+      return {}
+    })
     const parsed = parsePageResponse(res)
     pagination.value = { ...pagination.value, total: parsed.total, page: parsed.page, size: parsed.size }
     list.value = parsed.records
@@ -67,7 +73,7 @@ export function useAdminData(request) {
   const feedbackSection = useAdminSection(request, '/admin/feedback', { extra: 'status=all' })
   const commentsSection = useAdminSection(request, '/admin/comments', { extra: 'status=all' })
   const quizSection = useAdminSection(request, '/quiz/list')
-  const logsSection = useAdminSection(request, '/admin/logs/list', { pageSize: 500, extra: 'limit=500', raw: true })
+  const logsSection = useAdminSection(request, '/admin/logs/list', { pageSize: 100, extra: 'limit=100', raw: true })
 
   const sections = {
     users: usersSection,
@@ -123,7 +129,10 @@ export function useAdminData(request) {
   const sortedUsers = computed(() => [...(users.value || [])].sort((a, b) => a.id - b.id))
 
   async function fetchStats() {
-    const res = await request.get('/admin/stats').catch(() => ({}))
+    const res = await request.get('/admin/stats').catch(e => {
+      logFetchError('管理后台统计', e)
+      return {}
+    })
     const raw = res?.data ?? res
     adminStats.value = raw?.data ?? raw ?? {}
   }

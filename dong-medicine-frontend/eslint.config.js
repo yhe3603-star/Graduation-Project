@@ -23,14 +23,14 @@ export default [
       }
     },
     rules: {
-      'no-console': 'off',
-      'no-empty': 'off',
-      'no-undef': 'off',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      'no-undef': 'error',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'vue/html-indent': 'off',
       'vue/max-attributes-per-line': 'off',
       'vue/require-explicit-emits': 'off',
-      'vue/no-v-html': 'warn',
+      'vue/no-v-html': 'error',
       'vue/multi-word-component-names': 'off',
       'vue/no-mutating-props': 'warn',
       'vue/require-default-prop': 'off'

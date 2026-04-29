@@ -25,12 +25,12 @@ public class OperationLogController {
             @RequestParam(required = false) String module,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String username,
-            @RequestParam(defaultValue = "500") Integer limit) {
+            @RequestParam(defaultValue = "100") Integer limit) {
         QueryWrapper<OperationLog> wrapper = new QueryWrapper<>();
         if (module != null && !module.isEmpty()) wrapper.eq("module", module);
         if (type != null && !type.isEmpty()) wrapper.eq("type", type);
         if (username != null && !username.isEmpty()) wrapper.like("username", "%" + username + "%");
-        int safeLimit = limit == null ? 500 : Math.min(Math.max(limit, 1), 5000);
+        int safeLimit = Math.min(Math.max(limit == null ? 100 : limit, 1), 100);
         wrapper.last("LIMIT " + safeLimit);
         wrapper.orderByDesc("created_at");
         return R.ok(logService.list(wrapper));

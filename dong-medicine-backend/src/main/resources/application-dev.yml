@@ -106,3 +106,5 @@ deepseek:
   api-key: ${DEEPSEEK_API_KEY:}
   base-url: https://api.deepseek.com
   model: deepseek-chat
+  connect-timeout: 10
+  read-timeout: 60

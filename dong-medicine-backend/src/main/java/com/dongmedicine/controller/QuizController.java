@@ -29,9 +29,9 @@ public class QuizController {
 
     @GetMapping("/questions")
     public R<List<QuizQuestionDTO>> list(
-            @RequestParam(defaultValue = "10") int count,
+            @RequestParam(defaultValue = "10") @jakarta.validation.constraints.Max(50) int count,
             @RequestParam(defaultValue = "10") int scorePerQuestion) {
-        return R.ok(service.getRandomQuestions(count));
+        return R.ok(service.getRandomQuestions(Math.min(count, 50)));
     }
 
     @PostMapping("/submit")
@@ -47,9 +47,16 @@ public class QuizController {
     }
 
     @GetMapping("/records")
-    public R<List<QuizRecord>> records() {
+    public R<List<QuizRecord>> records(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
         Integer userId = SecurityUtils.getCurrentUserId();
-        return R.ok(userId == null ? List.of() : service.getUserRecords(userId));
+        if (userId == null) return R.ok(List.of());
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        List<QuizRecord> all = service.getUserRecords(userId);
+        int start = (Math.max(page, 1) - 1) * safeSize;
+        int end = Math.min(start + safeSize, all.size());
+        return R.ok(start < all.size() ? all.subList(start, end) : List.of());
     }
 
     @GetMapping("/list")

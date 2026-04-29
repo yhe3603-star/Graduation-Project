@@ -5,6 +5,7 @@ import com.dongmedicine.mq.producer.OperationLogProducer;
 import com.dongmedicine.service.RabbitMQOperationLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j

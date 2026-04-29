@@ -38,9 +38,15 @@ public class FavoriteController {
 
     @GetMapping("/my")
     @SaCheckLogin
-    public R<List<Map<String, Object>>> myFavorites() {
+    public R<List<Map<String, Object>>> myFavorites(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw BusinessException.unauthorized("请先登录");
-        return R.ok(service.getMyFavorites(userId));
+        int safeSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
+        List<Map<String, Object>> all = service.getMyFavorites(userId);
+        int start = (Math.max(page, 1) - 1) * safeSize;
+        int end = Math.min(start + safeSize, all.size());
+        return R.ok(start < all.size() ? all.subList(start, end) : List.of());
     }
 }

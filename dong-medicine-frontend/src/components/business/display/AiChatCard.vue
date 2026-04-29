@@ -55,6 +55,7 @@
         </div>
         <div class="message-content">
           <div class="message-text">
+            <!-- eslint-disable-next-line vue/no-v-html -- DOMPurify已做XSS净化 -->
             <span v-html="renderMarkdown(msg.content)"></span>
             <span v-if="msg.streaming" class="cursor-blink">▌</span>
           </div>
@@ -100,6 +101,14 @@ import DOMPurify from 'dompurify'
 
 marked.setOptions({ breaks: true, gfm: true })
 
+const DOMPURIFY_CONFIG = {
+  ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'code', 'pre', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'a', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'span', 'sub', 'sup', 'del', 'mark'],
+  ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+  ALLOW_DATA_ATTR: false,
+  FORBID_TAGS: ['style', 'script', 'iframe', 'form', 'input', 'button', 'object', 'embed', 'link'],
+  FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur']
+}
+
 const messages = ref([])
 const inputMessage = ref('')
 const streaming = ref(false)
@@ -118,7 +127,7 @@ const quickQuestions = [
 const getWsUrl = () => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const host = window.location.host
-  const token = sessionStorage.getItem('token')
+  const token = localStorage.getItem('token')
   const params = token ? `?token=${encodeURIComponent(token)}` : ''
   return `${protocol}//${host}/ws/chat${params}`
 }
@@ -266,7 +275,7 @@ const scrollToBottom = () => {
 const renderMarkdown = (text) => {
   if (!text) return ''
   const html = marked.parse(text)
-  return DOMPurify.sanitize(html)
+  return DOMPurify.sanitize(html, DOMPURIFY_CONFIG)
 }
 
 onMounted(() => {

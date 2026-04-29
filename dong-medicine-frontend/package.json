@@ -8,6 +8,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
     "lint": "eslint src --ext .js,.vue --fix"
   },
   "dependencies": {
@@ -25,8 +27,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
+    "@playwright/test": "^1.59.1",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vitest/coverage-v8": "^1.0.0",
+    "@vue/test-utils": "^2.4.9",
     "eslint": "^9.22.0",
     "eslint-plugin-vue": "^9.33.0",
     "globals": "^15.15.0",

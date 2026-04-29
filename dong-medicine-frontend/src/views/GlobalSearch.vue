@@ -232,11 +232,11 @@ const loadAllData = async () => {
   loading.value = true;
   try {
     const [kRes, pRes, iRes, qRes, rRes] = await Promise.all([
-      request.get(`/knowledge/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/plants/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/inheritors/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/qa/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/resources/list?page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } }))
+      request.get(`/knowledge/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/plants/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/inheritors/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/qa/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/resources/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } }))
     ]);
 
     const kData = getData(kRes);
@@ -304,11 +304,11 @@ const doSearch = async () => {
     const kw = keyword.value.trim();
 
     const [kRes, pRes, iRes, qRes, rRes] = await Promise.all([
-      request.get(`/knowledge/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/plants/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/inheritors/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/qa/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/resources/search?keyword=${kw}&page=1&size=1000`).catch(() => ({ data: { records: [], total: 0 } }))
+      request.get(`/knowledge/search?keyword=${kw}&page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/plants/search?keyword=${kw}&page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/inheritors/search?keyword=${kw}&page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/qa/search?keyword=${kw}&page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
+      request.get(`/resources/search?keyword=${kw}&page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } }))
     ]);
 
     const kData = getData(kRes);

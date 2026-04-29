@@ -5,6 +5,7 @@ import com.dongmedicine.mq.producer.FileProcessProducer.FileProcessTask;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.rabbitmq.enabled", havingValue = "true", matchIfMissing = true)
 public class FileProcessConsumer {
 
     @RabbitListener(queues = RabbitMQConstants.QUEUE_FILE_PROCESS)

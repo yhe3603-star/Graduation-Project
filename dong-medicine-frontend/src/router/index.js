@@ -72,7 +72,7 @@ async function validateTokenWithCache(userStore) {
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   
-  if (!userStore.token && sessionStorage.getItem('token')) {
+  if (!userStore.token && localStorage.getItem('token')) {
     userStore.initializeFromStorage()
   }
 

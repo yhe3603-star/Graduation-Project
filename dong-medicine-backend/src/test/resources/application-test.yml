@@ -1,0 +1,104 @@
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: false
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+  main:
+    allow-bean-definition-overriding: true
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-test.sql
+
+jwt:
+  expiration: 7200000
+
+sa-token:
+  jwt-secret-key: test-only-secret-key-for-integration-tests-32chars
+  token-name: Authorization
+  timeout: 7200
+  is-concurrent: true
+  is-share: false
+  is-read-cookie: false
+  is-read-header: true
+  is-read-body: false
+  is-log: false
+  token-prefix: Bearer
+  token-style: uuid
+
+app:
+  security:
+    jwt-secret: test-only-secret-key-for-integration-tests-32chars
+    jwt-expiration: 7200000
+    cors-allowed-origins:
+      - http://localhost:3000
+  cache:
+    enabled: false
+    default-expire-time: 60000
+  logging:
+    performance-monitoring: false
+    request-logging: false
+    database-monitoring: false
+  rabbitmq:
+    enabled: false
+
+logging:
+  level:
+    com.dongmedicine: WARN
+    org.springframework: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  global-config:
+    db-config:
+      id-type: auto
+    banner: false
+
+file:
+  upload:
+    base-path: ${java.io.tmpdir}/dong-medicine-test
+    image-max-size: 10485760
+    video-max-size: 104857600
+    document-max-size: 52428800
+    allowed-image-extensions: jpg,jpeg,png,gif,bmp,webp
+    allowed-video-extensions: mp4,avi,mov,wmv,flv,mkv
+    allowed-document-extensions: pdf,docx,doc,xlsx,xls,pptx,ppt,txt
+
+deepseek:
+  api-key: test-key
+  base-url: https://api.deepseek.com
+  model: deepseek-chat
+  connect-timeout: 5
+  read-timeout: 10

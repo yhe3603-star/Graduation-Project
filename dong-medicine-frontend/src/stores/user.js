@@ -45,15 +45,15 @@ function getTokenRemainingTime(token) {
 
 function safeSetItem(key, value) {
   try {
-    sessionStorage.setItem(key, value)
+    localStorage.setItem(key, value)
   } catch {
-    console.warn('sessionStorage not available, falling back to memory')
+    console.warn('localStorage not available, falling back to memory')
   }
 }
 
 function safeGetItem(key) {
   try {
-    return sessionStorage.getItem(key)
+    return localStorage.getItem(key)
   } catch {
     return null
   }
@@ -61,7 +61,7 @@ function safeGetItem(key) {
 
 function safeRemoveItem(key) {
   try {
-    sessionStorage.removeItem(key)
+    localStorage.removeItem(key)
   } catch {
     // ignore
   }

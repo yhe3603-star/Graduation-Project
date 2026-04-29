@@ -51,8 +51,14 @@ public class CommentController {
     @GetMapping("/list/{targetType}/{targetId}")
     public R<List<CommentDTO>> list(
             @PathVariable @NotBlank(message = "目标类型不能为空") String targetType,
-            @PathVariable @NotNull(message = "目标ID不能为空") Integer targetId) {
-        return R.ok(service.listApproved(targetType, targetId));
+            @PathVariable @NotNull(message = "目标ID不能为空") Integer targetId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        int safeSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
+        List<CommentDTO> all = service.listApproved(targetType, targetId);
+        int start = (Math.max(page, 1) - 1) * safeSize;
+        int end = Math.min(start + safeSize, all.size());
+        return R.ok(start < all.size() ? all.subList(start, end) : List.of());
     }
 
     @GetMapping("/list/all")
@@ -65,9 +71,15 @@ public class CommentController {
 
     @GetMapping("/my")
     @SaCheckLogin
-    public R<List<CommentDTO>> myComments() {
+    public R<List<CommentDTO>> myComments(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId == null) throw BusinessException.unauthorized("请先登录");
-        return R.ok(service.listByUserId(userId));
+        int safeSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
+        List<CommentDTO> all = service.listByUserId(userId);
+        int start = (Math.max(page, 1) - 1) * safeSize;
+        int end = Math.min(start + safeSize, all.size());
+        return R.ok(start < all.size() ? all.subList(start, end) : List.of());
     }
 }

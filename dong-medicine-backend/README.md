@@ -138,11 +138,12 @@ dong-medicine-backend/
 +-- src/main/
 |   +-- java/com/dongmedicine/    # Java 源代码（详见 src README）
 |   |   +-- common/               # 通用工具（R、异常、工具类）
-|   |   +-- config/               # 配置类（安全、缓存、限流等）
+|   |   +-- config/               # 配置类（安全、缓存、限流、MQ等）
 |   |   +-- controller/           # 控制器层（17个控制器）
 |   |   +-- dto/                  # 数据传输对象
-|   |   +-- entity/               # 数据库实体类（13个）
+|   |   +-- entity/               # 数据库实体类（含BaseEntity公共基类）
 |   |   +-- mapper/               # 数据库映射接口
+|   |   +-- mq/                   # RabbitMQ消息消费者
 |   |   +-- service/              # 业务逻辑层
 |   |   |   +-- impl/             # 业务实现类
 |   |   +-- DongMedicineBackendApplication.java  # 启动入口
@@ -178,6 +179,7 @@ dong-medicine-backend/
 | GET | `/api/plants/{id}/similar` | 相似植物 | 路径参数 `id` |
 | GET | `/api/plants/random` | 随机植物 | `limit`(1-100, 默认20) |
 | POST | `/api/plants/{id}/view` | 增加浏览量 | 路径参数 `id` |
+| POST | `/api/plants/batch` | 批量获取植物 | Body: `{ids: [1,2,3]}` |
 
 **请求示例：获取植物列表**
 
@@ -263,17 +265,21 @@ Content-Type: application/json
 |------|------|------|
 | GET | `/api/knowledge/list` | 侗医药知识列表 |
 | GET | `/api/knowledge/{id}` | 知识详情 |
+| POST | `/api/knowledge/{id}/view` | 增加知识浏览量 |
 | GET | `/api/inheritors/list` | 传承人列表 |
 | GET | `/api/inheritors/{id}` | 传承人详情 |
+| POST | `/api/inheritors/{id}/view` | 增加传承人浏览量 |
 | GET | `/api/qa/list` | 问答列表 |
+| POST | `/api/qa/{id}/view` | 增加问答浏览量 |
 | GET | `/api/resources/list` | 学习资源列表 |
 | GET | `/api/resources/hot` | 热门资源 |
+| POST | `/api/resources/{id}/view` | 增加资源浏览量 |
 | GET | `/api/comments/list/{type}/{id}` | 评论列表 |
 | GET | `/api/leaderboard/**` | 排行榜 |
 | GET | `/api/stats/**` | 统计数据 |
 | POST | `/api/chat` | AI聊天（10次/分） |
 | POST | `/api/quiz/submit` | 提交测验 |
-| POST | `/api/feedback` | 提交反馈 |
+| POST | `/api/feedback` | 提交反馈（匿名可访问） |
 
 ### 5.2 认证接口（需要登录）
 
@@ -496,9 +502,41 @@ passwordEncoder.matches("wrong_password", user.getPasswordHash()); // false
 @RateLimit(value = 3, key = "user_register") // 注册：每秒最多3次
 ```
 
-**实现原理：** Redis 计数器 + 滑动窗口。Redis 不可用时自动降级到本地令牌桶。
+**实现原理：** Redis + Lua脚本实现原子化计数器，确保并发安全。Redis 不可用时自动降级到本地令牌桶。
 
-### 7.5 SQL 注入防护 -- "仓库管理员只认表格"
+### 7.5 RabbitMQ 异步处理 -- "快递中转站"
+
+**生活类比：** 操作日志和热度计算就像快递包裹，不需要立即处理，放到中转站（RabbitMQ），由专门的快递员（消费者）慢慢处理，不阻塞主流程。
+
+```
+用户浏览植物 → Controller处理请求 → 同时发送消息到RabbitMQ
+                                        ↓
+                              消费者异步处理：
+                              ├── 保存操作日志到数据库
+                              └── 更新热度分数
+```
+
+**优势：** 主接口响应速度不受日志写入和热度计算影响，提升用户体验。
+
+### 7.6 BaseEntity 公共基类 -- "统一表单格式"
+
+所有实体类继承 `BaseEntity`，自动拥有 `id`、`createdAt`、`updatedAt` 三个公共字段，`MyMetaObjectHandler` 自动填充时间戳：
+
+```java
+@Data
+public abstract class BaseEntity {
+    @TableId(type = IdType.AUTO)
+    private Integer id;
+    
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+    
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
+}
+```
+
+### 7.7 SQL 注入防护 -- "仓库管理员只认表格"
 
 MyBatis-Plus 的 `LambdaQueryWrapper` 使用参数化查询，用户输入永远不会被拼接到 SQL 语句中：
 
