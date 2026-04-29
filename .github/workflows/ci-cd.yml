@@ -272,11 +272,11 @@ jobs:
               ports:
                 - "8080:8080"
               healthcheck:
-                test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+                test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
                 interval: 10s
                 timeout: 5s
                 retries: 15
-                start_period: 300s
+                start_period: 180s
               deploy:
                 resources:
                   limits:
@@ -354,29 +354,32 @@ jobs:
           echo "========== 启动服务 =========="
           docker compose up -d
           
-          echo "========== 等待服务启动 =========="
-          echo "等待MySQL..."
-          for i in {1..30}; do
-            if docker exec dong-medicine-mysql mysqladmin ping -h localhost -uroot -p${{ secrets.MYSQL_ROOT_PASSWORD }} 2>/dev/null; then
-              echo "MySQL就绪"
+          echo "========== 等待后端启动 =========="
+          for i in {1..90}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
+            echo "后端状态: $STATUS ($i/90)"
+            if [ "$STATUS" = "healthy" ]; then
+              echo "后端就绪!"
               break
             fi
-            echo "等待MySQL... ($i/30)"
-            sleep 2
-          done
-          
-          echo "等待后端..."
-          for i in {1..40}; do
-            if curl -sf http://localhost:8080/actuator/health >/dev/null 2>&1; then
-              echo "后端就绪"
-              break
+            if [ "$i" -eq 30 ] || [ "$i" -eq 60 ]; then
+              echo "========== 后端日志 (最近50行) =========="
+              docker logs dong-medicine-backend --tail 50 2>&1 || true
             fi
-            echo "等待后端... ($i/40)"
-            sleep 3
+            sleep 5
           done
           
           echo "========== 部署状态 =========="
           docker compose ps
+          
+          echo "========== 后端日志 =========="
+          docker logs dong-medicine-backend --tail 100 2>&1 || true
+          
+          BACKEND_STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
+          if [ "$BACKEND_STATUS" != "healthy" ]; then
+            echo "ERROR: 后端未就绪, 状态: $BACKEND_STATUS"
+            exit 1
+          fi
           
           echo "========== 部署完成 =========="
           date
