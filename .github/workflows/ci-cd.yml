@@ -83,7 +83,7 @@ jobs:
     name: Deploy to Server
     needs: build-and-push
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -100,8 +100,8 @@ jobs:
             IdentityFile ~/.ssh/id_rsa
             StrictHostKeyChecking accept-new
             ConnectTimeout 60
-            ServerAliveInterval 10
-            ServerAliveCountMax 120
+            ServerAliveInterval 15
+            ServerAliveCountMax 200
           EOF
 
       - name: Copy SQL file
@@ -315,44 +315,14 @@ jobs:
               driver: bridge
           EOF
 
-          echo "========== 拉取镜像 =========="
-          
-          pull_with_retry() {
-            local image=$1
-            local max_retries=3
-            local retry=0
-            while [ $retry -lt $max_retries ]; do
-              echo "拉取镜像: $image (尝试 $((retry+1))/$max_retries)"
-              if docker pull "$image"; then
-                echo "成功: $image"
-                return 0
-              fi
-              retry=$((retry+1))
-              echo "失败，等待10秒后重试..."
-              sleep 10
-            done
-            echo "警告: $image 拉取失败，继续部署"
-            return 1
-          }
-          
-          echo ">>> 拉取基础镜像..."
-          pull_with_retry mysql:8.0 &
-          pull_with_retry redis:7-alpine &
-          wait
-          
-          echo ">>> 拉取应用镜像..."
-          pull_with_retry ghcr.io/yhe3603-star/dong-medicine-backend:latest &
-          pull_with_retry ghcr.io/yhe3603-star/dong-medicine-frontend:latest &
-          wait
-          
-          echo ">>> 拉取kkfileview镜像..."
-          pull_with_retry keking/kkfileview:4.1.0 || true
+          echo "========== 登录GHCR =========="
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
           
           echo "========== 停止旧容器 =========="
           docker compose down --remove-orphans 2>/dev/null || true
           
-          echo "========== 启动服务 =========="
-          COMPOSE_HTTP_TIMEOUT=120 docker compose up -d --timeout 120
+          echo "========== 启动服务 (自动拉取镜像) =========="
+          COMPOSE_HTTP_TIMEOUT=300 docker compose up -d --pull always --timeout 300
           
           echo "========== 等待后端启动 =========="
           for i in {1..60}; do
