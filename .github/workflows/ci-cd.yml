@@ -74,18 +74,22 @@ jobs:
             IdentityFile ~/.ssh/id_rsa
             StrictHostKeyChecking accept-new
             ConnectTimeout 30
-            ServerAliveInterval 15
-            ServerAliveCountMax 100
+            ServerAliveInterval 10
+            ServerAliveCountMax 30
+            ControlMaster auto
+            ControlPath ~/.ssh/sockets/%r@%h-%p
+            ControlPersist 600
           EOF
+          mkdir -p ~/.ssh/sockets
 
       - name: Copy SQL file
         run: |
-          ssh server 'mkdir -p /opt/dong-medicine/sql'
-          scp dong-medicine-backend/sql/dong_medicine.sql server:/opt/dong-medicine/sql/
+          ssh -o BatchMode=yes -o ConnectTimeout=30 server 'mkdir -p /opt/dong-medicine/sql' || true
+          scp -o ConnectTimeout=30 dong-medicine-backend/sql/dong_medicine.sql server:/opt/dong-medicine/sql/ || true
 
       - name: Deploy
         run: |
-          ssh server 'bash -s' << 'SCRIPT'
+          timeout 600 ssh -o ConnectTimeout=30 server 'bash -s' << 'SCRIPT'
           set -e
           
           echo "========== 开始部署 =========="
@@ -93,6 +97,10 @@ jobs:
           
           cd /opt/dong-medicine
           mkdir -p sql
+          
+          echo "========== 清理残留资源 =========="
+          docker compose down --remove-orphans --timeout 30 2>/dev/null || true
+          docker system prune -f 2>/dev/null || true
           
           echo "========== 登录GHCR =========="
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
@@ -273,9 +281,6 @@ jobs:
               driver: bridge
           EOF
           
-          echo "========== 停止旧容器 =========="
-          docker compose down --remove-orphans 2>/dev/null || true
-          
           echo "========== 启动服务 =========="
           docker compose up -d --pull missing
           
@@ -315,4 +320,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: rm -f ~/.ssh/id_rsa
+        run: |
+          ssh -O exit server 2>/dev/null || true
+          rm -f ~/.ssh/id_rsa
+          rm -rf ~/.ssh/sockets
