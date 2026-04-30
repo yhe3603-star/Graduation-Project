@@ -192,10 +192,10 @@ jobs:
               cat > /etc/docker/daemon.json << 'DOCKEREOF'
             {
               "registry-mirrors": [
+                "https://dockerhub.icu",
+                "https://docker.m.daocloud.io",
                 "https://docker.1ms.run",
-                "https://docker.fxxk.dedyn.io",
-                "https://dockerpull.org",
-                "https://docker.rainbond.cc"
+                "https://docker.hlyun.org"
               ]
             }
             DOCKEREOF
