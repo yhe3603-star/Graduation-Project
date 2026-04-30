@@ -158,8 +158,6 @@ jobs:
           script_stop: false
           command_timeout: 25m
           script: |
-            set -e
-            
             export PATH=$PATH:/usr/bin:/usr/local/bin
             COMPOSE_CMD="docker compose"
             APP_DIR="/opt/dong-medicine"
@@ -177,8 +175,8 @@ jobs:
             RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRATION=86400000
-            FRONTEND_PORT=3000
-            CORS_ALLOWED_ORIGIN=http://${{ secrets.SERVER_HOST }}:3000
+            FRONTEND_PORT=80
+            CORS_ALLOWED_ORIGIN=http://${{ secrets.SERVER_HOST }}
             DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
             APP_RABBITMQ_ENABLED=false
             SPRING_AUTOCONFIGURE_EXCLUDE=org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
@@ -190,8 +188,29 @@ jobs:
             echo "========== 拉取最新镜像 =========="
             $COMPOSE_CMD pull 2>/dev/null || true
             
-            echo "========== 启动服务 =========="
-            $COMPOSE_CMD up -d --timeout 180
+            echo "========== 启动基础服务 (mysql, redis, kkfileview) =========="
+            $COMPOSE_CMD up -d mysql redis kkfileview
+            
+            echo "========== 等待基础服务就绪 =========="
+            for i in $(seq 1 40); do
+              MYSQL_STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-mysql 2>/dev/null || echo "unknown")
+              REDIS_STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-redis 2>/dev/null || echo "unknown")
+              echo "[$i] MySQL: $MYSQL_STATUS, Redis: $REDIS_STATUS"
+              if [ "$MYSQL_STATUS" = "healthy" ] && [ "$REDIS_STATUS" = "healthy" ]; then
+                echo "✓ 基础服务就绪!"
+                break
+              fi
+              if [ $i -eq 40 ]; then
+                echo "✗ 基础服务未就绪"
+                docker logs dong-medicine-mysql --tail 30 2>/dev/null || true
+                docker logs dong-medicine-redis --tail 30 2>/dev/null || true
+                exit 1
+              fi
+              sleep 5
+            done
+            
+            echo "========== 启动后端 =========="
+            $COMPOSE_CMD up -d backend
             
             echo "========== 等待后端就绪 (最多8分钟) =========="
             for i in $(seq 1 48); do
@@ -200,33 +219,36 @@ jobs:
               
               if [ "$STATUS" = "healthy" ]; then
                 echo "✓ 后端服务就绪!"
-                $COMPOSE_CMD ps
-                exit 0
+                break
               fi
               
               if [ "$STATUS" = "unhealthy" ]; then
-                echo "✗ 后端服务不健康"
-                docker logs dong-medicine-backend --tail 80
+                echo "✗ 后端服务不健康，输出日志..."
+                docker logs dong-medicine-backend --tail 100
                 exit 1
               fi
               
-              if ! docker ps | grep -q dong-medicine-backend; then
-                echo "✗ 后端容器已停止"
-                docker logs dong-medicine-backend --tail 80
+              if ! docker ps --format '{{.Names}}' | grep -q dong-medicine-backend; then
+                echo "✗ 后端容器已停止，输出日志..."
+                docker logs dong-medicine-backend --tail 100
                 exit 1
               fi
               
               if [ $((i % 6)) -eq 0 ]; then
-                echo "--- 后端日志 (最近10行) ---"
-                docker logs dong-medicine-backend --tail 10 2>/dev/null || true
+                echo "--- 后端日志 (最近15行) ---"
+                docker logs dong-medicine-backend --tail 15 2>/dev/null || true
               fi
               
               sleep 10
             done
             
-            echo "✗ 后端服务未在预期时间内就绪"
-            docker logs dong-medicine-backend --tail 80
-            exit 1
+            echo "========== 启动前端 =========="
+            $COMPOSE_CMD up -d frontend
+            
+            echo "========== 最终状态 =========="
+            $COMPOSE_CMD ps
+            echo ""
+            echo "✓ 部署完成!"
 
       - name: Cleanup SSH Key
         if: always()
