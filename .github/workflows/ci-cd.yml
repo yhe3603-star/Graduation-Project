@@ -286,8 +286,9 @@ jobs:
             echo "========== 登录 GHCR =========="
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
             
-            echo "========== 检查 Docker 状态 =========="
-            docker info | head -5 || echo "Docker not running"
+            echo "========== 停止旧容器 =========="
+            docker compose down --remove-orphans --timeout 10 2>/dev/null || true
+            sleep 3
             
             echo "========== 启动基础服务 (MySQL/Redis/RabbitMQ) =========="
             docker compose up -d mysql redis rabbitmq kkfileview
