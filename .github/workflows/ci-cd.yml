@@ -146,18 +146,18 @@ jobs:
             set -e
             
             echo "========== 清理残留状态 =========="
-            # 杀死所有可能残留的 SSH 会话中的 Docker 进程
-            pkill -f "docker" 2>/dev/null || true
-            sleep 2
+            # 清理 Docker 锁文件（不杀死进程，避免终止当前会话）
+            rm -f /var/run/docker.pid 2>/dev/null || true
             
-            # 清理 Docker 锁文件
-            rm -f /var/run/docker.pid /var/run/docker.sock 2>/dev/null || true
+            # 检查 Docker 服务状态并重启
+            if systemctl is-active docker &>/dev/null; then
+              echo "Docker 服务运行中，跳过重启"
+            else
+              echo "Docker 服务未运行，正在启动..."
+              systemctl start docker 2>/dev/null || service docker start 2>/dev/null || true
+            fi
             
-            # 重启 Docker 服务以确保干净状态
-            systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
-            sleep 5
-            
-            # 等待 Docker 完全启动
+            # 等待 Docker 完全就绪
             for i in $(seq 1 30); do
               if docker info &>/dev/null; then
                 echo "Docker 服务就绪"
