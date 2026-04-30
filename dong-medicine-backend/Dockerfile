@@ -1,4 +1,4 @@
-FROM maven:3.9-eclipse-temurin-17 AS deps
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
@@ -10,25 +10,15 @@ RUN mkdir -p /root/.m2 && \
             <mirror> \
               <id>aliyun</id> \
               <mirrorOf>central</mirrorOf> \
-              <name>Aliyun Maven Mirror</name> \
               <url>https://maven.aliyun.com/repository/public</url> \
             </mirror> \
           </mirrors> \
         </settings>' > /root/.m2/settings.xml
 
 COPY pom.xml .
-
-RUN mvn dependency:go-offline -B --no-transfer-progress -q
-
-FROM maven:3.9-eclipse-temurin-17 AS builder
-
-WORKDIR /app
-
-COPY --from=deps /root/.m2 /root/.m2
-COPY pom.xml .
 COPY src ./src
 
-RUN mvn clean package -DskipTests -B --no-transfer-progress -q -T 2C
+RUN mvn clean package -DskipTests -B -T 2C
 
 FROM eclipse-temurin:17-jre-alpine
 
@@ -57,7 +47,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=5 \
   CMD curl -sf http://localhost:8080/actuator/health || exit 1
 
-LABEL org.opencontainers.image.title="Dong Medicine Backend" \
-      org.opencontainers.image.description="侗乡医药数字展示平台后端服务"
+LABEL org.opencontainers.image.title="Dong Medicine Backend"
 
 ENTRYPOINT ["/app/entrypoint.sh"]
