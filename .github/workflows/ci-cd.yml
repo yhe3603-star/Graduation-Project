@@ -76,11 +76,7 @@ jobs:
             ConnectTimeout 30
             ServerAliveInterval 10
             ServerAliveCountMax 30
-            ControlMaster auto
-            ControlPath ~/.ssh/sockets/%r@%h-%p
-            ControlPersist 600
           EOF
-          mkdir -p ~/.ssh/sockets
 
       - name: Pre-check SSH connection
         run: |
@@ -334,7 +330,4 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: |
-          ssh -O exit server 2>/dev/null || true
-          rm -f ~/.ssh/id_rsa
-          rm -rf ~/.ssh/sockets
+        run: rm -f ~/.ssh/id_rsa
