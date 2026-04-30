@@ -145,14 +145,19 @@ jobs:
           script: |
             set -e
             
+            # 设置 Docker 路径
+            export PATH=$PATH:/usr/bin:/usr/local/bin
+            DOCKER_CMD=$(which docker 2>/dev/null || echo "/usr/bin/docker")
+            COMPOSE_CMD="docker compose"
+            
             APP_DIR="/opt/dong-medicine"
             mkdir -p "$APP_DIR"
             cd "$APP_DIR"
             
             echo "========== 强制清理旧容器和网络 =========="
-            docker compose down --remove-orphans --timeout 5 2>/dev/null || true
-            docker ps -a --filter "name=dong-medicine" -q | xargs -r docker rm -f 2>/dev/null || true
-            docker network ls --filter "name=app-net" -q | xargs -r docker network rm 2>/dev/null || true
+            $COMPOSE_CMD down --remove-orphans --timeout 5 2>/dev/null || true
+            $DOCKER_CMD ps -a --filter "name=dong-medicine" -q | xargs -r $DOCKER_CMD rm -f 2>/dev/null || true
+            $DOCKER_CMD network ls --filter "name=app-net" -q | xargs -r $DOCKER_CMD network rm 2>/dev/null || true
             echo "清理完成"
             
             echo "========== 创建环境配置 =========="
@@ -290,16 +295,16 @@ jobs:
             EOF
             
             echo "========== 登录 GHCR =========="
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
+            echo ${{ secrets.GITHUB_TOKEN }} | $DOCKER_CMD login ghcr.io -u ${{ github.actor }} --password-stdin || true
             
             echo "========== 启动基础服务 =========="
-            docker compose up -d mysql redis rabbitmq kkfileview
+            $COMPOSE_CMD up -d mysql redis rabbitmq kkfileview
             
             echo "========== 等待基础服务就绪 =========="
             for i in $(seq 1 30); do
-              MYSQL_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-mysql 2>/dev/null || echo "unknown")
-              REDIS_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-redis 2>/dev/null || echo "unknown")
-              RABBITMQ_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-rabbitmq 2>/dev/null || echo "unknown")
+              MYSQL_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-mysql 2>/dev/null || echo "unknown")
+              REDIS_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-redis 2>/dev/null || echo "unknown")
+              RABBITMQ_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-rabbitmq 2>/dev/null || echo "unknown")
               echo "[$i] MySQL: $MYSQL_HEALTH, Redis: $REDIS_HEALTH, RabbitMQ: $RABBITMQ_HEALTH"
               
               if [ "$MYSQL_HEALTH" = "healthy" ] && [ "$REDIS_HEALTH" = "healthy" ] && [ "$RABBITMQ_HEALTH" = "healthy" ]; then
@@ -310,33 +315,33 @@ jobs:
             done
             
             echo "========== 启动应用服务 =========="
-            docker compose up -d backend frontend
+            $COMPOSE_CMD up -d backend frontend
             
             echo "========== 等待后端启动 =========="
             sleep 15
-            docker compose ps
-            docker logs dong-medicine-backend --tail 20 2>/dev/null || echo "后端容器未启动"
+            $COMPOSE_CMD ps
+            $DOCKER_CMD logs dong-medicine-backend --tail 20 2>/dev/null || echo "后端容器未启动"
             
             echo "========== 等待后端就绪 (最多6分钟) =========="
             for i in $(seq 1 36); do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
+              STATUS=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
               echo "[$i] 后端状态: $STATUS"
               
               if [ "$STATUS" = "healthy" ]; then
                 echo "✓ 后端服务就绪!"
-                docker compose ps
+                $COMPOSE_CMD ps
                 exit 0
               fi
               
               if [ "$STATUS" = "unhealthy" ]; then
                 echo "✗ 后端服务不健康，查看错误..."
-                docker logs dong-medicine-backend --tail 50
+                $DOCKER_CMD logs dong-medicine-backend --tail 50
                 exit 1
               fi
               
-              if ! docker ps | grep -q dong-medicine-backend; then
+              if ! $DOCKER_CMD ps | grep -q dong-medicine-backend; then
                 echo "✗ 后端容器已停止，查看错误..."
-                docker logs dong-medicine-backend --tail 50
+                $DOCKER_CMD logs dong-medicine-backend --tail 50
                 exit 1
               fi
               
@@ -344,5 +349,5 @@ jobs:
             done
             
             echo "✗ 后端服务未在预期时间内就绪"
-            docker logs dong-medicine-backend --tail 50
+            $DOCKER_CMD logs dong-medicine-backend --tail 50
             exit 1
