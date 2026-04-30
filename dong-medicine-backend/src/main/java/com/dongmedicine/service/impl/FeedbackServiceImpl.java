@@ -12,6 +12,7 @@ import com.dongmedicine.mq.producer.NotificationProducer;
 import com.dongmedicine.service.FeedbackService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,8 +23,11 @@ import java.util.List;
 public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> implements FeedbackService {
 
     private final UserMapper userMapper;
-    private final FeedbackProducer feedbackProducer;
-    private final NotificationProducer notificationProducer;
+
+    @Autowired(required = false)
+    private FeedbackProducer feedbackProducer;
+    @Autowired(required = false)
+    private NotificationProducer notificationProducer;
 
     @Override
     public List<Feedback> listByStatus(String status) {
@@ -54,8 +58,12 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
         }
         
         try {
-            feedbackProducer.sendFeedback(feedback);
-            log.debug("反馈已通过 RabbitMQ 异步提交, userId={}", userId);
+            if (feedbackProducer != null) {
+                feedbackProducer.sendFeedback(feedback);
+                log.debug("反馈已通过 RabbitMQ 异步提交, userId={}", userId);
+            } else {
+                save(feedback);
+            }
         } catch (Exception e) {
             log.warn("RabbitMQ 提交反馈失败, 降级为同步保存, error={}", e.getMessage());
             save(feedback);
@@ -72,7 +80,7 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
         feedback.setStatus("resolved");
         updateById(feedback);
         
-        if (feedback.getUserId() != null) {
+        if (feedback.getUserId() != null && notificationProducer != null) {
             try {
                 notificationProducer.sendFeedbackReplyNotification(
                         feedback.getUserId(),

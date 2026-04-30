@@ -28,7 +28,9 @@ import java.util.Map;
 public class OperationLogAspect {
 
     private final OperationLogService logService;
-    private final RabbitMQOperationLogService rabbitMQOperationLogService;
+
+    @Autowired(required = false)
+    private RabbitMQOperationLogService rabbitMQOperationLogService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -89,7 +91,11 @@ public class OperationLogAspect {
             }
 
             try {
-                    rabbitMQOperationLogService.saveLogAsync(operationLog);
+                    if (rabbitMQOperationLogService != null) {
+                        rabbitMQOperationLogService.saveLogAsync(operationLog);
+                    } else {
+                        logService.save(operationLog);
+                    }
                 } catch (Exception e) {
                     log.warn("RabbitMQ 保存操作日志失败, 降级为同步保存, error={}", e.getMessage());
                     logService.save(operationLog);

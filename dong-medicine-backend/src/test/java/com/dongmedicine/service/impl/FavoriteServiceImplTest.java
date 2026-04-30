@@ -39,7 +39,8 @@ class FavoriteServiceImplTest {
     void setUp() throws Exception {
         favoriteService = new FavoriteServiceImpl(
                 plantMapper, knowledgeMapper, inheritorMapper,
-                resourceMapper, qaMapper, statisticsProducer);
+                resourceMapper, qaMapper);
+        setField(favoriteService, "statisticsProducer", statisticsProducer);
         setBaseMapper(favoriteService, favoriteMapper);
     }
 
@@ -50,6 +51,20 @@ class FavoriteServiceImplTest {
                 Field field = clazz.getDeclaredField("baseMapper");
                 field.setAccessible(true);
                 field.set(service, mapper);
+                return;
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+    }
+
+    private void setField(Object target, String fieldName, Object value) throws Exception {
+        Class<?> clazz = target.getClass();
+        while (clazz != null) {
+            try {
+                Field field = clazz.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                field.set(target, value);
                 return;
             } catch (NoSuchFieldException e) {
                 clazz = clazz.getSuperclass();

@@ -6,11 +6,13 @@ import com.dongmedicine.service.RabbitMQOperationLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.rabbitmq.enabled", havingValue = "true", matchIfMissing = true)
 public class RabbitMQOperationLogServiceImpl implements RabbitMQOperationLogService {
 
     private final OperationLogProducer operationLogProducer;

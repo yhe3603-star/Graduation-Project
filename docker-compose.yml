@@ -16,27 +16,35 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --default-authentication-plugin=mysql_native_password
-      - --max_connections=500
-      - --innodb_buffer_pool_size=256M
+      - --max_connections=50
+      - --innodb_buffer_pool_size=128M
+      - --table_open_cache=400
+      - --thread_cache_size=4
+      - --sort_buffer_size=256K
+      - --read_buffer_size=256K
+      - --read_rnd_buffer_size=256K
+      - --join_buffer_size=256K
+      - --innodb_flush_method=O_DIRECT
+      - --performance_schema=OFF
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
       interval: 5s
       timeout: 3s
       retries: 10
-      start_period: 20s
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
-        max-file: "3"
+        max-size: "30m"
+        max-file: "2"
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 1G
+          cpus: '0.8'
+          memory: 384M
         reservations:
-          cpus: '0.25'
-          memory: 256M
+          cpus: '0.2'
+          memory: 128M
     networks:
       - dong-medicine-network
 
@@ -44,7 +52,7 @@ services:
     image: redis:7-alpine
     container_name: dong-medicine-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123} --maxmemory 200mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123} --maxmemory 64mb --maxmemory-policy allkeys-lru --save 60 1 --save 300 10
     volumes:
       - redis_data:/data
     healthcheck:
@@ -52,6 +60,40 @@ services:
       interval: 5s
       timeout: 2s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+    networks:
+      - dong-medicine-network
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: dong-medicine-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-rabbitmq123}
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: 0.4
+      TZ: Asia/Shanghai
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
@@ -65,39 +107,8 @@ services:
         reservations:
           cpus: '0.1'
           memory: 64M
-    networks:
-      - dong-medicine-network
-
-  rabbitmq:
-    image: rabbitmq:3.12-management
-    container_name: dong-medicine-rabbitmq
-    restart: unless-stopped
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-rabbitmq123}
-      RABBITMQ_DEFAULT_VHOST: /
-      TZ: Asia/Shanghai
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "30m"
-        max-file: "2"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
+    profiles:
+      - full
     networks:
       - dong-medicine-network
 
@@ -111,6 +122,7 @@ services:
       - KK_FILE_UPLOAD_MAX_SIZE=104857600
       - base.url=${KKFILEVIEW_BASE_URL:-http://localhost:3000/kkfileview}
       - KK_DOMAIN=${KKFILEVIEW_DOMAIN:-http://localhost:3000}
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseSerialGC
     volumes:
       - kkfileview_data:/opt/kkFileView-4.1.0/file
     extra_hosts:
@@ -118,16 +130,16 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "30m"
+        max-size: "20m"
         max-file: "2"
     deploy:
       resources:
         limits:
           cpus: '0.5'
-          memory: 1G
+          memory: 384M
         reservations:
           cpus: '0.1'
-          memory: 256M
+          memory: 128M
     networks:
       - dong-medicine-network
 
@@ -151,12 +163,15 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_USER:-admin}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-rabbitmq123}
+      APP_RABBITMQ_ENABLED: ${APP_RABBITMQ_ENABLED:-true}
+      SPRING_AUTOCONFIGURE_EXCLUDE: ${SPRING_AUTOCONFIGURE_EXCLUDE:-}
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:3000}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       FILE_UPLOAD_PATH: /app/public
-      KKFILEVIEW_URL: http://kkfileview:8012
+      KKFILEVIEW_URL: ${KKFILEVIEW_URL:-http://kkfileview:8012}
+      JAVA_OPTS: ${JAVA_OPTS:--Xms256m -Xmx384m -XX:+UseSerialGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -Djava.security.egd=file:/dev/./urandom}
     volumes:
       - ./dong-medicine-backend/public:/app/public
       - backend_logs:/app/logs
@@ -167,27 +182,25 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
-      interval: 10s
+      interval: 15s
       timeout: 5s
       retries: 10
       start_period: 120s
     logging:
       driver: "json-file"
       options:
-        max-size: "100m"
-        max-file: "5"
+        max-size: "50m"
+        max-file: "3"
     deploy:
       resources:
         limits:
           cpus: '1'
-          memory: 1536M
+          memory: 512M
         reservations:
           cpus: '0.25'
-          memory: 512M
+          memory: 256M
     networks:
       - dong-medicine-network
 
@@ -209,16 +222,16 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "20m"
+        max-size: "10m"
         max-file: "2"
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 256M
+          cpus: '0.3'
+          memory: 128M
         reservations:
-          cpus: '0.1'
-          memory: 64M
+          cpus: '0.05'
+          memory: 32M
     networks:
       - dong-medicine-network
 

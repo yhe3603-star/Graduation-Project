@@ -10,6 +10,7 @@ import com.dongmedicine.mq.producer.FileProcessProducer.FileProcessTask;
 import com.dongmedicine.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +32,9 @@ import java.util.UUID;
 public class FileUploadServiceImpl implements FileUploadService {
     
     private final FileUploadProperties properties;
-    private final FileProcessProducer fileProcessProducer;
+
+    @Autowired(required = false)
+    private FileProcessProducer fileProcessProducer;
     
     @Override
     public FileUploadResult uploadImage(MultipartFile file, String category) {
@@ -273,6 +276,7 @@ public class FileUploadServiceImpl implements FileUploadService {
     }
     
     private void submitFileProcessTask(String fileName, String filePath, String originalFileName, String fileType, long fileSize) {
+        if (fileProcessProducer == null) return;
         try {
             String processType = determineProcessType(fileType);
             

@@ -25,7 +25,7 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 ENV TZ=Asia/Shanghai \
-    JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -Djava.security.egd=file:/dev/./urandom"
+    JAVA_OPTS="-Xms256m -Xmx384m -XX:+UseSerialGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -Djava.security.egd=file:/dev/./urandom"
 
 RUN apk add --no-cache curl mysql-client netcat-openbsd tzdata && \
     cp /usr/share/zoneinfo/$TZ /etc/localtime && \
@@ -44,7 +44,7 @@ USER appuser
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=5 \
+HEALTHCHECK --interval=15s --timeout=5s --start-period=120s --retries=5 \
   CMD curl -sf http://localhost:8080/actuator/health || exit 1
 
 LABEL org.opencontainers.image.title="Dong Medicine Backend"

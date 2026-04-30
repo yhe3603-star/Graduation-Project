@@ -44,7 +44,9 @@ class FeedbackServiceImplTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        feedbackService = new FeedbackServiceImpl(userMapper, feedbackProducer, notificationProducer);
+        feedbackService = new FeedbackServiceImpl(userMapper);
+        setField(feedbackService, "feedbackProducer", feedbackProducer);
+        setField(feedbackService, "notificationProducer", notificationProducer);
         setBaseMapper(feedbackService, feedbackMapper);
     }
 
@@ -55,6 +57,20 @@ class FeedbackServiceImplTest {
                 Field field = clazz.getDeclaredField("baseMapper");
                 field.setAccessible(true);
                 field.set(service, mapper);
+                return;
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+    }
+
+    private void setField(Object target, String fieldName, Object value) throws Exception {
+        Class<?> clazz = target.getClass();
+        while (clazz != null) {
+            try {
+                Field field = clazz.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                field.set(target, value);
                 return;
             } catch (NoSuchFieldException e) {
                 clazz = clazz.getSuperclass();

@@ -79,12 +79,14 @@ wait_for_mysql || exit 1
 init_database
 
 [ -n "$REDIS_HOST" ] && wait_for_service "$REDIS_HOST" "${REDIS_PORT:-6379}" "Redis" 30
-[ -n "$RABBITMQ_HOST" ] && wait_for_service "$RABBITMQ_HOST" "${RABBITMQ_PORT:-5672}" "RabbitMQ" 60
+if [ "${APP_RABBITMQ_ENABLED:-true}" = "true" ] && [ -n "$RABBITMQ_HOST" ]; then
+    wait_for_service "$RABBITMQ_HOST" "${RABBITMQ_PORT:-5672}" "RabbitMQ" 60
+else
+    log_info "RabbitMQ 已禁用，跳过等待"
+fi
 
 echo "=========================================="
 log_info "启动应用..."
 echo "=========================================="
 
-exec java $JAVA_OPTS -jar app.jar &
-JAVA_PID=$!
-wait "$JAVA_PID"
+exec java $JAVA_OPTS -jar app.jar

@@ -134,6 +134,20 @@ jobs:
     timeout-minutes: 25
     environment: production
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Upload docker-compose.yml
+        run: |
+          scp -i ~/.ssh/deploy_key docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/dong-medicine/docker-compose.yml
+
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -145,105 +159,14 @@ jobs:
           script: |
             set -e
             
-            echo "========== 清理残留状态 =========="
-            # 清理 Docker 锁文件（不杀死进程，避免影响 SSH 会话）
-            rm -f /var/run/docker.pid 2>/dev/null || true
-            
-            # 检查 Docker 是否响应
-            if ! timeout 10 docker info &>/dev/null; then
-              echo "Docker 未响应，尝试重启..."
-              systemctl restart docker 2>/dev/null || service docker restart 2>/dev/null || true
-              sleep 5
-            else
-              echo "Docker 服务正常"
-            fi
-            
-            # 等待 Docker 完全就绪
-            for i in $(seq 1 15); do
-              if docker info &>/dev/null; then
-                echo "Docker 服务就绪"
-                break
-              fi
-              echo "等待 Docker 启动... ($i/15)"
-              sleep 2
-            done
-            
-            echo "========== 检查 Docker 安装 =========="
-            if ! command -v docker &> /dev/null; then
-              echo "Docker 未安装，正在自动安装（使用国内镜像）..."
-              
-              # 使用阿里云镜像安装 Docker
-              if [ -f /etc/debian_version ] || [ -f /etc/lsb-release ]; then
-                # Debian/Ubuntu - 使用阿里云镜像
-                apt-get update -y
-                apt-get install -y curl ca-certificates gnupg lsb-release
-                
-                # 创建 keyrings 目录
-                mkdir -p /etc/apt/keyrings
-                
-                # 下载并导入 GPG 密钥（非交互模式）
-                curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null || true
-                
-                # 如果 GPG 导入失败，尝试不验证签名
-                if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
-                  echo "GPG 密钥导入失败，使用不验证签名方式..."
-                  echo "deb [arch=$(dpkg --print-architecture)] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-                else
-                  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-                fi
-                
-                apt-get update -y
-                apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                
-              elif [ -f /etc/redhat-release ]; then
-                # CentOS/RHEL - 使用阿里云镜像
-                yum install -y yum-utils
-                yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-                yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                
-              else
-                # 使用阿里云镜像脚本
-                curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
-              fi
-              
-              # 启动 Docker
-              systemctl start docker
-              systemctl enable docker
-              
-              # 配置 Docker 镜像加速
-              mkdir -p /etc/docker
-              cat > /etc/docker/daemon.json << 'DOCKEREOF'
-            {
-              "registry-mirrors": [
-                "https://dockerhub.icu",
-                "https://docker.m.daocloud.io",
-                "https://docker.1ms.run",
-                "https://docker.hlyun.org"
-              ]
-            }
-            DOCKEREOF
-              systemctl restart docker
-              
-              echo "Docker 安装完成: $(docker --version)"
-            else
-              echo "Docker 已安装: $(docker --version)"
-            fi
-            
-            # 设置 Docker 路径
             export PATH=$PATH:/usr/bin:/usr/local/bin
-            DOCKER_CMD=$(which docker 2>/dev/null || echo "/usr/bin/docker")
             COMPOSE_CMD="docker compose"
-            
             APP_DIR="/opt/dong-medicine"
             mkdir -p "$APP_DIR"
             cd "$APP_DIR"
             
-            echo "========== 强制清理旧容器和网络 =========="
-            $COMPOSE_CMD down --remove-orphans --timeout 5 --volumes 2>/dev/null || true
-            $DOCKER_CMD ps -a --filter "name=dong-medicine" -q | xargs -r $DOCKER_CMD rm -f 2>/dev/null || true
-            $DOCKER_CMD network ls --filter "name=app-net" -q | xargs -r $DOCKER_CMD network rm 2>/dev/null || true
-            $DOCKER_CMD volume ls --filter "name=dong-medicine" -q | xargs -r $DOCKER_CMD volume rm 2>/dev/null || true
-            echo "清理完成"
+            echo "========== 清理旧容器 =========="
+            $COMPOSE_CMD down --remove-orphans --timeout 10 2>/dev/null || true
             
             echo "========== 创建环境配置 =========="
             cat > .env << ENVEOF
@@ -258,158 +181,15 @@ jobs:
             DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
             ENVEOF
             
-            echo "========== 创建 docker-compose.yml =========="
-            cat > docker-compose.yml << 'EOF'
-            services:
-              mysql:
-                image: mysql:8.0
-                container_name: dong-medicine-mysql
-                restart: unless-stopped
-                environment:
-                  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-                  MYSQL_DATABASE: dong_medicine
-                  TZ: Asia/Shanghai
-                volumes:
-                  - mysql_data:/var/lib/mysql
-                command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
-                healthcheck:
-                  test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
-                  interval: 5s
-                  timeout: 5s
-                  retries: 20
-                  start_period: 60s
-                networks: [app-net]
-
-              redis:
-                image: redis:7-alpine
-                container_name: dong-medicine-redis
-                restart: unless-stopped
-                command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-                volumes:
-                  - redis_data:/data
-                healthcheck:
-                  test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-                  interval: 5s
-                  timeout: 2s
-                  retries: 5
-                networks: [app-net]
-
-              rabbitmq:
-                image: rabbitmq:3.12-management
-                container_name: dong-medicine-rabbitmq
-                restart: unless-stopped
-                environment:
-                  RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-                  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-                volumes:
-                  - rabbitmq_data:/var/lib/rabbitmq
-                healthcheck:
-                  test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-                  interval: 5s
-                  timeout: 10s
-                  retries: 20
-                  start_period: 90s
-                networks: [app-net]
-
-              kkfileview:
-                image: keking/kkfileview:4.1.0
-                container_name: dong-medicine-kkfileview
-                restart: unless-stopped
-                environment:
-                  - KK_OFFICE_PREVIEW_TYPE=image
-                  - KK_CONTEXT_PATH=/kkfileview
-                ports: ["8012:8012"]
-                volumes: [kkfileview_data:/opt/kkFileView-4.1.0/file]
-                networks: [app-net]
-
-              backend:
-                image: ghcr.io/yhe3603-star/dong-medicine-backend:latest
-                container_name: dong-medicine-backend
-                restart: unless-stopped
-                environment:
-                  SPRING_PROFILES_ACTIVE: prod
-                  DB_HOST: mysql
-                  DB_PORT: 3306
-                  DB_NAME: dong_medicine
-                  DB_USERNAME: root
-                  DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-                  REDIS_HOST: redis
-                  REDIS_PORT: 6379
-                  REDIS_PASSWORD: ${REDIS_PASSWORD}
-                  RABBITMQ_HOST: rabbitmq
-                  RABBITMQ_PORT: 5672
-                  RABBITMQ_USER: ${RABBITMQ_USER}
-                  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-                  JWT_SECRET: ${JWT_SECRET}
-                  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
-                volumes:
-                  - backend_public:/app/public
-                  - backend_logs:/app/logs
-                depends_on:
-                  mysql: {condition: service_healthy}
-                  redis: {condition: service_healthy}
-                  rabbitmq: {condition: service_healthy}
-                ports: ["8080:8080"]
-                healthcheck:
-                  test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
-                  interval: 10s
-                  timeout: 5s
-                  retries: 15
-                  start_period: 120s
-                networks: [app-net]
-
-              frontend:
-                image: ghcr.io/yhe3603-star/dong-medicine-frontend:latest
-                container_name: dong-medicine-frontend
-                restart: unless-stopped
-                ports: ["80:80"]
-                depends_on:
-                  backend: {condition: service_started}
-                networks: [app-net]
-
-            volumes:
-              mysql_data:
-              redis_data:
-              rabbitmq_data:
-              kkfileview_data:
-              backend_public:
-              backend_logs:
-
-            networks:
-              app-net:
-            EOF
-            
             echo "========== 登录 GHCR =========="
-            echo ${{ secrets.GITHUB_TOKEN }} | $DOCKER_CMD login ghcr.io -u ${{ github.actor }} --password-stdin || true
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
             
-            echo "========== 启动基础服务 =========="
-            $COMPOSE_CMD up -d mysql redis rabbitmq kkfileview
-            
-            echo "========== 等待基础服务就绪 (最多3分钟) =========="
-            for i in $(seq 1 60); do
-              MYSQL_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-mysql 2>/dev/null || echo "unknown")
-              REDIS_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-redis 2>/dev/null || echo "unknown")
-              RABBITMQ_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-rabbitmq 2>/dev/null || echo "unknown")
-              echo "[$i] MySQL: $MYSQL_HEALTH, Redis: $REDIS_HEALTH, RabbitMQ: $RABBITMQ_HEALTH"
-              
-              if [ "$MYSQL_HEALTH" = "healthy" ] && [ "$REDIS_HEALTH" = "healthy" ] && [ "$RABBITMQ_HEALTH" = "healthy" ]; then
-                echo "✓ 基础服务就绪!"
-                break
-              fi
-              sleep 3
-            done
-            
-            echo "========== 启动应用服务 =========="
-            $COMPOSE_CMD up -d backend frontend
-            
-            echo "========== 等待后端启动 =========="
-            sleep 15
-            $COMPOSE_CMD ps
-            $DOCKER_CMD logs dong-medicine-backend --tail 20 2>/dev/null || echo "后端容器未启动"
+            echo "========== 启动服务 =========="
+            $COMPOSE_CMD up -d
             
             echo "========== 等待后端就绪 (最多6分钟) =========="
             for i in $(seq 1 36); do
-              STATUS=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
               echo "[$i] 后端状态: $STATUS"
               
               if [ "$STATUS" = "healthy" ]; then
@@ -419,14 +199,14 @@ jobs:
               fi
               
               if [ "$STATUS" = "unhealthy" ]; then
-                echo "✗ 后端服务不健康，查看错误..."
-                $DOCKER_CMD logs dong-medicine-backend --tail 50
+                echo "✗ 后端服务不健康"
+                docker logs dong-medicine-backend --tail 50
                 exit 1
               fi
               
-              if ! $DOCKER_CMD ps | grep -q dong-medicine-backend; then
-                echo "✗ 后端容器已停止，查看错误..."
-                $DOCKER_CMD logs dong-medicine-backend --tail 50
+              if ! docker ps | grep -q dong-medicine-backend; then
+                echo "✗ 后端容器已停止"
+                docker logs dong-medicine-backend --tail 50
                 exit 1
               fi
               
@@ -434,5 +214,9 @@ jobs:
             done
             
             echo "✗ 后端服务未在预期时间内就绪"
-            $DOCKER_CMD logs dong-medicine-backend --tail 50
+            docker logs dong-medicine-backend --tail 50
             exit 1
+
+      - name: Cleanup SSH Key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
