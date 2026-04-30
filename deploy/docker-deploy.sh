@@ -14,62 +14,101 @@ print_info() { echo -e "${COLOR_YELLOW}[i] $1${COLOR_RESET}"; }
 print_step() { echo -e "${COLOR_BLUE}==> $1${COLOR_RESET}"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_DIR="/opt/dong-medicine"
+APP_DIR="${APP_DIR:-/opt/dong-medicine}"
+BACKUP_DIR="${APP_DIR}/backups"
+VERSION="$(date +%Y%m%d_%H%M%S)"
 
-echo ""
-echo "=========================================="
-echo "  侗乡医药数字展示平台 - Docker 部署"
-echo "=========================================="
-echo ""
+check_dependencies() {
+    if docker compose version &> /dev/null; then
+        COMPOSE_CMD="docker compose"
+    elif command -v docker-compose &> /dev/null; then
+        COMPOSE_CMD="docker-compose"
+    else
+        print_error "Docker Compose 未安装"
+        exit 1
+    fi
+}
 
-if docker compose version &> /dev/null; then
-    COMPOSE_CMD="docker compose"
-elif command -v docker-compose &> /dev/null; then
-    COMPOSE_CMD="docker-compose"
-else
-    print_error "Docker Compose 未安装"
-    exit 1
-fi
+backup_current() {
+    mkdir -p "$BACKUP_DIR"
+    [ -f "$APP_DIR/docker-compose.yml" ] && cp "$APP_DIR/docker-compose.yml" "$BACKUP_DIR/docker-compose_$VERSION.yml"
+    [ -f "$APP_DIR/.env" ] && cp "$APP_DIR/.env" "$BACKUP_DIR/.env_$VERSION"
+}
 
-print_info "使用: $COMPOSE_CMD"
+deploy_files() {
+    print_step "部署文件..."
+    mkdir -p "$APP_DIR"
+    
+    [ -f "$SCRIPT_DIR/../docker-compose.yml" ] && cp "$SCRIPT_DIR/../docker-compose.yml" "$APP_DIR/"
+    [ -f "$SCRIPT_DIR/../.env" ] && cp "$SCRIPT_DIR/../.env" "$APP_DIR/"
+    
+    rm -rf "$APP_DIR/dong-medicine-backend" "$APP_DIR/dong-medicine-frontend" 2>/dev/null || true
+    
+    [ -d "$SCRIPT_DIR/../dong-medicine-backend" ] && cp -r "$SCRIPT_DIR/../dong-medicine-backend" "$APP_DIR/"
+    [ -d "$SCRIPT_DIR/../dong-medicine-frontend" ] && cp -r "$SCRIPT_DIR/../dong-medicine-frontend" "$APP_DIR/"
+    
+    print_success "完成"
+}
 
-print_step "部署应用文件..."
-mkdir -p "$APP_DIR"
-cp "$SCRIPT_DIR/docker-compose.yml" "$APP_DIR/"
-cp "$SCRIPT_DIR/.env" "$APP_DIR/"
-rm -rf "$APP_DIR/dong-medicine-backend" "$APP_DIR/dong-medicine-frontend"
-cp -r "$SCRIPT_DIR/dong-medicine-backend" "$APP_DIR/"
-cp -r "$SCRIPT_DIR/dong-medicine-frontend" "$APP_DIR/"
-print_success "文件部署完成"
+deploy() {
+    cd "$APP_DIR"
+    
+    print_step "拉取镜像..."
+    $COMPOSE_CMD pull 2>/dev/null || true
+    
+    print_step "启动服务..."
+    export DOCKER_BUILDKIT=1
+    $COMPOSE_CMD up -d --build
+    
+    print_step "等待就绪..."
+    for i in $(seq 1 30); do
+        if docker exec dong-medicine-backend curl -sf http://localhost:8080/actuator/health 2>/dev/null; then
+            print_success "服务就绪!"
+            return 0
+        fi
+        sleep 2
+    done
+    
+    print_error "服务未就绪"
+    docker logs dong-medicine-backend --tail 30
+    return 1
+}
 
-print_step "停止旧容器..."
-cd "$APP_DIR"
-$COMPOSE_CMD down --remove-orphans 2>/dev/null || true
-print_success "旧容器已停止"
-
-print_step "构建镜像 (使用缓存)..."
-export DOCKER_BUILDKIT=0
-$COMPOSE_CMD build 2>&1 || {
-    print_error "构建失败"
+rollback() {
+    print_error "部署失败，回滚..."
+    local backup=$(ls -t "$BACKUP_DIR"/docker-compose_*.yml 2>/dev/null | head -1)
+    if [ -n "$backup" ]; then
+        cp "$backup" "$APP_DIR/docker-compose.yml"
+        cd "$APP_DIR" && $COMPOSE_CMD up -d
+    fi
     exit 1
 }
-print_success "镜像构建完成"
 
-print_step "启动容器..."
-$COMPOSE_CMD up -d
-print_success "容器已启动"
+main() {
+    echo ""
+    echo "=========================================="
+    echo "  侗乡医药平台部署 v$VERSION"
+    echo "=========================================="
+    echo ""
+    
+    check_dependencies
+    backup_current
+    
+    deploy_files || rollback
+    deploy || rollback
+    
+    echo ""
+    echo "=========================================="
+    print_success "部署完成!"
+    echo "=========================================="
+    
+    cd "$APP_DIR"
+    $COMPOSE_CMD ps
+    
+    IP=$(curl -s --connect-timeout 2 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')
+    echo ""
+    echo "访问: http://$IP:${FRONTEND_PORT:-3000}"
+    echo ""
+}
 
-sleep 3
-
-echo ""
-echo "=========================================="
-print_success "部署完成！"
-echo "=========================================="
-echo ""
-$COMPOSE_CMD ps
-echo ""
-PUBLIC_IP=$(curl -s --connect-timeout 3 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')
-echo "访问地址:"
-echo "  前端: http://$PUBLIC_IP"
-echo "  后端: http://$PUBLIC_IP:8080"
-echo ""
+main "$@"

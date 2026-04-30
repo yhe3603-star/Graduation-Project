@@ -1,35 +1,89 @@
 #!/bin/bash
 
-echo "========== 侗乡医药后端启动 =========="
-date
-echo "DB_HOST=${DB_HOST} DB_PORT=${DB_PORT:-3306} DB_NAME=${DB_NAME:-dong_medicine}"
-echo "REDIS_HOST=${REDIS_HOST} REDIS_PORT=${REDIS_PORT:-6379}"
-echo "RABBITMQ_HOST=${RABBITMQ_HOST} RABBITMQ_PORT=${RABBITMQ_PORT:-5672}"
+set -e
 
-echo "========== 检查数据库初始化 =========="
-DB_EXISTS=$(mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" -e "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${DB_NAME:-dong_medicine}'" -s -N 2>/dev/null || echo "")
+LOG_PREFIX="[DongMedicine]"
 
-if [ -z "$DB_EXISTS" ]; then
-  echo "创建数据库 ${DB_NAME:-dong_medicine}..."
-  mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME:-dong_medicine}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
-fi
+log_info() { echo "$LOG_PREFIX [INFO] $1"; }
+log_warn() { echo "$LOG_PREFIX [WARN] $1"; }
+log_error() { echo "$LOG_PREFIX [ERROR] $1" >&2; }
 
-TABLE_COUNT=$(mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" "${DB_NAME:-dong_medicine}" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME:-dong_medicine}'" -s -N 2>/dev/null || echo "0")
-
-if [ "$TABLE_COUNT" = "0" ] || [ -z "$TABLE_COUNT" ]; then
-  echo "初始化数据库..."
-  if [ -f /app/init.sql ]; then
-    if mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" "${DB_NAME:-dong_medicine}" < /app/init.sql 2>&1; then
-      echo "数据库初始化成功!"
-    else
-      echo "WARNING: 数据库初始化失败, 继续启动应用..."
+cleanup() {
+    log_info "收到终止信号，正在关闭应用..."
+    if [ -n "$JAVA_PID" ] && kill -0 "$JAVA_PID" 2>/dev/null; then
+        kill -TERM "$JAVA_PID"
+        wait "$JAVA_PID" 2>/dev/null || true
     fi
-  else
-    echo "WARNING: /app/init.sql 不存在, 跳过初始化"
-  fi
-else
-  echo "数据库已有 $TABLE_COUNT 张表, 跳过初始化"
-fi
+    log_info "应用已关闭"
+    exit 0
+}
 
-echo "========== 启动Spring Boot应用 =========="
-exec java $JAVA_OPTS -jar app.jar
+trap cleanup TERM INT
+
+echo "=========================================="
+echo "  侗乡医药后端服务启动"
+echo "  时间: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "=========================================="
+
+log_info "环境: DB=${DB_HOST}:${DB_PORT:-3306}/${DB_NAME:-dong_medicine}"
+
+wait_for_mysql() {
+    local max_retries=${1:-30}
+    local retry=0
+    
+    log_info "等待 MySQL..."
+    
+    while [ $retry -lt $max_retries ]; do
+        if mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" -e "SELECT 1" 2>/dev/null; then
+            log_info "MySQL 就绪"
+            return 0
+        fi
+        retry=$((retry + 1))
+        sleep 1
+    done
+    
+    log_error "MySQL 连接失败"
+    return 1
+}
+
+wait_for_service() {
+    local host=$1 port=$2 name=$3
+    local retry=0
+    
+    while [ $retry -lt 15 ]; do
+        if nc -z "$host" "$port" 2>/dev/null; then
+            log_info "$name 就绪"
+            return 0
+        fi
+        retry=$((retry + 1))
+        sleep 1
+    done
+    log_warn "$name 未就绪"
+    return 1
+}
+
+init_database() {
+    local table_count
+    table_count=$(mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" "${DB_NAME:-dong_medicine}" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME:-dong_medicine}'" -s -N 2>/dev/null || echo "0")
+    
+    if [ "$table_count" = "0" ] && [ -f /app/init.sql ]; then
+        log_info "初始化数据库..."
+        mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" "${DB_NAME:-dong_medicine}" < /app/init.sql 2>&1 && log_info "初始化完成" || log_warn "初始化失败"
+    else
+        log_info "数据库已存在 ($table_count 表)"
+    fi
+}
+
+wait_for_mysql || exit 1
+init_database
+
+[ -n "$REDIS_HOST" ] && wait_for_service "$REDIS_HOST" "${REDIS_PORT:-6379}" "Redis"
+[ -n "$RABBITMQ_HOST" ] && wait_for_service "$RABBITMQ_HOST" "${RABBITMQ_PORT:-5672}" "RabbitMQ"
+
+echo "=========================================="
+log_info "启动应用..."
+echo "=========================================="
+
+exec java $JAVA_OPTS -jar app.jar &
+JAVA_PID=$!
+wait "$JAVA_PID"

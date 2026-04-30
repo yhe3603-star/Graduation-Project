@@ -11,23 +11,32 @@ services:
       - mysql_data:/var/lib/mysql
       - ./dong-medicine-backend/sql/dong_medicine.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     ports:
-      - "3307:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --default-authentication-plugin=mysql_native_password
       - --max_connections=500
+      - --innodb_buffer_pool_size=256M
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root123}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     deploy:
       resources:
         limits:
           cpus: '1'
           memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     networks:
       - dong-medicine-network
 
@@ -35,19 +44,27 @@ services:
     image: redis:7-alpine
     container_name: dong-medicine-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123} --maxmemory 200mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "2"
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - dong-medicine-network
 
@@ -64,44 +81,60 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-      interval: 10s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 10
-      start_period: 40s
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "30m"
+        max-file: "2"
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
     networks:
       - dong-medicine-network
 
   kkfileview:
-    image: keking/kkfileview:latest
+    image: keking/kkfileview:4.1.0
     container_name: dong-medicine-kkfileview
     restart: unless-stopped
     environment:
       - KK_OFFICE_PREVIEW_TYPE=image
       - KK_CONTEXT_PATH=/kkfileview
       - KK_FILE_UPLOAD_MAX_SIZE=104857600
-      - base.url=http://localhost:3000/kkfileview
-      - KK_DOMAIN=http://localhost:3000
+      - base.url=${KKFILEVIEW_BASE_URL:-http://localhost:3000/kkfileview}
+      - KK_DOMAIN=${KKFILEVIEW_DOMAIN:-http://localhost:3000}
     volumes:
       - kkfileview_data:/opt/kkFileView-4.1.0/file
     extra_hosts:
       - "localhost:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "30m"
+        max-file: "2"
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 1G
+        reservations:
+          cpus: '0.1'
+          memory: 256M
     networks:
       - dong-medicine-network
 
   backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/yhe3603-star/dong-medicine-backend:latest}
     build:
       context: ./dong-medicine-backend
-    image: dong-medicine-backend:latest
     container_name: dong-medicine-backend
     restart: unless-stopped
     environment:
@@ -126,6 +159,7 @@ services:
       KKFILEVIEW_URL: http://kkfileview:8012
     volumes:
       - ./dong-medicine-backend/public:/app/public
+      - backend_logs:/app/logs
     depends_on:
       mysql:
         condition: service_healthy
@@ -133,34 +167,56 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
     deploy:
       resources:
         limits:
           cpus: '1'
           memory: 1536M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
     networks:
       - dong-medicine-network
 
   frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/yhe3603-star/dong-medicine-frontend:latest}
     build:
       context: ./dong-medicine-frontend
       args:
         - VITE_API_BASE_URL=/api
         - VITE_KKFILEVIEW_URL=/kkfileview
         - VITE_KKFILEVIEW_FILE_HOST=http://backend:8080
-    image: dong-medicine-frontend:latest
     container_name: dong-medicine-frontend
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "2"
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - dong-medicine-network
 
@@ -172,6 +228,8 @@ volumes:
   rabbitmq_data:
     driver: local
   kkfileview_data:
+    driver: local
+  backend_logs:
     driver: local
 
 networks:

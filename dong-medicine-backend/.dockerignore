@@ -1,21 +1,21 @@
 !.mvn/wrapper/maven-wrapper.jar
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+**/target/
+!target/*.jar
 
-### IntelliJ IDEA ###
-.idea
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings
+**/.springBeans
+**/.sts4-cache
+
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -23,26 +23,30 @@
 /.nb-gradle/
 build/
 
-### VS Code ###
 .vscode/
 
-### Logs ###
 logs/
 *.log
 
-### OS ###
 .DS_Store
 Thumbs.db
 
-### Git ###
 .git
 .gitignore
+.gitattributes
 
-### Docker ###
 Dockerfile
 docker-compose*.yml
 .dockerignore
 
-### Other ###
 *.md
 .env*
+*.bak
+*.tmp
+*.swp
+*~
+
+public/documents/
+public/images/
+!public/images/.gitkeep
+!public/documents/.gitkeep

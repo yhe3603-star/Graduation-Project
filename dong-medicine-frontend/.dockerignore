@@ -1,39 +1,43 @@
-# Dependencies
 node_modules/
+dist/
 
-# Logs
 logs/
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+.vscode/
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Git
-.git
-.gitignore
-
-# Docker
-Dockerfile
-docker-compose*.yml
-.dockerignore
-
-# Tests
 coverage/
 *.test.js
 *.spec.js
+e2e/
+playwright-report/
+test-results/
 
-# Other
+.DS_Store
+Thumbs.db
+
+.git
+.gitignore
+
+Dockerfile
+docker-compose*.yml
+.dockerignore
+nginx.conf
+default.conf
+
 *.md
 .env*
+*.bak
+*.tmp
+*.swp
+*~
