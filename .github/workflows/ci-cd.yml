@@ -216,9 +216,10 @@ jobs:
             cd "$APP_DIR"
             
             echo "========== 强制清理旧容器和网络 =========="
-            $COMPOSE_CMD down --remove-orphans --timeout 5 2>/dev/null || true
+            $COMPOSE_CMD down --remove-orphans --timeout 5 --volumes 2>/dev/null || true
             $DOCKER_CMD ps -a --filter "name=dong-medicine" -q | xargs -r $DOCKER_CMD rm -f 2>/dev/null || true
             $DOCKER_CMD network ls --filter "name=app-net" -q | xargs -r $DOCKER_CMD network rm 2>/dev/null || true
+            $DOCKER_CMD volume ls --filter "name=dong-medicine" -q | xargs -r $DOCKER_CMD volume rm 2>/dev/null || true
             echo "清理完成"
             
             echo "========== 创建环境配置 =========="
