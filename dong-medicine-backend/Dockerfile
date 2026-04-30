@@ -33,7 +33,7 @@ USER appuser
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=5s --timeout=3s --start-period=90s --retries=20 \
+HEALTHCHECK --interval=5s --timeout=3s --start-period=120s --retries=20 \
   CMD curl -sf http://localhost:8080/actuator/health || exit 1
 
 ENV JAVA_OPTS="-Xms384m -Xmx768m -XX:+UseG1GC -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError"

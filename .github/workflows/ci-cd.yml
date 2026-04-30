@@ -234,7 +234,7 @@ jobs:
                 interval: 5s
                 timeout: 3s
                 retries: 20
-                start_period: 90s
+                start_period: 120s
               deploy:
                 resources:
                   limits:
@@ -280,10 +280,10 @@ jobs:
           docker compose up -d --pull missing
           
           echo "========== 等待后端就绪 =========="
-          for i in {1..40}; do
+          for i in {1..50}; do
             STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
             RUNNING=$(docker inspect --format='{{.State.Running}}' dong-medicine-backend 2>/dev/null || echo "false")
-            echo "后端: $STATUS, 运行: $RUNNING ($i/40)"
+            echo "后端: $STATUS, 运行: $RUNNING ($i/50)"
             
             if [ "$STATUS" = "healthy" ]; then
               echo "后端就绪!"

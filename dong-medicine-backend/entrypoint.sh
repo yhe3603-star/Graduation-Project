@@ -6,22 +6,6 @@ echo "DB_HOST=${DB_HOST} DB_PORT=${DB_PORT:-3306} DB_NAME=${DB_NAME:-dong_medici
 echo "REDIS_HOST=${REDIS_HOST} REDIS_PORT=${REDIS_PORT:-6379}"
 echo "RABBITMQ_HOST=${RABBITMQ_HOST} RABBITMQ_PORT=${RABBITMQ_PORT:-5672}"
 
-echo "========== 等待MySQL =========="
-MYSQL_READY=false
-for i in $(seq 1 60); do
-  if mysqladmin ping --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --silent 2>/dev/null; then
-    echo "MySQL就绪!"
-    MYSQL_READY=true
-    break
-  fi
-  echo "等待MySQL... ($i/60)"
-  sleep 2
-done
-
-if [ "$MYSQL_READY" = "false" ]; then
-  echo "WARNING: MySQL未就绪, 继续启动应用..."
-fi
-
 echo "========== 检查数据库初始化 =========="
 DB_EXISTS=$(mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" -e "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${DB_NAME:-dong_medicine}'" -s -N 2>/dev/null || echo "")
 
