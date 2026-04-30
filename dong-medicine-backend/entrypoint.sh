@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -34,7 +34,7 @@ wait_for_mysql() {
     log_info "等待 MySQL..."
     
     while [ $retry -lt $max_retries ]; do
-        if mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" -e "SELECT 1" 2>/dev/null; then
+        if mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --skip-ssl -e "SELECT 1" 2>/dev/null; then
             log_info "MySQL 就绪"
             return 0
         fi
@@ -64,11 +64,11 @@ wait_for_service() {
 
 init_database() {
     local table_count
-    table_count=$(mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" "${DB_NAME:-dong_medicine}" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME:-dong_medicine}'" -s -N 2>/dev/null || echo "0")
+    table_count=$(mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --skip-ssl "${DB_NAME:-dong_medicine}" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME:-dong_medicine}'" -s -N 2>/dev/null || echo "0")
     
     if [ "$table_count" = "0" ] && [ -f /app/init.sql ]; then
         log_info "初始化数据库..."
-        mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" "${DB_NAME:-dong_medicine}" < /app/init.sql 2>&1 && log_info "初始化完成" || log_warn "初始化失败"
+        mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --skip-ssl "${DB_NAME:-dong_medicine}" < /app/init.sql 2>&1 && log_info "初始化完成" || log_warn "初始化失败"
     else
         log_info "数据库已存在 ($table_count 表)"
     fi
