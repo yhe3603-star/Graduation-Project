@@ -69,9 +69,6 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    outputs:
-      backend_digest: ${{ steps.build-backend.outputs.digest }}
-      frontend_digest: ${{ steps.build-frontend.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,7 +84,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push backend
-        id: build-backend
         uses: docker/build-push-action@v5
         with:
           context: ./dong-medicine-backend
@@ -95,11 +91,8 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:latest,${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:${{ github.sha }}
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
-          build-args: |
-            VITE_API_BASE_URL=/api
 
       - name: Build and push frontend
-        id: build-frontend
         uses: docker/build-push-action@v5
         with:
           context: ./dong-medicine-frontend
@@ -117,7 +110,7 @@ jobs:
     needs: build-and-push
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: production
     steps:
       - name: Checkout
@@ -130,29 +123,196 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: false
-          command_timeout: 10m
+          command_timeout: 15m
           script: |
             set -e
             
             APP_DIR="/opt/dong-medicine"
+            mkdir -p "$APP_DIR"
             cd "$APP_DIR"
+            
+            echo "========== 创建环境配置 =========="
+            cat > .env << 'ENVEOF'
+            # MySQL配置
+            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+            
+            # Redis配置
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            
+            # RabbitMQ配置
+            RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}
+            RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
+            
+            # JWT配置
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRATION=86400000
+            
+            # 前端端口
+            FRONTEND_PORT=3000
+            
+            # CORS配置
+            CORS_ALLOWED_ORIGIN=http://${{ secrets.SERVER_HOST }}:3000
+            
+            # AI配置
+            DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
+            ENVEOF
+            
+            echo "========== 复制 docker-compose.yml =========="
+            cat > docker-compose.yml << 'COMPOSEOF'
+            services:
+              mysql:
+                image: mysql:8.0
+                container_name: dong-medicine-mysql
+                restart: unless-stopped
+                environment:
+                  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                  MYSQL_DATABASE: dong_medicine
+                  TZ: Asia/Shanghai
+                volumes:
+                  - mysql_data:/var/lib/mysql
+                command:
+                  - --character-set-server=utf8mb4
+                  - --collation-server=utf8mb4_unicode_ci
+                healthcheck:
+                  test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+                  interval: 5s
+                  timeout: 3s
+                  retries: 10
+                  start_period: 20s
+                networks:
+                  - app-net
+
+              redis:
+                image: redis:7-alpine
+                container_name: dong-medicine-redis
+                restart: unless-stopped
+                command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+                volumes:
+                  - redis_data:/data
+                healthcheck:
+                  test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+                  interval: 5s
+                  timeout: 2s
+                  retries: 5
+                networks:
+                  - app-net
+
+              rabbitmq:
+                image: rabbitmq:3.12-management
+                container_name: dong-medicine-rabbitmq
+                restart: unless-stopped
+                environment:
+                  RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+                  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+                  TZ: Asia/Shanghai
+                volumes:
+                  - rabbitmq_data:/var/lib/rabbitmq
+                healthcheck:
+                  test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+                  interval: 5s
+                  timeout: 5s
+                  retries: 10
+                  start_period: 20s
+                networks:
+                  - app-net
+
+              kkfileview:
+                image: keking/kkfileview:4.1.0
+                container_name: dong-medicine-kkfileview
+                restart: unless-stopped
+                environment:
+                  - KK_OFFICE_PREVIEW_TYPE=image
+                  - KK_CONTEXT_PATH=/kkfileview
+                ports:
+                  - "8012:8012"
+                volumes:
+                  - kkfileview_data:/opt/kkFileView-4.1.0/file
+                networks:
+                  - app-net
+
+              backend:
+                image: ghcr.io/yhe3603-star/dong-medicine-backend:latest
+                container_name: dong-medicine-backend
+                restart: unless-stopped
+                environment:
+                  SPRING_PROFILES_ACTIVE: prod
+                  DB_HOST: mysql
+                  DB_PORT: 3306
+                  DB_NAME: dong_medicine
+                  DB_USERNAME: root
+                  DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                  REDIS_HOST: redis
+                  REDIS_PORT: 6379
+                  REDIS_PASSWORD: ${REDIS_PASSWORD}
+                  RABBITMQ_HOST: rabbitmq
+                  RABBITMQ_PORT: 5672
+                  RABBITMQ_USER: ${RABBITMQ_USER}
+                  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+                  JWT_SECRET: ${JWT_SECRET}
+                  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+                volumes:
+                  - backend_public:/app/public
+                  - backend_logs:/app/logs
+                depends_on:
+                  mysql:
+                    condition: service_healthy
+                  redis:
+                    condition: service_healthy
+                  rabbitmq:
+                    condition: service_healthy
+                ports:
+                  - "8080:8080"
+                healthcheck:
+                  test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+                  interval: 10s
+                  timeout: 5s
+                  retries: 10
+                  start_period: 60s
+                networks:
+                  - app-net
+
+              frontend:
+                image: ghcr.io/yhe3603-star/dong-medicine-frontend:latest
+                container_name: dong-medicine-frontend
+                restart: unless-stopped
+                ports:
+                  - "80:80"
+                depends_on:
+                  backend:
+                    condition: service_started
+                networks:
+                  - app-net
+
+            volumes:
+              mysql_data:
+              redis_data:
+              rabbitmq_data:
+              kkfileview_data:
+              backend_public:
+              backend_logs:
+
+            networks:
+              app-net:
+                driver: bridge
+            COMPOSEOF
             
             echo "========== 拉取镜像 =========="
             docker compose pull
             
-            echo "========== 滚动更新 =========="
-            docker compose up -d --no-deps --build backend frontend
+            echo "========== 启动服务 =========="
+            docker compose up -d
             
             echo "========== 等待就绪 =========="
-            for i in $(seq 1 20); do
+            for i in $(seq 1 30); do
               if docker exec dong-medicine-backend curl -sf http://localhost:8080/actuator/health 2>/dev/null; then
                 echo "✓ 服务就绪!"
+                docker compose ps
                 exit 0
               fi
-              echo "等待... ($i/20)"
+              echo "等待... ($i/30)"
               sleep 5
             done
             
             echo "✗ 服务未就绪"
-            docker logs dong-medicine-backend --tail 30
+            docker logs dong-medicine-backend --tail 50
             exit 1
