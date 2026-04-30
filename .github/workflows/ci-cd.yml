@@ -258,8 +258,8 @@ jobs:
                   test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
                   interval: 10s
                   timeout: 5s
-                  retries: 10
-                  start_period: 60s
+                  retries: 15
+                  start_period: 120s
                 networks: [app-net]
 
               frontend:
@@ -308,14 +308,21 @@ jobs:
             sleep 10
             docker logs dong-medicine-backend --tail 20 || echo "无日志"
             
-            echo "========== 等待后端就绪 (最多5分钟) =========="
+            echo "========== 等待后端就绪 (最多6分钟) =========="
             for i in $(seq 1 36); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
               echo "[$i] 后端状态: $STATUS"
               
               if [ "$STATUS" = "healthy" ]; then
                 echo "✓ 后端服务就绪!"
-                break
+                docker compose ps
+                exit 0
+              fi
+              
+              if [ "$STATUS" = "unhealthy" ]; then
+                echo "✗ 后端服务不健康，查看错误..."
+                docker logs dong-medicine-backend --tail 50
+                exit 1
               fi
               
               if ! docker ps | grep -q dong-medicine-backend; then
@@ -327,4 +334,6 @@ jobs:
               sleep 10
             done
             
-            docker compose ps
+            echo "✗ 后端服务未在预期时间内就绪"
+            docker logs dong-medicine-backend --tail 50
+            exit 1
