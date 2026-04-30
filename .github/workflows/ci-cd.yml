@@ -193,7 +193,9 @@ jobs:
             {
               "registry-mirrors": [
                 "https://docker.1ms.run",
-                "https://docker.xuanyuan.me"
+                "https://docker.fxxk.dedyn.io",
+                "https://dockerpull.org",
+                "https://docker.rainbond.cc"
               ]
             }
             DOCKEREOF
