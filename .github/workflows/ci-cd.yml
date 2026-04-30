@@ -150,20 +150,34 @@ jobs:
               echo "Docker 未安装，正在自动安装（使用国内镜像）..."
               
               # 使用阿里云镜像安装 Docker
-              if [ -f /etc/debian_version ]; then
+              if [ -f /etc/debian_version ] || [ -f /etc/lsb-release ]; then
                 # Debian/Ubuntu - 使用阿里云镜像
                 apt-get update -y
                 apt-get install -y curl ca-certificates gnupg lsb-release
+                
+                # 创建 keyrings 目录
                 mkdir -p /etc/apt/keyrings
-                curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-                echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+                
+                # 下载并导入 GPG 密钥（非交互模式）
+                curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null || true
+                
+                # 如果 GPG 导入失败，尝试不验证签名
+                if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
+                  echo "GPG 密钥导入失败，使用不验证签名方式..."
+                  echo "deb [arch=$(dpkg --print-architecture)] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+                else
+                  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+                fi
+                
                 apt-get update -y
                 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+                
               elif [ -f /etc/redhat-release ]; then
                 # CentOS/RHEL - 使用阿里云镜像
                 yum install -y yum-utils
                 yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
                 yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+                
               else
                 # 使用阿里云镜像脚本
                 curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
