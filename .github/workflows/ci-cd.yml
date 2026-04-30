@@ -69,7 +69,10 @@ jobs:
     needs: [test-backend, test-frontend]
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    outputs:
+      backend_image: ${{ steps.build-backend.outputs.imageid }}
+      frontend_image: ${{ steps.build-frontend.outputs.imageid }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -85,26 +88,43 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push backend
+        id: build-backend
         uses: docker/build-push-action@v5
         with:
           context: ./dong-medicine-backend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:latest,${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:${{ github.sha }}
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
+          provenance: false
+          sbom: false
 
       - name: Build and push frontend
+        id: build-frontend
         uses: docker/build-push-action@v5
         with:
           context: ./dong-medicine-frontend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:latest,${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:${{ github.sha }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
           build-args: |
             VITE_API_BASE_URL=/api
             VITE_KKFILEVIEW_URL=/kkfileview
             VITE_KKFILEVIEW_FILE_HOST=http://${{ secrets.SERVER_HOST }}:8080
+          provenance: false
+          sbom: false
+
+      - name: Verify images pushed
+        run: |
+          echo "Backend image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:latest"
+          echo "Frontend image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:latest"
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:latest
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:latest
 
   deploy:
     name: Deploy
@@ -114,9 +134,6 @@ jobs:
     timeout-minutes: 15
     environment: production
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -133,33 +150,20 @@ jobs:
             cd "$APP_DIR"
             
             echo "========== 创建环境配置 =========="
-            cat > .env << 'ENVEOF'
-            # MySQL配置
+            cat > .env << ENVEOF
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            
-            # Redis配置
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-            
-            # RabbitMQ配置
             RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}
             RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
-            
-            # JWT配置
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRATION=86400000
-            
-            # 前端端口
             FRONTEND_PORT=3000
-            
-            # CORS配置
             CORS_ALLOWED_ORIGIN=http://${{ secrets.SERVER_HOST }}:3000
-            
-            # AI配置
             DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
             ENVEOF
             
-            echo "========== 复制 docker-compose.yml =========="
-            cat > docker-compose.yml << 'COMPOSEOF'
+            echo "========== 创建 docker-compose.yml =========="
+            cat > docker-compose.yml << 'EOF'
             services:
               mysql:
                 image: mysql:8.0
@@ -171,17 +175,14 @@ jobs:
                   TZ: Asia/Shanghai
                 volumes:
                   - mysql_data:/var/lib/mysql
-                command:
-                  - --character-set-server=utf8mb4
-                  - --collation-server=utf8mb4_unicode_ci
+                command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
                 healthcheck:
                   test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
                   interval: 5s
                   timeout: 3s
                   retries: 10
                   start_period: 20s
-                networks:
-                  - app-net
+                networks: [app-net]
 
               redis:
                 image: redis:7-alpine
@@ -195,8 +196,7 @@ jobs:
                   interval: 5s
                   timeout: 2s
                   retries: 5
-                networks:
-                  - app-net
+                networks: [app-net]
 
               rabbitmq:
                 image: rabbitmq:3.12-management
@@ -205,7 +205,6 @@ jobs:
                 environment:
                   RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
                   RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-                  TZ: Asia/Shanghai
                 volumes:
                   - rabbitmq_data:/var/lib/rabbitmq
                 healthcheck:
@@ -214,8 +213,7 @@ jobs:
                   timeout: 5s
                   retries: 10
                   start_period: 20s
-                networks:
-                  - app-net
+                networks: [app-net]
 
               kkfileview:
                 image: keking/kkfileview:4.1.0
@@ -224,12 +222,9 @@ jobs:
                 environment:
                   - KK_OFFICE_PREVIEW_TYPE=image
                   - KK_CONTEXT_PATH=/kkfileview
-                ports:
-                  - "8012:8012"
-                volumes:
-                  - kkfileview_data:/opt/kkFileView-4.1.0/file
-                networks:
-                  - app-net
+                ports: ["8012:8012"]
+                volumes: [kkfileview_data:/opt/kkFileView-4.1.0/file]
+                networks: [app-net]
 
               backend:
                 image: ghcr.io/yhe3603-star/dong-medicine-backend:latest
@@ -255,34 +250,26 @@ jobs:
                   - backend_public:/app/public
                   - backend_logs:/app/logs
                 depends_on:
-                  mysql:
-                    condition: service_healthy
-                  redis:
-                    condition: service_healthy
-                  rabbitmq:
-                    condition: service_healthy
-                ports:
-                  - "8080:8080"
+                  mysql: {condition: service_healthy}
+                  redis: {condition: service_healthy}
+                  rabbitmq: {condition: service_healthy}
+                ports: ["8080:8080"]
                 healthcheck:
                   test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
                   interval: 10s
                   timeout: 5s
                   retries: 10
                   start_period: 60s
-                networks:
-                  - app-net
+                networks: [app-net]
 
               frontend:
                 image: ghcr.io/yhe3603-star/dong-medicine-frontend:latest
                 container_name: dong-medicine-frontend
                 restart: unless-stopped
-                ports:
-                  - "80:80"
+                ports: ["80:80"]
                 depends_on:
-                  backend:
-                    condition: service_started
-                networks:
-                  - app-net
+                  backend: {condition: service_started}
+                networks: [app-net]
 
             volumes:
               mysql_data:
@@ -294,17 +281,15 @@ jobs:
 
             networks:
               app-net:
-                driver: bridge
-            COMPOSEOF
+            EOF
             
-            echo "========== 拉取应用镜像 =========="
-            docker pull ghcr.io/yhe3603-star/dong-medicine-backend:latest || true
-            docker pull ghcr.io/yhe3603-star/dong-medicine-frontend:latest || true
+            echo "========== 登录 GHCR =========="
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
             
             echo "========== 启动服务 =========="
-            docker compose up -d --no-pull
+            docker compose up -d
             
-            echo "========== 等待就绪 =========="
+            echo "========== 等待就绪 (最多5分钟) =========="
             for i in $(seq 1 30); do
               if docker exec dong-medicine-backend curl -sf http://localhost:8080/actuator/health 2>/dev/null; then
                 echo "✓ 服务就绪!"
@@ -312,9 +297,10 @@ jobs:
                 exit 0
               fi
               echo "等待... ($i/30)"
-              sleep 5
+              sleep 10
             done
             
             echo "✗ 服务未就绪"
-            docker logs dong-medicine-backend --tail 50
+            docker compose ps
+            docker logs dong-medicine-backend --tail 100
             exit 1
