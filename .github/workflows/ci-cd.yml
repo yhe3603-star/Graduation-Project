@@ -7,72 +7,25 @@ on:
       - master
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - main
-      - master
   workflow_dispatch:
 
 permissions:
   contents: read
   packages: write
-  id-token: write
-
-env:
-  REGISTRY: ghcr.io
 
 jobs:
-  test-backend:
-    name: Test Backend
+  build:
+    strategy:
+      matrix:
+        include:
+          - component: backend
+            context: ./dong-medicine-backend
+            image: dong-medicine-backend
+          - component: frontend
+            context: ./dong-medicine-frontend
+            image: dong-medicine-frontend
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Run Tests
-        working-directory: dong-medicine-backend
-        run: |
-          chmod +x mvnw
-          ./mvnw test -B --no-transfer-progress -T 2C
-
-  test-frontend:
-    name: Test Frontend
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: dong-medicine-frontend/package-lock.json
-
-      - name: Install and Test
-        working-directory: dong-medicine-frontend
-        run: |
-          npm ci --prefer-offline
-          npm run test -- --passWithNoTests || true
-
-  build-and-push:
-    name: Build & Push
-    needs: [test-backend, test-frontend]
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    outputs:
-      backend_image: ${{ steps.build-backend.outputs.imageid }}
-      frontend_image: ${{ steps.build-frontend.outputs.imageid }}
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -83,181 +36,48 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push backend
-        id: build-backend
+      - name: Build and push ${{ matrix.component }}
         uses: docker/build-push-action@v5
         with:
-          context: ./dong-medicine-backend
+          context: ${{ matrix.context }}
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:latest
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:${{ github.sha }}
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,scope=backend,mode=max
-          provenance: false
-          sbom: false
-
-      - name: Build and push frontend
-        id: build-frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./dong-medicine-frontend
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:latest
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:${{ github.sha }}
-          cache-from: type=gha,scope=frontend
-          cache-to: type=gha,scope=frontend,mode=max
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             VITE_API_BASE_URL=/api
             VITE_KKFILEVIEW_URL=/kkfileview
             VITE_KKFILEVIEW_FILE_HOST=http://${{ secrets.SERVER_HOST }}:8080
-          provenance: false
-          sbom: false
-
-      - name: Verify images pushed
-        run: |
-          echo "Backend image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:latest"
-          echo "Frontend image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:latest"
-          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-backend:latest
-          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/dong-medicine-frontend:latest
 
   deploy:
-    name: Deploy
-    needs: build-and-push
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
+    name: Deploy to Server
+    needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    environment: production
+    timeout-minutes: 20
     steps:
-      - name: Deploy to Server
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: false
-          command_timeout: 25m
+          command_timeout: 20m
           script: |
             set -e
             
-            echo "========== 清理残留状态 =========="
-            # 清理 Docker 锁文件（不杀死进程，避免终止当前会话）
-            rm -f /var/run/docker.pid 2>/dev/null || true
+            echo "========== 准备部署环境 =========="
+            mkdir -p /opt/dong-medicine/sql
+            cd /opt/dong-medicine
             
-            # 检查 Docker 服务状态并重启
-            if systemctl is-active docker &>/dev/null; then
-              echo "Docker 服务运行中，跳过重启"
-            else
-              echo "Docker 服务未运行，正在启动..."
-              systemctl start docker 2>/dev/null || service docker start 2>/dev/null || true
-            fi
-            
-            # 等待 Docker 完全就绪
-            for i in $(seq 1 30); do
-              if docker info &>/dev/null; then
-                echo "Docker 服务就绪"
-                break
-              fi
-              echo "等待 Docker 启动... ($i/30)"
-              sleep 2
-            done
-            
-            echo "========== 检查 Docker 安装 =========="
-            if ! command -v docker &> /dev/null; then
-              echo "Docker 未安装，正在自动安装（使用国内镜像）..."
-              
-              # 使用阿里云镜像安装 Docker
-              if [ -f /etc/debian_version ] || [ -f /etc/lsb-release ]; then
-                # Debian/Ubuntu - 使用阿里云镜像
-                apt-get update -y
-                apt-get install -y curl ca-certificates gnupg lsb-release
-                
-                # 创建 keyrings 目录
-                mkdir -p /etc/apt/keyrings
-                
-                # 下载并导入 GPG 密钥（非交互模式）
-                curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null || true
-                
-                # 如果 GPG 导入失败，尝试不验证签名
-                if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
-                  echo "GPG 密钥导入失败，使用不验证签名方式..."
-                  echo "deb [arch=$(dpkg --print-architecture)] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-                else
-                  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-                fi
-                
-                apt-get update -y
-                apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                
-              elif [ -f /etc/redhat-release ]; then
-                # CentOS/RHEL - 使用阿里云镜像
-                yum install -y yum-utils
-                yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-                yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                
-              else
-                # 使用阿里云镜像脚本
-                curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
-              fi
-              
-              # 启动 Docker
-              systemctl start docker
-              systemctl enable docker
-              
-              # 配置 Docker 镜像加速
-              mkdir -p /etc/docker
-              cat > /etc/docker/daemon.json << 'DOCKEREOF'
-            {
-              "registry-mirrors": [
-                "https://dockerhub.icu",
-                "https://docker.m.daocloud.io",
-                "https://docker.1ms.run",
-                "https://docker.hlyun.org"
-              ]
-            }
-            DOCKEREOF
-              systemctl restart docker
-              
-              echo "Docker 安装完成: $(docker --version)"
-            else
-              echo "Docker 已安装: $(docker --version)"
-            fi
-            
-            # 设置 Docker 路径
-            export PATH=$PATH:/usr/bin:/usr/local/bin
-            DOCKER_CMD=$(which docker 2>/dev/null || echo "/usr/bin/docker")
-            COMPOSE_CMD="docker compose"
-            
-            APP_DIR="/opt/dong-medicine"
-            mkdir -p "$APP_DIR"
-            cd "$APP_DIR"
-            
-            echo "========== 强制清理旧容器和网络 =========="
-            $COMPOSE_CMD down --remove-orphans --timeout 5 --volumes 2>/dev/null || true
-            $DOCKER_CMD ps -a --filter "name=dong-medicine" -q | xargs -r $DOCKER_CMD rm -f 2>/dev/null || true
-            $DOCKER_CMD network ls --filter "name=app-net" -q | xargs -r $DOCKER_CMD network rm 2>/dev/null || true
-            $DOCKER_CMD volume ls --filter "name=dong-medicine" -q | xargs -r $DOCKER_CMD volume rm 2>/dev/null || true
-            echo "清理完成"
-            
-            echo "========== 创建环境配置 =========="
-            cat > .env << ENVEOF
-            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-            RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}
-            RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_EXPIRATION=86400000
-            FRONTEND_PORT=3000
-            CORS_ALLOWED_ORIGIN=http://${{ secrets.SERVER_HOST }}:3000
-            DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
-            ENVEOF
-            
-            echo "========== 创建 docker-compose.yml =========="
+            echo "========== 创建配置文件 =========="
             cat > docker-compose.yml << 'EOF'
             services:
               mysql:
@@ -272,7 +92,7 @@ jobs:
                   - mysql_data:/var/lib/mysql
                 command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
                 healthcheck:
-                  test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+                  test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
                   interval: 5s
                   timeout: 5s
                   retries: 20
@@ -284,13 +104,12 @@ jobs:
                 container_name: dong-medicine-redis
                 restart: unless-stopped
                 command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-                volumes:
-                  - redis_data:/data
+                volumes: [redis_data:/data]
                 healthcheck:
                   test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
                   interval: 5s
-                  timeout: 2s
-                  retries: 5
+                  timeout: 3s
+                  retries: 10
                 networks: [app-net]
 
               rabbitmq:
@@ -298,16 +117,15 @@ jobs:
                 container_name: dong-medicine-rabbitmq
                 restart: unless-stopped
                 environment:
-                  RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+                  RABBITMQ_DEFAULT_USER: admin
                   RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-                volumes:
-                  - rabbitmq_data:/var/lib/rabbitmq
+                volumes: [rabbitmq_data:/var/lib/rabbitmq]
                 healthcheck:
                   test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
                   interval: 5s
                   timeout: 5s
-                  retries: 10
-                  start_period: 20s
+                  retries: 15
+                  start_period: 30s
                 networks: [app-net]
 
               kkfileview:
@@ -337,17 +155,11 @@ jobs:
                   REDIS_PASSWORD: ${REDIS_PASSWORD}
                   RABBITMQ_HOST: rabbitmq
                   RABBITMQ_PORT: 5672
-                  RABBITMQ_USER: ${RABBITMQ_USER}
+                  RABBITMQ_USER: admin
                   RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
                   JWT_SECRET: ${JWT_SECRET}
                   DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
-                volumes:
-                  - backend_public:/app/public
-                  - backend_logs:/app/logs
-                depends_on:
-                  mysql: {condition: service_healthy}
-                  redis: {condition: service_healthy}
-                  rabbitmq: {condition: service_healthy}
+                volumes: [backend_public:/app/public, backend_logs:/app/logs]
                 ports: ["8080:8080"]
                 healthcheck:
                   test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
@@ -362,8 +174,6 @@ jobs:
                 container_name: dong-medicine-frontend
                 restart: unless-stopped
                 ports: ["80:80"]
-                depends_on:
-                  backend: {condition: service_started}
                 networks: [app-net]
 
             volumes:
@@ -377,61 +187,37 @@ jobs:
             networks:
               app-net:
             EOF
-            
-            echo "========== 登录 GHCR =========="
-            echo ${{ secrets.GITHUB_TOKEN }} | $DOCKER_CMD login ghcr.io -u ${{ github.actor }} --password-stdin || true
-            
-            echo "========== 启动基础服务 =========="
-            $COMPOSE_CMD up -d mysql redis rabbitmq kkfileview
-            
-            echo "========== 等待基础服务就绪 =========="
-            for i in $(seq 1 30); do
-              MYSQL_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-mysql 2>/dev/null || echo "unknown")
-              REDIS_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-redis 2>/dev/null || echo "unknown")
-              RABBITMQ_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-rabbitmq 2>/dev/null || echo "unknown")
-              echo "[$i] MySQL: $MYSQL_HEALTH, Redis: $REDIS_HEALTH, RabbitMQ: $RABBITMQ_HEALTH"
-              
-              if [ "$MYSQL_HEALTH" = "healthy" ] && [ "$REDIS_HEALTH" = "healthy" ] && [ "$RABBITMQ_HEALTH" = "healthy" ]; then
-                echo "✓ 基础服务就绪!"
-                break
-              fi
-              sleep 2
-            done
-            
-            echo "========== 启动应用服务 =========="
-            $COMPOSE_CMD up -d backend frontend
-            
-            echo "========== 等待后端启动 =========="
-            sleep 15
-            $COMPOSE_CMD ps
-            $DOCKER_CMD logs dong-medicine-backend --tail 20 2>/dev/null || echo "后端容器未启动"
-            
-            echo "========== 等待后端就绪 (最多6分钟) =========="
+
+            cat > .env << EOF
+            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
+            EOF
+
+            echo "========== 停止旧容器 =========="
+            docker compose down --remove-orphans --timeout 10 --volumes 2>/dev/null || true
+
+            echo "========== 启动新容器 =========="
+            docker compose up -d
+
+            echo "========== 等待服务就绪 =========="
+            sleep 30
+            docker compose ps
+
+            echo "========== 检查后端健康 =========="
             for i in $(seq 1 36); do
-              STATUS=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
               echo "[$i] 后端状态: $STATUS"
-              
               if [ "$STATUS" = "healthy" ]; then
-                echo "✓ 后端服务就绪!"
-                $COMPOSE_CMD ps
+                echo "✓ 部署成功!"
+                docker compose ps
                 exit 0
               fi
-              
-              if [ "$STATUS" = "unhealthy" ]; then
-                echo "✗ 后端服务不健康，查看错误..."
-                $DOCKER_CMD logs dong-medicine-backend --tail 50
-                exit 1
-              fi
-              
-              if ! $DOCKER_CMD ps | grep -q dong-medicine-backend; then
-                echo "✗ 后端容器已停止，查看错误..."
-                $DOCKER_CMD logs dong-medicine-backend --tail 50
-                exit 1
-              fi
-              
               sleep 10
             done
-            
-            echo "✗ 后端服务未在预期时间内就绪"
-            $DOCKER_CMD logs dong-medicine-backend --tail 50
+
+            echo "✗ 部署超时"
+            docker logs dong-medicine-backend --tail 50
             exit 1
