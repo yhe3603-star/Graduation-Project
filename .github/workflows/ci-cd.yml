@@ -292,12 +292,30 @@ jobs:
             echo "========== 登录 GHCR =========="
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
             
-            echo "========== 启动所有服务 =========="
-            docker compose up -d
+            echo "========== 启动基础服务 =========="
+            docker compose up -d mysql redis rabbitmq kkfileview
             
-            echo "========== 等待服务启动 (30秒) =========="
-            sleep 30
+            echo "========== 等待基础服务就绪 =========="
+            for i in $(seq 1 30); do
+              MYSQL_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-mysql 2>/dev/null || echo "unknown")
+              REDIS_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-redis 2>/dev/null || echo "unknown")
+              RABBITMQ_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-rabbitmq 2>/dev/null || echo "unknown")
+              echo "[$i] MySQL: $MYSQL_HEALTH, Redis: $REDIS_HEALTH, RabbitMQ: $RABBITMQ_HEALTH"
+              
+              if [ "$MYSQL_HEALTH" = "healthy" ] && [ "$REDIS_HEALTH" = "healthy" ] && [ "$RABBITMQ_HEALTH" = "healthy" ]; then
+                echo "✓ 基础服务就绪!"
+                break
+              fi
+              sleep 2
+            done
+            
+            echo "========== 启动应用服务 =========="
+            docker compose up -d backend frontend
+            
+            echo "========== 等待后端启动 =========="
+            sleep 15
             docker compose ps
+            docker logs dong-medicine-backend --tail 20 2>/dev/null || echo "后端容器未启动"
             
             echo "========== 等待后端就绪 (最多6分钟) =========="
             for i in $(seq 1 36); do
