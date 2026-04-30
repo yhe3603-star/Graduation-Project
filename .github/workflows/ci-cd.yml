@@ -297,11 +297,12 @@ jobs:
                 driver: bridge
             COMPOSEOF
             
-            echo "========== 拉取镜像 =========="
-            docker compose pull
+            echo "========== 拉取应用镜像 =========="
+            docker pull ghcr.io/yhe3603-star/dong-medicine-backend:latest || true
+            docker pull ghcr.io/yhe3603-star/dong-medicine-frontend:latest || true
             
             echo "========== 启动服务 =========="
-            docker compose up -d
+            docker compose up -d --no-pull
             
             echo "========== 等待就绪 =========="
             for i in $(seq 1 30); do
