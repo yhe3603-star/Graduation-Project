@@ -32,8 +32,6 @@ Thumbs.db
 Dockerfile
 docker-compose*.yml
 .dockerignore
-nginx.conf
-default.conf
 
 *.md
 .env*
