@@ -82,6 +82,20 @@ jobs:
           EOF
           mkdir -p ~/.ssh/sockets
 
+      - name: Pre-check SSH connection
+        run: |
+          echo "检查 SSH 连接..."
+          for i in {1..5}; do
+            if ssh -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new server 'echo OK' 2>/dev/null; then
+              echo "SSH 连接正常"
+              exit 0
+            fi
+            echo "SSH 连接失败，等待 ${i}0 秒后重试..."
+            sleep $((i * 10))
+          done
+          echo "ERROR: SSH 连接失败，请检查服务器状态"
+          exit 1
+
       - name: Copy SQL file
         run: |
           ssh -o BatchMode=yes -o ConnectTimeout=30 server 'mkdir -p /opt/dong-medicine/sql' || true
