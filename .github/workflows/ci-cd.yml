@@ -180,16 +180,21 @@ jobs:
             FRONTEND_PORT=3000
             CORS_ALLOWED_ORIGIN=http://${{ secrets.SERVER_HOST }}:3000
             DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}
+            APP_RABBITMQ_ENABLED=false
+            SPRING_AUTOCONFIGURE_EXCLUDE=org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
             ENVEOF
             
             echo "========== 登录 GHCR =========="
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
             
-            echo "========== 启动服务 =========="
-            $COMPOSE_CMD up -d
+            echo "========== 拉取最新镜像 =========="
+            $COMPOSE_CMD pull 2>/dev/null || true
             
-            echo "========== 等待后端就绪 (最多6分钟) =========="
-            for i in $(seq 1 36); do
+            echo "========== 启动服务 =========="
+            $COMPOSE_CMD up -d --timeout 180
+            
+            echo "========== 等待后端就绪 (最多8分钟) =========="
+            for i in $(seq 1 48); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' dong-medicine-backend 2>/dev/null || echo "unknown")
               echo "[$i] 后端状态: $STATUS"
               
@@ -201,21 +206,26 @@ jobs:
               
               if [ "$STATUS" = "unhealthy" ]; then
                 echo "✗ 后端服务不健康"
-                docker logs dong-medicine-backend --tail 50
+                docker logs dong-medicine-backend --tail 80
                 exit 1
               fi
               
               if ! docker ps | grep -q dong-medicine-backend; then
                 echo "✗ 后端容器已停止"
-                docker logs dong-medicine-backend --tail 50
+                docker logs dong-medicine-backend --tail 80
                 exit 1
+              fi
+              
+              if [ $((i % 6)) -eq 0 ]; then
+                echo "--- 后端日志 (最近10行) ---"
+                docker logs dong-medicine-backend --tail 10 2>/dev/null || true
               fi
               
               sleep 10
             done
             
             echo "✗ 后端服务未在预期时间内就绪"
-            docker logs dong-medicine-backend --tail 50
+            docker logs dong-medicine-backend --tail 80
             exit 1
 
       - name: Cleanup SSH Key
