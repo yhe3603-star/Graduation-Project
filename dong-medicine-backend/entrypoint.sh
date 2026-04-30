@@ -48,9 +48,10 @@ wait_for_mysql() {
 
 wait_for_service() {
     local host=$1 port=$2 name=$3
+    local max_retries=${4:-30}
     local retry=0
     
-    while [ $retry -lt 15 ]; do
+    while [ $retry -lt $max_retries ]; do
         if nc -z "$host" "$port" 2>/dev/null; then
             log_info "$name 就绪"
             return 0
@@ -77,8 +78,8 @@ init_database() {
 wait_for_mysql || exit 1
 init_database
 
-[ -n "$REDIS_HOST" ] && wait_for_service "$REDIS_HOST" "${REDIS_PORT:-6379}" "Redis"
-[ -n "$RABBITMQ_HOST" ] && wait_for_service "$RABBITMQ_HOST" "${RABBITMQ_PORT:-5672}" "RabbitMQ"
+[ -n "$REDIS_HOST" ] && wait_for_service "$REDIS_HOST" "${REDIS_PORT:-6379}" "Redis" 30
+[ -n "$RABBITMQ_HOST" ] && wait_for_service "$RABBITMQ_HOST" "${RABBITMQ_PORT:-5672}" "RabbitMQ" 60
 
 echo "=========================================="
 log_info "启动应用..."

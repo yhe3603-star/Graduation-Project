@@ -306,9 +306,9 @@ jobs:
                 healthcheck:
                   test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
                   interval: 5s
-                  timeout: 5s
-                  retries: 10
-                  start_period: 20s
+                  timeout: 10s
+                  retries: 20
+                  start_period: 90s
                 networks: [app-net]
 
               kkfileview:
@@ -385,8 +385,8 @@ jobs:
             echo "========== 启动基础服务 =========="
             $COMPOSE_CMD up -d mysql redis rabbitmq kkfileview
             
-            echo "========== 等待基础服务就绪 =========="
-            for i in $(seq 1 30); do
+            echo "========== 等待基础服务就绪 (最多3分钟) =========="
+            for i in $(seq 1 60); do
               MYSQL_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-mysql 2>/dev/null || echo "unknown")
               REDIS_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-redis 2>/dev/null || echo "unknown")
               RABBITMQ_HEALTH=$($DOCKER_CMD inspect --format='{{.State.Health.Status}}' dong-medicine-rabbitmq 2>/dev/null || echo "unknown")
@@ -396,7 +396,7 @@ jobs:
                 echo "✓ 基础服务就绪!"
                 break
               fi
-              sleep 2
+              sleep 3
             done
             
             echo "========== 启动应用服务 =========="
