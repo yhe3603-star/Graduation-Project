@@ -38,7 +38,9 @@ jobs:
 
       - name: Run Tests
         working-directory: dong-medicine-backend
-        run: ./mvnw test -B --no-transfer-progress -T 2C
+        run: |
+          chmod +x mvnw
+          ./mvnw test -B --no-transfer-progress -T 2C
 
   test-frontend:
     name: Test Frontend
