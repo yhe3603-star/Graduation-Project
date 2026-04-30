@@ -1,3 +1,15 @@
+FROM maven:3.9-eclipse-temurin-17 AS builder
+
+WORKDIR /app
+
+COPY pom.xml .
+
+RUN mvn dependency:go-offline -B
+
+COPY src ./src
+
+RUN mvn clean package -DskipTests -B
+
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
@@ -10,7 +22,7 @@ RUN apt-get update && \
 
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-COPY target/*.jar app.jar
+COPY --from=builder /app/target/*.jar app.jar
 COPY sql/dong_medicine.sql /app/init.sql
 COPY entrypoint.sh /app/entrypoint.sh
 
