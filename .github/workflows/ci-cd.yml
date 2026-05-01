@@ -185,7 +185,11 @@ jobs:
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
             
             echo "========== 拉取最新镜像 =========="
-            $COMPOSE_CMD pull 2>/dev/null || true
+            echo "拉取 backend 镜像..."
+            docker pull ghcr.io/${{ github.repository_owner }}/dong-medicine-backend:latest || echo "警告: backend 镜像拉取失败，将使用本地镜像"
+            echo "拉取 frontend 镜像..."
+            docker pull ghcr.io/${{ github.repository_owner }}/dong-medicine-frontend:latest || echo "警告: frontend 镜像拉取失败，将使用本地镜像"
+            echo "镜像拉取完成"
             
             echo "========== 启动基础服务 (mysql, redis, rabbitmq, kkfileview) =========="
             $COMPOSE_CMD up -d mysql redis rabbitmq kkfileview
