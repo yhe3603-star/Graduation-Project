@@ -3,10 +3,10 @@ package com.dongmedicine.websocket;
 import cn.dev33.satoken.stp.StpUtil;
 import com.dongmedicine.controller.ChatController;
 import com.dongmedicine.service.AiChatService;
+import com.dongmedicine.service.ChatHistoryService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -14,29 +14,44 @@ import reactor.core.Disposable;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
-    @Autowired
-    private AiChatService aiChatService;
+    private static final int MAX_CHAT_THREADS = 50;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final AiChatService aiChatService;
+    private final ChatHistoryService chatHistoryService;
+    private final ObjectMapper objectMapper;
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final Map<String, Disposable> activeSubscriptions = new ConcurrentHashMap<>();
+    private final Map<String, String> chatSessionIds = new ConcurrentHashMap<>();
     private final ExecutorService chatExecutor = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors(),
-            r -> {
-                Thread t = new Thread(r, "ws-chat");
-                t.setDaemon(true);
-                return t;
+            MAX_CHAT_THREADS,
+            new ThreadFactory() {
+                private final AtomicInteger counter = new AtomicInteger(1);
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread t = new Thread(r, "ws-chat-" + counter.getAndIncrement());
+                    t.setDaemon(true);
+                    return t;
+                }
             });
+
+    public ChatWebSocketHandler(AiChatService aiChatService, ChatHistoryService chatHistoryService,
+                                ObjectMapper objectMapper) {
+        this.aiChatService = aiChatService;
+        this.chatHistoryService = chatHistoryService;
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -70,18 +85,35 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        String sessionId = session.getId();
-        Disposable prev = activeSubscriptions.get(sessionId);
+        String wsSessionId = session.getId();
+        Disposable prev = activeSubscriptions.get(wsSessionId);
         if (prev != null && !prev.isDisposed()) {
             prev.dispose();
-            log.info("取消前一次AI请求: sessionId={}", sessionId);
+            log.info("取消前一次AI请求: sessionId={}", wsSessionId);
         }
 
-        String userId = getUserId(session);
-        log.info("WebSocket聊天请求: sessionId={}, userId={}, messageLength={}",
-                sessionId, userId, userMessage.length());
+        // Generate or reuse chat session ID
+        String chatSessionId = json.has("sessionId") && !json.path("sessionId").asText().isBlank()
+                ? json.path("sessionId").asText()
+                : chatSessionIds.computeIfAbsent(wsSessionId, k -> UUID.randomUUID().toString());
+        chatSessionIds.putIfAbsent(wsSessionId, chatSessionId);
 
-        sendJson(session, Map.of("type", "start"));
+        String userIdStr = getUserId(session);
+        Integer userId = "anonymous".equals(userIdStr) ? null : Integer.parseInt(userIdStr);
+
+        log.info("WebSocket聊天请求: wsSessionId={}, chatSessionId={}, userId={}, messageLength={}",
+                wsSessionId, chatSessionId, userId, userMessage.length());
+
+        // Save user message to database
+        if (userId != null) {
+            try {
+                chatHistoryService.saveMessage(userId, chatSessionId, "user", userMessage);
+            } catch (Exception e) {
+                log.warn("保存用户消息失败: userId={}, chatSessionId={}", userId, chatSessionId, e);
+            }
+        }
+
+        sendJson(session, Map.of("type", "start", "sessionId", chatSessionId));
 
         chatExecutor.submit(() -> {
             try {
@@ -93,23 +125,33 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
                     @Override
                     public void onComplete(String fullReply) {
-                        activeSubscriptions.remove(sessionId);
-                        sendJson(session, Map.of("type", "done", "content", fullReply));
+                        activeSubscriptions.remove(wsSessionId);
+                        sendJson(session, Map.of("type", "done", "content", fullReply, "sessionId", chatSessionId));
                         ChatController.recordRequest(true);
-                        log.info("WebSocket聊天完成: sessionId={}, replyLength={}",
-                                sessionId, fullReply.length());
+
+                        // Save assistant response to database
+                        if (userId != null) {
+                            try {
+                                chatHistoryService.saveMessage(userId, chatSessionId, "assistant", fullReply);
+                            } catch (Exception e) {
+                                log.warn("保存AI回复失败: userId={}, chatSessionId={}", userId, chatSessionId, e);
+                            }
+                        }
+
+                        log.info("WebSocket聊天完成: chatSessionId={}, replyLength={}",
+                                chatSessionId, fullReply.length());
                     }
 
                     @Override
                     public void onError(String error) {
-                        activeSubscriptions.remove(sessionId);
+                        activeSubscriptions.remove(wsSessionId);
                         sendError(session, error);
                         ChatController.recordRequest(false);
                     }
                 });
-                activeSubscriptions.put(sessionId, subscription);
+                activeSubscriptions.put(wsSessionId, subscription);
             } catch (Exception e) {
-                log.error("WebSocket聊天提交失败: sessionId={}", sessionId, e);
+                log.error("WebSocket聊天提交失败: chatSessionId={}", chatSessionId, e);
                 sendError(session, "聊天服务异常");
             }
         });
@@ -131,6 +173,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         String sessionId = session.getId();
         sessions.remove(sessionId);
+        chatSessionIds.remove(sessionId);
         Disposable subscription = activeSubscriptions.remove(sessionId);
         if (subscription != null && !subscription.isDisposed()) {
             subscription.dispose();
@@ -144,6 +187,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String sessionId = session.getId();
         log.error("WebSocket传输错误: sessionId={}", sessionId, exception);
         sessions.remove(sessionId);
+        chatSessionIds.remove(sessionId);
         Disposable subscription = activeSubscriptions.remove(sessionId);
         if (subscription != null && !subscription.isDisposed()) {
             subscription.dispose();

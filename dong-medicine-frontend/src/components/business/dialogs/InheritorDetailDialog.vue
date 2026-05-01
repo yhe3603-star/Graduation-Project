@@ -56,6 +56,33 @@
         </el-descriptions-item>
       </el-descriptions>
 
+      <div class="timeline-section">
+        <el-divider content-position="left">
+          <el-icon><Clock /></el-icon>
+          传承生涯
+        </el-divider>
+        <div v-if="timelineItems.length > 0" class="milestone-timeline">
+          <div
+            v-for="(item, index) in timelineItems"
+            :key="index"
+            class="timeline-item"
+            :class="{ 'timeline-left': index % 2 === 0, 'timeline-right': index % 2 !== 0 }"
+          >
+            <div class="timeline-dot" :style="{ background: item.color }">
+              <el-icon><component :is="item.icon" /></el-icon>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-tag">
+                <el-tag :type="item.tagType" size="small" effect="dark">{{ item.phase }}</el-tag>
+                <span v-if="item.year" class="timeline-year">{{ item.year }}</span>
+              </div>
+              <p class="timeline-desc">{{ item.description }}</p>
+            </div>
+          </div>
+        </div>
+        <el-empty v-else description="暂无生涯记录" :image-size="80" />
+      </div>
+
       <div class="media-section">
         <el-divider content-position="left">
           <el-icon><Film /></el-icon>
@@ -131,7 +158,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { Clock, Film, VideoPlay, Picture, Star, Document } from '@element-plus/icons-vue';
+import { Clock, Film, Medal, Reading, School, Star, Trophy, VideoPlay, Picture, Document } from '@element-plus/icons-vue';
 import VideoPlayer from '@/components/business/media/VideoPlayer.vue';
 import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
 import DocumentList from '@/components/business/media/DocumentList.vue';
@@ -158,6 +185,131 @@ const videoPlayerRef = ref(null);
 const videoList = computed(() => parseMediaList(props.inheritor?.videos));
 const imageList = computed(() => parseMediaList(props.inheritor?.images));
 const isVideoTab = computed(() => activeMediaTab.value === 'video');
+
+const timelineItems = computed(() => {
+  const inheritor = props.inheritor;
+  if (!inheritor) return [];
+
+  const bio = inheritor.bio || '';
+  const experienceYears = inheritor.experienceYears || 0;
+  const honors = inheritor.honors || '';
+  const specialties = inheritor.specialties || '';
+
+  const parsed = parseTimelineFromBio(bio);
+
+  if (parsed.length > 0) {
+    return parsed;
+  }
+
+  return generateGenericTimeline(inheritor.name, experienceYears, specialties, honors, bio);
+});
+
+function parseTimelineFromBio(bio) {
+  if (!bio || !bio.trim()) return [];
+
+  const phasePatterns = [
+    { regex: /学习经历[:：]?\s*([\s\S]*?)(?=行医经历[:：]|荣誉奖项[:：]|传承贡献[:：]|$)/, phase: '学习经历', icon: School, color: '#409EFF', tagType: 'primary' },
+    { regex: /行医经历[:：]?\s*([\s\S]*?)(?=荣誉奖项[:：]|传承贡献[:：]|$)/, phase: '行医经历', icon: Clock, color: '#67C23A', tagType: 'success' },
+    { regex: /荣誉奖项[:：]?\s*([\s\S]*?)(?=传承贡献[:：]|$)/, phase: '荣誉奖项', icon: Trophy, color: '#E6A23C', tagType: 'warning' },
+    { regex: /传承贡献[:：]?\s*([\s\S]*)/, phase: '传承贡献', icon: Medal, color: '#F56C6C', tagType: 'danger' }
+  ];
+
+  const items = [];
+  const phaseMeta = {
+    '学习经历': { icon: School, color: '#409EFF', tagType: 'primary' },
+    '行医经历': { icon: Clock, color: '#67C23A', tagType: 'success' },
+    '荣誉奖项': { icon: Trophy, color: '#E6A23C', tagType: 'warning' },
+    '传承贡献': { icon: Medal, color: '#F56C6C', tagType: 'danger' }
+  };
+
+  for (const pattern of phasePatterns) {
+    const match = bio.match(pattern.regex);
+    if (match && match[1] && match[1].trim()) {
+      const content = match[1].trim().replace(/[,，;；、\n]+/g, '\n').split('\n').filter(Boolean);
+      const meta = phaseMeta[pattern.phase];
+      for (const line of content.slice(0, 5)) {
+        const yearMatch = line.match(/(\d{4})\s*[年年]/);
+        items.push({
+          phase: pattern.phase,
+          year: yearMatch ? yearMatch[1] : null,
+          description: line.replace(/\d{4}\s*[年年]\s*/, '').trim() || line,
+          icon: meta.icon,
+          color: meta.color,
+          tagType: meta.tagType
+        });
+      }
+    }
+  }
+
+  return items;
+}
+
+function generateGenericTimeline(name, years, specialties, honors, bio) {
+  const items = [];
+  const year = new Date().getFullYear();
+
+  if (years > 0) {
+    const startYear = year - years;
+    items.push({
+      phase: '开始行医',
+      year: startYear.toString(),
+      description: `${name || '传承人'}于${startYear}年开始从事侗医药实践，至今已有${years}年丰富经验`,
+      icon: Clock,
+      color: '#67C23A',
+      tagType: 'success'
+    });
+
+    if (years >= 10) {
+      const midYear = startYear + Math.floor(years / 2);
+      items.splice(0, 0, {
+        phase: '学习经历',
+        year: (startYear - 5).toString(),
+        description: `${name || '传承人'}早期跟随师长学习侗医药知识，系统掌握传统诊疗技艺`,
+        icon: School,
+        color: '#409EFF',
+        tagType: 'primary'
+      });
+    }
+  }
+
+  if (specialties && specialties.trim()) {
+    items.push({
+      phase: '技艺特色',
+      year: null,
+      description: `擅长：${specialties.trim()}`,
+      icon: Reading,
+      color: '#909399',
+      tagType: 'info'
+    });
+  }
+
+  if (honors && honors.trim()) {
+    const honorList = honors.split(/[,，;；、\n]/).filter(Boolean);
+    for (const honor of honorList.slice(0, 3)) {
+      items.push({
+        phase: '荣誉奖项',
+        year: null,
+        description: honor.trim(),
+        icon: Trophy,
+        color: '#E6A23C',
+        tagType: 'warning'
+      });
+    }
+  }
+
+  if (bio && bio.trim()) {
+    items.push({
+      phase: '传承贡献',
+      year: null,
+      description: bio.substring(0, 80) + (bio.length > 80 ? '...' : ''),
+      icon: Medal,
+      color: '#F56C6C',
+      tagType: 'danger'
+    });
+  }
+
+  return items;
+}
 
 const loadDocuments = () => {
   documentsLoading.value = true;
@@ -229,6 +381,87 @@ const handleDocumentDownload = downloadDocument;
 
 .detail-section {
   margin-top: 16px;
+}
+
+.timeline-section {
+  margin-top: 24px;
+}
+
+.milestone-timeline {
+  position: relative;
+  padding: var(--space-lg) 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  position: relative;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-inverse);
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 40px;
+  bottom: -24px;
+  width: 2px;
+  background: var(--border-light);
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-content {
+  flex: 1;
+  padding: var(--space-md);
+  background: var(--bg-rice);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--border-light);
+  transition: all var(--transition-fast);
+}
+
+.timeline-content:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.timeline-tag {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.timeline-year {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+.timeline-desc {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 @media (max-width: 768px) {

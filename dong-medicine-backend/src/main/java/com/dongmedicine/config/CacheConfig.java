@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,8 +26,11 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Configuration
 @EnableCaching
@@ -36,12 +40,15 @@ public class CacheConfig {
 
     @Value("${app.cache.enabled:true}")
     private boolean cacheEnabled;
-    
+
     @Value("${app.cache.max-size:1000}")
     private int maxCacheSize;
-    
+
     @Value("${app.cache.expire-minutes:60}")
     private int defaultExpireMinutes;
+
+    private final AtomicBoolean redisRecovered = new AtomicBoolean(false);
+    private final AtomicReference<CacheManager> currentCacheManager = new AtomicReference<>();
 
     private ObjectMapper createObjectMapper() {
         ObjectMapper om = new ObjectMapper();
@@ -71,14 +78,40 @@ public class CacheConfig {
     @Bean
     @Primary
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        CacheManager manager;
         try {
             connectionFactory.getConnection().ping();
             log.info("Redis connection successful, using Redis cache manager");
-            return createRedisCacheManager(connectionFactory);
+            manager = createRedisCacheManager(connectionFactory);
         } catch (Exception e) {
             log.warn("Redis connection failed, falling back to in-memory cache: {}", e.getMessage());
-            return createFallbackCacheManager();
+            manager = createFallbackCacheManager();
+            scheduleRedisRecoveryCheck(connectionFactory);
         }
+        currentCacheManager.set(manager);
+        return manager;
+    }
+
+    private void scheduleRedisRecoveryCheck(RedisConnectionFactory connectionFactory) {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "redis-recovery-check");
+            t.setDaemon(true);
+            return t;
+        });
+        scheduler.scheduleWithFixedDelay(() -> {
+            if (redisRecovered.get()) {
+                scheduler.shutdown();
+                return;
+            }
+            try {
+                connectionFactory.getConnection().ping();
+                redisRecovered.set(true);
+                log.warn("=== Redis连接已恢复，请重启应用以启用Redis缓存 ===");
+                scheduler.shutdown();
+            } catch (Exception ignored) {
+                // Redis still unavailable
+            }
+        }, 60, 60, TimeUnit.SECONDS);
     }
 
     private CacheManager createRedisCacheManager(RedisConnectionFactory connectionFactory) {

@@ -16,7 +16,16 @@
         {{ plant?.nameCn }}
       </el-descriptions-item>
       <el-descriptions-item label="侗语名">
-        {{ plant?.nameDong }}
+        <div class="dong-name-row">
+          <span>{{ plant?.nameDong || '暂无' }}</span>
+          <HerbAudio
+            v-if="plant?.nameDong"
+            :plant-name="plant?.nameDong"
+            :plant-id="plant?.id"
+            :show-label="false"
+            :icon-size="16"
+          />
+        </div>
       </el-descriptions-item>
       <el-descriptions-item label="学名">
         {{ plant?.scientificName }}
@@ -91,6 +100,7 @@
 <script setup>
 import { formatTime } from '@/utils/adminUtils'
 import MediaDisplay from '@/components/business/media/MediaDisplay.vue'
+import HerbAudio from '@/components/business/media/HerbAudio.vue'
 
 defineProps({
   visible: { type: Boolean, default: false },
@@ -102,4 +112,10 @@ defineEmits(['update:visible'])
 
 <style scoped>
 @import '@/styles/media-common.css';
+
+.dong-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
 </style>

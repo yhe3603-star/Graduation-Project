@@ -2,10 +2,12 @@ package com.dongmedicine.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Plant;
+import com.dongmedicine.service.BrowseHistoryService;
 import com.dongmedicine.service.PlantService;
 import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,6 +29,7 @@ import java.util.Map;
 public class PlantController {
 
     private final PlantService service;
+    private final BrowseHistoryService browseHistoryService;
 
     @GetMapping("/list")
     public R<Map<String, Object>> list(
@@ -52,6 +55,14 @@ public class PlantController {
     public R<Plant> detail(@PathVariable @NotNull Integer id) {
         Plant plant = service.getDetailWithStory(id);
         if (plant == null) throw BusinessException.notFound("植物不存在");
+        Integer userId = SecurityUtils.getCurrentUserIdOrNull();
+        if (userId != null) {
+            try {
+                browseHistoryService.record(userId, "plant", id);
+            } catch (Exception e) {
+                // Silently ignore browse history recording failures
+            }
+        }
         return R.ok(plant);
     }
 

@@ -376,11 +376,41 @@ body {
 @media (max-width: 1024px) {
   .page-container { grid-template-columns: 1fr; }
   .page-sidebar { order: -1; }
+  .chat-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .module-page { padding: var(--space-xl) var(--space-md) var(--space-2xl); }
+  .module-header h1 { font-size: var(--font-size-xl); }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .media-grid.image { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+  .media-grid.video { grid-template-columns: 1fr; }
+  .comparison-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .favorite-card { flex-wrap: wrap; gap: var(--space-sm); }
+  .record-item { flex-direction: column; align-items: flex-start; }
 }
 
 @media (max-width: 640px) {
-  .module-page { padding: var(--space-lg); }
+  .module-page { padding: var(--space-lg) var(--space-sm); }
   .stats-grid { grid-template-columns: 1fr; }
-  .media-grid.image { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
-  .media-grid.video { grid-template-columns: 1fr; }
+  .media-grid.image { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  .nav-card { padding: var(--space-md); }
+  .resource-icon { width: 40px; height: 40px; }
+  .section-title { font-size: var(--font-size-lg); }
+}
+
+@media (max-width: 480px) {
+  .module-page { padding: var(--space-md) var(--space-sm); }
+  .module-header { margin-bottom: var(--space-lg); }
+  .module-header h1 { font-size: var(--font-size-lg); }
+  .hero-section { padding: var(--space-xl) var(--space-md); border-radius: var(--radius-lg); }
+  .hero-title { font-size: var(--font-size-xl); }
+  .quick-nav { grid-template-columns: 1fr; gap: var(--space-sm); }
+  .stats-grid { grid-template-columns: 1fr; gap: var(--space-sm); }
+  .qa-card { padding: var(--space-md); }
+  .resource-card { padding: var(--space-md); }
+  .inheritor-card { padding: var(--space-md); flex-wrap: wrap; }
+  .comment-item { padding: var(--space-sm); }
+  .el-dialog { width: 95% !important; margin: 0 auto; }
+  .el-message-box { width: 90% !important; }
 }

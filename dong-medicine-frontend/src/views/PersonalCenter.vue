@@ -15,6 +15,7 @@
     </div>
 
     <div v-else class="personal-container">
+      <!-- Profile Section -->
       <div class="profile-section">
         <div class="profile-card">
           <div class="avatar-section">
@@ -25,15 +26,11 @@
             </div>
           </div>
           <el-divider />
+          <!-- Study Stats Summary -->
           <div class="stats-row">
-            <div class="stat-block">
-              <span class="stat-num">{{ favorites.length }}</span><span class="stat-text">收藏</span>
-            </div>
-            <div class="stat-block">
-              <span class="stat-num">{{ quizRecords.length + gameRecords.length }}</span><span class="stat-text">答题</span>
-            </div>
-            <div class="stat-block">
-              <span class="stat-num">{{ comments.length }}</span><span class="stat-text">评论</span>
+            <div class="stat-block" v-for="s in studyStats" :key="s.label">
+              <span class="stat-num">{{ s.value }}</span>
+              <span class="stat-text">{{ s.label }}</span>
             </div>
           </div>
         </div>
@@ -46,8 +43,72 @@
         </div>
       </div>
 
+      <!-- Content Section -->
       <div class="content-section">
         <el-tabs v-model="activeTab" class="content-tabs">
+          <!-- Study Stats Tab -->
+          <el-tab-pane label="学习统计" name="stats">
+            <div class="stats-dashboard" v-loading="statsLoading">
+              <div class="stats-cards">
+                <div class="stats-card-item">
+                  <div class="stats-card-icon" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                    <el-icon><EditPen /></el-icon>
+                  </div>
+                  <div class="stats-card-body">
+                    <div class="stats-card-value">{{ studyStats[0]?.value || 0 }}</div>
+                    <div class="stats-card-label">总答题次数</div>
+                  </div>
+                </div>
+                <div class="stats-card-item">
+                  <div class="stats-card-icon" style="background: linear-gradient(135deg, var(--dong-indigo), var(--dong-indigo-dark));">
+                    <el-icon><Trophy /></el-icon>
+                  </div>
+                  <div class="stats-card-body">
+                    <div class="stats-card-value">{{ studyStats[1]?.value || 0 }}分</div>
+                    <div class="stats-card-label">平均得分</div>
+                  </div>
+                </div>
+                <div class="stats-card-item">
+                  <div class="stats-card-icon" style="background: linear-gradient(135deg, var(--dong-jade), var(--dong-jade-dark));">
+                    <el-icon><Cherry /></el-icon>
+                  </div>
+                  <div class="stats-card-body">
+                    <div class="stats-card-value">{{ studyStats[2]?.value || 0 }}</div>
+                    <div class="stats-card-label">植物游戏次数</div>
+                  </div>
+                </div>
+                <div class="stats-card-item">
+                  <div class="stats-card-icon" style="background: linear-gradient(135deg, var(--dong-gold-light), var(--dong-copper));">
+                    <el-icon><Star /></el-icon>
+                  </div>
+                  <div class="stats-card-body">
+                    <div class="stats-card-value">{{ studyStats[3]?.value || 0 }}</div>
+                    <div class="stats-card-label">收藏总数</div>
+                  </div>
+                </div>
+                <div class="stats-card-item">
+                  <div class="stats-card-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                    <el-icon><View /></el-icon>
+                  </div>
+                  <div class="stats-card-body">
+                    <div class="stats-card-value">{{ studyStats[4]?.value || 0 }}</div>
+                    <div class="stats-card-label">浏览总数</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Score Trend Chart -->
+              <div class="chart-section">
+                <h3 class="chart-title">
+                  <el-icon><TrendCharts /></el-icon>成绩趋势
+                </h3>
+                <div ref="scoreChartRef" class="score-chart"></div>
+                <el-empty v-if="!hasScoreData && !statsLoading" description="暂无答题数据" :image-size="80" />
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- Favorites Tab -->
           <el-tab-pane label="我的收藏" name="favorites">
             <div class="tab-header">
               <el-radio-group v-model="favoriteType" size="small">
@@ -75,6 +136,7 @@
             <Pagination v-else-if="filteredFavorites.length > favPageSize" :page="favPage" :size="favPageSize" :total="filteredFavorites.length" @update:page="favPage = $event" @update:size="favPageSize = $event" />
           </el-tab-pane>
 
+          <!-- Quiz Records Tab -->
           <el-tab-pane label="答题记录" name="quiz">
             <div class="record-list">
               <div v-for="record in paginatedRecords" :key="record.id + record.type" class="record-item">
@@ -90,21 +152,30 @@
             <Pagination v-else-if="allRecords.length > quizPageSize" :page="quizPage" :size="quizPageSize" :total="allRecords.length" @update:page="quizPage = $event" @update:size="quizPageSize = $event" />
           </el-tab-pane>
 
-          <el-tab-pane label="我的评论" name="comments">
-            <div class="comment-list">
-              <div v-for="c in paginatedComments" :key="c.id" class="comment-item">
-                <p class="comment-content">{{ c.content }}</p>
-                <div class="comment-meta">
-                  <span class="comment-target">{{ c.targetType }}</span>
-                  <span class="comment-time">{{ formatTime(c.createTime) }}</span>
+          <!-- Browse History Tab -->
+          <el-tab-pane label="浏览历史" name="history">
+            <div v-loading="historyLoading" class="history-list">
+              <div v-for="item in paginatedHistory" :key="item.id" class="history-item" @click="goToHistoryItem(item)">
+                <div class="history-icon">
+                  <el-icon><component :is="getHistoryIcon(item.targetType)" /></el-icon>
                 </div>
+                <div class="history-content">
+                  <h4>{{ item.title || item.targetTitle || item.targetName || item.targetType }}</h4>
+                  <p class="history-time">
+                    <el-icon><Clock /></el-icon>
+                    {{ formatTime(item.createTime || item.viewTime) }}
+                  </p>
+                </div>
+                <el-tag size="small" :type="getTypeTag(item.targetType)">{{ getTypeName(item.targetType) }}</el-tag>
+                <el-icon class="history-arrow"><ArrowRight /></el-icon>
               </div>
             </div>
-            <el-empty v-if="!comments.length" description="暂无评论" />
-            <Pagination v-else-if="comments.length > commentPageSize" :page="commentPage" :size="commentPageSize" :total="comments.length" @update:page="commentPage = $event" @update:size="commentPageSize = $event" />
+            <el-empty v-if="!historyLoading && !browseHistory.length" description="暂无浏览记录" />
+            <Pagination v-if="browseHistory.length > historyPageSize" :page="historyPage" :size="historyPageSize" :total="browseHistory.length" @update:page="historyPage = $event" @update:size="historyPageSize = $event" />
           </el-tab-pane>
 
-          <el-tab-pane label="账号设置" name="settings">
+          <!-- Password Change Tab -->
+          <el-tab-pane label="修改密码" name="settings">
             <div class="settings-container">
               <el-card class="settings-card" shadow="hover">
                 <template #header>
@@ -174,21 +245,25 @@
 </template>
 
 <script setup>
-import { inject, watch } from 'vue'
+import { inject, watch, ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import request from '@/utils/request'
-import { Lock, SwitchButton, User } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { Lock, SwitchButton, User, EditPen, Star, View, Clock, ArrowRight, TrendCharts, Trophy, Cherry } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
 import Pagination from '@/components/business/display/Pagination.vue'
 import CaptchaInput from '@/components/business/interact/CaptchaInput.vue'
 import { usePersonalCenter, actions, typeIconMap, typeTagMap, typeNameMap } from '@/composables/usePersonalCenter'
 
 const updateUserState = inject('updateUserState')
+const router = useRouter()
 
 const {
   isLoggedIn, userName, isAdmin, pageLoading, activeTab, favoriteType,
-  favorites, quizRecords, gameRecords, comments,
-  favPage, favPageSize, quizPage, quizPageSize, commentPage, commentPageSize,
+  favorites, quizRecords, gameRecords,
+  favPage, favPageSize, quizPage, quizPageSize,
   passwordFormRef, passwordCaptchaRef, passwordLoading, logoutLoading, passwordForm, passwordRules,
-  filteredFavorites, paginatedFavorites, allRecords, paginatedRecords, paginatedComments,
+  filteredFavorites, paginatedFavorites, allRecords, paginatedRecords,
   goToDetail, handleChangePassword, resetPasswordForm, handleLogout,
   formatTime, getDifficultyName, getScoreClass
 } = usePersonalCenter(request, updateUserState)
@@ -198,6 +273,302 @@ watch(favoriteType, () => { favPage.value = 1 })
 const getTypeIcon = (type) => typeIconMap[type] || typeIconMap.knowledge
 const getTypeTag = (type) => typeTagMap[type] || 'info'
 const getTypeName = (type) => typeNameMap[type] || '其他'
+
+// ========== Browse History ==========
+const browseHistory = ref([])
+const historyLoading = ref(false)
+const historyPage = ref(1)
+const historyPageSize = ref(10)
+
+const paginatedHistory = computed(() => {
+  const start = (historyPage.value - 1) * historyPageSize.value
+  return browseHistory.value.slice(start, start + historyPageSize.value)
+})
+
+const historyTypeIcons = {
+  plant: Cherry,
+  knowledge: Document,
+  inheritor: User,
+  resource: Star,
+  qa: EditPen
+}
+
+const getHistoryIcon = (type) => historyTypeIcons[type] || typeIconMap.knowledge
+
+const goToHistoryItem = (item) => {
+  const pathMap = {
+    plant: '/plants',
+    knowledge: '/knowledge',
+    inheritor: '/inheritors',
+    resource: '/resources',
+    qa: '/qa'
+  }
+  const basePath = pathMap[item.targetType]
+  if (basePath) {
+    router.push(`${basePath}?id=${item.targetId || item.id}`)
+  }
+}
+
+const loadBrowseHistory = async () => {
+  historyLoading.value = true
+  try {
+    const res = await request.get('/browse-history/my')
+    browseHistory.value = res.data || res || []
+  } catch (e) {
+    console.error('加载浏览历史失败:', e)
+    browseHistory.value = []
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+// ========== Study Stats ==========
+const statsLoading = ref(false)
+const studyStatsRaw = ref({
+  totalQuizAttempts: 0,
+  averageScore: 0,
+  totalGameAttempts: 0,
+  totalFavorites: 0,
+  totalBrowseCount: 0
+})
+
+const studyStats = computed(() => [
+  { value: studyStatsRaw.value.totalQuizAttempts, label: '总答题次数' },
+  { value: Math.round(studyStatsRaw.value.averageScore), label: '平均得分' },
+  { value: studyStatsRaw.value.totalGameAttempts, label: '植物游戏次' },
+  { value: studyStatsRaw.value.totalFavorites, label: '收藏总数' },
+  { value: studyStatsRaw.value.totalBrowseCount, label: '浏览总数' }
+])
+
+const computeStudyStats = () => {
+  const quizTotal = quizRecords.value.length
+  const gameTotal = gameRecords.value.length
+  const totalAttempts = quizTotal + gameTotal
+
+  let totalScore = 0
+  let scoreCount = 0
+  quizRecords.value.forEach(r => {
+    if (r.score !== undefined && r.score !== null) {
+      totalScore += Number(r.score)
+      scoreCount++
+    }
+  })
+  gameRecords.value.forEach(r => {
+    if (r.score !== undefined && r.score !== null) {
+      totalScore += Number(r.score)
+      scoreCount++
+    }
+  })
+  const avgScore = scoreCount > 0 ? totalScore / scoreCount : 0
+
+  studyStatsRaw.value = {
+    totalQuizAttempts: totalAttempts,
+    averageScore: avgScore,
+    totalGameAttempts: gameTotal,
+    totalFavorites: favorites.value.length,
+    totalBrowseCount: browseHistory.value.length
+  }
+}
+
+// ========== Score Trend Chart ==========
+const scoreChartRef = ref(null)
+let scoreChartInstance = null
+let scoreResizeObserver = null
+const hasScoreData = ref(false)
+
+function buildScoreTrendData() {
+  // Collect all quiz scores with timestamps
+  const quizPoints = quizRecords.value.map(r => ({
+    date: r.createTime ? new Date(r.createTime).toISOString().slice(0, 10) : '',
+    score: Number(r.score || 0),
+    type: 'quiz'
+  }))
+
+  // Collect all game scores with timestamps
+  const gamePoints = gameRecords.value.map(r => ({
+    date: r.createTime ? new Date(r.createTime).toISOString().slice(0, 10) : '',
+    score: Number(r.score || 0),
+    type: 'game'
+  }))
+
+  // Sort by date and aggregate by date
+  const allPoints = [...quizPoints, ...gamePoints].filter(p => p.date).sort((a, b) => a.date.localeCompare(b.date))
+
+  if (allPoints.length === 0) {
+    hasScoreData.value = false
+    return { dates: [], quizScores: [], gameScores: [] }
+  }
+
+  hasScoreData.value = true
+
+  // Aggregate: average score per date per type
+  const dateMap = new Map()
+  allPoints.forEach(p => {
+    if (!dateMap.has(p.date)) {
+      dateMap.set(p.date, { quizScores: [], gameScores: [] })
+    }
+    const entry = dateMap.get(p.date)
+    if (p.type === 'quiz') entry.quizScores.push(p.score)
+    else entry.gameScores.push(p.score)
+  })
+
+  const dates = [...dateMap.keys()].sort()
+  const quizScores = dates.map(d => {
+    const arr = dateMap.get(d).quizScores
+    return arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null
+  })
+  const gameScores = dates.map(d => {
+    const arr = dateMap.get(d).gameScores
+    return arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null
+  })
+
+  return { dates, quizScores, gameScores }
+}
+
+function initScoreChart() {
+  if (!scoreChartRef.value) return
+
+  if (scoreChartInstance) {
+    scoreChartInstance.dispose()
+  }
+
+  scoreChartInstance = echarts.init(scoreChartRef.value)
+
+  const { dates, quizScores, gameScores } = buildScoreTrendData()
+
+  if (!dates.length) {
+    scoreChartInstance = null
+    return
+  }
+
+  scoreChartInstance.setOption({
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params) => {
+        let result = `<b>${params[0].axisValue}</b><br/>`
+        params.forEach(p => {
+          if (p.value !== null) {
+            result += `${p.marker} ${p.seriesName}: ${p.value}分<br/>`
+          }
+        })
+        return result
+      }
+    },
+    legend: {
+      data: ['趣味答题', '植物识别'],
+      bottom: 0,
+      textStyle: { color: 'var(--text-secondary, #555)', fontSize: 12 }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      top: '10%',
+      bottom: '15%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: dates,
+      boundaryGap: false,
+      axisLabel: {
+        color: 'var(--text-muted, #888)',
+        fontSize: 10,
+        rotate: 30
+      },
+      axisLine: { lineStyle: { color: 'var(--border-light, #eee)' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: '分数',
+      min: 0,
+      max: 100,
+      axisLabel: { color: 'var(--text-muted, #888)' },
+      splitLine: { lineStyle: { color: 'var(--border-light, #eee)', type: 'dashed' } }
+    },
+    series: [
+      {
+        name: '趣味答题',
+        type: 'line',
+        data: quizScores,
+        smooth: true,
+        connectNulls: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: { color: '#3498db', width: 2 },
+        itemStyle: { color: '#3498db' },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(52, 152, 219, 0.3)' },
+            { offset: 1, color: 'rgba(52, 152, 219, 0.02)' }
+          ])
+        }
+      },
+      {
+        name: '植物识别',
+        type: 'line',
+        data: gameScores,
+        smooth: true,
+        connectNulls: true,
+        symbol: 'diamond',
+        symbolSize: 6,
+        lineStyle: { color: '#28B463', width: 2 },
+        itemStyle: { color: '#28B463' },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(40, 180, 99, 0.3)' },
+            { offset: 1, color: 'rgba(40, 180, 99, 0.02)' }
+          ])
+        }
+      }
+    ]
+  })
+
+  // Resize handling
+  if (scoreResizeObserver) scoreResizeObserver.disconnect()
+  scoreResizeObserver = new ResizeObserver(() => {
+    if (scoreChartInstance && !scoreChartInstance.isDisposed()) {
+      scoreChartInstance.resize()
+    }
+  })
+  scoreResizeObserver.observe(scoreChartRef.value)
+}
+
+// Watch for quiz data changes to update chart and stats
+watch(
+  () => [quizRecords.value, gameRecords.value, browseHistory.value, favorites.value],
+  () => {
+    computeStudyStats()
+    nextTick(() => {
+      initScoreChart()
+    })
+  },
+  { deep: true }
+)
+
+// Watch tab changes to load data and init chart
+watch(activeTab, (tab) => {
+  if (tab === 'stats') {
+    nextTick(() => { initScoreChart() })
+  }
+  if (tab === 'history') {
+    loadBrowseHistory()
+  }
+})
+
+onMounted(() => {
+  loadBrowseHistory()
+})
+
+onUnmounted(() => {
+  if (scoreResizeObserver) {
+    scoreResizeObserver.disconnect()
+    scoreResizeObserver = null
+  }
+  if (scoreChartInstance && !scoreChartInstance.isDisposed()) {
+    scoreChartInstance.dispose()
+    scoreChartInstance = null
+  }
+})
 </script>
 
 <style scoped>
@@ -298,6 +669,81 @@ const getTypeName = (type) => typeNameMap[type] || '其他'
   margin-bottom: var(--space-xl);
 }
 
+/* Study Stats Dashboard */
+.stats-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-md);
+}
+
+.stats-card-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-rice);
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-fast);
+}
+
+.stats-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.stats-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-inverse);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.stats-card-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.stats-card-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Chart Section */
+.chart-section {
+  background: var(--bg-rice);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.chart-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-lg) 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--dong-indigo);
+}
+
+.score-chart {
+  width: 100%;
+  height: 350px;
+}
+
+/* Favorites */
 .favorites-grid {
   display: flex;
   flex-direction: column;
@@ -340,6 +786,7 @@ const getTypeName = (type) => typeNameMap[type] || '其他'
   color: var(--text-muted);
 }
 
+/* Records */
 .record-list {
   display: flex;
   flex-direction: column;
@@ -367,15 +814,15 @@ const getTypeName = (type) => typeNameMap[type] || '其他'
   font-size: 18px;
 }
 
-.record-score.excellent {
+.record-score.score-high {
   background: linear-gradient(135deg, var(--dong-jade), var(--dong-jade-dark));
 }
 
-.record-score.good {
+.record-score.score-medium {
   background: linear-gradient(135deg, var(--dong-gold-light), var(--dong-gold));
 }
 
-.record-score.pass {
+.record-score.score-low {
   background: linear-gradient(135deg, var(--color-info), #2980b9);
 }
 
@@ -399,29 +846,65 @@ const getTypeName = (type) => typeNameMap[type] || '其他'
   color: var(--text-secondary);
 }
 
-.comment-list {
+/* Browse History */
+.history-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-.comment-item {
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
   padding: var(--space-md);
   background: var(--bg-rice);
   border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
 }
 
-.comment-content {
-  margin: 0 0 var(--space-sm) 0;
+.history-item:hover {
+  background: var(--bg-rice-dark);
 }
 
-.comment-meta {
+.history-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  border-radius: var(--radius-md);
   display: flex;
-  justify-content: space-between;
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  align-items: center;
+  justify-content: center;
+  color: var(--text-inverse);
+  flex-shrink: 0;
 }
 
+.history-content {
+  flex: 1;
+}
+
+.history-content h4 {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.history-time {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.history-arrow {
+  color: var(--text-light);
+  font-size: var(--font-size-base);
+}
+
+/* Settings */
 .settings-container {
   display: flex;
   flex-direction: column;
@@ -454,9 +937,75 @@ const getTypeName = (type) => typeNameMap[type] || '其他'
   margin-bottom: var(--space-lg);
 }
 
+/* Responsive */
+@media (max-width: 1024px) {
+  .personal-container {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-cards {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .personal-container {
     grid-template-columns: 1fr;
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+  }
+
+  .stats-card-item {
+    padding: var(--space-md);
+  }
+
+  .stats-card-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .stats-card-value {
+    font-size: var(--font-size-lg);
+  }
+
+  .score-chart {
+    height: 280px;
+  }
+
+  .settings-form {
+    max-width: 100%;
+  }
+
+  .record-item {
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .score-chart {
+    height: 240px;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .favorite-card {
+    flex-wrap: wrap;
+  }
+
+  .history-item {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
   }
 }
 </style>

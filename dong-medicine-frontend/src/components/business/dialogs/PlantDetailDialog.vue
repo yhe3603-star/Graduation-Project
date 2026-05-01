@@ -83,7 +83,16 @@
             {{ plant?.nameCn }}
           </el-descriptions-item>
           <el-descriptions-item label="侗语名">
-            {{ plant?.nameDong || '暂无' }}
+            <div class="dong-name-row">
+              <span>{{ plant?.nameDong || '暂无' }}</span>
+              <HerbAudio
+                v-if="plant?.nameDong"
+                :plant-name="plant?.nameDong"
+                :plant-id="plant?.id"
+                :show-label="false"
+                :icon-size="16"
+              />
+            </div>
           </el-descriptions-item>
           <el-descriptions-item label="学名">
             {{ plant?.scientificName || '暂无' }}
@@ -142,6 +151,7 @@ import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
 import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
+import HerbAudio from '@/components/business/media/HerbAudio.vue';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -228,6 +238,12 @@ const handleDocumentDownload = downloadDocument;
   background: #fafafa;
   border-radius: 8px;
   padding: 16px;
+}
+
+.dong-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .efficacy-text {

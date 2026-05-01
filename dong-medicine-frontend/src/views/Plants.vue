@@ -50,6 +50,16 @@
             >
               <el-icon><component :is="isItemFavorited(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
             </el-button>
+            <el-button
+              :type="isInCompare(item.id) ? 'success' : 'default'"
+              size="small"
+              class="compare-btn"
+              :disabled="!isInCompare(item.id) && compareList.length >= MAX_COMPARE"
+              @click.stop="handleCompareToggle(item)"
+            >
+              <el-icon><component :is="isInCompare(item.id) ? 'CircleCheck' : 'Plus'" /></el-icon>
+              {{ isInCompare(item.id) ? '已加入' : '加入对比' }}
+            </el-button>
           </template>
         </CardGrid>
 
@@ -83,21 +93,46 @@
       </PageSidebar>
     </div>
 
-    <PlantDetailDialog 
-      v-model:visible="detailVisible" 
-      :plant="currentPlant" 
+    <PlantDetailDialog
+      v-model:visible="detailVisible"
+      :plant="currentPlant"
       :is-favorited="isFavorited"
       @toggle-favorite="toggleFavorite"
     />
+
+    <Teleport to="body">
+      <transition name="float-bar-fade">
+        <div v-if="compareList.length >= 2" class="floating-compare-bar">
+          <div class="bar-left">
+            <span class="bar-label">已选择 <strong>{{ compareList.length }}</strong> 个药材</span>
+            <div class="bar-thumbs">
+              <span
+                v-for="item in compareList"
+                :key="item.id"
+                class="bar-thumb-item"
+              >
+                {{ item.nameCn }}
+                <el-icon class="bar-remove" @click.stop="removeFromCompare(item.id)"><Close /></el-icon>
+              </span>
+            </div>
+          </div>
+          <div class="bar-right">
+            <el-button type="primary" size="default" @click="startCompare">
+              <el-icon><DataLine /></el-icon>开始对比
+            </el-button>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import request from '@/utils/request';
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { Location, Star, StarFilled, View } from "@element-plus/icons-vue";
+import { CircleCheck, Close, DataLine, Location, Plus, Star, StarFilled, View } from "@element-plus/icons-vue";
 import CardGrid from "@/components/business/display/CardGrid.vue";
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
@@ -109,6 +144,7 @@ import { extractPageData, logFetchError } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
 import { useFavorite } from "@/composables/useFavorite";
+import { useCompare } from "@/composables/useCompare";
 
 const PAGE_SIZE_OPTIONS = {
   DEFAULT: 12,
@@ -119,8 +155,10 @@ const PAGE_SIZE_OPTIONS = {
 const DEBOUNCE_DELAY = 300;
 
 const route = useRoute();
+const router = useRouter();
 
 const { items: favItems, isFavorited: isItemFavorited, loadFavorites, toggleFavorite: doToggleFavorite } = useFavorite('plant');
+const { compareList, isInCompare, addToCompare, removeFromCompare, MAX_COMPARE } = useCompare();
 
 const pageLoading = ref(false);
 const keyword = ref("");
@@ -200,6 +238,26 @@ const showDetail = async (plant) => {
 const toggleFavorite = () => { if (currentPlant.value) doToggleFavorite(currentPlant.value.id, isFavorited.value); };
 const toggleFavoriteCard = (item) => { doToggleFavorite(item.id, isItemFavorited(item.id)); };
 
+const handleCompareToggle = (item) => {
+  if (isInCompare(item.id)) {
+    removeFromCompare(item.id);
+    ElMessage.info(`已从对比列表移除"${item.nameCn}"`);
+  } else {
+    const added = addToCompare(item);
+    if (added) {
+      ElMessage.success(`已添加"${item.nameCn}"到对比列表`);
+    } else if (compareList.value.length >= MAX_COMPARE) {
+      ElMessage.warning(`最多只能对比${MAX_COMPARE}种药材`);
+    }
+  }
+};
+
+const startCompare = () => {
+  if (compareList.value.length < 2) return;
+  const ids = compareList.value.map(p => p.id).join(',');
+  router.push({ path: '/compare', query: { ids } });
+};
+
 const loadPlantsData = async () => {
   pageLoading.value = true;
   try {
@@ -273,19 +331,129 @@ watch(() => route.path, (newPath) => {
   }
 }
 
+.compare-btn {
+  margin-top: var(--space-xs);
+  width: 100%;
+}
+
+.floating-compare-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: var(--space-md) var(--space-xl);
+  background: var(--text-inverse);
+  border-radius: 48px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-light);
+}
+
+.bar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.bar-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.bar-label strong {
+  color: var(--dong-blue);
+  font-size: var(--font-size-md);
+}
+
+.bar-thumbs {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.bar-thumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--bg-rice);
+  border-radius: 20px;
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+}
+
+.bar-remove {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
+}
+
+.bar-remove:hover {
+  color: var(--color-danger);
+}
+
+.bar-right {
+  flex-shrink: 0;
+}
+
+.float-bar-fade-enter-active,
+.float-bar-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.float-bar-fade-enter-from,
+.float-bar-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+}
+
 @media (max-width: 768px) {
   .plants-container {
     gap: var(--space-lg);
   }
-  
+
   .habitat {
     display: none;
   }
-  
+
   .favorite-btn {
     position: absolute;
     top: var(--space-sm);
     right: var(--space-sm);
+  }
+
+  .floating-compare-bar {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    flex-direction: column;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .bar-left {
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+  }
+
+  .bar-thumbs {
+    justify-content: center;
+  }
+
+  .bar-right {
+    width: 100%;
+  }
+
+  .bar-right .el-button {
+    width: 100%;
   }
 }
 </style>

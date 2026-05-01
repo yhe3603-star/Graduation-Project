@@ -30,6 +30,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -153,6 +155,75 @@ public class ResourceController {
             log.error("文件下载失败: {}", filePath, e);
             if (!response.isCommitted()) {
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "文件下载失败");
+            }
+        }
+    }
+
+    @PostMapping("/batch-download")
+    public void batchDownload(@RequestBody Map<String, List<Integer>> body, HttpServletResponse response) throws IOException {
+        List<Integer> ids = body.get("ids");
+        if (ids == null || ids.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "请提供要下载的资源ID列表");
+            return;
+        }
+
+        String zipFileName = "resources_batch_" + java.time.LocalDate.now() + ".zip";
+        response.setContentType("application/zip");
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename*=UTF-8''" + URLEncoder.encode(zipFileName, StandardCharsets.UTF_8));
+
+        try (ZipOutputStream zos = new ZipOutputStream(response.getOutputStream())) {
+            for (Integer id : ids) {
+                Resource resource = service.getById(id);
+                if (resource == null || resource.getFiles() == null || resource.getFiles().isEmpty()) {
+                    log.warn("批量下载跳过不存在的资源: id={}", id);
+                    continue;
+                }
+
+                JsonNode filesArray = objectMapper.readTree(resource.getFiles());
+                if (!filesArray.isArray()) continue;
+
+                for (int i = 0; i < filesArray.size(); i++) {
+                    JsonNode fileNode = filesArray.get(i);
+                    if (!fileNode.has("path")) continue;
+
+                    String fileUrl = fileNode.get("path").asText();
+                    if (fileUrl.startsWith("http")) {
+                        log.info("批量下载跳过远程URL: {}", fileUrl);
+                        continue;
+                    }
+
+                    Path filePath = fileUrl.startsWith("/")
+                            ? Paths.get(uploadPath, fileUrl.substring(1))
+                            : Paths.get(uploadPath, fileUrl);
+
+                    File file = filePath.toFile();
+                    if (!file.exists() || !file.isFile()) {
+                        log.warn("批量下载文件不存在: {}", filePath);
+                        continue;
+                    }
+
+                    // Create entry with resource folder to avoid name collisions
+                    String entryName = "resource_" + id + "/" + file.getName();
+                    zos.putNextEntry(new ZipEntry(entryName));
+
+                    try (InputStream is = Files.newInputStream(filePath)) {
+                        byte[] buffer = new byte[STREAM_BUFFER_SIZE];
+                        int bytesRead;
+                        while ((bytesRead = is.read(buffer)) != -1) {
+                            zos.write(buffer, 0, bytesRead);
+                        }
+                    }
+                    zos.closeEntry();
+
+                    service.incrementDownload(id);
+                }
+            }
+            zos.finish();
+        } catch (IOException e) {
+            log.error("批量下载失败", e);
+            if (!response.isCommitted()) {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "批量下载失败");
             }
         }
     }

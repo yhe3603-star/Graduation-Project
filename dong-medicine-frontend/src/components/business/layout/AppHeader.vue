@@ -84,6 +84,18 @@
         </el-input>
       </div>
       <el-tooltip
+        :content="isDark ? '切换亮色模式' : '切换暗色模式'"
+        placement="bottom"
+      >
+        <el-button
+          class="action-btn"
+          circle
+          @click="toggleDark"
+        >
+          <el-icon><component :is="isDark ? Sunny : Moon" /></el-icon>
+        </el-button>
+      </el-tooltip>
+      <el-tooltip
         content="返回上一页"
         placement="bottom"
       >
@@ -185,7 +197,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { HomeFilled, Document, User, Picture, ChatDotRound, More, ArrowDown, Search, ArrowLeft, Setting, SwitchButton, Aim, Folder, DataLine, InfoFilled, Menu } from "@element-plus/icons-vue";
+import { HomeFilled, Document, User, Picture, ChatDotRound, More, ArrowDown, Search, ArrowLeft, Setting, SwitchButton, Aim, Folder, DataLine, InfoFilled, Menu, Moon, Sunny, Calendar } from "@element-plus/icons-vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -195,6 +207,24 @@ defineEmits(["logout", "showLogin", "showRegister"]);
 
 const activeIndex = computed(() => route.path);
 const searchKeyword = ref("");
+const isDark = ref(false);
+
+const toggleDark = () => {
+  isDark.value = !isDark.value;
+  document.documentElement.classList.toggle("dark", isDark.value);
+  try { localStorage.setItem("theme", isDark.value ? "dark" : "light"); } catch {}
+};
+
+const initDark = () => {
+  try {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      isDark.value = true;
+      document.documentElement.classList.add("dark");
+    }
+  } catch {}
+};
+initDark();
 
 const navItems = [
   { path: "/", label: "首页", icon: HomeFilled },
@@ -204,7 +234,8 @@ const navItems = [
   { path: "/resources", label: "学习资源", icon: Folder },
   { path: "/qa", label: "问答", icon: ChatDotRound },
   { path: "/interact", label: "文化互动", icon: Aim },
-  { path: "/visual", label: "数据可视化", icon: DataLine }
+  { path: "/visual", label: "数据可视化", icon: DataLine },
+  { path: "/solar-terms", label: "节气采药", icon: Calendar }
 ];
 
 const moreItems = [

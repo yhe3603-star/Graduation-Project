@@ -7,7 +7,6 @@ import com.dongmedicine.service.OperationLogService;
 import com.dongmedicine.service.RabbitMQOperationLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -24,16 +23,19 @@ import java.util.Map;
 @Slf4j
 @Aspect
 @Component
-@RequiredArgsConstructor
 public class OperationLogAspect {
 
     private final OperationLogService logService;
+    private final RabbitMQOperationLogService rabbitMQOperationLogService;
+    private final ObjectMapper objectMapper;
 
-    @Autowired(required = false)
-    private RabbitMQOperationLogService rabbitMQOperationLogService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    public OperationLogAspect(OperationLogService logService,
+                              @Autowired(required = false) RabbitMQOperationLogService rabbitMQOperationLogService,
+                              ObjectMapper objectMapper) {
+        this.logService = logService;
+        this.rabbitMQOperationLogService = rabbitMQOperationLogService;
+        this.objectMapper = objectMapper;
+    }
 
     @Pointcut("execution(* com.dongmedicine.controller.*Controller.*(..)) && " +
             "!execution(* com.dongmedicine.controller.UserController.login(..)) && " +
@@ -42,6 +44,11 @@ public class OperationLogAspect {
 
     @Around("controllerPointcut()")
     public Object around(ProceedingJoinPoint point) throws Throwable {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null && "GET".equalsIgnoreCase(attributes.getRequest().getMethod())) {
+            return point.proceed();
+        }
+
         long startTime = System.currentTimeMillis();
         boolean success = true;
         String errorMsg = null;

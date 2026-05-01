@@ -24,22 +24,35 @@
           v-else
           class="resource-list"
         >
-          <div v-for="item in paginatedList" :key="item.id" class="resource-card" @click="openResource(item)">
-            <div class="resource-icon" :class="getTypeClass(getFileInfo(item).type)">
-              <el-icon :size="28"><component :is="getTypeIcon(getFileInfo(item).type)" /></el-icon>
+          <div
+            v-for="item in paginatedList"
+            :key="item.id"
+            class="resource-card"
+            :class="{ selected: selectedIds.has(item.id) }"
+          >
+            <div class="resource-checkbox" @click.stop>
+              <el-checkbox
+                :model-value="selectedIds.has(item.id)"
+                @change="toggleSelect(item)"
+              />
             </div>
-            <div class="resource-info">
-              <h3>{{ item.title }}</h3>
-              <p class="resource-desc">{{ (item.description || '').substring(0, 60) }}...</p>
-              <div class="resource-meta">
-                <el-tag size="small" effect="light">{{ item.category }}</el-tag>
-                <span class="resource-type">{{ getTypeName(getFileInfo(item).type) }}</span>
-                <span v-if="getFileExt(getFileInfo(item).url)" class="resource-ext">{{ getFileExt(getFileInfo(item).url).toUpperCase() }}</span>
-                <span v-if="getFileInfo(item).size" class="resource-size">{{ formatSize(getFileInfo(item).size) }}</span>
-                <div class="card-stats">
-                  <span class="stat-item"><el-icon><View /></el-icon>{{ item.viewCount || 0 }}</span>
-                  <span class="stat-item"><el-icon><Star /></el-icon>{{ item.favoriteCount || 0 }}</span>
-                  <span class="stat-item"><el-icon><Download /></el-icon>{{ item.downloadCount || 0 }}</span>
+            <div class="resource-card-body" @click="openResource(item)">
+              <div class="resource-icon" :class="getTypeClass(getFileInfo(item).type)">
+                <el-icon :size="28"><component :is="getTypeIcon(getFileInfo(item).type)" /></el-icon>
+              </div>
+              <div class="resource-info">
+                <h3>{{ item.title }}</h3>
+                <p class="resource-desc">{{ (item.description || '').substring(0, 60) }}...</p>
+                <div class="resource-meta">
+                  <el-tag size="small" effect="light">{{ item.category }}</el-tag>
+                  <span class="resource-type">{{ getTypeName(getFileInfo(item).type) }}</span>
+                  <span v-if="getFileExt(getFileInfo(item).url)" class="resource-ext">{{ getFileExt(getFileInfo(item).url).toUpperCase() }}</span>
+                  <span v-if="getFileInfo(item).size" class="resource-size">{{ formatSize(getFileInfo(item).size) }}</span>
+                  <div class="card-stats">
+                    <span class="stat-item"><el-icon><View /></el-icon>{{ item.viewCount || 0 }}</span>
+                    <span class="stat-item"><el-icon><Star /></el-icon>{{ item.favoriteCount || 0 }}</span>
+                    <span class="stat-item"><el-icon><Download /></el-icon>{{ item.downloadCount || 0 }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -72,9 +85,24 @@
       </PageSidebar>
     </div>
 
-    <ResourceDetailDialog 
-      v-model:visible="previewVisible" 
-      :resource="currentResource" 
+    <!-- Floating Batch Action Bar -->
+    <transition name="batch-bar-fade">
+      <div v-if="selectedIds.size > 0" class="batch-action-bar">
+        <div class="batch-action-content">
+          <span class="batch-count">已选 <strong>{{ selectedIds.size }}</strong> 项</span>
+          <div class="batch-action-buttons">
+            <el-button type="primary" :loading="batchDownloading" @click="batchDownload">
+              <el-icon><Download /></el-icon>批量下载
+            </el-button>
+            <el-button @click="clearSelection">取消</el-button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <ResourceDetailDialog
+      v-model:visible="previewVisible"
+      :resource="currentResource"
       :is-favorited="isCurrentFavorited"
       @toggle-favorite="toggleFavoriteDetail"
       @download="downloadCurrentResource"
@@ -131,6 +159,10 @@ const currentPage = ref(1);
 const pageSize = ref(9);
 const totalItems = ref(0);
 const statsData = ref({ total: 0, videoCount: 0, documentCount: 0, imageCount: 0, totalFavorites: 0, totalViews: 0, totalDownloads: 0, totalSize: 0 });
+
+// Batch download state
+const selectedIds = ref(new Set());
+const batchDownloading = ref(false);
 
 const { parseUpdateLog } = useUpdateLog();
 
@@ -198,15 +230,81 @@ const formatSize = (bytes) => {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
+// ========== Selection ==========
+const toggleSelect = (item) => {
+  const newSet = new Set(selectedIds.value);
+  if (newSet.has(item.id)) {
+    newSet.delete(item.id);
+  } else {
+    newSet.add(item.id);
+  }
+  selectedIds.value = newSet;
+};
+
+const clearSelection = () => {
+  selectedIds.value = new Set();
+};
+
+// ========== Batch Download ==========
+const batchDownload = async () => {
+  if (selectedIds.value.size === 0) {
+    ElMessage.warning('请先选择要下载的资源');
+    return;
+  }
+
+  if (!isLoggedIn.value) {
+    try {
+      await ElMessageBox.confirm("批量下载资源需要登录，是否前往登录？", "提示", { confirmButtonText: "去登录", cancelButtonText: "取消", type: "info" });
+      showLoginDialog();
+    } catch {}
+    return;
+  }
+
+  batchDownloading.value = true;
+  try {
+    const ids = [...selectedIds.value];
+    const response = await request.post('/resources/batch-download', ids, {
+      responseType: 'blob'
+    });
+
+    const blob = new Blob([response]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'resources_batch_' + Date.now() + '.zip';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    // Update download counts for selected resources
+    allResources.value.forEach(item => {
+      if (selectedIds.value.has(item.id)) {
+        item.downloadCount = (item.downloadCount || 0) + 1;
+      }
+    });
+
+    ElMessage.success(`成功下载 ${ids.length} 个资源`);
+    clearSelection();
+  } catch (e) {
+    console.error('批量下载失败:', e);
+    ElMessage.error('批量下载失败，请重试');
+  } finally {
+    batchDownloading.value = false;
+  }
+};
+
+// ========== Search & Filter ==========
 const debouncedSearch = useDebounceFn(() => { currentPage.value = 1; loadResourcesData(); }, 300);
 const handleSearch = () => debouncedSearch();
-const handleFilter = (filters) => { 
-  typeFilter.value = filters.type || ""; 
-  categoryFilter.value = filters.category || ""; 
+const handleFilter = (filters) => {
+  typeFilter.value = filters.type || "";
+  categoryFilter.value = filters.category || "";
   currentPage.value = 1;
   loadResourcesData();
 };
 
+// ========== Resource Actions ==========
 const openResource = async (item) => {
   currentResource.value = item;
   previewVisible.value = true;
@@ -237,12 +335,12 @@ const downloadResource = async (item) => {
     } catch {}
     return;
   }
-  
+
   try {
     const response = await request.get(`/resources/download/${item.id}`, {
       responseType: 'blob'
     });
-    
+
     const blob = new Blob([response]);
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -252,7 +350,7 @@ const downloadResource = async (item) => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-    
+
     const idx = allResources.value.findIndex(r => r.id === item.id);
     if (idx > -1) allResources.value[idx].downloadCount = (allResources.value[idx].downloadCount || 0) + 1;
     ElMessage.success("下载成功");
@@ -264,6 +362,7 @@ const downloadResource = async (item) => {
 
 const downloadCurrentResource = () => { if (currentResource.value) downloadResource(currentResource.value); };
 
+// ========== Data Loading ==========
 const loadResourcesData = async () => {
   pageLoading.value = true;
   try {
@@ -271,17 +370,19 @@ const loadResourcesData = async () => {
       request.get("/resources/list", { params: { page: currentPage.value, size: pageSize.value, keyword: keyword.value, fileType: typeFilter.value, category: categoryFilter.value, _t: Date.now() } }),
       request.get("/stats/resources")
     ]);
-    
+
     const { records, total } = extractPageData(pageRes);
     allResources.value = records.map(r => ({ ...r, fileType: detectFileType(getFileInfo(r).url, getFileInfo(r).type) }));
     favItems.value = allResources.value;
     totalItems.value = total;
     hotResources.value = allResources.value.slice(0, 5);
-    
+
     const sd = statsRes.data || statsRes || {};
     statsData.value = { total: sd.total || 0, videoCount: sd.videoCount || 0, documentCount: sd.documentCount || 0, imageCount: sd.imageCount || 0, totalFavorites: sd.totalFavorites || 0, totalViews: sd.totalViews || 0, totalDownloads: sd.totalDownloads || 0, totalSize: sd.totalSize || 0 };
-    
+
     await loadFavorites();
+    // Clear selection on page load
+    selectedIds.value = new Set();
   } catch { ElMessage.error("加载失败"); }
   finally { pageLoading.value = false; }
 };
@@ -310,21 +411,129 @@ watch(() => route.path, (newPath) => {
 <style scoped>
 .resources-container { display: grid; grid-template-columns: 1fr var(--sidebar-width); gap: var(--space-xl); }
 .resource-list { display: flex; flex-direction: column; gap: var(--space-xl); }
-.resource-card { display: flex; align-items: center; gap: var(--space-xl); padding: var(--space-xl); background: var(--text-inverse); border-radius: var(--radius-lg); cursor: pointer; transition: all var(--transition-normal); box-shadow: var(--shadow-sm); }
-.resource-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-.resource-icon { width: 56px; height: 56px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--text-inverse); flex-shrink: 0; }
+
+.resource-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xl);
+  background: var(--text-inverse);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.resource-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.resource-card.selected {
+  border: 2px solid var(--dong-indigo);
+  background: linear-gradient(135deg, rgba(26, 82, 118, 0.03), rgba(26, 82, 118, 0.06));
+}
+
+.resource-checkbox {
+  flex-shrink: 0;
+}
+
+.resource-card-body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  flex: 1;
+  min-width: 0;
+}
+
+.resource-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-inverse);
+  flex-shrink: 0;
+}
+
 .type-video { background: linear-gradient(135deg, #e74c3c, #c0392b); }
 .type-doc { background: linear-gradient(135deg, #3498db, #2980b9); }
 .type-img { background: linear-gradient(135deg, var(--dong-jade), var(--dong-jade-dark)); }
-.resource-info { flex: 1; }
+
+.resource-info { flex: 1; min-width: 0; }
 .resource-info h3 { margin: 0 0 var(--space-sm) 0; font-size: var(--font-size-md); }
 .resource-desc { margin: 0 0 var(--space-sm) 0; font-size: var(--font-size-sm); color: var(--text-muted); }
 .resource-meta { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
 .resource-type { font-size: var(--font-size-sm); color: var(--text-secondary); }
 .resource-ext { font-size: var(--font-size-xs); color: var(--text-light); background: var(--bg-rice-dark); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-xs); }
 .resource-size { font-size: var(--font-size-sm); color: var(--text-light); }
-.resource-actions { display: flex; gap: var(--space-sm); }
+.resource-actions { display: flex; gap: var(--space-sm); flex-shrink: 0; }
 
+.card-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+/* Floating Batch Action Bar */
+.batch-action-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-sticky);
+  background: var(--text-inverse);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-md) var(--space-xl);
+  border: 1px solid var(--border-light);
+}
+
+.batch-action-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.batch-count {
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.batch-count strong {
+  color: var(--dong-indigo);
+  font-size: var(--font-size-lg);
+}
+
+.batch-action-buttons {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* Batch bar transition */
+.batch-bar-fade-enter-active,
+.batch-bar-fade-leave-active {
+  transition: all var(--transition-normal);
+}
+
+.batch-bar-fade-enter-from,
+.batch-bar-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+}
+
+/* Responsive */
 @media (max-width: 1024px) {
   .resources-container { grid-template-columns: 1fr; }
   .resource-card { flex-wrap: wrap; }
@@ -332,7 +541,27 @@ watch(() => route.path, (newPath) => {
 }
 
 @media (max-width: 768px) {
-  .resource-card { flex-direction: column; align-items: flex-start; padding: var(--space-lg); gap: var(--space-md); }
+  .resource-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-lg);
+    gap: var(--space-md);
+  }
+
+  .resource-checkbox {
+    position: absolute;
+    top: var(--space-md);
+    left: var(--space-md);
+    z-index: 2;
+  }
+
+  .resource-card-body {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding-left: var(--space-lg);
+  }
+
   .resource-icon { width: 48px; height: 48px; }
   .resource-info { width: 100%; }
   .resource-info h3 { font-size: var(--font-size-base); }
@@ -340,9 +569,37 @@ watch(() => route.path, (newPath) => {
   .resource-meta { flex-wrap: wrap; gap: var(--space-sm); }
   .resource-actions { flex-wrap: wrap; width: 100%; }
   .resource-actions .el-button { flex: 1; min-width: 80px; }
+
+  .batch-action-bar {
+    left: var(--space-md);
+    right: var(--space-md);
+    transform: none;
+    border-radius: var(--radius-md);
+  }
+
+  .batch-action-content {
+    flex-direction: column;
+    gap: var(--space-md);
+    text-align: center;
+  }
+
+  .batch-action-buttons {
+    width: 100%;
+  }
+
+  .batch-action-buttons .el-button {
+    flex: 1;
+  }
+
+  .batch-bar-fade-enter-from,
+  .batch-bar-fade-leave-to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
 }
 
 @media (max-width: 480px) {
   .resource-actions .el-button { font-size: var(--font-size-xs); padding: var(--space-sm) var(--space-md); }
+  .batch-action-bar { padding: var(--space-md); left: var(--space-sm); right: var(--space-sm); bottom: 16px; }
 }
 </style>

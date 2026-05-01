@@ -2,10 +2,12 @@ package com.dongmedicine.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Inheritor;
+import com.dongmedicine.service.BrowseHistoryService;
 import com.dongmedicine.service.InheritorService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.Map;
 public class InheritorController {
 
     private final InheritorService service;
+    private final BrowseHistoryService browseHistoryService;
 
     @GetMapping("/list")
     public R<Map<String, Object>> list(
@@ -45,6 +48,14 @@ public class InheritorController {
     public R<Inheritor> detail(@PathVariable Integer id) {
         Inheritor in = service.getDetailWithExtras(id);
         if (in == null) throw BusinessException.notFound("传承人不存在");
+        Integer userId = SecurityUtils.getCurrentUserIdOrNull();
+        if (userId != null) {
+            try {
+                browseHistoryService.record(userId, "inheritor", id);
+            } catch (Exception e) {
+                // Silently ignore
+            }
+        }
         return R.ok(in);
     }
 

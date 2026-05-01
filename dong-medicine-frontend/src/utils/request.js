@@ -2,7 +2,7 @@ import axios from "axios"
 import { ElMessage } from "element-plus"
 import logger from "./logger"
 import { logSecurityWarn } from "./logger"
-import { sanitize, containsXss, containsSqlInjection, sanitizeForLog } from "./xss"
+import { sanitize, containsXss, containsSqlInjection, sanitizeForLog, stripHtmlTags } from "./xss"
 
 const pendingRequests = new Map()
 let refreshPromise = null
@@ -363,13 +363,18 @@ function sanitizeRequestData(data) {
 
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string') {
+      let cleanValue = value
       if (containsXss(value)) {
         logSecurityWarn(key, sanitizeForLog(value))
+        cleanValue = stripHtmlTags(value)
       }
-      if (containsSqlInjection(value)) {
-        logSecurityWarn(key, sanitizeForLog(value))
+      if (containsSqlInjection(cleanValue)) {
+        logSecurityWarn(key, sanitizeForLog(cleanValue))
+        cleanValue = cleanValue.replace(/(--|#|\/\*|\*\/|;|\|\|)/g, '')
+          .replace(/\b(union)\b.*\b(select)\b/gi, '')
+          .replace(/\b(or|and)\b\s+\d+\s*=\s*\d+/gi, '')
       }
-      sanitized[key] = value
+      sanitized[key] = cleanValue
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeRequestData(value)
     } else {

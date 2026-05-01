@@ -648,24 +648,160 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .page-layout,
+  .page-layout-reverse {
+    grid-template-columns: 1fr;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-list {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--space-lg);
+  }
+}
+
 @media (max-width: 768px) {
   .hero-section {
     padding: var(--space-2xl) var(--space-xl);
   }
-  
+
   .hero-title {
     font-size: var(--font-size-2xl);
   }
-  
+
   .hero-stats {
     grid-template-columns: 1fr;
   }
-  
+
+  .hero-subtitle {
+    font-size: var(--font-size-base);
+  }
+
   .quick-nav {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-list {
+    grid-template-columns: 1fr;
+  }
+
   .personal-container {
     grid-template-columns: 1fr;
+  }
+
+  .resource-card {
+    flex-wrap: wrap;
+  }
+
+  .resource-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: var(--space-md);
+  }
+
+  .profile-card {
+    padding: var(--space-lg);
+  }
+
+  .avatar-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stats-row {
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .stat-block {
+    flex: 1 1 45%;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .comparison-table table {
+    min-width: 600px;
+  }
+
+  .solar-term-card {
+    margin-bottom: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: var(--space-xl) var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .hero-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .hero-stat-value {
+    font-size: var(--font-size-2xl);
+  }
+
+  .quick-nav {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .nav-card {
+    padding: var(--space-md);
+  }
+
+  .stats-row {
+    flex-direction: column;
+  }
+
+  .stat-block {
+    flex: 1 1 100%;
+  }
+
+  .favorite-card {
+    flex-wrap: wrap;
+  }
+
+  .record-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .resource-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .page-container {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .section-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .qa-card {
+    padding: var(--space-md);
+  }
+
+  .auth-dialog {
+    width: 95vw !important;
   }
 }

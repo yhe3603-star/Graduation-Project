@@ -10,7 +10,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -28,17 +27,18 @@ public class RateLimitAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimitAspect.class);
     private static final String RATE_LIMIT_PREFIX = "rate_limit:";
-    
-    private static final String RATE_LIMIT_LUA_SCRIPT = 
+
+    private static final String RATE_LIMIT_LUA_SCRIPT =
         "local current = redis.call('INCR', KEYS[1]) " +
         "if current == 1 then " +
         "  redis.call('EXPIRE', KEYS[1], ARGV[1]) " +
         "end " +
         "return current";
-    
+
     private static final int LOCAL_BUCKET_CAPACITY = 100;
     private static final long LOCAL_BUCKET_REFILL_RATE_MS = 1000;
-    
+
+    private final StringRedisTemplate stringRedisTemplate;
     private final Map<String, LocalTokenBucket> localBuckets = new ConcurrentHashMap<>();
     private volatile boolean redisAvailable = true;
     private volatile long lastRedisCheckTime = 0;
@@ -46,8 +46,9 @@ public class RateLimitAspect {
     private static final long CLEANUP_INTERVAL = 100;
     private long checkCount = 0;
 
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+    public RateLimitAspect(StringRedisTemplate stringRedisTemplate) {
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
 
     @Around("@annotation(rateLimit)")
     public Object rateLimit(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
@@ -128,6 +129,8 @@ public class RateLimitAspect {
 
     private String generateKey(ProceedingJoinPoint joinPoint, RateLimit rateLimit) {
         StringBuilder key = new StringBuilder();
+        String className = joinPoint.getTarget().getClass().getSimpleName();
+        key.append(className).append(".");
         key.append(rateLimit.key().isEmpty() ? joinPoint.getSignature().getName() : rateLimit.key());
 
         if (StpUtil.isLogin()) {

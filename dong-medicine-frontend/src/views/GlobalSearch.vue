@@ -8,43 +8,75 @@
     </div>
 
     <div class="search-main">
-      <div class="search-box-large">
-        <el-input
-          v-model="keyword"
-          placeholder="输入关键词搜索..."
-          size="large"
-          clearable
-          @keyup.enter="doSearch"
-          @clear="onClear"
-        >
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
-        <el-button
-          type="primary"
-          size="large"
-          :loading="loading"
-          @click="doSearch"
-        >
-          搜索
-        </el-button>
-      </div>
+      <div class="search-box-area">
+        <div class="search-box-large">
+          <el-autocomplete
+            v-model="keyword"
+            :fetch-suggestions="fetchSuggestions"
+            :trigger-on-focus="false"
+            placeholder="输入关键词搜索..."
+            clearable
+            class="search-autocomplete"
+            @select="handleSuggestionSelect"
+            @keyup.enter="doSearch"
+            @clear="onClear"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-autocomplete>
+          <el-button
+            type="primary"
+            size="large"
+            :loading="loading"
+            @click="doSearch"
+          >
+            搜索
+          </el-button>
+        </div>
 
-      <div
-        v-if="!searched"
-        class="hot-keywords"
-      >
-        <span class="hot-label">热门搜索：</span>
-        <el-tag
-          v-for="k in hotKeywords"
-          :key="k"
-          class="hot-tag"
-          effect="plain"
-          @click="keyword = k; doSearch()"
+        <div v-if="searchHistory.length > 0 && !searched" class="search-history">
+          <span class="history-label">
+            <el-icon><Clock /></el-icon>搜索历史：
+          </span>
+          <el-tag
+            v-for="(h, i) in searchHistory"
+            :key="i"
+            class="history-chip"
+            closable
+            size="small"
+            effect="plain"
+            @click="keyword = h; doSearch()"
+            @close="removeHistory(i)"
+          >
+            {{ h }}
+          </el-tag>
+          <el-button
+            v-if="searchHistory.length > 0"
+            text
+            size="small"
+            type="info"
+            @click="clearHistory"
+          >
+            清除历史
+          </el-button>
+        </div>
+
+        <div
+          v-if="!searched"
+          class="hot-keywords"
         >
-          {{ k }}
-        </el-tag>
+          <span class="hot-label">热门搜索：</span>
+          <el-tag
+            v-for="k in hotKeywords"
+            :key="k"
+            class="hot-tag"
+            effect="plain"
+            @click="keyword = k; doSearch()"
+          >
+            {{ k }}
+          </el-tag>
+        </div>
       </div>
 
       <div
@@ -79,8 +111,8 @@
                 <el-icon><component :is="getTypeIcon(item.type)" /></el-icon>
               </div>
               <div class="result-info">
-                <h4>{{ item.title || item.nameCn || item.name || item.question }}</h4>
-                <p>{{ (item.description || item.bio || item.efficacy || item.answer || '').substring(0, 60) }}...</p>
+                <h4 v-html="highlightText(item.title || item.nameCn || item.name || item.question)" />
+                <p v-html="highlightText((item.description || item.bio || item.efficacy || item.answer || '').substring(0, 60)) + '...'" />
               </div>
               <el-tag
                 size="small"
@@ -90,10 +122,23 @@
               </el-tag>
             </div>
           </div>
-          <el-empty
-            v-else
-            description="未找到相关结果"
-          />
+          <div v-else>
+            <el-empty description="未找到相关结果" />
+            <div class="recommend-section">
+              <p class="recommend-title">无结果？试试以下推荐</p>
+              <div class="recommend-tags">
+                <el-tag
+                  v-for="r in recommendedItems"
+                  :key="r"
+                  class="recommend-tag"
+                  effect="plain"
+                  @click="keyword = r; doSearch()"
+                >
+                  {{ r }}
+                </el-tag>
+              </div>
+            </div>
+          </div>
         </el-tab-pane>
         <el-tab-pane
           v-for="type in typeList"
@@ -111,14 +156,27 @@
               class="result-item"
               @click="goToDetail(item)"
             >
-              <span class="result-title">{{ item.title || item.nameCn || item.name || item.question }}</span>
-              <span class="result-desc">{{ (item.description || item.bio || item.efficacy || item.answer || '').substring(0, 40) }}...</span>
+              <span class="result-title" v-html="highlightText(item.title || item.nameCn || item.name || item.question)" />
+              <span class="result-desc" v-html="highlightText((item.description || item.bio || item.efficacy || item.answer || '').substring(0, 40)) + '...'" />
             </div>
           </div>
-          <el-empty
-            v-else
-            description="该类型暂无搜索结果"
-          />
+          <div v-else>
+            <el-empty description="该类型暂无搜索结果" />
+            <div class="recommend-section">
+              <p class="recommend-title">无结果？试试以下推荐</p>
+              <div class="recommend-tags">
+                <el-tag
+                  v-for="r in recommendedItems"
+                  :key="r"
+                  class="recommend-tag"
+                  effect="plain"
+                  @click="keyword = r; doSearch()"
+                >
+                  {{ r }}
+                </el-tag>
+              </div>
+            </div>
+          </div>
         </el-tab-pane>
       </el-tabs>
 
@@ -141,10 +199,10 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, watch } from "vue";
 import request from '@/utils/request';
 import { useRoute, useRouter } from "vue-router";
-import { ChatDotRound, Document, FolderOpened, Picture, Search, User } from "@element-plus/icons-vue";
+import { ChatDotRound, Clock, Document, FolderOpened, Picture, Search, User } from "@element-plus/icons-vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -158,6 +216,7 @@ const allResults = ref([]);
 const searchResults = ref([]);
 const total = ref(0);
 const typeCounts = ref({ knowledge: 0, plant: 0, inheritor: 0, qa: 0, resource: 0 });
+const suggestions = ref([]);
 
 const currentPage = ref(1);
 const pageSize = ref(12);
@@ -165,9 +224,69 @@ const pageSize = ref(12);
 const hotKeywords = ["侗医药", "药浴", "传承人", "艾灸", "鼻炎", "风湿"];
 const typeList = ["knowledge", "plant", "inheritor", "qa", "resource"];
 
+const HISTORY_KEY = 'dong_search_history';
+const MAX_HISTORY = 10;
+
+const popularRecommendItems = [
+  "侗医药理论", "药浴疗法", "艾灸", "风湿", "鼻炎", "清热解毒",
+  "活血化瘀", "侗族草药", "金银花", "慢性支气管炎", "穴位按摩", "青钱柳"
+];
+
+const recommendedItems = computed(() => {
+  const shuffled = [...popularRecommendItems].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 6);
+});
+
+const searchHistory = ref(loadHistory());
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory() {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(searchHistory.value));
+  } catch {}
+}
+
+function addToHistory(kw) {
+  if (!kw || !kw.trim()) return;
+  const term = kw.trim();
+  searchHistory.value = [term, ...searchHistory.value.filter(h => h !== term)].slice(0, MAX_HISTORY);
+  saveHistory();
+}
+
+function removeHistory(index) {
+  searchHistory.value.splice(index, 1);
+  saveHistory();
+}
+
+function clearHistory() {
+  searchHistory.value = [];
+  saveHistory();
+}
+
 const getTypeIcon = (type) => ({ knowledge: Document, plant: Picture, inheritor: User, qa: ChatDotRound, resource: FolderOpened }[type] || Document);
 const getTypeTag = (type) => ({ knowledge: "primary", plant: "success", inheritor: "warning", qa: "info", resource: "danger" }[type] || "info");
 const getTypeName = (type) => ({ knowledge: "知识", plant: "植物", inheritor: "传承人", qa: "问答", resource: "资源" }[type] || "其他");
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(text) {
+  if (!text) return '';
+  const kw = lastKeyword.value || keyword.value;
+  if (!kw || !kw.trim()) return text;
+  const escaped = escapeRegex(kw.trim());
+  const regex = new RegExp(`(${escaped})`, 'gi');
+  return String(text).replace(regex, '<em class="highlight">$1</em>');
+}
 
 const paginatedResults = computed(() => {
   if (activeTab.value !== "all") return searchResults.value;
@@ -175,6 +294,30 @@ const paginatedResults = computed(() => {
   const end = start + pageSize.value;
   return allResults.value.slice(start, end);
 });
+
+const fetchSuggestions = async (queryString, cb) => {
+  if (!queryString || queryString.trim().length < 1) {
+    cb([]);
+    return;
+  }
+  try {
+    const res = await request.get('/search/suggest', { params: { keyword: queryString.trim() } });
+    const data = res?.data || res || [];
+    const items = Array.isArray(data) ? data : (data.suggestions || data.data || []);
+    const formatted = items.map(item => ({
+      value: typeof item === 'string' ? item : (item.value || item.name || item.title || item.keyword || ''),
+      ...(typeof item === 'object' ? item : {})
+    }));
+    cb(formatted);
+  } catch {
+    cb([]);
+  }
+};
+
+const handleSuggestionSelect = (item) => {
+  keyword.value = item.value || item;
+  doSearch();
+};
 
 const onTabChange = () => {
   currentPage.value = 1;
@@ -218,7 +361,10 @@ const onClear = () => {
   searched.value = false;
   activeTab.value = "all";
   currentPage.value = 1;
-  loadAllData();
+  allResults.value = [];
+  searchResults.value = [];
+  total.value = 0;
+  typeCounts.value = { knowledge: 0, plant: 0, inheritor: 0, qa: 0, resource: 0 };
 };
 
 const getData = (res) => {
@@ -226,70 +372,6 @@ const getData = (res) => {
   if (Array.isArray(d)) return { records: d, total: d.length };
   if (d?.records && Array.isArray(d.records)) return { records: d.records, total: d.total || d.records.length };
   return { records: [], total: 0 };
-};
-
-const loadAllData = async () => {
-  loading.value = true;
-  try {
-    const [kRes, pRes, iRes, qRes, rRes] = await Promise.all([
-      request.get(`/knowledge/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/plants/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/inheritors/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/qa/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } })),
-      request.get(`/resources/list?page=1&size=100`).catch(() => ({ data: { records: [], total: 0 } }))
-    ]);
-
-    const kData = getData(kRes);
-    const pData = getData(pRes);
-    const iData = getData(iRes);
-    const qData = getData(qRes);
-    const rData = getData(rRes);
-
-    allResults.value = [
-      ...(kData.records.map(r => ({ ...r, type: "knowledge" }))),
-      ...(pData.records.map(r => ({ ...r, type: "plant" }))),
-      ...(iData.records.map(r => ({ ...r, type: "inheritor" }))),
-      ...(qData.records.map(r => ({ ...r, type: "qa" }))),
-      ...(rData.records.map(r => ({ ...r, type: "resource" })))
-    ];
-
-    total.value = kData.total + pData.total + iData.total + qData.total + rData.total;
-    typeCounts.value = {
-      knowledge: kData.total,
-      plant: pData.total,
-      inheritor: iData.total,
-      qa: qData.total,
-      resource: rData.total
-    };
-
-    searchResults.value = [];
-  } finally {
-    loading.value = false;
-  }
-};
-
-const loadSingleType = async () => {
-  loading.value = true;
-  try {
-    const tab = activeTab.value;
-    const page = currentPage.value;
-    const size = pageSize.value;
-
-    const typeUrls = {
-      knowledge: `/knowledge/list?page=${page}&size=${size}`,
-      plant: `/plants/list?page=${page}&size=${size}`,
-      inheritor: `/inheritors/list?page=${page}&size=${size}`,
-      qa: `/qa/list?page=${page}&size=${size}`,
-      resource: `/resources/list?page=${page}&size=${size}`
-    };
-
-    const res = await request.get(typeUrls[tab]).catch(() => ({ data: { records: [], total: 0 } }));
-    const data = getData(res);
-    searchResults.value = data.records.map(r => ({ ...r, type: tab }));
-    total.value = data.total;
-  } finally {
-    loading.value = false;
-  }
 };
 
 const doSearch = async () => {
@@ -300,6 +382,7 @@ const doSearch = async () => {
   loading.value = true;
   searched.value = true;
   lastKeyword.value = keyword.value.trim();
+  addToHistory(lastKeyword.value);
   try {
     const kw = keyword.value.trim();
 
@@ -364,6 +447,30 @@ const loadSingleTypeSearch = async () => {
   total.value = data.total;
 };
 
+const loadSingleType = async () => {
+  loading.value = true;
+  try {
+    const tab = activeTab.value;
+    const page = currentPage.value;
+    const size = pageSize.value;
+
+    const typeUrls = {
+      knowledge: `/knowledge/list?page=${page}&size=${size}`,
+      plant: `/plants/list?page=${page}&size=${size}`,
+      inheritor: `/inheritors/list?page=${page}&size=${size}`,
+      qa: `/qa/list?page=${page}&size=${size}`,
+      resource: `/resources/list?page=${page}&size=${size}`
+    };
+
+    const res = await request.get(typeUrls[tab]).catch(() => ({ data: { records: [], total: 0 } }));
+    const data = getData(res);
+    searchResults.value = data.records.map(r => ({ ...r, type: tab }));
+    total.value = data.total;
+  } finally {
+    loading.value = false;
+  }
+};
+
 const goToDetail = (item) => {
   const routes = { knowledge: "/knowledge", plant: "/plants", inheritor: "/inheritors", qa: "/qa", resource: "/resources" };
   router.push(routes[item.type] || "/");
@@ -373,8 +480,6 @@ onMounted(() => {
   if (route.query.q) {
     keyword.value = route.query.q;
     doSearch();
-  } else {
-    loadAllData();
   }
 });
 </script>
@@ -385,14 +490,45 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-.search-box-large {
-  display: flex;
-  gap: var(--space-md);
+.search-box-area {
   margin-bottom: var(--space-xl);
 }
 
-.search-box-large .el-input {
+.search-box-large {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.search-autocomplete {
   flex: 1;
+}
+
+.search-history {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-top: var(--space-md);
+  padding: var(--space-sm) 0;
+}
+
+.history-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.history-chip {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.history-chip:hover {
+  border-color: var(--dong-blue);
+  color: var(--dong-blue);
 }
 
 .hot-keywords {
@@ -400,7 +536,7 @@ onMounted(() => {
   align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
-  margin-bottom: var(--space-xl);
+  margin-top: var(--space-md);
 }
 
 .hot-label {
@@ -474,10 +610,28 @@ onMounted(() => {
   font-size: var(--font-size-sm);
 }
 
+.result-info h4 :deep(.highlight) {
+  background: #fff3cd;
+  color: #856404;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: 600;
+  font-style: normal;
+}
+
 .result-info p {
   margin: 0;
   font-size: var(--font-size-xs);
   color: var(--text-muted);
+}
+
+.result-info p :deep(.highlight) {
+  background: #fff3cd;
+  color: #856404;
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 600;
+  font-style: normal;
 }
 
 .result-list {
@@ -503,9 +657,25 @@ onMounted(() => {
   margin-bottom: var(--space-xs);
 }
 
+.result-title :deep(.highlight) {
+  background: #fff3cd;
+  color: #856404;
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
 .result-desc {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
+}
+
+.result-desc :deep(.highlight) {
+  background: #fff3cd;
+  color: #856404;
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 600;
 }
 
 .pagination-wrap {
@@ -516,5 +686,63 @@ onMounted(() => {
   background: var(--text-inverse);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+}
+
+.recommend-section {
+  margin-top: var(--space-lg);
+  text-align: center;
+}
+
+.recommend-title {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.recommend-tags {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.recommend-tag {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.recommend-tag:hover {
+  border-color: var(--dong-blue);
+  color: var(--dong-blue);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .search-box-large {
+    flex-direction: column;
+  }
+
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-history {
+    gap: var(--space-xs);
+  }
+
+  .hot-keywords {
+    gap: var(--space-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .search-main {
+    padding: 0 var(--space-sm);
+  }
+
+  .result-tabs {
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+  }
 }
 </style>

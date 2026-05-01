@@ -8,19 +8,29 @@
         clearable
         style="width: 240px"
       />
-      <el-button
-        v-if="showAdd"
-        type="primary"
-        @click="$emit('add')"
-      >
-        <el-icon><Plus /></el-icon>
-        添加{{ title }}
-      </el-button>
+      <div class="table-header-right">
+        <el-button
+          v-if="entity"
+          :loading="exportLoading"
+          @click="handleExportCSV"
+        >
+          <el-icon><Download /></el-icon>
+          导出CSV
+        </el-button>
+        <el-button
+          v-if="showAdd"
+          type="primary"
+          @click="$emit('add')"
+        >
+          <el-icon><Plus /></el-icon>
+          添加{{ title }}
+        </el-button>
+      </div>
     </div>
-    
-    <el-table 
-      :data="paginatedData" 
-      stripe 
+
+    <el-table
+      :data="paginatedData"
+      stripe
       style="width: 100%"
       @selection-change="handleSelectionChange"
     >
@@ -98,26 +108,30 @@
       </el-table-column>
     </el-table>
 
-    <Pagination 
-      v-if="paginationTotal > 0" 
-      :page="displayPage" 
-      :size="displayPageSize" 
-      :total="paginationTotal" 
+    <Pagination
+      v-if="paginationTotal > 0"
+      :page="displayPage"
+      :size="displayPageSize"
+      :total="paginationTotal"
       :page-sizes="[20, 50, 100, 200]"
-      @update:page="onPageUpdate" 
-      @update:size="onSizeUpdate" 
+      @update:page="onPageUpdate"
+      @update:size="onSizeUpdate"
     />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from "vue";
-import { Plus } from "@element-plus/icons-vue";
+import { Plus, Download } from "@element-plus/icons-vue";
+import { ElMessage } from "element-plus";
 import Pagination from "@/components/business/display/Pagination.vue";
+import request from "@/utils/request";
 
 const props = defineProps({
-  title: String,
+  title: { type: String, default: "" },
   titleName: { type: String, default: "名称" },
+  /** Entity name for admin export API, e.g. "plants", "knowledge", "resources" */
+  entity: { type: String, default: "" },
   data: { type: Array, default: () => [] },
   columns: { type: Array, default: () => [] },
   showAdd: { type: Boolean, default: true },
@@ -136,6 +150,7 @@ const emit = defineEmits(["add", "edit", "delete", "view", "selection-change", "
 const searchKey = ref("");
 const currentPage = ref(1);
 const internalPageSize = ref(12);
+const exportLoading = ref(false);
 
 const displayPage = computed(() => (props.serverPagination ? props.page : currentPage.value));
 const displayPageSize = computed(() => (props.serverPagination ? props.pageSize : internalPageSize.value));
@@ -146,7 +161,7 @@ const filteredData = computed(() => {
   if (!Array.isArray(data)) return [];
   if (!searchKey.value) return data;
   const key = searchKey.value.toLowerCase();
-  return data.filter(item => 
+  return data.filter(item =>
     (item.title || item.nameCn || item.name || item.question || item.content || "").toLowerCase().includes(key)
   );
 });
@@ -179,9 +194,48 @@ const handleSelectionChange = (selection) => {
   emit("selection-change", selection);
 };
 
-const TAG_TYPES = { 
-  easy: "success", medium: "warning", hard: "danger", 
-  "省级": "warning", "自治区级": "success", "州级": "primary", "市级": "primary", 
+// ========== CSV Export ==========
+const handleExportCSV = async () => {
+  if (!props.entity) {
+    ElMessage.warning("未配置导出实体");
+    return;
+  }
+
+  exportLoading.value = true;
+  try {
+    const response = await request.get(`/admin/export/${props.entity}`, {
+      params: { format: 'csv' },
+      responseType: 'blob'
+    });
+
+    const blob = new Blob([response], { type: 'text/csv;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const timestamp = new Date().toISOString().slice(0, 10);
+    link.download = `${props.entity}_export_${timestamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    ElMessage.success(`${props.title || props.entity} 数据导出成功`);
+  } catch (e) {
+    console.error('导出CSV失败:', e);
+    // Try to read error from blob
+    if (e instanceof Blob || (e.data instanceof Blob)) {
+      ElMessage.error('导出失败，服务器返回错误');
+    } else {
+      ElMessage.error('导出失败，请重试');
+    }
+  } finally {
+    exportLoading.value = false;
+  }
+};
+
+const TAG_TYPES = {
+  easy: "success", medium: "warning", hard: "danger",
+  "省级": "warning", "自治区级": "success", "州级": "primary", "市级": "primary",
   approved: "success", pending: "warning", rejected: "danger",
   resolved: "success", processing: "warning",
   video: "primary", document: "success", image: "warning",
@@ -189,7 +243,7 @@ const TAG_TYPES = {
   user: "info", admin: "warning"
 };
 
-const STATUS_TEXTS = { 
+const STATUS_TEXTS = {
   approved: "已审核", pending: "待审核", rejected: "已拒绝",
   resolved: "已解决", processing: "处理中",
   video: "视频", document: "文档", image: "图片",
@@ -202,5 +256,33 @@ const getStatusText = (val) => STATUS_TEXTS[val] || val;
 </script>
 
 <style scoped>
-.table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.table-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 768px) {
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-header .el-input {
+    width: 100% !important;
+  }
+
+  .table-header-right {
+    justify-content: flex-end;
+  }
+}
 </style>

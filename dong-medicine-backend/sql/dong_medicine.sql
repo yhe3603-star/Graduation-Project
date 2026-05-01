@@ -15,7 +15,6 @@
 */
 
 SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for comments
@@ -824,4 +823,35 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_hot_plants` AS select 
 DROP VIEW IF EXISTS `v_user_stats`;
 CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `v_user_stats` AS select `u`.`id` AS `id`,`u`.`username` AS `username`,count(distinct `qr`.`id`) AS `quiz_count`,avg(`qr`.`score`) AS `avg_quiz_score`,count(distinct `pgr`.`id`) AS `game_count`,avg(`pgr`.`score`) AS `avg_game_score`,count(distinct `f`.`id`) AS `favorite_count` from (((`users` `u` left join `quiz_record` `qr` on((`qr`.`user_id` = `u`.`id`))) left join `plant_game_record` `pgr` on((`pgr`.`user_id` = `u`.`id`))) left join `favorites` `f` on((`f`.`user_id` = `u`.`id`))) group by `u`.`id`,`u`.`username`;
 
-SET FOREIGN_KEY_CHECKS = 1;
+-- ----------------------------
+-- Table structure for chat_history
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_history`;
+CREATE TABLE `chat_history` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` int DEFAULT NULL COMMENT '用户ID',
+  `session_id` varchar(64) NOT NULL COMMENT '会话ID(UUID)',
+  `role` varchar(20) NOT NULL COMMENT '角色: user/assistant',
+  `content` text NOT NULL COMMENT '消息内容',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_session`(`user_id` ASC, `session_id` ASC) USING BTREE,
+  INDEX `idx_session_id`(`session_id` ASC) USING BTREE,
+  INDEX `idx_created_at`(`created_at` DESC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'AI聊天历史记录表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for browse_history
+-- ----------------------------
+DROP TABLE IF EXISTS `browse_history`;
+CREATE TABLE `browse_history` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` int NOT NULL COMMENT '用户ID',
+  `target_type` varchar(50) NOT NULL COMMENT '目标类型: plant/knowledge/inheritor',
+  `target_id` int NOT NULL COMMENT '目标ID',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '浏览时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_target`(`target_type` ASC, `target_id` ASC) USING BTREE,
+  INDEX `idx_created_at`(`created_at` DESC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户浏览历史记录表' ROW_FORMAT = DYNAMIC;

@@ -8,6 +8,7 @@ import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Knowledge;
+import com.dongmedicine.service.BrowseHistoryService;
 import com.dongmedicine.service.KnowledgeService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,6 +28,7 @@ import java.util.Map;
 public class KnowledgeController {
 
     private final KnowledgeService service;
+    private final BrowseHistoryService browseHistoryService;
 
     @GetMapping("/list")
     public R<Map<String, Object>> list(
@@ -59,6 +61,14 @@ public class KnowledgeController {
         Knowledge knowledge = service.getDetailWithRelated(id);
         if (knowledge == null) {
             throw BusinessException.notFound("知识条目不存在");
+        }
+        Integer userId = SecurityUtils.getCurrentUserIdOrNull();
+        if (userId != null) {
+            try {
+                browseHistoryService.record(userId, "knowledge", id);
+            } catch (Exception e) {
+                // Silently ignore
+            }
         }
         return R.ok(knowledge);
     }

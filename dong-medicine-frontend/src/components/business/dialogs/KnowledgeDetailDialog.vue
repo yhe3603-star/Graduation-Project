@@ -133,6 +133,18 @@
               </div>
             </div>
           </div>
+
+          <!-- Knowledge Graph Visualization -->
+          <div class="knowledge-graph-section">
+            <h3 class="section-title">
+              <el-icon><Connection /></el-icon>知识图谱
+            </h3>
+            <KnowledgeGraph
+              :knowledge-title="knowledge?.title || '侗医药知识'"
+              :related-plants="relatedPlants"
+              height="400px"
+            />
+          </div>
         </section>
 
         <section
@@ -272,11 +284,12 @@
 import { ref, computed, watch } from 'vue';
 import request from '@/utils/request';
 import { useRouter } from 'vue-router';
-import { View, Star, Document, Memo, FirstAidKit, List, Film, VideoPlay, Cherry, Picture } from '@element-plus/icons-vue';
+import { View, Star, Document, Memo, FirstAidKit, List, Film, VideoPlay, Cherry, Picture, Connection } from '@element-plus/icons-vue';
 import VideoPlayer from '@/components/business/media/VideoPlayer.vue';
 import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
+import KnowledgeGraph from '@/components/business/display/KnowledgeGraph.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
 
 const props = defineProps({
@@ -513,6 +526,14 @@ const handleDocumentDownload = downloadDocument;
   margin-top: 4px;
 }
 
+.knowledge-graph-section {
+  margin-top: var(--space-xl);
+}
+
+.knowledge-graph-section .section-title {
+  margin-bottom: var(--space-md);
+}
+
 .steps-flowchart {
   display: flex;
   flex-direction: column;
@@ -678,6 +699,10 @@ const handleDocumentDownload = downloadDocument;
   
   .media-section {
     margin-top: 4px;
+  }
+
+  .knowledge-graph-section {
+    margin-top: var(--space-lg);
   }
 }
 
