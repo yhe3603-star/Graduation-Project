@@ -21,6 +21,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -29,7 +30,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
-    public String login(String username, String password) {
+    public Map<String, Object> login(String username, String password) {
         if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
             throw BusinessException.badRequest("用户名和密码不能为空");
         }
@@ -48,7 +49,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         StpUtil.getSession().set("username", user.getUsername());
         StpUtil.getSession().set("role", user.getRole());
 
-        return StpUtil.getTokenValue();
+        return Map.of("token", StpUtil.getTokenValue(),
+                      "id", user.getId(),
+                      "username", user.getUsername(),
+                      "role", user.getRole());
     }
 
     @Override
@@ -65,17 +69,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!validationResult.isValid()) {
             throw BusinessException.passwordTooWeak();
         }
-        
-        if (getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username)) != null) {
-            throw BusinessException.userAlreadyExists();
-        }
 
         User user = new User();
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setRole(RoleConstants.ROLE_USER);
         user.setStatus(User.STATUS_ACTIVE);
-        save(user);
+        
+        try {
+            save(user);
+        } catch (org.springframework.dao.DuplicateKeyException e) {
+            throw BusinessException.userAlreadyExists();
+        }
     }
 
     @Override
@@ -110,8 +115,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userId == null) {
             throw BusinessException.badRequest("用户ID不能为空");
         }
-        Integer currentId = SecurityUtils.getCurrentUserId();
-        if (currentId != null && currentId.equals(userId)) {
+        if (SecurityUtils.getCurrentUserId().equals(userId)) {
             throw BusinessException.forbidden("不能删除当前登录账号");
         }
         User target = getById(userId);
@@ -194,8 +198,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userId == null) {
             throw BusinessException.badRequest("用户ID不能为空");
         }
-        Integer currentId = SecurityUtils.getCurrentUserId();
-        if (currentId != null && currentId.equals(userId)) {
+        if (SecurityUtils.getCurrentUserId().equals(userId)) {
             throw BusinessException.forbidden("不能封禁当前登录账号");
         }
         User user = getById(userId);
@@ -227,7 +230,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public String getUserToken(Integer userId) {
-        // 管理员权限检查：仅admin角色可获取其他用户Token
         StpUtil.checkRole("admin");
 
         if (userId == null) {
@@ -237,14 +239,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw BusinessException.userNotFound();
         }
-        StpUtil.login(String.valueOf(user.getId()));
-        StpUtil.getSession().set("username", user.getUsername());
-        StpUtil.getSession().set("role", user.getRole());
 
-        // 安全审计日志：记录管理员获取用户Token的操作
         log.warn("[安全审计] 管理员获取用户Token - 操作人ID:{}, 目标用户ID:{}, 目标用户名:{}",
             StpUtil.getLoginIdAsString(), user.getId(), user.getUsername());
 
-        return StpUtil.getTokenValue();
+        StpUtil.switchTo(userId);
+        String token = StpUtil.getTokenValue();
+        StpUtil.endSwitch();
+        return token;
     }
 }

@@ -3,6 +3,7 @@ package com.dongmedicine.controller;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
+import com.dongmedicine.common.util.PageUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.dto.QuizCreateDTO;
 import com.dongmedicine.dto.QuizQuestionDTO;
@@ -11,15 +12,16 @@ import com.dongmedicine.dto.QuizUpdateDTO;
 import com.dongmedicine.entity.QuizQuestion;
 import com.dongmedicine.entity.QuizRecord;
 import com.dongmedicine.service.QuizService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "趣味答题", description = "侗乡医药知识趣味答题与题目管理")
 @RestController
 @RequestMapping("/api/quiz")
 @RequiredArgsConstructor
@@ -31,15 +33,15 @@ public class QuizController {
     public R<List<QuizQuestionDTO>> list(
             @RequestParam(defaultValue = "10") @jakarta.validation.constraints.Max(50) int count,
             @RequestParam(defaultValue = "10") int scorePerQuestion) {
-        return R.ok(service.getRandomQuestions(Math.min(count, 50)));
+        return R.ok(service.getRandomQuestions(count));
     }
 
     @PostMapping("/submit")
     public R<Map<String, Object>> submit(@RequestBody QuizSubmitDTO dto,
                                          @RequestParam(defaultValue = "10") int scorePerQuestion) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        int score = (userId == null) 
-                ? service.calculateScore(dto.getAnswers(), scorePerQuestion) 
+        Integer userId = SecurityUtils.getCurrentUserIdOrNull();
+        int score = (userId == null)
+                ? service.calculateScore(dto.getAnswers(), scorePerQuestion)
                 : service.submit(userId, dto.getAnswers(), scorePerQuestion);
         int totalQuestions = dto.getAnswers() != null ? dto.getAnswers().size() : 0;
         int correctAnswers = score / (scorePerQuestion > 0 ? scorePerQuestion : 10);
@@ -47,31 +49,21 @@ public class QuizController {
     }
 
     @GetMapping("/records")
-    public R<List<QuizRecord>> records(
+    public R<Map<String, Object>> records(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) return R.ok(List.of());
-        int safeSize = Math.min(Math.max(size, 1), 100);
-        List<QuizRecord> all = service.getUserRecords(userId);
-        int start = (Math.max(page, 1) - 1) * safeSize;
-        int end = Math.min(start + safeSize, all.size());
-        return R.ok(start < all.size() ? all.subList(start, end) : List.of());
+        Integer userId = SecurityUtils.getCurrentUserIdOrNull();
+        if (userId == null) return R.ok(Map.of("records", List.of(), "total", 0));
+        Page<QuizRecord> pageResult = service.pageUserRecords(userId, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @GetMapping("/list")
     public R<Map<String, Object>> listAll(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        Page<QuizQuestion> pageResult = service.pageQuestions(
-                page == null ? 1 : page,
-                size == null ? 20 : size);
-        Map<String, Object> data = new HashMap<>();
-        data.put("records", pageResult.getRecords());
-        data.put("total", pageResult.getTotal());
-        data.put("page", pageResult.getCurrent());
-        data.put("size", pageResult.getSize());
-        return R.ok(data);
+        Page<QuizQuestion> pageResult = service.pageQuestions(page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @PostMapping("/add")

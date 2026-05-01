@@ -2,6 +2,7 @@ package com.dongmedicine.controller;
 
 import com.dongmedicine.common.R;
 import com.dongmedicine.service.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Tag(name = "数据统计", description = "平台数据概览与统计")
 @RestController
 @RequestMapping("/api/stats")
 @RequiredArgsConstructor

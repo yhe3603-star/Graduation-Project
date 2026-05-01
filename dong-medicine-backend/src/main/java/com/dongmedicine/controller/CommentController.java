@@ -4,7 +4,6 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
-import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.dto.CommentAddDTO;
 import com.dongmedicine.dto.CommentDTO;
@@ -20,6 +19,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "用户评论", description = "用户评论发布、查询与管理")
 @RestController
 @RequestMapping("/api/comments")
 @Validated
@@ -31,11 +33,9 @@ public class CommentController {
     @PostMapping
     @SaCheckLogin
     public R<String> add(@Valid @RequestBody CommentAddDTO dto) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) throw BusinessException.unauthorized("请先登录");
         Comment comment = new Comment();
-        comment.setUserId(userId);
-        comment.setUsername(SecurityUtils.getCurrentUsername());
+        comment.setUserId(SecurityUtils.getCurrentUserId());
+        comment.setUsername(SecurityUtils.getCurrentUsernameOrNull());
         comment.setTargetType(dto.getTargetType());
         comment.setTargetId(dto.getTargetId());
         comment.setContent(dto.getContent());
@@ -74,10 +74,8 @@ public class CommentController {
     public R<List<CommentDTO>> myComments(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) throw BusinessException.unauthorized("请先登录");
         int safeSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
-        List<CommentDTO> all = service.listByUserId(userId);
+        List<CommentDTO> all = service.listByUserId(SecurityUtils.getCurrentUserId());
         int start = (Math.max(page, 1) - 1) * safeSize;
         int end = Math.min(start + safeSize, all.size());
         return R.ok(start < all.size() ? all.subList(start, end) : List.of());

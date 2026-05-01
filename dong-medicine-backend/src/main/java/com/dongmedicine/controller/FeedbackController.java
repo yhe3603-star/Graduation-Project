@@ -6,12 +6,14 @@ import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.dto.FeedbackDTO;
 import com.dongmedicine.entity.Feedback;
 import com.dongmedicine.service.FeedbackService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "用户反馈", description = "用户意见反馈与回复")
 @RestController
 @RequestMapping("/api/feedback")
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class FeedbackController {
         feedback.setTitle(dto.getTitle());
         feedback.setContent(dto.getContent());
         feedback.setContact(dto.getContact());
-        feedbackService.submitFeedback(feedback, SecurityUtils.getCurrentUserId());
+        feedbackService.submitFeedback(feedback, SecurityUtils.getCurrentUserIdOrNull());
         return R.ok("提交成功");
     }
 
@@ -35,10 +37,8 @@ public class FeedbackController {
     public R<List<Feedback>> myFeedbacks(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) return R.ok(List.of());
         int safeSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
-        List<Feedback> all = feedbackService.listByUserId(userId);
+        List<Feedback> all = feedbackService.listByUserId(SecurityUtils.getCurrentUserId());
         int start = (Math.max(page, 1) - 1) * safeSize;
         int end = Math.min(start + safeSize, all.size());
         return R.ok(start < all.size() ? all.subList(start, end) : List.of());

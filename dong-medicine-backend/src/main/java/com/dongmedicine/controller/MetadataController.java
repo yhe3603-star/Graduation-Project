@@ -6,6 +6,7 @@ import com.dongmedicine.service.KnowledgeService;
 import com.dongmedicine.service.PlantService;
 import com.dongmedicine.service.QaService;
 import com.dongmedicine.service.ResourceService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Tag(name = "元数据", description = "平台元数据分类信息")
 @RestController
 @RequestMapping("/api/metadata")
 @RequiredArgsConstructor

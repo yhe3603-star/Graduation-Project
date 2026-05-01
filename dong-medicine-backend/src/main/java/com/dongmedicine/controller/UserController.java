@@ -1,11 +1,9 @@
 package com.dongmedicine.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
-import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
-import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.entity.User;
 import com.dongmedicine.config.RateLimit;
@@ -14,6 +12,7 @@ import com.dongmedicine.dto.RegisterDTO;
 import com.dongmedicine.dto.ChangePasswordDTO;
 import com.dongmedicine.service.UserService;
 import com.dongmedicine.service.CaptchaService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.Map;
 
+@Tag(name = "用户管理", description = "用户注册、登录、个人信息管理")
 @RestController
 @RequestMapping("/api/user")
 @Validated
@@ -35,9 +35,7 @@ public class UserController {
     public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
         captchaService.validateCaptchaOrThrow(dto.getCaptchaKey(), dto.getCaptchaCode());
         
-        String token = service.login(dto.getUsername(), dto.getPassword());
-        User user = service.getUserByUsername(dto.getUsername());
-        return R.ok(Map.of("token", token, "id", user.getId(), "username", user.getUsername(), "role", user.getRole()));
+        return R.ok(service.login(dto.getUsername(), dto.getPassword()));
     }
 
     @PostMapping("/register")
@@ -56,24 +54,15 @@ public class UserController {
     @GetMapping("/me")
     @SaCheckLogin
     public R<User> me() {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw BusinessException.unauthorized("请先登录");
-        }
-        return R.ok(service.getUserInfo(userId));
+        return R.ok(service.getUserInfo(SecurityUtils.getCurrentUserId()));
     }
 
     @PostMapping("/change-password")
     @SaCheckLogin
     public R<String> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw BusinessException.unauthorized("请先登录");
-        }
-        
         captchaService.validateCaptchaOrThrow(dto.getCaptchaKey(), dto.getCaptchaCode());
         
-        service.changePassword(userId, dto.getCurrentPassword(), dto.getNewPassword());
+        service.changePassword(SecurityUtils.getCurrentUserId(), dto.getCurrentPassword(), dto.getNewPassword());
         StpUtil.logout();
         return R.ok("密码修改成功，请重新登录");
     }
@@ -86,19 +75,12 @@ public class UserController {
 
     @GetMapping("/validate")
     public R<Map<String, Object>> validate() {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        String username = SecurityUtils.getCurrentUsername();
-        String role = SecurityUtils.getCurrentUserRole();
-        
-        if (userId == null || username == null) {
-            throw BusinessException.unauthorized("Token无效或已过期");
+        try {
+            Integer userId = SecurityUtils.getCurrentUserId();
+            return R.ok(Map.of("valid", true, "id", userId));
+        } catch (BusinessException e) {
+            return R.ok(Map.of("valid", false));
         }
-        
-        return R.ok(Map.of(
-            "id", userId,
-            "username", username,
-            "role", role != null ? role : RoleConstants.ROLE_USER
-        ));
     }
 
     @PostMapping("/refresh-token")
@@ -106,17 +88,12 @@ public class UserController {
         if (!StpUtil.isLogin()) {
             throw BusinessException.badRequest("Token无法刷新");
         }
-        Integer userId = SecurityUtils.getCurrentUserId();
-        String username = (String) StpUtil.getSession().get("username");
-        String role = (String) StpUtil.getSession().get("role");
 
         StpUtil.renewTimeout(StpUtil.getTokenTimeout());
 
         return R.ok(Map.of(
             "token", StpUtil.getTokenValue(),
-            "id", userId,
-            "username", username != null ? username : "",
-            "role", role != null ? role : RoleConstants.ROLE_USER
+            "id", SecurityUtils.getCurrentUserId()
         ));
     }
 }

@@ -1,6 +1,8 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.mapper.KnowledgeMapper;
 import com.dongmedicine.service.FavoriteService;
@@ -9,24 +11,30 @@ import com.dongmedicine.common.util.FileCleanupHelper;
 import com.dongmedicine.service.PopularityAsyncService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
+@DisplayName("KnowledgeService 单元测试")
 class KnowledgeServiceImplTest {
 
     @Mock
@@ -44,21 +52,17 @@ class KnowledgeServiceImplTest {
     @Mock
     private PopularityAsyncService popularityAsyncService;
 
+    @InjectMocks
     private KnowledgeServiceImpl knowledgeService;
 
     @BeforeEach
-    void setUp() throws Exception {
-        knowledgeService = new KnowledgeServiceImpl(favoriteService, feedbackService, fileCleanupHelper, popularityAsyncService);
-        setBaseMapper(knowledgeService, knowledgeMapper);
-    }
-
-    private void setBaseMapper(Object service, Object mapper) throws Exception {
-        Class<?> clazz = service.getClass();
+    void injectBaseMapper() throws Exception {
+        Class<?> clazz = knowledgeService.getClass();
         while (clazz != null) {
             try {
-                Field field = clazz.getDeclaredField("baseMapper");
-                field.setAccessible(true);
-                field.set(service, mapper);
+                Field baseMapperField = clazz.getDeclaredField("baseMapper");
+                baseMapperField.setAccessible(true);
+                baseMapperField.set(knowledgeService, knowledgeMapper);
                 return;
             } catch (NoSuchFieldException e) {
                 clazz = clazz.getSuperclass();
@@ -66,106 +70,183 @@ class KnowledgeServiceImplTest {
         }
     }
 
-    @Test
-    @DisplayName("搜索知识 - 返回空列表")
-    void searchEmpty() {
-        when(knowledgeMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
-
-        List<Knowledge> result = knowledgeService.search("不存在的关键词");
-        assertNotNull(result);
+    private Knowledge createKnowledge(Integer id, String title, String type) {
+        Knowledge k = new Knowledge();
+        k.setId(id);
+        k.setTitle(title);
+        k.setType(type);
+        k.setContent("Content for " + title);
+        k.setPopularity(100);
+        k.setCreatedAt(LocalDateTime.now());
+        return k;
     }
 
-    @Test
-    @DisplayName("获取详情 - 存在的ID")
-    void getDetailByIdExists() {
-        Knowledge knowledge = new Knowledge();
-        knowledge.setId(1);
-        knowledge.setTitle("药浴疗法");
-        when(knowledgeMapper.selectById(1)).thenReturn(knowledge);
+    @Nested
+    @DisplayName("getByType - 按类型查询测试")
+    class GetByType {
 
-        Knowledge result = knowledgeService.getDetailById(1);
-        assertNotNull(result);
-        assertEquals("药浴疗法", result.getTitle());
+        @Test
+        @DisplayName("空类型参数应返回全部")
+        void shouldReturnAllWhenTypeIsEmpty() {
+            List<Knowledge> expected = List.of(createKnowledge(1, "K1", "therapy"), createKnowledge(2, "K2", "disease"));
+            when(knowledgeMapper.selectList(any())).thenReturn(expected);
+
+            List<Knowledge> result = knowledgeService.getByType("");
+
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("null类型参数应返回全部")
+        void shouldReturnAllWhenTypeIsNull() {
+            List<Knowledge> expected = List.of(createKnowledge(1, "K1", "therapy"));
+            when(knowledgeMapper.selectList(any())).thenReturn(expected);
+
+            List<Knowledge> result = knowledgeService.getByType(null);
+
+            assertThat(result).hasSize(1);
+        }
     }
 
-    @Test
-    @DisplayName("获取详情 - 不存在的ID")
-    void getDetailByIdNotExists() {
-        when(knowledgeMapper.selectById(999)).thenReturn(null);
+    @Nested
+    @DisplayName("search - 关键词搜索测试")
+    class Search {
 
-        Knowledge result = knowledgeService.getDetailById(999);
-        assertNull(result);
+        @Test
+        @DisplayName("空关键词应返回全部")
+        void shouldReturnAllForEmptyKeyword() {
+            List<Knowledge> expected = List.of(createKnowledge(1, "K1", "therapy"));
+            when(knowledgeMapper.selectList(any())).thenReturn(expected);
+
+            List<Knowledge> result = knowledgeService.search("");
+
+            assertThat(result).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("null关键词应返回全部")
+        void shouldReturnAllForNullKeyword() {
+            List<Knowledge> expected = List.of(createKnowledge(1, "K1", "therapy"));
+            when(knowledgeMapper.selectList(any())).thenReturn(expected);
+
+            List<Knowledge> result = knowledgeService.search(null);
+
+            assertThat(result).hasSize(1);
+        }
     }
 
-    @Test
-    @DisplayName("增加浏览次数")
-    void incrementViewCount() {
-        doNothing().when(knowledgeMapper).incrementViewCount(anyInt());
+    @Nested
+    @DisplayName("advancedSearch - 高级搜索测试")
+    class AdvancedSearch {
 
-        assertDoesNotThrow(() -> {
-            knowledgeService.incrementViewCount(1);
-        });
+        @Test
+        @DisplayName("多条件组合搜索应正常工作")
+        void shouldCombineMultipleConditions() {
+            when(knowledgeMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
+
+            List<Knowledge> result = knowledgeService.advancedSearch("鼻炎", "鼻炎疗法", "呼吸道", "艾草", "popularity");
+
+            assertThat(result).isEmpty();
+            verify(knowledgeMapper).selectList(any(LambdaQueryWrapper.class));
+        }
+
+        @Test
+        @DisplayName("全部条件为空时应返回全部按热度排序")
+        void shouldReturnAllSortedByPopularityWhenAllEmpty() {
+            when(knowledgeMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
+
+            knowledgeService.advancedSearch("", "", "", "", "popularity");
+
+            verify(knowledgeMapper).selectList(any(LambdaQueryWrapper.class));
+        }
     }
 
-    @Test
-    @DisplayName("增加浏览次数 - 异常被静默处理")
-    void incrementViewCountExceptionHandled() {
-        doThrow(new RuntimeException("DB error")).when(knowledgeMapper).incrementViewCount(anyInt());
+    @Nested
+    @DisplayName("pageAll - 分页查询测试")
+    class PageAll {
 
-        assertDoesNotThrow(() -> {
-            knowledgeService.incrementViewCount(1);
-        });
+        @Test
+        @DisplayName("null pageNumber应被PageUtils归一化为1")
+        void shouldNormalizeNullPageNumber() {
+            when(knowledgeMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(new Page<>());
+
+            knowledgeService.pageAll(null, 10, "time");
+
+            verify(knowledgeMapper).selectPage(any(Page.class), any(LambdaQueryWrapper.class));
+        }
     }
 
-    @Test
-    @DisplayName("获取所有疗法 - 空列表")
-    void getAllTherapiesEmpty() {
-        when(knowledgeMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
+    @Nested
+    @DisplayName("submitFeedback - 反馈提交测试")
+    class SubmitFeedback {
 
-        List<Knowledge> result = knowledgeService.getAllTherapies();
-        assertNotNull(result);
+        @Test
+        @DisplayName("空反馈内容应抛出异常")
+        void shouldThrowForEmptyFeedback() {
+            assertThatThrownBy(() -> knowledgeService.submitFeedback(1, ""))
+                    .isInstanceOf(BusinessException.class);
+        }
+
+        @Test
+        @DisplayName("null反馈内容应抛出异常")
+        void shouldThrowForNullFeedback() {
+            assertThatThrownBy(() -> knowledgeService.submitFeedback(1, null))
+                    .isInstanceOf(BusinessException.class);
+        }
+
+        @Test
+        @DisplayName("超长反馈应抛出异常")
+        void shouldThrowForTooLongFeedback() {
+            String longFeedback = "x".repeat(1001);
+
+            assertThatThrownBy(() -> knowledgeService.submitFeedback(1, longFeedback))
+                    .isInstanceOf(BusinessException.class);
+        }
+
+        @Test
+        @DisplayName("null knowledgeId应抛出异常")
+        void shouldThrowForNullKnowledgeId() {
+            assertThatThrownBy(() -> knowledgeService.submitFeedback(null, "good"))
+                    .isInstanceOf(BusinessException.class);
+        }
+
+        @Test
+        @DisplayName("知识不存在应抛出异常")
+        void shouldThrowForNonExistentKnowledge() {
+            when(knowledgeMapper.selectById(999)).thenReturn(null);
+
+            assertThatThrownBy(() -> knowledgeService.submitFeedback(999, "good"))
+                    .isInstanceOf(BusinessException.class);
+        }
     }
 
-    @Test
-    @DisplayName("获取所有疾病 - 空列表")
-    void getAllDiseasesEmpty() {
-        when(knowledgeMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
+    @Nested
+    @DisplayName("deleteWithFiles - 删除测试")
+    class DeleteWithFiles {
 
-        List<Knowledge> result = knowledgeService.getAllDiseases();
-        assertNotNull(result);
-    }
+        @Test
+        @DisplayName("知识不存在应直接返回")
+        void shouldReturnWhenNotExists() {
+            when(knowledgeMapper.selectById(999)).thenReturn(null);
 
-    @Test
-    @DisplayName("搜索知识 - 空关键词返回全部")
-    void searchEmptyKeyword() {
-        when(knowledgeMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(Collections.emptyList());
+            knowledgeService.deleteWithFiles(999);
 
-        List<Knowledge> result = knowledgeService.search("");
-        assertNotNull(result);
-    }
+            verify(knowledgeMapper, never()).deleteById(any(Serializable.class));
+            verify(fileCleanupHelper, never()).deleteFilesFromJson(any());
+        }
 
-    @Test
-    @DisplayName("获取详情并增加人气")
-    void getDetailWithRelated() {
-        Knowledge knowledge = new Knowledge();
-        knowledge.setId(1);
-        knowledge.setTitle("药浴疗法");
-        when(knowledgeMapper.selectById(1)).thenReturn(knowledge);
-        doNothing().when(popularityAsyncService).incrementKnowledgePopularity(anyInt());
+        @Test
+        @DisplayName("存在时应删除知识并清理关联文件")
+        void shouldDeleteWithFiles() {
+            Knowledge k = createKnowledge(1, "K", "therapy");
+            k.setVideos("[{\"url\":\"/files/v1.mp4\"}]");
+            k.setDocuments("[{\"url\":\"/files/d1.pdf\"}]");
+            when(knowledgeMapper.selectById(1)).thenReturn(k);
 
-        Knowledge result = knowledgeService.getDetailWithRelated(1);
-        assertNotNull(result);
-        assertEquals("药浴疗法", result.getTitle());
-        verify(popularityAsyncService).incrementKnowledgePopularity(1);
-    }
+            knowledgeService.deleteWithFiles(1);
 
-    @Test
-    @DisplayName("获取详情并增加人气 - 知识不存在")
-    void getDetailWithRelatedNotFound() {
-        when(knowledgeMapper.selectById(999)).thenReturn(null);
-
-        Knowledge result = knowledgeService.getDetailWithRelated(999);
-        assertNull(result);
-        verify(popularityAsyncService, never()).incrementKnowledgePopularity(anyInt());
+            verify(fileCleanupHelper).deleteFilesFromJson(k.getVideos());
+            verify(fileCleanupHelper).deleteFilesFromJson(k.getDocuments());
+        }
     }
 }

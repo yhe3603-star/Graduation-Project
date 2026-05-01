@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckRole;
 import com.dongmedicine.common.R;
 import com.dongmedicine.dto.FileUploadResult;
 import com.dongmedicine.service.FileUploadService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Tag(name = "文件上传", description = "图片与附件上传")
 @Slf4j
 @RestController
 @RequestMapping("/api/upload")

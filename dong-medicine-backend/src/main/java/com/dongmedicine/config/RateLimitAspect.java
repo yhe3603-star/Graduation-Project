@@ -157,34 +157,40 @@ public class RateLimitAspect {
         private final AtomicLong tokens;
         private volatile long lastRefillTime;
         private volatile long lastAccessTime;
-        
+        private long leftoverMs;
+
         public LocalTokenBucket(int capacity, long refillRateMs) {
             this.capacity = capacity;
             this.refillRateMs = refillRateMs;
             this.tokens = new AtomicLong(capacity);
             this.lastRefillTime = System.currentTimeMillis();
             this.lastAccessTime = System.currentTimeMillis();
+            this.leftoverMs = 0;
         }
-        
+
         public synchronized boolean tryAcquire() {
             lastAccessTime = System.currentTimeMillis();
             refill();
-            if (tokens.get() > 0) {
-                tokens.decrementAndGet();
-                return true;
+            long current = tokens.get();
+            while (current > 0) {
+                if (tokens.compareAndSet(current, current - 1)) {
+                    return true;
+                }
+                current = tokens.get();
             }
             return false;
         }
-        
+
         public long getLastAccessTime() {
             return lastAccessTime;
         }
-        
+
         private void refill() {
             long now = System.currentTimeMillis();
-            long elapsed = now - lastRefillTime;
+            long elapsed = now - lastRefillTime + leftoverMs;
             if (elapsed >= refillRateMs) {
                 long tokensToAdd = elapsed / refillRateMs;
+                leftoverMs = elapsed % refillRateMs;
                 long newTokens = Math.min(capacity, tokens.get() + tokensToAdd);
                 tokens.set(newTokens);
                 lastRefillTime = now;

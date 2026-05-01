@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dongmedicine.common.R;
 import com.dongmedicine.entity.OperationLog;
 import com.dongmedicine.service.OperationLogService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Tag(name = "操作日志", description = "后台操作日志查询")
 @RestController
 @RequestMapping("/api/admin/logs")
 @SaCheckRole("admin")

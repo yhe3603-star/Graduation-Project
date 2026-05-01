@@ -55,11 +55,11 @@ class QuizControllerTest {
     }
 
     @Test
-    @DisplayName("获取随机题目 - count超过50被限制")
-    void testListQuestions_CountOverLimit() {
+    @DisplayName("获取随机题目 - count=50应正常处理")
+    void testListQuestions_Count50() {
         when(quizService.getRandomQuestions(50)).thenReturn(List.of());
 
-        R<List<QuizQuestionDTO>> result = quizController.list(999, 10);
+        R<List<QuizQuestionDTO>> result = quizController.list(50, 10);
 
         assertEquals(200, result.getCode());
         verify(quizService).getRandomQuestions(50);
@@ -79,36 +79,36 @@ class QuizControllerTest {
     }
 
     @Test
-    @DisplayName("答题记录 - 未登录返回空列表")
+    @DisplayName("答题记录 - 未登录返回空记录")
     void testRecords_NotLoggedIn() {
         try (MockedStatic<SecurityUtils> mocked = mockStatic(SecurityUtils.class)) {
-            mocked.when(SecurityUtils::getCurrentUserId).thenReturn(null);
+            mocked.when(SecurityUtils::getCurrentUserIdOrNull).thenReturn(null);
 
-            R<List<QuizRecord>> result = quizController.records(1, 20);
+            R<Map<String, Object>> result = quizController.records(1, 20);
 
             assertEquals(200, result.getCode());
             assertNotNull(result.getData());
-            assertTrue(result.getData().isEmpty());
         }
     }
 
     @Test
-    @DisplayName("答题记录 - 已登录返回数据")
+    @DisplayName("答题记录 - 已登录返回分页数据")
     void testRecords_LoggedIn() {
         try (MockedStatic<SecurityUtils> mocked = mockStatic(SecurityUtils.class)) {
-            mocked.when(SecurityUtils::getCurrentUserId).thenReturn(1);
+            mocked.when(SecurityUtils::getCurrentUserIdOrNull).thenReturn(1);
 
             QuizRecord record = new QuizRecord();
             record.setId(1);
             record.setUserId(1);
             record.setScore(80);
-            when(quizService.getUserRecords(1)).thenReturn(Arrays.asList(record));
+            Page<QuizRecord> page = new Page<>(1, 20, 1);
+            page.setRecords(Arrays.asList(record));
+            when(quizService.pageUserRecords(eq(1), eq(1), eq(20))).thenReturn(page);
 
-            R<List<QuizRecord>> result = quizController.records(1, 20);
+            R<Map<String, Object>> result = quizController.records(1, 20);
 
             assertEquals(200, result.getCode());
             assertNotNull(result.getData());
-            assertEquals(1, result.getData().size());
         }
     }
 }

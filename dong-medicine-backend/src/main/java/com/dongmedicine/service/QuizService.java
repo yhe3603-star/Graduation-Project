@@ -12,6 +12,7 @@ public interface QuizService {
     Integer submit(Integer userId, List<AnswerDTO> answers, int scorePerQuestion);
     Integer calculateScore(List<AnswerDTO> answers, int scorePerQuestion);
     List<QuizRecord> getUserRecords(Integer userId);
+    Page<QuizRecord> pageUserRecords(Integer userId, int page, int size);
 
     void deleteQuestion(Integer questionId);
     

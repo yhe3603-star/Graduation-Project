@@ -6,6 +6,7 @@ import com.dongmedicine.mapper.KnowledgeMapper;
 import com.dongmedicine.mapper.PlantMapper;
 import com.dongmedicine.mapper.QaMapper;
 import com.dongmedicine.mapper.ResourceMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "简版统计", description = "平台简化统计数据")
 @RestController
 @RequestMapping("/api/stats")
 @RequiredArgsConstructor

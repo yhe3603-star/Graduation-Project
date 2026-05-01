@@ -8,12 +8,10 @@ import com.dongmedicine.common.R;
 import com.dongmedicine.dto.CaptchaDTO;
 import com.dongmedicine.service.CaptchaService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-/**
- * 验证码控制器
- * 提供验证码生成接口
- */
+@Tag(name = "验证码", description = "用户验证码获取")
 @RestController
 @RequestMapping("/api/captcha")
 @RequiredArgsConstructor

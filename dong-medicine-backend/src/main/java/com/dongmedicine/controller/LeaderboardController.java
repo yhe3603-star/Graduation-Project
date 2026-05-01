@@ -9,12 +9,14 @@ import com.dongmedicine.entity.QuizRecord;
 import com.dongmedicine.mapper.PlantGameRecordMapper;
 import com.dongmedicine.mapper.QuizRecordMapper;
 import com.dongmedicine.mapper.UserMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Tag(name = "排行榜", description = "答题与游戏排行榜")
 @RestController
 @RequestMapping("/api/leaderboard")
 @RequiredArgsConstructor

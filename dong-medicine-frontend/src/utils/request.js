@@ -1,6 +1,7 @@
 import axios from "axios"
 import { ElMessage } from "element-plus"
-import { logAuthWarn, logSecurityWarn } from '@/utils/logger'
+import logger from "./logger"
+import { logSecurityWarn } from "./logger"
 import { sanitize, containsXss, containsSqlInjection, sanitizeForLog } from "./xss"
 
 const pendingRequests = new Map()
@@ -252,7 +253,7 @@ request.interceptors.response.use(
     removePendingRequest(res.config)
     
     if (res.data?.code !== undefined && res.data.code !== 200) {
-      console.log('Response error:', res.data)
+      logger.warn('Response error:', res.data.code, res.data.msg)
       return Promise.reject(res.data)
     }
     return res.data
@@ -266,7 +267,7 @@ request.interceptors.response.use(
       config.__retryCount += 1
       const delay = RETRY_CONFIG.retryDelay * Math.pow(2, config.__retryCount - 1)
       
-      console.log(`请求重试 (${config.__retryCount}/${RETRY_CONFIG.maxRetries}): ${config.url}`)
+      logger.info(`请求重试 (${config.__retryCount}/${RETRY_CONFIG.maxRetries}): ${config.url}`)
       await sleep(delay)
       
       return request(config)
@@ -276,7 +277,7 @@ request.interceptors.response.use(
     const msg = err.response?.data?.msg || err.message || "网络错误"
 
     if (axios.isCancel(err)) {
-      console.log('请求被取消:', err.message)
+      logger.info('请求被取消:', err.message)
       return Promise.reject(err)
     }
 

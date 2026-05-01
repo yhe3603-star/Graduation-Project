@@ -104,6 +104,18 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
+    public Page<QuizRecord> pageUserRecords(Integer userId, int page, int size) {
+        if (userId == null) {
+            return new Page<>(page, 0);
+        }
+        return recordMapper.selectPage(
+                PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<QuizRecord>()
+                        .eq(QuizRecord::getUserId, userId)
+                        .orderByDesc(QuizRecord::getCreatedAt));
+    }
+
+    @Override
     @CacheEvict(value = "quizQuestions", allEntries = true)
     public void deleteQuestion(Integer questionId) {
         if (questionId == null) {

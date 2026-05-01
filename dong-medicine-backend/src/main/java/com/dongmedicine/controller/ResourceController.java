@@ -31,6 +31,9 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "学习资源", description = "侗乡医药学习资源下载与管理")
 @Slf4j
 @RestController
 @RequestMapping("/api/resources")

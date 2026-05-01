@@ -186,7 +186,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
     class ValidateToken {
 
         @Test
-        @DisplayName("有效Token应返回用户信息")
+        @DisplayName("有效Token应返回验证通过")
         void shouldValidateValidToken() throws Exception {
             String token = loginAndGetToken();
 
@@ -194,15 +194,17 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .header("Authorization", token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(200))
-                    .andExpect(jsonPath("$.data.username").value(TEST_USERNAME));
+                    .andExpect(jsonPath("$.data.valid").value(true))
+                    .andExpect(jsonPath("$.data.id").isNumber());
         }
 
         @Test
-        @DisplayName("无效Token应返回401")
+        @DisplayName("无效Token应返回验证不通过")
         void shouldRejectInvalidToken() throws Exception {
             mockMvc.perform(get("/api/user/validate")
                             .header("Authorization", "Bearer invalid-token"))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.valid").value(false));
         }
     }
 }

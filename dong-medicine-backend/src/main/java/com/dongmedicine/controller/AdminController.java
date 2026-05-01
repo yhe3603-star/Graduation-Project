@@ -10,6 +10,7 @@ import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.dto.*;
 import com.dongmedicine.entity.*;
 import com.dongmedicine.service.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "后台管理", description = "管理员数据管理台")
 @RestController
 @RequestMapping("/api/admin")
 @Validated

@@ -8,6 +8,7 @@ import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.service.PlantService;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +19,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "药用资源图鉴", description = "侗乡药用植物信息查询与图文展示")
 @RestController
 @RequestMapping("/api/plants")
 @Validated

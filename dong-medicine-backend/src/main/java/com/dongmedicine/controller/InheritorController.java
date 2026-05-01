@@ -7,12 +7,14 @@ import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.service.InheritorService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "传承人风采", description = "侗乡医药非遗传承人信息查询与展示")
 @RestController
 @RequestMapping("/api/inheritors")
 @RequiredArgsConstructor

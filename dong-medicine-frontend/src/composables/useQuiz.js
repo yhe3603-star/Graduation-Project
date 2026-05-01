@@ -102,7 +102,7 @@ export const useQuiz = (request, isLoggedIn) => {
       if (isLoggedIn.value) {
         try {
           const quizRes = await request.get('/quiz/records')
-          quizRecords.value = quizRes?.data?.data || quizRes?.data || []
+          quizRecords.value = quizRes?.data?.data?.records || quizRes?.data?.data || []
         } catch (e) {
           console.debug('加载答题记录失败:', e)
         }
@@ -128,7 +128,7 @@ export const useQuiz = (request, isLoggedIn) => {
   const loadQuizRecords = async () => {
     try {
       const res = await request.get('/quiz/records')
-      quizRecords.value = res?.data?.data || res?.data || []
+      quizRecords.value = res?.data?.data?.records || res?.data?.data || []
     } catch (e) {
       console.debug('加载答题记录失败:', e)
     }

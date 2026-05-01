@@ -28,6 +28,18 @@ spring:
       password: ${REDIS_PASSWORD:}
       database: 0
       timeout: 10000ms
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+    connection-timeout: 10000
+    listener:
+      simple:
+        prefetch: 10
+        retry:
+          enabled: true
 
 jwt:
   expiration: ${JWT_EXPIRATION:86400000}
@@ -47,6 +59,8 @@ sa-token:
   jwt-secret-key: ${JWT_SECRET:}
 
 app:
+  rabbitmq:
+    enabled: ${APP_RABBITMQ_ENABLED:true}
   cors:
     allowed-origins:
       - ${CORS_ORIGIN_1:http://localhost:5173}

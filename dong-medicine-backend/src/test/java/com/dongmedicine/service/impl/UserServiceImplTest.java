@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dongmedicine.entity.User;
 import com.dongmedicine.mapper.UserMapper;
 import com.dongmedicine.common.util.PasswordValidator;
+import com.dongmedicine.common.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.lang.reflect.Field;
@@ -90,12 +92,13 @@ class UserServiceImplTest {
     }
 
     @Test
-    @DisplayName("注册失败 - 用户名已存在")
+    @DisplayName("注册失败 - 用户名已存在(数据库唯一约束冲突)")
     void testRegisterFailUsernameExists() {
-        when(userMapper.selectOne(any(LambdaQueryWrapper.class), anyBoolean())).thenReturn(testUser);
+        doThrow(new DuplicateKeyException("Duplicate entry"))
+                .when(userMapper).insert(any(User.class));
 
-        assertThrows(Exception.class, () -> {
-            userService.register("testuser", "Test123456");
+        assertThrows(BusinessException.class, () -> {
+            userService.register("existinguser", "Test123456");
         });
     }
 

@@ -11,6 +11,7 @@ import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.service.KnowledgeService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "非遗知识库", description = "侗乡医药知识查询、检索、浏览统计")
 @RestController
 @RequestMapping("/api/knowledge")
 @Validated
@@ -71,9 +73,7 @@ public class KnowledgeController {
     @PostMapping("/favorite/{id}")
     @SaCheckLogin
     public R<String> favorite(@PathVariable @NotNull(message = "ID不能为空") Integer id) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) throw BusinessException.unauthorized("请先登录");
-        service.addFavorite(userId, id);
+        service.addFavorite(SecurityUtils.getCurrentUserId(), id);
         return R.ok("收藏成功");
     }
 
