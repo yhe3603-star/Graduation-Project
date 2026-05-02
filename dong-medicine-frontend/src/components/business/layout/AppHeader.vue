@@ -208,7 +208,6 @@ const navItems = [
 ];
 
 const moreItems = [
-  { path: "/solar-terms", label: "节气采药", icon: Calendar },
   { path: "/feedback", label: "意见反馈", icon: InfoFilled },
   { path: "/about", label: "关于非遗", icon: InfoFilled }
 ];

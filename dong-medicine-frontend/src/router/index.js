@@ -15,7 +15,6 @@ const routes = [
   { path: "/about", name: "About", component: () => import("@/views/About.vue") },
   { path: "/feedback", name: "Feedback", component: () => import("@/views/Feedback.vue") },
   { path: "/search", name: "Search", component: () => import("@/views/GlobalSearch.vue") },
-  { path: "/solar-terms", name: "SolarTerms", component: () => import("@/views/SolarTerms.vue"), meta: { keepAlive: true } },
   { path: "/:pathMatch(.*)*", name: "NotFound", component: () => import("@/views/NotFound.vue") }
 ]
 

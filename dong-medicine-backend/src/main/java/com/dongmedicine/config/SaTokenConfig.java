@@ -106,13 +106,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
             "/images/**",
             "/videos/**",
 
-            // ========== 开发工具与监控 ==========
-            "/actuator/**",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/swagger-ui.html",
-            "/doc.html",
-            "/webjars/**",
+            // ========== 静态资源 ==========
             "/favicon.ico",
             "/error"
         );
@@ -121,9 +115,9 @@ public class SaTokenConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-            .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
+            .allowedOriginPatterns("*")
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-            .allowedHeaders("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "userid", "Userid", "UserId")
+            .allowedHeaders("*")
             .allowCredentials(true)
             .maxAge(3600);
     }
