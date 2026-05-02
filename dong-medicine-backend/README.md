@@ -69,6 +69,7 @@ dong-medicine-backend/
 │   │   ├── java/com/dongmedicine/
 │   │   │   ├── DongMedicineBackendApplication.java  # 启动入口（加载.env + @EnableCaching）
 │   │   │   ├── controller/              # 控制器层（24个Controller）
+│   │   │   │   └── admin/              #   管理后台（4个子Controller: User/Content/Interaction/Stats）
 │   │   │   ├── service/                 # 服务层（18个Service接口 + 实现类）
 │   │   │   ├── mapper/                  # 数据访问层（15个Mapper接口）
 │   │   │   ├── entity/                  # 实体类（15个Entity + BaseEntity基类）
@@ -207,7 +208,7 @@ R.notFound("msg")               // 404
 
 | 位置 | 注解 | 作用 |
 |------|------|------|
-| 类级别 | `@SaCheckRole("admin")` | AdminController整个类需要admin角色 |
+| 类级别 | `@SaCheckRole("admin")` | admin/ 子Controller整个类需要admin角色 |
 | 方法级别 | `@SaCheckLogin` | user/me, change-password等需要登录 |
 | 默认 | 无注解 | 公开接口，GET请求免登录访问 |
 
@@ -293,7 +294,7 @@ public void deleteWithFiles(Integer id) { ... }
 | 组件 | 作用 | 实现方式 |
 |------|------|---------|
 | **SaTokenConfig** | 路由拦截 | SaInterceptor + 路径白名单 |
-| **StpInterfaceImpl** | 角色查询 | 实现StpInterface，从数据库查user.role |
+| **StpInterfaceImpl** | 角色查询 | 实现StpInterface，本地缓存5分钟避免频繁查库 |
 | **XssFilter** | XSS防护 | 过滤表单参数和JSON请求体中的危险标签 |
 | **XssUtils** | XSS检测 | 30+种危险模式正则匹配 |
 | **RateLimitAspect** | 接口限流 | Redis Lua脚本 + 本地令牌桶降级 |

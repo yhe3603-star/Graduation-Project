@@ -164,9 +164,10 @@ manualChunks(id) {
 4. 注册 Vue Router 路由
 5. 注册 Pinia 状态管理
 6. 通过 `provide` 和 `globalProperties` 全局注入 `request`（Axios 实例）
-7. 批量注册所有 Element Plus 图标组件为全局组件
-8. 挂载到 `#app` DOM 节点
-9. 路由就绪后移除加载动画（`#app-loading` 淡出并移除）
+7. 挂载到 `#app` DOM 节点
+8. 路由就绪后移除加载动画（`#app-loading` 淡出并移除）
+
+> Element Plus 图标采用按需导入，各组件直接 `import { Star } from '@element-plus/icons-vue'`，不全局注册。
 
 ## 组件架构
 
@@ -223,9 +224,9 @@ manualChunks(id) {
 - **JWT 认证**：token 存储在 localStorage，请求自动携带 `Authorization: Bearer <token>` 头
 - **Token 自动刷新**：401 响应时自动尝试 `/user/refresh-token` 接口刷新 token；刷新失败触发 `auth-expired` 自定义事件清空认证状态
 - **Token 本地解码**：客户端解码 JWT payload 检查 `exp` 过期时间，提前判断无需每次都请求服务端
-- **XSS 防护**：请求数据在发送前经过 `sanitizeRequestData` 处理，检测并清除 `<script>`、`onerror` 等 28 种攻击模式
-- **SQL 注入防护**：请求参数检测并移除 SQL 注入特征码（`--`、`;`、`union select`、`' OR 1=1` 等）
-- **重复请求取消**：非 GET/HEAD/OPTIONS 的重复请求自动通过 Axios CancelToken 取消前一次请求，防止重复提交
+- **XSS 防护**：请求数据在发送前经过 `sanitizeRequestData` 处理，检测并清除 `<script>`、`onerror` 等 28 种攻击模式；`sanitizeHtml` 使用 DOMParser 解析后移除危险元素和属性，防止编码绕过
+- **SQL 注入防护**：请求参数检测 SQL 注入特征码（`union select`、`;` + SQL 语句、`OR 1=1`、SQL 注释符等），针对上下文匹配降低误报
+- **重复请求取消**：非 GET/HEAD/OPTIONS 的重复请求自动通过 AbortController 取消前一次请求，防止重复提交
 - **请求重试**：GET/HEAD/OPTIONS 请求在网络错误或 408/429/5xx 状态码时自动重试（最多 3 次，指数退避 1s/2s/4s）
 - **敏感信息脱敏**：日志输出前对敏感内容进行脱敏处理
 
