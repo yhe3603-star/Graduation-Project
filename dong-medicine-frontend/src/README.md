@@ -24,6 +24,10 @@ src/
 │   ├── useInteraction.js  # 交互功能（倒计时、评论、分页、过滤、统计）
 │   ├── useMedia.js        # 媒体显示（文档预览、媒体Tabs、文件信息）
 │   ├── usePersonalCenter.js # 个人中心全部功能
+│   ├── useStudyStats.js   # 学习统计 + ECharts 成绩趋势图
+│   ├── useBrowseHistory.js # 浏览历史管理
+│   ├── useChatWebSocket.js # AI 聊天 WebSocket 连接与流式消息处理
+│   ├── useChatSessions.js  # AI 聊天会话管理（CRUD、历史加载）
 │   ├── usePlantGame.js    # 植物识别游戏
 │   ├── useQuiz.js         # 趣味答题功能
 │   ├── useUpdateLog.js    # 更新日志管理
@@ -43,26 +47,25 @@ src/
 │   ├── common/            # 通用组件（骨架屏、PageLoading）
 │   └── business/          # 业务组件
 │       ├── layout/        # AppHeader、AppFooter
-│       ├── display/       # SearchFilter、CardGrid、ChartCard 等
+│       ├── display/       # SearchFilter、AiChatCard、ai-chat/ 等
 │       ├── interact/      # CommentSection、QuizSection、PlantGame 等
 │       ├── media/         # ImageCarousel、VideoPlayer 等
 │       ├── upload/        # ImageUploader、FileUploader 等
 │       ├── dialogs/       # 前台详情弹窗
 │       └── admin/         # 管理后台组件
-├── views/                 # 页面组件（15 个页面，与路由一一对应）
-│   ├── Home.vue           # 首页
+├── views/                 # 页面组件（14 个页面，与路由一一对应）
+│   ├── Home.vue           # 首页（子组件在 home/）
 │   ├── Plants.vue         # 药用资源图鉴
 │   ├── Knowledge.vue      # 非遗医药知识库
 │   ├── Inheritors.vue     # 传承人风采
 │   ├── Qa.vue             # 问答社区
 │   ├── Resources.vue      # 学习资源
 │   ├── Interact.vue       # 文化互动专区
-│   ├── SolarTerms.vue     # 节气采药
 │   ├── About.vue          # 关于平台
 │   ├── Feedback.vue       # 意见反馈
 │   ├── Admin.vue          # 管理后台
-│   ├── PersonalCenter.vue # 个人中心
-│   ├── GlobalSearch.vue   # 全局搜索
+│   ├── PersonalCenter.vue # 个人中心（子组件在 personal-center/）
+│   ├── GlobalSearch.vue   # 全局搜索（子组件在 global-search/）
 │   ├── Visual.vue         # 数据可视化
 │   └── NotFound.vue       # 404 页面
 ├── styles/                # 全局样式系统
@@ -85,7 +88,18 @@ src/
 │   └── homeConfig.js      # 首页的统计数据、快捷入口等配置
 ├── directives/            # 全局自定义指令
 │   └── index.js           # 8 个指令（lazy、debounce、throttle、permission 等）
-└── __test__/              # 单元测试
+├── __test__/              # 单元测试（14 个测试文件）
+│   ├── utils.test.js       # 工具函数测试
+│   ├── components.test.js  # 通用组件测试
+│   ├── personal-center.test.js # 个人中心子组件测试（7 个测试）
+│   ├── request.test.js     # HTTP 请求封装测试
+│   ├── xss.test.js         # XSS 防护测试
+│   └── ...
+└── e2e/                  # Playwright E2E 测试（9 个 spec 文件）
+    ├── page-load.spec.js   # 页面加载测试
+    ├── search.spec.js      # 搜索功能测试
+    ├── api.spec.js         # API 回归测试
+    ├── ai-chat.spec.js     # AI 聊天组件测试（8 个测试）
     └── ...
 ```
 

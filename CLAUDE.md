@@ -51,7 +51,7 @@ Browser → Nginx (port 80/3000)
 - **Auth**: Sa-Token with JWT mode
 - **ORM**: MyBatis-Plus (`com.dongmedicine.mapper/`)
 - **DB**: MySQL 8.0 (`dong_medicine`), schema + seed data in `sql/dong_medicine.sql`
-- **Cache**: Redis 7 + Caffeine (two-level cache via `CacheConfig`)
+- **Cache**: Redis 7 + Caffeine — true two-level cache (Caffeine L1 in-memory → Redis L2 distributed), see `CacheConfig.TwoLevelCacheManager`
 - **MQ**: RabbitMQ for async operation logs, statistics, feedback, file processing, notifications (`com.dongmedicine.mq/`)
 - **AI Chat**: WebSocket handler (`com.dongmedicine.websocket.ChatWebSocketHandler`) + Spring WebFlux WebClient streaming to DeepSeek API
 - **API Docs**: Swagger UI via SpringDoc/OpenAPI
@@ -62,7 +62,7 @@ Browser → Nginx (port 80/3000)
 ### Frontend (`dong-medicine-frontend/`)
 - **Vue 3.4 + Vite 5** with Element Plus UI (Chinese locale)
 - **State**: Pinia (single store: `stores/user.js`)
-- **Router**: 15 routes with auth guards (`/personal` requires login, `/admin` requires admin role)
+- **Router**: 14 routes with auth guards (`/personal` requires login, `/admin` requires admin role)
 - **Composables**: Business logic in `src/composables/` (useAdminData, useFavorite, useQuiz, useChatWebSocket, useChatSessions, useStudyStats, useBrowseHistory, etc.)
 - **HTTP**: Axios instance in `src/utils/request.js` — handles auth tokens, error codes, token refresh
 - **XSS**: DOMPurify sanitization via `src/utils/xss.js`
@@ -88,7 +88,8 @@ Tracking: `operation_log`, `browse_history`, `chat_history`
 - Entity classes use MyBatis-Plus annotations (`@TableName`, `@TableField`)
 - The `@SaCheckLogin` / `@SaCheckRole` annotations handle auth on controller methods
 - RabbitMQ producers in `mq/producer/` send messages; corresponding consumers in `mq/consumer/` process them
-- Large views split into sub-components: `views/personal-center/` (6 sub-components), `components/business/display/ai-chat/` (5 sub-components)
-- E2E tests split into 8 spec files under `e2e/` by feature area
-- Backend regression tests split by bug category under `regression/`
+- Large views split into sub-components: `views/personal-center/` (6), `components/business/display/ai-chat/` (5), `views/home/` (7), `views/global-search/` (1)
+- E2E tests split into 9 spec files under `e2e/` by feature area (incl. ai-chat)
+- Backend regression tests split by bug category under `regression/` (5 files)
+- Component unit tests: `__tests__/personal-center.test.js` covers ProfileSection, StatsDashboard, BrowseHistoryPanel
 - Static file uploads go to the backend's configured upload directory; paths are stored as relative URLs in the DB
