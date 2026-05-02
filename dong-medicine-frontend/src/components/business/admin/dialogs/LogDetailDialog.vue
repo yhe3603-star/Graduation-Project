@@ -1,5 +1,5 @@
 <template>
-  <el-dialog
+  <BaseDetailDialog
     :model-value="visible"
     title="日志详情"
     width="650px"
@@ -93,10 +93,11 @@
         关闭
       </el-button>
     </template>
-  </el-dialog>
+  </BaseDetailDialog>
 </template>
 
 <script setup>
+import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 defineProps({
   visible: { type: Boolean, default: false },
   log: { type: Object, default: null }

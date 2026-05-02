@@ -1,9 +1,9 @@
 <template>
-  <el-dialog 
+  <BaseDetailDialog 
     :model-value="visible" 
     :title="qa?.question" 
     width="min(700px, 90vw)"
-    class="qa-detail-dialog detail-dialog"
+    dialog-class="qa-detail-dialog detail-dialog"
     @update:model-value="$emit('update:visible', $event)"
   >
     <div class="dialog-content">
@@ -24,7 +24,9 @@
       <div class="qa-body">
         <section class="content-section">
           <h3 class="section-title">
-            <el-icon class="q-icon"><QuestionFilled /></el-icon>问题
+            <el-icon class="q-icon">
+<QuestionFilled />
+</el-icon>问题
           </h3>
           <div class="content-box highlight">
             {{ qa?.question }}
@@ -33,7 +35,9 @@
 
         <section class="content-section">
           <h3 class="section-title">
-            <el-icon class="a-icon"><CircleCheckFilled /></el-icon>解答
+            <el-icon class="a-icon">
+<CircleCheckFilled />
+</el-icon>解答
           </h3>
           <div class="content-box">
             {{ qa?.answer || '暂无解答' }}
@@ -60,10 +64,11 @@
         </el-button>
       </div>
     </template>
-  </el-dialog>
+  </BaseDetailDialog>
 </template>
 
 <script setup>
+import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { watch } from 'vue';
 import { View, Star, QuestionFilled, CircleCheckFilled } from '@element-plus/icons-vue';
 import request from '@/utils/request';
@@ -86,7 +91,6 @@ watch(() => props.visible, (newVal) => {
 </script>
 
 <style scoped>
-@import '@/styles/dialog-common.css';
 
 .qa-detail-dialog :deep(.el-dialog__body) {
   overflow-x: hidden;

@@ -1,5 +1,5 @@
 <template>
-  <el-dialog
+  <BaseDetailDialog
     :model-value="visible"
     title="资源详情"
     width="900px"
@@ -167,10 +167,11 @@
         关闭
       </el-button>
     </template>
-  </el-dialog>
+  </BaseDetailDialog>
 </template>
 
 <script setup>
+import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { computed, ref, watch } from 'vue';
 import { Picture, Download, Loading } from '@element-plus/icons-vue';
 import { formatTime, formatFileSize, getFileTypeTagType, getFileTypeText } from '@/utils/adminUtils';

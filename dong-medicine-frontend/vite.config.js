@@ -1,8 +1,9 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { resolve } from "path";
+import purgecss from "@fullhuman/postcss-purgecss";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [vue()],
   resolve: {
     alias: {
@@ -16,6 +17,23 @@ export default defineConfig({
         api: "modern-compiler",
       },
     },
+    ...(command === 'build' && {
+      postcss: {
+        plugins: [
+          purgecss({
+            content: ['./index.html', './src/**/*.{vue,js}'],
+            safelist: {
+              standard: [/^el-/, /^hljs/, /^v-enter/, /^v-leave/, /^fade-/],
+              deep: [/el-/, /is-/],
+            },
+            defaultExtractor: (content) => content.match(/[\w-/:]+(?<!:)/g) || [],
+            keyframes: true,
+            fontFace: true,
+            variables: true,
+          }),
+        ],
+      },
+    }),
   },
   build: {
     chunkSizeWarningLimit: 1500,
@@ -69,4 +87,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

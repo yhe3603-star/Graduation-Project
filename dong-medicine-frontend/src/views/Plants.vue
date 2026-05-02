@@ -50,16 +50,6 @@
             >
               <el-icon><component :is="isItemFavorited(item.id) ? StarFilled : Star" /></el-icon>
             </el-button>
-            <el-button
-              :type="isInCompare(item.id) ? 'success' : 'default'"
-              size="small"
-              class="compare-btn"
-              :disabled="!isInCompare(item.id) && compareList.length >= MAX_COMPARE"
-              @click.stop="handleCompareToggle(item)"
-            >
-              <el-icon><component :is="isInCompare(item.id) ? CircleCheck : Plus" /></el-icon>
-              {{ isInCompare(item.id) ? '已加入' : '加入对比' }}
-            </el-button>
           </template>
         </CardGrid>
 
@@ -100,30 +90,6 @@
       @toggle-favorite="toggleFavorite"
     />
 
-    <Teleport to="body">
-      <transition name="float-bar-fade">
-        <div v-if="compareList.length >= 2" class="floating-compare-bar">
-          <div class="bar-left">
-            <span class="bar-label">已选择 <strong>{{ compareList.length }}</strong> 个药材</span>
-            <div class="bar-thumbs">
-              <span
-                v-for="item in compareList"
-                :key="item.id"
-                class="bar-thumb-item"
-              >
-                {{ item.nameCn }}
-                <el-icon class="bar-remove" @click.stop="removeFromCompare(item.id)"><Close /></el-icon>
-              </span>
-            </div>
-          </div>
-          <div class="bar-right">
-            <el-button type="primary" size="default" @click="startCompare">
-              <el-icon><DataLine /></el-icon>开始对比
-            </el-button>
-          </div>
-        </div>
-      </transition>
-    </Teleport>
   </div>
 </template>
 
@@ -132,7 +98,7 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import request from '@/utils/request';
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { CircleCheck, Close, DataLine, Location, Plus, Star, StarFilled, View } from "@element-plus/icons-vue";
+import { Location, Plus, Star, StarFilled, View } from "@element-plus/icons-vue";
 import CardGrid from "@/components/business/display/CardGrid.vue";
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
@@ -144,7 +110,6 @@ import { extractPageData, logFetchError } from "@/utils";
 import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
 import { useFavorite } from "@/composables/useFavorite";
-import { useCompare } from "@/composables/useCompare";
 
 const PAGE_SIZE_OPTIONS = {
   DEFAULT: 12,
@@ -158,8 +123,6 @@ const route = useRoute();
 const router = useRouter();
 
 const { items: favItems, isFavorited: isItemFavorited, loadFavorites, toggleFavorite: doToggleFavorite } = useFavorite('plant');
-const { compareList, isInCompare, addToCompare, removeFromCompare, MAX_COMPARE } = useCompare();
-
 const pageLoading = ref(false);
 const keyword = ref("");
 const allPlants = ref([]);
@@ -237,26 +200,6 @@ const showDetail = async (plant) => {
 
 const toggleFavorite = () => { if (currentPlant.value) doToggleFavorite(currentPlant.value.id, isFavorited.value); };
 const toggleFavoriteCard = (item) => { doToggleFavorite(item.id, isItemFavorited(item.id)); };
-
-const handleCompareToggle = (item) => {
-  if (isInCompare(item.id)) {
-    removeFromCompare(item.id);
-    ElMessage.info(`已从对比列表移除"${item.nameCn}"`);
-  } else {
-    const added = addToCompare(item);
-    if (added) {
-      ElMessage.success(`已添加"${item.nameCn}"到对比列表`);
-    } else if (compareList.value.length >= MAX_COMPARE) {
-      ElMessage.warning(`最多只能对比${MAX_COMPARE}种药材`);
-    }
-  }
-};
-
-const startCompare = () => {
-  if (compareList.value.length < 2) return;
-  const ids = compareList.value.map(p => p.id).join(',');
-  router.push({ path: '/compare', query: { ids } });
-};
 
 const loadPlantsData = async () => {
   pageLoading.value = true;

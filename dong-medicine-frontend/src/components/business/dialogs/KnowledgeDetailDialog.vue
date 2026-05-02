@@ -1,9 +1,9 @@
 <template>
-  <el-dialog 
+  <BaseDetailDialog 
     :model-value="visible" 
     :title="knowledge?.title" 
     width="min(800px, 90vw)"
-    class="knowledge-detail-dialog"
+    dialog-class="knowledge-detail-dialog"
     @update:model-value="handleDialogClose"
   >
     <div class="dialog-content">
@@ -277,10 +277,11 @@
       :document="previewDoc"
       @download="handleDocumentDownload"
     />
-  </el-dialog>
+  </BaseDetailDialog>
 </template>
 
 <script setup>
+import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { ref, computed, watch } from 'vue';
 import request from '@/utils/request';
 import { useRouter } from 'vue-router';
@@ -403,7 +404,6 @@ const handleDocumentDownload = downloadDocument;
 </script>
 
 <style scoped>
-@import '@/styles/dialog-common.css';
 
 .knowledge-detail-dialog :deep(.el-dialog__body) {
   overflow-x: hidden;

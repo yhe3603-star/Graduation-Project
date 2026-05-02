@@ -1,5 +1,5 @@
 <template>
-  <el-dialog
+  <BaseDetailDialog
     :model-value="visible"
     title="知识详情"
     width="900px"
@@ -75,10 +75,11 @@
         关闭
       </el-button>
     </template>
-  </el-dialog>
+  </BaseDetailDialog>
 </template>
 
 <script setup>
+import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { formatTime } from '@/utils/adminUtils'
 import MediaDisplay from '@/components/business/media/MediaDisplay.vue'
 

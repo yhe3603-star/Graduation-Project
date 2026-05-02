@@ -1,5 +1,5 @@
 <template>
-  <el-dialog
+  <BaseDetailDialog
     :model-value="visible"
     title="传承人详情"
     width="900px"
@@ -56,7 +56,9 @@
     </el-descriptions>
 
     <div class="timeline-section">
-      <h4 class="section-subtitle">传承生涯</h4>
+      <h4 class="section-subtitle">
+传承生涯
+</h4>
       <div v-if="timelineItems.length > 0" class="admin-timeline">
         <div
           v-for="(item, index) in timelineItems"
@@ -68,10 +70,14 @@
           </div>
           <div class="timeline-body">
             <div class="timeline-header">
-              <el-tag :type="item.tagType" size="small" effect="dark">{{ item.phase }}</el-tag>
+              <el-tag :type="item.tagType" size="small" effect="dark">
+{{ item.phase }}
+</el-tag>
               <span v-if="item.year" class="timeline-year">{{ item.year }}</span>
             </div>
-            <p class="timeline-text">{{ item.description }}</p>
+            <p class="timeline-text">
+{{ item.description }}
+</p>
           </div>
         </div>
       </div>
@@ -109,10 +115,11 @@
         关闭
       </el-button>
     </template>
-  </el-dialog>
+  </BaseDetailDialog>
 </template>
 
 <script setup>
+import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { computed } from 'vue'
 import { Clock, Medal, Reading, School, Trophy } from '@element-plus/icons-vue'
 import { formatTime, getLevelTagType } from '@/utils/adminUtils'

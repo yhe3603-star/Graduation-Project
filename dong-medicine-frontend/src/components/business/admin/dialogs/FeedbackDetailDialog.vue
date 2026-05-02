@@ -1,5 +1,5 @@
 <template>
-  <el-dialog
+  <BaseDetailDialog
     :model-value="visible"
     title="反馈详情"
     width="600px"
@@ -66,10 +66,11 @@
         回复并处理
       </el-button>
     </template>
-  </el-dialog>
+  </BaseDetailDialog>
 </template>
 
 <script setup>
+import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { ref, watch } from 'vue';
 import { formatTime, getFeedbackStatusTag, getFeedbackStatusText } from '@/utils/adminUtils';
 

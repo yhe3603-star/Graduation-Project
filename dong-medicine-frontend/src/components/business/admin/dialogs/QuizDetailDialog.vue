@@ -1,5 +1,5 @@
 <template>
-  <el-dialog
+  <BaseDetailDialog
     :model-value="visible"
     title="题目详情"
     width="600px"
@@ -48,10 +48,11 @@
         关闭
       </el-button>
     </template>
-  </el-dialog>
+  </BaseDetailDialog>
 </template>
 
 <script setup>
+import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 defineProps({
   visible: { type: Boolean, default: false },
   quiz: { type: Object, default: null }
