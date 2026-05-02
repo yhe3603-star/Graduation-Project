@@ -180,6 +180,20 @@ public class CacheConfig {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
+        public <T> T get(Object key, java.util.concurrent.Callable<T> valueLoader) {
+            ValueWrapper v = get(key);
+            if (v != null) return (T) v.get();
+            try {
+                T loaded = valueLoader.call();
+                put(key, loaded);
+                return loaded;
+            } catch (Exception e) {
+                throw new org.springframework.cache.Cache.ValueRetrievalException(key, valueLoader, e);
+            }
+        }
+
+        @Override
         public void put(Object key, Object value) {
             l1.put(key, value);
             l2.put(key, value);
@@ -214,6 +228,15 @@ public class CacheConfig {
 
         @Override
         public <T> T get(Object key, Class<T> type) { return null; }
+
+        @Override
+        public <T> T get(Object key, java.util.concurrent.Callable<T> valueLoader) {
+            try {
+                return valueLoader.call();
+            } catch (Exception e) {
+                throw new org.springframework.cache.Cache.ValueRetrievalException(key, valueLoader, e);
+            }
+        }
 
         @Override
         public void put(Object key, Object value) {}
