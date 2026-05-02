@@ -103,7 +103,12 @@ const {
 } = usePersonalCenter(request, updateUserState)
 
 // ========== Browse History (composable) ==========
-const { browseHistory } = useBrowseHistory()
+const { browseHistory, loadBrowseHistory } = useBrowseHistory()
+
+// Load browse history on mount (needed for study stats)
+onMounted(() => {
+  loadBrowseHistory()
+})
 
 // ========== Study Stats (composable) ==========
 const { studyStats, computeStudyStats, initScoreChart, disposeChart } = useStudyStats()
@@ -132,6 +137,7 @@ watch(activeTab, async (tab) => {
         quizRecords.value = extractData(quizRes)
         gameRecords.value = extractData(gameRes)
       }
+      await loadBrowseHistory()
       computeStudyStats(quizRecords.value, gameRecords.value, favorites.value, browseHistory.value)
       await nextTick()
       initScoreChart(quizRecords.value, gameRecords.value)
