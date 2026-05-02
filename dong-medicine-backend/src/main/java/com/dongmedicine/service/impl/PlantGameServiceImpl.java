@@ -1,7 +1,9 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.dto.PlantGameAnswerDTO;
 import com.dongmedicine.dto.PlantGameSubmitDTO;
 import com.dongmedicine.entity.Plant;
@@ -105,5 +107,16 @@ public class PlantGameServiceImpl extends ServiceImpl<PlantGameRecordMapper, Pla
         return baseMapper.selectList(new LambdaQueryWrapper<PlantGameRecord>()
                 .eq(PlantGameRecord::getUserId, userId)
                 .orderByDesc(PlantGameRecord::getCreatedAt));
+    }
+
+    @Override
+    public Page<PlantGameRecord> getUserRecordsPaged(Integer userId, Integer page, Integer size) {
+        if (userId == null) {
+            return new Page<>(page, size);
+        }
+        return baseMapper.selectPage(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<PlantGameRecord>()
+                        .eq(PlantGameRecord::getUserId, userId)
+                        .orderByDesc(PlantGameRecord::getCreatedAt));
     }
 }

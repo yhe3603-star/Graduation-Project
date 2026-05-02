@@ -49,16 +49,13 @@ public class CommentController {
     }
 
     @GetMapping("/list/{targetType}/{targetId}")
-    public R<List<CommentDTO>> list(
+    public R<Map<String, Object>> list(
             @PathVariable @NotBlank(message = "目标类型不能为空") String targetType,
             @PathVariable @NotNull(message = "目标ID不能为空") Integer targetId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        int safeSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
-        List<CommentDTO> all = service.listApproved(targetType, targetId);
-        int start = (Math.max(page, 1) - 1) * safeSize;
-        int end = Math.min(start + safeSize, all.size());
-        return R.ok(start < all.size() ? all.subList(start, end) : List.of());
+        Page<CommentDTO> pageResult = service.listApprovedPaged(targetType, targetId, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 
     @GetMapping("/list/all")
@@ -71,13 +68,10 @@ public class CommentController {
 
     @GetMapping("/my")
     @SaCheckLogin
-    public R<List<CommentDTO>> myComments(
+    public R<Map<String, Object>> myComments(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        int safeSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
-        List<CommentDTO> all = service.listByUserId(SecurityUtils.getCurrentUserId());
-        int start = (Math.max(page, 1) - 1) * safeSize;
-        int end = Math.min(start + safeSize, all.size());
-        return R.ok(start < all.size() ? all.subList(start, end) : List.of());
+        Page<CommentDTO> pageResult = service.listByUserIdPaged(SecurityUtils.getCurrentUserId(), page, size);
+        return R.ok(PageUtils.toMap(pageResult));
     }
 }

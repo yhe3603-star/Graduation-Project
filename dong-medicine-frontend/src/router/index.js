@@ -40,7 +40,7 @@ function isTokenLocallyExpired(userStore) {
     if (!payload || !payload.exp) return false
     return Date.now() >= payload.exp * 1000
   } catch {
-    return false
+    return true
   }
 }
 

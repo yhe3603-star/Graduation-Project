@@ -256,7 +256,6 @@ const handleLogin = async () => {
     }
   } catch (e) {
     logFetchError('登录', e)
-    console.log('Login error:', e)
     ElMessage.error(e.msg || e.message || "登录失败，请重试")
     loginCaptchaRef.value?.refreshCaptcha()
   } finally {
@@ -302,12 +301,19 @@ const logout = async () => {
 </script>
 
 <style>
-:root { --dong-blue: #1A5276; --dong-green: #28B463; --dong-light: var(--bg-rice); }
+:root { --dong-blue: var(--dong-indigo); --dong-green: var(--dong-jade); --dong-light: var(--bg-rice); }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: var(--dong-light); }
+body {
+  font-family: var(--font-body);
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(40, 180, 99, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(26, 82, 118, 0.04) 0%, transparent 50%),
+    var(--bg-rice);
+  background-attachment: fixed;
+}
 .dong-app { min-height: 100vh; display: flex; flex-direction: column; }
 .dong-app.admin-layout { background: #f5f7fa; }
 .dong-main { flex: 1; }
-.page-fade-enter-active, .page-fade-leave-active { transition: opacity 0.2s ease; }
+.page-fade-enter-active, .page-fade-leave-active { transition: opacity 0.25s ease; }
 .page-fade-enter-from, .page-fade-leave-to { opacity: 0; }
 </style>

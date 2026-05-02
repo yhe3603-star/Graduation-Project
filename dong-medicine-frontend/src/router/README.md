@@ -1,336 +1,184 @@
 # 路由目录 (router/)
 
-> 类比：想象一家侗族文化餐厅的**导航图**。客人进来后，导航图告诉他们"大厅往左走"、"包间在二楼"、"厨房只有员工能进"。**路由就是这张导航图**，告诉浏览器"这个 URL 应该显示哪个页面"。
+使用 **Vue Router 4** 实现客户端路由。采用 `createWebHistory` History 模式，通过懒加载动态导入页面组件。
 
-## 什么是路由？
+## 路由配置
 
-在传统网站中，每个 URL 对应服务器上的一个 HTML 文件：
+**文件：** `index.js`
 
-```
-传统多页网站：
-  /index.html    --> 服务器返回首页 HTML
-  /plants.html   --> 服务器返回植物页 HTML
-  /about.html    --> 服务器返回关于页 HTML
-```
+### 全部 16 条路由
 
-每次点击链接，浏览器都会**刷新整个页面**，重新加载所有资源。
+| 路径 | 路由名称 | 页面组件 | 特殊配置 | 说明 |
+|------|---------|---------|---------|------|
+| `/` | `Home` | `views/Home.vue` | -- | 平台首页 |
+| `/knowledge` | `Knowledge` | `views/Knowledge.vue` | -- | 非遗医药知识库 |
+| `/inheritors` | `Inheritors` | `views/Inheritors.vue` | -- | 传承人风采 |
+| `/plants` | `Plants` | `views/Plants.vue` | -- | 药用资源图鉴 |
+| `/qa` | `Qa` | `views/Qa.vue` | `keepAlive: true` | 问答社区（缓存） |
+| `/interact` | `Interact` | `views/Interact.vue` | -- | 文化互动专区 |
+| `/resources` | `Resources` | `views/Resources.vue` | -- | 学习资源 |
+| `/visual` | `Visual` | `views/Visual.vue` | -- | 数据可视化 |
+| `/personal` | `Personal` | `views/PersonalCenter.vue` | `requiresAuth: true` | 个人中心（需登录） |
+| `/admin` | `Admin` | `views/Admin.vue` | `requiresAuth: true, requiresAdmin: true` | 管理后台（需管理员） |
+| `/about` | `About` | `views/About.vue` | -- | 关于平台 |
+| `/feedback` | `Feedback` | `views/Feedback.vue` | -- | 意见反馈 |
+| `/search` | `Search` | `views/GlobalSearch.vue` | -- | 全局搜索 |
+| `/compare` | `Compare` | `views/PlantCompare.vue` | `keepAlive: true` | 药材对比（缓存） |
+| `/solar-terms` | `SolarTerms` | `views/SolarTerms.vue` | `keepAlive: true` | 节气采药（缓存） |
+| `/:pathMatch(.*)*` | `NotFound` | `views/NotFound.vue` | -- | 404 页面（通配符） |
 
-## 什么是 SPA 路由？
+### 路由配置特点
 
-SPA（单页应用，Single Page Application）只有一个 HTML 文件，通过 JavaScript 动态切换显示的内容：
+1. **懒加载：** 所有页面组件使用动态 `import()` 语法，Vite 自动进行代码分割
 
-```
-SPA 单页应用：
-  /         --> JavaScript 把 Home.vue 渲染到页面上
-  /plants   --> JavaScript 把 Plants.vue 渲染到页面上
-  /about    --> JavaScript 把 About.vue 渲染到页面上
-```
+   ```js
+   { path: "/plants", name: "Plants", component: () => import("@/views/Plants.vue") }
+   ```
 
-**关键区别**：
-- 传统网站：换页 = 整个页面刷新（像换电视频道）
-- SPA 路由：换页 = 只替换内容区域（像换幻灯片的一页）
+2. **keepAlive 缓存：** 3 个页面启用了 `keepAlive`（问答、对比、节气），在 `App.vue` 中通过 `<keep-alive>` 包裹避免切换时销毁组件状态
 
-**SPA 路由的好处**：
-- 切换页面不需要重新加载 CSS、JS 等公共资源
-- 切换速度极快，用户体验流畅
-- 可以在页面切换时加过渡动画
+3. **认证控制：** 2 个页面需要登录（个人中心、管理后台），通过路由元信息 `meta.requiresAuth` 控制
 
----
+4. **角色控制：** 管理后台额外需要 `meta.requiresAdmin`，非管理员访问会被重定向
 
-## 文件清单
-
-| 文件 | 职责 |
-|------|------|
-| `index.js` | 路由配置、导航守卫、token 验证缓存 |
-
----
-
-## 全部 14 条路由
-
-| 路由路径 | 路由名称 | 页面组件 | 权限 | 说明 |
-|---------|---------|---------|------|------|
-| `/` | `Home` | `Home.vue` | 公开 | 首页 |
-| `/knowledge` | `Knowledge` | `Knowledge.vue` | 公开 | 知识库 |
-| `/inheritors` | `Inheritors` | `Inheritors.vue` | 公开 | 传承人 |
-| `/plants` | `Plants` | `Plants.vue` | 公开 | 药用植物 |
-| `/qa` | `Qa` | `Qa.vue` | 公开 | 问答 |
-| `/interact` | `Interact` | `Interact.vue` | 公开 | 互动专区 |
-| `/resources` | `Resources` | `Resources.vue` | 公开 | 学习资源 |
-| `/visual` | `Visual` | `Visual.vue` | 公开 | 数据可视化 |
-| `/personal` | `Personal` | `PersonalCenter.vue` | 需登录 | 个人中心 |
-| `/admin` | `Admin` | `Admin.vue` | 需登录+管理员 | 管理后台 |
-| `/about` | `About` | `About.vue` | 公开 | 关于平台 |
-| `/feedback` | `Feedback` | `Feedback.vue` | 公开 | 意见反馈 |
-| `/search` | `Search` | `GlobalSearch.vue` | 公开 | 全局搜索 |
-| `/:pathMatch(.*)*` | `NotFound` | `NotFound.vue` | 公开 | 404 页面 |
-
-### 路由配置代码
-
-```javascript
-const routes = [
-  // 公开页面：任何人都能访问
-  { path: '/', name: 'Home', component: () => import('@/views/Home.vue') },
-  { path: '/plants', name: 'Plants', component: () => import('@/views/Plants.vue') },
-  { path: '/knowledge', name: 'Knowledge', component: () => import('@/views/Knowledge.vue') },
-  // ... 其他公开页面
-
-  // 需要登录的页面：meta.requiresAuth = true
-  { path: '/personal', name: 'Personal', component: () => import('@/views/PersonalCenter.vue'),
-    meta: { requiresAuth: true } },
-
-  // 需要管理员权限的页面：meta.requiresAuth + meta.requiresAdmin
-  { path: '/admin', name: 'Admin', component: () => import('@/views/Admin.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true } },
-
-  // 404 兜底路由：放在最后，匹配所有未定义的路径
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFound.vue') }
-]
-```
-
-**注意**：`/:pathMatch(.*)*` 是 Vue Router 4 的写法，会匹配所有未定义的路径，必须放在路由数组的最后。
+5. **通配符路由：** `/:pathMatch(.*)*` 匹配所有未定义路径，显示 404 页面
 
 ---
 
-## 导航守卫 -- 路由的"保安"
+## 导航守卫 (Navigation Guards)
 
-导航守卫是在**路由跳转之前**执行的检查函数，决定用户能不能进入目标页面。
+### beforeEach -- 全局前置守卫
 
-类比：导航守卫就像餐厅门口的保安，检查你有没有门票（token）、是不是 VIP（管理员），不符合条件就不让进。
+在 `router/index.js` 中定义的 `beforeEach` 守卫处理以下逻辑：
 
-### 守卫执行流程
-
-```javascript
+```js
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
-
-  // 第 1 步：恢复登录状态
-  // 如果 store 里没有 token，但 sessionStorage 里有，说明页面刷新了，需要恢复
-  if (!userStore.token && sessionStorage.getItem('token')) {
+  
+  // 1. 尝试从 localStorage 恢复 token（如果 store 中还没有）
+  if (!userStore.token && localStorage.getItem('token')) {
     userStore.initializeFromStorage()
   }
 
-  // 第 2 步：公开页面直接放行
+  // 2. 不需要认证的页面直接放行
   if (!to.meta.requiresAuth) {
-    return next()  // 不需要登录的页面，谁都能看
+    return next()
   }
 
-  // 第 3 步：检查 token 是否存在
+  // 3. 需要认证但无 token -> 重定向到首页
   if (!userStore.token) {
-    // 没有 token，跳转首页并标记需要登录
-    return next({ path: '/', query: { redirect: to.fullPath, needLogin: 'true' } })
-    // redirect 参数让登录后能跳回原来想去的页面
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
   }
 
-  // 第 4 步：本地检查 token 是否过期
+  // 4. 本地检查 token 是否过期（解码 JWT exp）
   if (isTokenLocallyExpired(userStore)) {
     userStore.clearAuth()
-    return next({ path: '/', query: { redirect: to.fullPath, needLogin: 'true' } })
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
   }
 
-  // 第 5 步：远程验证 token（带缓存）
+  // 5. 服务端验证 token（带 60 秒缓存）
   const isValid = await validateTokenWithCache(userStore)
   if (!isValid) {
-    return next({ path: '/', query: { redirect: to.fullPath, needLogin: 'true' } })
+    return next({ path: "/", query: { redirect: to.fullPath, needLogin: "true" } })
   }
 
-  // 第 6 步：检查管理员权限
+  // 6. 需要管理员权限但用户不是 admin -> 重定向
   if (to.meta.requiresAdmin && !userStore.isAdmin) {
-    return next({ path: '/', query: { noPermission: 'true' } })
+    return next({ path: "/", query: { noPermission: "true" } })
   }
 
-  // 所有检查通过，放行
   next()
 })
 ```
 
-### Token 验证缓存 -- 避免重复请求
+### App.vue 中的路由守卫
 
-每次路由跳转都请求后端验证 token 太浪费了，所以加了缓存：
+`App.vue` 中还有一个 `beforeEach` 用于页面加载状态：
 
-```javascript
-const VALIDATION_CACHE_TTL = 60 * 1000  // 缓存 60 秒
+```js
+// 路由切换时显示加载状态
+router.beforeEach((to, from, next) => {
+  if (to.path !== from.path) {
+    pageLoading.value = true
+  }
+  next()
+})
 
+// 路由加载完成后延迟 100ms 隐藏（防止闪烁）
+router.afterEach(() => {
+  setTimeout(() => {
+    pageLoading.value = false
+  }, 100)
+})
+```
+
+### Token 验证缓存
+
+为了减少服务端请求，token 验证结果缓存 60 秒（`VALIDATION_CACHE_TTL = 60 * 1000`）：
+
+```js
 const validationCache = {
-  promise: null,    // 上次验证的 Promise
-  token: null,      // 上次验证时的 token
-  timestamp: 0      // 上次验证的时间戳
-}
-
-async function validateTokenWithCache(userStore) {
-  const now = Date.now()
-  const token = userStore.token
-
-  // 没有 token 直接返回失败
-  if (!token) return false
-
-  // 先做本地过期检查（快速，不请求后端）
-  if (isTokenLocallyExpired(userStore)) {
-    userStore.clearAuth()
-    return false
-  }
-
-  // 如果 token 没变，且缓存没过期（60 秒内），直接用上次的结果
-  if (validationCache.token === token &&
-      validationCache.promise &&
-      now - validationCache.timestamp < VALIDATION_CACHE_TTL) {
-    return validationCache.promise
-  }
-
-  // 缓存过期或 token 变了，重新验证
-  validationCache.token = token
-  validationCache.timestamp = now
-  validationCache.promise = userStore.validateToken().then(isValid => {
-    if (!isValid) userStore.clearAuth()
-    return isValid
-  })
-
-  return validationCache.promise
+  promise: null,   // 缓存的验证 Promise
+  token: null,     // 对应的 token 值
+  timestamp: 0     // 缓存时间戳
 }
 ```
 
-**为什么缓存 60 秒？**
-- 太短（如 5 秒）：频繁请求后端，浪费资源
-- 太长（如 5 分钟）：管理员禁用用户后，该用户还能继续访问
-- 60 秒是平衡点：既减少请求，又能及时响应权限变更
+缓存 key 为 token 值，同一 token 在 60 秒内不会重复请求服务端验证。
 
-### 本地过期检查 -- isTokenLocallyExpired
+### JWT 本地检查
 
-```javascript
+客户端解码 JWT 的 payload 检查 `exp` 字段：
+
+```js
 function isTokenLocallyExpired(userStore) {
   const token = userStore.token
   if (!token) return true
-
-  try {
-    // 解析 JWT 的载荷部分，提取过期时间
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    if (!payload || !payload.exp) return true
-    // 比较当前时间和过期时间
-    return Date.now() >= payload.exp * 1000
-  } catch {
-    return true  // 解析失败，视为已过期
-  }
+  
+  const parts = token.split('.')
+  if (parts.length !== 3) return false
+  const payload = JSON.parse(atob(parts[1]))
+  if (!payload || !payload.exp) return false
+  return Date.now() >= payload.exp * 1000
 }
-```
-
-这个函数**不请求后端**，只检查 JWT 自身的过期时间，速度极快。
-
----
-
-## 如何添加一个新路由
-
-### 第 1 步：在 routes 数组中添加路由配置
-
-打开 `router/index.js`，在 404 路由**之前**添加：
-
-```javascript
-const routes = [
-  // ... 已有路由
-
-  // 新增路由（必须在 404 路由之前！）
-  {
-    path: '/herbal-bath',                    // URL 路径
-    name: 'HerbalBath',                      // 路由名称（用于编程式导航）
-    component: () => import('@/views/HerbalBath.vue'),  // 懒加载页面组件
-    // meta: { requiresAuth: true }          // 如果需要登录才能访问
-    // meta: { requiresAuth: true, requiresAdmin: true }  // 如果需要管理员权限
-  },
-
-  // 404 路由必须放在最后
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFound.vue') }
-]
-```
-
-### 第 2 步：在组件中使用编程式导航
-
-```vue
-<script setup>
-import { useRouter } from 'vue-router'
-const router = useRouter()
-
-// 方式 1：通过路径跳转
-router.push('/herbal-bath')
-
-// 方式 2：通过路由名称跳转（推荐，更稳定）
-router.push({ name: 'HerbalBath' })
-
-// 方式 3：带参数跳转
-router.push({ name: 'HerbalBath', query: { type: 'foot' } })
-// URL 变成 /herbal-bath?type=foot
-</script>
-```
-
-### 第 3 步：在模板中使用声明式导航
-
-```vue
-<template>
-  <!-- router-link 会渲染成 <a> 标签，但不会刷新页面 -->
-  <router-link to="/herbal-bath">侗族药浴</router-link>
-
-  <!-- 也可以用命名路由 -->
-  <router-link :to="{ name: 'HerbalBath' }">侗族药浴</router-link>
-</template>
 ```
 
 ---
 
-## 常见错误
+## App.vue 中的布局条件
 
-### 错误 1：新路由放在 404 路由之后
+`App.vue` 根据当前路由控制布局元素的显隐：
 
-```javascript
-const routes = [
-  // ... 已有路由
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFound.vue') },
-  { path: '/herbal-bath', name: 'HerbalBath', component: () => import('@/views/HerbalBath.vue') }
-  // 错误！这个路由永远不会被匹配到，因为 404 路由已经拦截了所有路径
-]
+| 条件 | Header | Footer | 说明 |
+|------|--------|--------|------|
+| 普通页面 | 显示 | 显示 | 默认布局 |
+| `/admin` | 隐藏 | 隐藏 | 管理后台使用独立布局 |
+| `NotFound` | 隐藏 | 隐藏 | 404 页面简洁布局 |
 
-// 正确：新路由必须在 404 路由之前
-const routes = [
-  // ... 已有路由
-  { path: '/herbal-bath', name: 'HerbalBath', component: () => import('@/views/HerbalBath.vue') },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/views/NotFound.vue') }
-]
+```js
+const isAdminPage = computed(() => route.path === "/admin")
+const isNotFoundPage = computed(() => route.name === "NotFound")
 ```
 
-### 错误 2：用 `<a>` 标签而不是 `<router-link>`
+---
 
-```vue
-<!-- 错误：使用 <a> 标签会导致整页刷新，失去 SPA 的优势 -->
-<a href="/plants">药用植物</a>
+## 路由与组件映射
 
-<!-- 正确：使用 <router-link> 只替换内容区域，不刷新页面 -->
-<router-link to="/plants">药用植物</router-link>
 ```
-
-### 错误 3：忘记恢复 sessionStorage 中的登录状态
-
-页面刷新后，Pinia store 的数据会丢失（内存中的数据），但 sessionStorage 中的数据还在。导航守卫的第一步就是恢复：
-
-```javascript
-// 如果 store 里没有 token，但 sessionStorage 里有
-if (!userStore.token && sessionStorage.getItem('token')) {
-  userStore.initializeFromStorage()  // 从 sessionStorage 恢复到 store
-}
-```
-
-**如果不做这一步**：用户登录后刷新页面，store 里的 token 丢失，导航守卫会认为用户未登录，跳转到首页。
-
-### 错误 4：路由跳转后页面不滚动到顶部
-
-```javascript
-// 默认情况下，路由跳转后会保持原来的滚动位置
-// 比如你在 /plants 页面滚到底部，点击链接到 /knowledge，新页面也在底部
-
-// 解决方案：在创建路由时配置滚动行为
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-  scrollBehavior(to, from, savedPosition) {
-    // 如果有保存的位置（浏览器后退），回到那个位置
-    if (savedPosition) return savedPosition
-    // 否则滚动到顶部
-    return { top: 0 }
-  }
-})
+/ ──────────────────> Home.vue
+/knowledge ─────────> Knowledge.vue
+/inheritors ────────> Inheritors.vue
+/plants ────────────> Plants.vue
+/qa ────────────────> Qa.vue (keepAlive)
+/interact ──────────> Interact.vue
+/resources ─────────> Resources.vue
+/visual ────────────> Visual.vue
+/personal ──────────> PersonalCenter.vue (requiresAuth)
+/admin ─────────────> Admin.vue (requiresAuth + requiresAdmin)
+/about ─────────────> About.vue
+/feedback ──────────> Feedback.vue
+/search ────────────> GlobalSearch.vue
+/compare ───────────> PlantCompare.vue (keepAlive)
+/solar-terms ──────> SolarTerms.vue (keepAlive)
+/* ─────────────────> NotFound.vue
 ```

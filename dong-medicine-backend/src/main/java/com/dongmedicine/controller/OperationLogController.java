@@ -31,7 +31,7 @@ public class OperationLogController {
         QueryWrapper<OperationLog> wrapper = new QueryWrapper<>();
         if (module != null && !module.isEmpty()) wrapper.eq("module", module);
         if (type != null && !type.isEmpty()) wrapper.eq("type", type);
-        if (username != null && !username.isEmpty()) wrapper.like("username", "%" + username + "%");
+        if (username != null && !username.isEmpty()) wrapper.like("username", username);
         int safeLimit = Math.min(Math.max(limit == null ? 100 : limit, 1), 100);
         wrapper.last("LIMIT " + safeLimit);
         wrapper.orderByDesc("created_at");

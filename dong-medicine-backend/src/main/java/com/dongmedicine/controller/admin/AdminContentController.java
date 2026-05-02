@@ -1,80 +1,38 @@
-package com.dongmedicine.controller;
+package com.dongmedicine.controller.admin;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
-import com.dongmedicine.common.constant.RoleConstants;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.dto.*;
 import com.dongmedicine.entity.*;
 import com.dongmedicine.service.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-@Tag(name = "后台管理", description = "管理员数据管理台")
+@Tag(name = "后台管理-内容", description = "管理员内容CRUD管理")
 @RestController
 @RequestMapping("/api/admin")
 @Validated
 @SaCheckRole("admin")
 @RequiredArgsConstructor
-public class AdminController {
+public class AdminContentController {
 
-    private final UserService userService;
     private final InheritorService inheritorService;
     private final KnowledgeService knowledgeService;
     private final PlantService plantService;
     private final QaService qaService;
     private final ResourceService resourceService;
-    private final FeedbackService feedbackService;
-    private final CommentService commentService;
-    private final QuizService quizService;
 
-    @GetMapping("/users")
-    public R<Map<String, Object>> listUsers(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
-        Page<User> pageResult = userService.page(PageUtils.getPage(page, size));
-        pageResult.getRecords().forEach(u -> u.setPasswordHash(null));
-        return R.ok(PageUtils.toMap(pageResult));
-    }
-
-    @DeleteMapping("/users/{id}")
-    public R<String> deleteUser(@PathVariable @NotNull Integer id) {
-        userService.deleteUser(id);
-        return R.ok("删除用户成功");
-    }
-
-    @PutMapping("/users/{id}/role")
-    public R<String> updateUserRole(@PathVariable @NotNull Integer id,
-                                    @RequestParam @NotBlank(message = "角色不能为空") String role) {
-        userService.updateUserRole(id, role);
-        return R.ok("角色更新成功");
-    }
-
-    @PutMapping("/users/{id}/ban")
-    public R<String> banUser(@PathVariable @NotNull Integer id,
-                             @RequestParam(required = false) String reason) {
-        userService.banUser(id, reason);
-        return R.ok("用户已被封禁");
-    }
-
-    @PutMapping("/users/{id}/unban")
-    public R<String> unbanUser(@PathVariable @NotNull Integer id) {
-        userService.unbanUser(id);
-        return R.ok("用户已解封");
-    }
+    // ========== 传承人 ==========
 
     @GetMapping("/inheritors")
     public R<Map<String, Object>> listInheritors(
@@ -110,6 +68,8 @@ public class AdminController {
         return R.ok("删除传承人成功");
     }
 
+    // ========== 知识库 ==========
+
     @GetMapping("/knowledge")
     public R<Map<String, Object>> listKnowledge(
             @RequestParam(defaultValue = "1") Integer page,
@@ -143,6 +103,8 @@ public class AdminController {
         knowledgeService.deleteWithFiles(id);
         return R.ok("删除知识条目成功");
     }
+
+    // ========== 药用植物 ==========
 
     @GetMapping("/plants")
     public R<Map<String, Object>> listPlants(
@@ -178,6 +140,8 @@ public class AdminController {
         return R.ok("删除药用植物成功");
     }
 
+    // ========== 问答 ==========
+
     @GetMapping("/qa")
     public R<Map<String, Object>> listQa(
             @RequestParam(defaultValue = "1") Integer page,
@@ -209,6 +173,8 @@ public class AdminController {
         qaService.removeById(id);
         return R.ok("删除问答成功");
     }
+
+    // ========== 学习资源 ==========
 
     @GetMapping("/resources")
     public R<Map<String, Object>> listResources(
@@ -242,89 +208,5 @@ public class AdminController {
     public R<String> deleteResource(@PathVariable @NotNull Integer id) {
         resourceService.deleteWithFiles(id);
         return R.ok("删除学习资源成功");
-    }
-
-    @GetMapping("/feedback")
-    public R<Map<String, Object>> listFeedback(
-            @RequestParam(defaultValue = "all") String status,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
-        LambdaQueryWrapper<Feedback> wrapper = new LambdaQueryWrapper<Feedback>()
-                .orderByDesc(Feedback::getCreatedAt);
-        if (!"all".equalsIgnoreCase(status)) {
-            wrapper.eq(Feedback::getStatus, status);
-        }
-        Page<Feedback> pageResult = feedbackService.page(PageUtils.getPage(page, size), wrapper);
-        return R.ok(PageUtils.toMap(pageResult));
-    }
-
-    @PutMapping("/feedback/{id}/reply")
-    public R<String> replyFeedback(@PathVariable @NotNull Integer id, @RequestBody @Valid FeedbackReplyDTO dto) {
-        feedbackService.replyFeedback(id, dto.getReply().trim());
-        return R.ok("回复成功");
-    }
-
-    @DeleteMapping("/feedback/{id}")
-    public R<String> deleteFeedback(@PathVariable @NotNull Integer id) {
-        feedbackService.removeById(id);
-        return R.ok("删除反馈成功");
-    }
-
-    @GetMapping("/comments")
-    public R<Map<String, Object>> listComments(
-            @RequestParam(defaultValue = "all") String status,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
-        Page<CommentDTO> pageResult = commentService.pageAllDTO(status, page, size);
-        return R.ok(PageUtils.toMap(pageResult));
-    }
-
-    @PutMapping("/comments/{id}/approve")
-    public R<String> approveComment(@PathVariable @NotNull Integer id) {
-        commentService.approveComment(id);
-        return R.ok("审核通过");
-    }
-
-    @PutMapping("/comments/{id}/reject")
-    public R<String> rejectComment(@PathVariable @NotNull Integer id) {
-        commentService.rejectComment(id);
-        return R.ok("已拒绝");
-    }
-
-    @DeleteMapping("/comments/{id}")
-    public R<String> deleteComment(@PathVariable @NotNull Integer id) {
-        commentService.removeById(id);
-        return R.ok("删除评论成功");
-    }
-
-    @GetMapping("/stats")
-    public R<Map<String, Long>> stats() {
-        Map<String, Long> data = new HashMap<>();
-        data.put("users", userService.count());
-        data.put("knowledge", knowledgeService.count());
-        data.put("inheritors", inheritorService.count());
-        data.put("plants", plantService.count());
-        data.put("qa", qaService.count());
-        data.put("resources", resourceService.count());
-        data.put("quiz", quizService.countQuestions());
-        data.put("comments", commentService.count());
-        data.put("feedback", feedbackService.count());
-        return R.ok(data);
-    }
-
-    @GetMapping("/stats/plants-distribution")
-    public R<List<Map<String, Object>>> getPlantDistribution() {
-        return R.ok(plantService.listMaps(new QueryWrapper<Plant>()
-                .select("distribution as name", "count(*) as value")
-                .groupBy("distribution")
-                .orderByDesc("distribution")));
-    }
-
-    @GetMapping("/stats/knowledge-popularity")
-    public R<List<Map<String, Object>>> getKnowledgePopularity() {
-        return R.ok(knowledgeService.listMaps(new QueryWrapper<Knowledge>()
-                .select("title as name", "popularity as value")
-                .orderByDesc("popularity")
-                .last("LIMIT 10")));
     }
 }

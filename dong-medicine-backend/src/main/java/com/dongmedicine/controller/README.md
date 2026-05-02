@@ -1,548 +1,398 @@
-# Controller 层 -- 控制器目录
+# Controller 层 -- 控制器（24个）
 
-> Controller 是三层架构中的"服务员"层，负责接待顾客（前端请求），把订单传给厨房（Service），再把做好的菜端给顾客。
-
----
-
-## 一、什么是 Controller？
-
-### 生活类比：餐厅服务员
-
-```
-顾客（前端）走进餐厅
-       |
-       v
-服务员（Controller）迎上去
-       |
-       +-- "您好，看菜单"        --> GET 请求（查询数据）
-       +-- "好的，帮您下单"      --> POST 请求（创建数据）
-       +-- "这道菜帮您换一下"    --> PUT 请求（更新数据）
-       +-- "好的，帮您退掉"      --> DELETE 请求（删除数据）
-       |
-       v
-服务员把订单交给厨房（Service）
-       |
-       v
-厨房做好菜，服务员端给顾客
-       |
-       v
-顾客收到菜（JSON 响应）
-```
-
-**Controller 的核心原则：只做"传话人"，不做"厨师"。**
-
-- 该做的：接收请求、提取参数、校验参数、调用 Service、返回结果
-- 不该做的：写业务逻辑、直接操作数据库、处理复杂计算
+> Controller 是三层架构的"入口层"，负责接收HTTP请求、参数校验、调用Service、用R\<T\>统一封装响应。
+> 每个Controller = 一个URL前缀 + 多个HTTP方法接口。
 
 ---
 
-## 二、核心注解详解
+## 一、Controller 清单（24个）
 
-### 2.1 @RestController -- "我是服务员"
-
-```java
-@RestController   // 告诉 Spring：这个类是接收 HTTP 请求的控制器
-@RequestMapping("/api/plants")  // 这个控制器处理所有 /api/plants 开头的请求
-public class PlantController {
-    // ...
-}
-```
-
-**@RestController = @Controller + @ResponseBody**
-
-| 注解 | 作用 |
-|------|------|
-| `@Controller` | 标记这是一个控制器类 |
-| `@ResponseBody` | 方法的返回值自动转成 JSON 返回给前端 |
-
-> 如果只用 `@Controller` 不加 `@ResponseBody`，Spring 会把返回值当作页面名称去查找 HTML 模板。我们做的是前后端分离项目，只需要返回 JSON 数据，所以用 `@RestController`。
-
-### 2.2 @RequestMapping -- "我的工位在哪"
-
-```java
-@RequestMapping("/api/plants")  // 所有请求的公共前缀
-public class PlantController {
-
-    @GetMapping("/list")       // 完整路径：GET /api/plants/list
-    public R<Map<String, Object>> list(...) { ... }
-
-    @GetMapping("/{id}")       // 完整路径：GET /api/plants/5
-    public R<Plant> detail(...) { ... }
-
-    @PostMapping("/{id}/view") // 完整路径：POST /api/plants/5/view
-    public R<String> incrementView(...) { ... }
-}
-```
-
-### 2.3 HTTP 方法注解 -- "顾客要做什么操作"
-
-| 注解 | HTTP方法 | 用途 | 类比 |
-|------|---------|------|------|
-| `@GetMapping` | GET | 查询数据 | 看菜单 |
-| `@PostMapping` | POST | 创建数据 | 下新订单 |
-| `@PutMapping` | PUT | 更新数据 | 修改订单 |
-| `@DeleteMapping` | DELETE | 删除数据 | 取消订单 |
-
-**RESTful 风格的 URL 设计：**
-
-```
-GET    /api/plants/list      --> 查询植物列表
-GET    /api/plants/5         --> 查询ID为5的植物
-POST   /api/plants           --> 新增一个植物
-PUT    /api/plants/5         --> 修改ID为5的植物
-DELETE /api/plants/5         --> 删除ID为5的植物
-```
+| # | Controller | 路径前缀 | 权限 | 核心职责 |
+|---|-----------|---------|------|---------|
+| 1 | **PlantController** | `/api/plants` | 公开 | 药用植物列表/搜索/详情/相似/随机/浏览量 |
+| 2 | **KnowledgeController** | `/api/knowledge` | 公开 + @SaCheckLogin | 知识库列表/搜索/详情/收藏/反馈 |
+| 3 | **InheritorController** | `/api/inheritors` | 公开 | 传承人列表/搜索/详情/浏览量 |
+| 4 | **UserController** | `/api/user` | 公开 + @SaCheckLogin | 登录/注册/个人信息/改密/登出/Token验证 |
+| 5 | **AdminController** | `/api/admin` | @SaCheckRole("admin") | 统一管理后台（用户/植物/知识/传承人/问答/资源/反馈/评论） |
+| 6 | **CommentController** | `/api/comments` | 公开 + @SaCheckLogin | 评论发表/列表/我的评论 |
+| 7 | **FavoriteController** | `/api/favorites` | @SaCheckLogin | 收藏/取消收藏/我的收藏 |
+| 8 | **QuizController** | `/api/quiz` | 公开 + @SaCheckRole("admin") | 随机题目/提交答案/记录/题目CRUD |
+| 9 | **ResourceController** | `/api/resources` | 公开 | 资源列表/搜索/热门/下载/文件类型 |
+| 10 | **FeedbackController** | `/api/feedback` | 公开 + @SaCheckLogin | 提交反馈/我的反馈/反馈统计 |
+| 11 | **QaController** | `/api/qa` | 公开 | 问答列表/搜索/浏览量 |
+| 12 | **SearchController** | `/api/search` | 公开 | 搜索建议（植物+知识+传承人） |
+| 13 | **StatisticsController** | `/api/stats` | 公开 | 访问趋势/各模块统计 |
+| 14 | **StatsController** | `/api/stats` | 公开 | 图表数据（分类/分布/热门） |
+| 15 | **LeaderboardController** | `/api/leaderboard` | 公开 | 答题/游戏排行榜 |
+| 16 | **PlantGameController** | `/api/plant-game` | 公开 | 植物识别游戏提交/记录 |
+| 17 | **CaptchaController** | `/api/captcha` | 公开 | 验证码生成 |
+| 18 | **FileUploadController** | `/api/upload` | @SaCheckRole("admin") | 文件上传（图片/视频/文档） |
+| 19 | **ExportController** | `/api/admin/export` | @SaCheckRole("admin") | 数据导出CSV |
+| 20 | **ChatController** | `/api/chat` | 公开 | AI聊天统计 |
+| 21 | **ChatHistoryController** | `/api/chat-history` | @SaCheckLogin | 聊天历史会话/消息 |
+| 22 | **BrowseHistoryController** | `/api/browse-history` | @SaCheckLogin | 浏览历史/记录浏览 |
+| 23 | **OperationLogController** | `/api/admin/logs` | @SaCheckRole("admin") | 操作日志查询/删除/统计 |
+| 24 | **MetadataController** | `/api/metadata` | 公开 | 全平台筛选选项元数据 |
 
 ---
 
-## 三、请求参数的三种方式
+## 二、各个Controller的API端点
 
-### 3.1 @PathVariable -- 从 URL 路径中提取
+### 2.1 PlantController -- 药用植物（/api/plants）
 
-```java
-// 请求：GET /api/plants/5
-//                              URL 中的 {id} 被提取为 id=5
-@GetMapping("/{id}")
-public R<Plant> detail(@PathVariable @NotNull Integer id) {
-    Plant plant = service.getDetailWithStory(id);
-    return plant == null ? R.error("植物不存在") : R.ok(plant);
-}
-```
+| 方法 | 路径 | 说明 | 参数 |
+|------|------|------|------|
+| GET | `/api/plants/list` | 植物列表（分页+筛选） | page, size, category, usageWay, keyword |
+| GET | `/api/plants/search` | 搜索植物 | keyword(必填), page, size |
+| GET | `/api/plants/{id}` | 植物详情（含故事，自动记录浏览历史） | id(路径) |
+| GET | `/api/plants/{id}/similar` | 相似植物（同分类，最多4个） | id(路径) |
+| GET | `/api/plants/random` | 随机植物 | limit(1-100, 默认20) |
+| POST | `/api/plants/batch` | 批量获取植物 | Body: List\<Integer\> ids(最多50) |
+| POST | `/api/plants/{id}/view` | 增加浏览量 | id(路径), @RateLimit(10) |
 
-**适用场景：** 获取指定 ID 的资源详情、删除指定资源等。
+### 2.2 KnowledgeController -- 知识库（/api/knowledge）
 
-### 3.2 @RequestParam -- 从 URL 查询字符串中提取
+| 方法 | 路径 | 说明 | 参数 |
+|------|------|------|------|
+| GET | `/api/knowledge/list` | 知识列表（高级筛选） | page, size, sortBy, keyword, therapy, disease, herb |
+| GET | `/api/knowledge/search` | 搜索知识 | keyword(必填), therapy, disease, herb, sortBy, page, size |
+| GET | `/api/knowledge/{id}` | 知识详情（含相关内容） | id(路径) |
+| POST | `/api/knowledge/{id}/view` | 增加浏览量 | id(路径), @RateLimit(10) |
+| POST | `/api/knowledge/favorite/{id}` | 收藏知识 | id(路径), @SaCheckLogin |
+| POST | `/api/knowledge/feedback` | 知识反馈 | knowledgeId, content(最多500字符) |
 
-```java
-// 请求：GET /api/plants/list?page=1&size=12&category=清热药&keyword=钩藤
-@GetMapping("/list")
-public R<Map<String, Object>> list(
-        @RequestParam(defaultValue = "1") Integer page,        // 有默认值
-        @RequestParam(defaultValue = "12") Integer size,       // 有默认值
-        @RequestParam(required = false) String category,       // 可选参数
-        @RequestParam(required = false) String keyword) {      // 可选参数
-    // ...
-}
-```
+### 2.3 InheritorController -- 传承人（/api/inheritors）
 
-| 属性 | 作用 | 示例 |
+| 方法 | 路径 | 说明 | 参数 |
+|------|------|------|------|
+| GET | `/api/inheritors/list` | 传承人列表 | page, size, level, sortBy |
+| GET | `/api/inheritors/search` | 搜索传承人 | keyword, page, size |
+| GET | `/api/inheritors/{id}` | 传承人详情（含扩展信息） | id(路径) |
+| POST | `/api/inheritors/{id}/view` | 增加浏览量 | id(路径), @RateLimit(10) |
+
+### 2.4 UserController -- 用户认证（/api/user）
+
+| 方法 | 路径 | 说明 | 限流/权限 |
+|------|------|------|----------|
+| POST | `/api/user/login` | 用户登录（验证码校验 → 密码校验 → 生成Token） | @RateLimit(5) |
+| POST | `/api/user/register` | 用户注册（验证码校验 → 密码一致性 → 密码强度） | @RateLimit(3) |
+| GET | `/api/user/me` | 获取当前用户信息 | @SaCheckLogin |
+| POST | `/api/user/change-password` | 修改密码（验证码 + 旧密码校验 → 登出） | @SaCheckLogin |
+| POST | `/api/user/logout` | 退出登录 | 公开 |
+| GET | `/api/user/validate` | 验证Token有效性 | 公开 |
+| POST | `/api/user/refresh-token` | 刷新Token（延长有效期） | 公开 |
+
+### 2.5 AdminController -- 后台管理（/api/admin）
+
+整个Controller用 `@SaCheckRole("admin")` 保护。
+
+#### 用户管理
+
+| 方法 | 路径 | 说明 |
 |------|------|------|
-| `defaultValue` | 参数不存在时的默认值 | `defaultValue = "1"` |
-| `required` | 是否必填（默认 true） | `required = false` |
-| `name` | 指定参数名（字段名不同时） | `name = "page_num"` |
+| GET | `/api/admin/users` | 用户列表（分页，密码字段置null） |
+| DELETE | `/api/admin/users/{id}` | 删除用户 |
+| PUT | `/api/admin/users/{id}/role` | 修改角色（?role=admin/user） |
+| PUT | `/api/admin/users/{id}/ban` | 封禁用户（?reason=原因） |
+| PUT | `/api/admin/users/{id}/unban` | 解封用户 |
 
-**适用场景：** 分页、筛选、搜索等查询条件。
+#### 传承人管理
 
-### 3.3 @RequestBody -- 从请求体中提取（JSON）
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/inheritors` | 传承人列表 |
+| POST | `/api/admin/inheritors` | 新增传承人（@Valid InheritorCreateDTO） |
+| PUT | `/api/admin/inheritors/{id}` | 更新传承人（@Valid InheritorUpdateDTO） |
+| DELETE | `/api/admin/inheritors/{id}` | 删除传承人（含关联文件） |
 
-```java
-// 请求：POST /api/user/login
-// 请求体：{"username": "admin", "password": "Admin123456"}
-@PostMapping("/login")
-@RateLimit(value = 5, key = "user_login")
-public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
-    // dto.getUsername() --> "admin"
-    // dto.getPassword() --> "Admin123456"
-    String token = service.login(dto.getUsername(), dto.getPassword());
-    return R.ok(Map.of("token", token, ...));
-}
-```
+#### 知识管理
 
-**适用场景：** 提交表单、创建资源、登录注册等，数据量较大或包含敏感信息时。
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/knowledge` | 知识列表 |
+| POST | `/api/admin/knowledge` | 新增知识（@Valid KnowledgeCreateDTO） |
+| PUT | `/api/admin/knowledge/{id}` | 更新知识（@Valid KnowledgeUpdateDTO） |
+| DELETE | `/api/admin/knowledge/{id}` | 删除知识（含关联文件） |
 
-> **三种参数方式对比：**
->
-> | 方式 | 数据位置 | 适用场景 | 例子 |
-> |------|---------|---------|------|
-> | @PathVariable | URL路径 | 资源标识 | /api/plants/5 |
-> | @RequestParam | URL查询串 | 筛选条件 | ?page=1&keyword=钩藤 |
-> | @RequestBody | 请求体(JSON) | 提交数据 | {"name":"钩藤"} |
+#### 植物管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/plants` | 植物列表 |
+| POST | `/api/admin/plants` | 新增植物（@Valid PlantCreateDTO） |
+| PUT | `/api/admin/plants/{id}` | 更新植物（@Valid PlantUpdateDTO） |
+| DELETE | `/api/admin/plants/{id}` | 删除植物（含关联文件） |
+
+#### 问答管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/qa` | 问答列表 |
+| POST | `/api/admin/qa` | 新增问答（@Valid QaCreateDTO） |
+| PUT | `/api/admin/qa/{id}` | 更新问答（@Valid QaUpdateDTO） |
+| DELETE | `/api/admin/qa/{id}` | 删除问答 |
+
+#### 资源管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/resources` | 资源列表 |
+| POST | `/api/admin/resources` | 新增资源（@Valid ResourceCreateDTO） |
+| PUT | `/api/admin/resources/{id}` | 更新资源（@Valid ResourceUpdateDTO） |
+| DELETE | `/api/admin/resources/{id}` | 删除资源（含关联文件） |
+
+#### 反馈管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/feedback` | 反馈列表（?status=all/pending/resolved） |
+| PUT | `/api/admin/feedback/{id}/reply` | 回复反馈（@Valid FeedbackReplyDTO） |
+| DELETE | `/api/admin/feedback/{id}` | 删除反馈 |
+
+#### 评论管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/comments` | 评论列表（?status=all/approved/rejected） |
+| PUT | `/api/admin/comments/{id}/approve` | 审核通过 |
+| PUT | `/api/admin/comments/{id}/reject` | 审核拒绝 |
+| DELETE | `/api/admin/comments/{id}` | 删除评论 |
+
+#### 统计
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/stats` | 仪表盘统计（用户/知识/传承人/植物/问答/资源/测验/评论/反馈 总数） |
+| GET | `/api/admin/stats/plants-distribution` | 植物分布统计 |
+| GET | `/api/admin/stats/knowledge-popularity` | 知识热度Top10 |
+
+### 2.6 CommentController -- 评论（/api/comments）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/api/comments` | 发表评论（支持嵌套回复） | @SaCheckLogin |
+| GET | `/api/comments/list/{targetType}/{targetId}` | 获取评论列表（手动分页） | 公开 |
+| GET | `/api/comments/list/all` | 获取所有已审核评论 | 公开 |
+| GET | `/api/comments/my` | 我的评论 | @SaCheckLogin |
+
+### 2.7 FavoriteController -- 收藏（/api/favorites）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/api/favorites/{targetType}/{targetId}` | 添加收藏 | @SaCheckLogin |
+| DELETE | `/api/favorites/{targetType}/{targetId}` | 取消收藏 | @SaCheckLogin |
+| GET | `/api/favorites/my` | 我的收藏（手动分页） | @SaCheckLogin |
+
+### 2.8 QuizController -- 趣味答题（/api/quiz）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/quiz/questions` | 随机获取题目（?count=10&scorePerQuestion=10） | 公开 |
+| POST | `/api/quiz/submit` | 提交答案（?scorePerQuestion=10） | 公开 |
+| GET | `/api/quiz/records` | 我的答题记录 | 公开（未登录返回空） |
+| GET | `/api/quiz/list` | 题目列表（后台管理） | 公开 |
+| POST | `/api/quiz/add` | 新增题目 | @SaCheckRole("admin") |
+| PUT | `/api/quiz/update` | 更新题目 | @SaCheckRole("admin") |
+| DELETE | `/api/quiz/{id}` | 删除题目 | @SaCheckRole("admin") |
+
+### 2.9 ResourceController -- 学习资源（/api/resources）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/resources/list` | 资源列表（?category=&keyword=&fileType=） |
+| GET | `/api/resources/hot` | 热门资源 |
+| GET | `/api/resources/search` | 搜索资源 |
+| GET | `/api/resources/{id}` | 资源详情 |
+| GET | `/api/resources/download/{id}` | 下载资源文件（流式传输） |
+| POST | `/api/resources/batch-download` | 批量下载（ZIP打包） |
+| POST | `/api/resources/{id}/download` | 增加下载计数 |
+| POST | `/api/resources/{id}/view` | 增加浏览量 |
+| GET | `/api/resources/types` | 文件类型列表 |
+| GET | `/api/resources/categories` | 资源分类列表 |
+
+### 2.10 FeedbackController -- 用户反馈（/api/feedback）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/api/feedback` | 提交反馈 | 公开（支持匿名） |
+| GET | `/api/feedback/my` | 我的反馈 | @SaCheckLogin |
+| GET | `/api/feedback/stats` | 反馈统计（总数/待处理/已解决） | 公开 |
+
+### 2.11 QaController -- 非遗问答（/api/qa）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/qa/list` | 问答列表（?category=） |
+| GET | `/api/qa/search` | 搜索问答 |
+| POST | `/api/qa/{id}/view` | 增加浏览量 |
+
+### 2.12 SearchController -- 搜索建议（/api/search）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/search/suggest` | 搜索建议（植物+知识+传承人，按相关性排序，最多15条） |
+
+### 2.13 StatisticsController -- 数据统计（/api/stats）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/stats/trend` | 访问趋势（最近7天） |
+| GET | `/api/stats/plants` | 植物统计 |
+| GET | `/api/stats/knowledge` | 知识统计 |
+| GET | `/api/stats/qa` | 问答统计 |
+| GET | `/api/stats/inheritors` | 传承人统计 |
+| GET | `/api/stats/resources` | 资源统计 |
+
+### 2.14 StatsController -- 图表统计（/api/stats）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/stats/chart` | 综合图表数据（分类/分布/热门/趋势） |
+
+### 2.15 LeaderboardController -- 排行榜（/api/leaderboard）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/leaderboard/combined` | 综合排行榜（答题+游戏，?sortBy=total/quiz/game） |
+| GET | `/api/leaderboard/quiz` | 答题排行榜 |
+| GET | `/api/leaderboard/game` | 游戏排行榜 |
+
+### 2.16 PlantGameController -- 植物识别游戏（/api/plant-game）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/plant-game/submit` | 提交游戏结果 |
+| GET | `/api/plant-game/records` | 我的游戏记录 |
+
+### 2.17 CaptchaController -- 验证码（/api/captcha）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/captcha` | 获取验证码（返回captchaKey + Base64图片） |
+
+### 2.18 FileUploadController -- 文件上传（/api/upload）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/upload/image` | 上传图片（?category=） |
+| POST | `/api/upload/images` | 批量上传图片 |
+| POST | `/api/upload/video` | 上传视频 |
+| POST | `/api/upload/videos` | 批量上传视频 |
+| POST | `/api/upload/document` | 上传文档 |
+| POST | `/api/upload/documents` | 批量上传文档 |
+| POST | `/api/upload/file` | 通用文件上传（?category=&subDir=） |
+| DELETE | `/api/upload` | 删除文件（?filePath=） |
+
+### 2.19 ExportController -- 数据导出（/api/admin/export）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/export/{entity}` | 导出CSV（entity=users/plants/knowledge/inheritors/resources/qa/comments/feedback/quiz-questions） |
+
+### 2.20 ChatController -- AI聊天（/api/chat）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/chat/stats` | 聊天统计（总请求/成功/失败） |
+
+### 2.21 ChatHistoryController -- 聊天历史（/api/chat-history）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/chat-history/sessions` | 我的会话列表 | @SaCheckLogin |
+| GET | `/api/chat-history/sessions/{sessionId}` | 会话消息列表 | @SaCheckLogin |
+| DELETE | `/api/chat-history/sessions/{sessionId}` | 删除会话 | @SaCheckLogin |
+
+### 2.22 BrowseHistoryController -- 浏览历史（/api/browse-history）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/browse-history/my` | 我的浏览历史（?limit=50） | @SaCheckLogin |
+| POST | `/api/browse-history/record` | 手动记录浏览（?targetType=&targetId=） | @SaCheckLogin |
+
+### 2.23 OperationLogController -- 操作日志（/api/admin/logs）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/admin/logs/list` | 日志列表（?module=&type=&username=&limit=100） |
+| GET | `/api/admin/logs/{id}` | 日志详情 |
+| DELETE | `/api/admin/logs/{id}` | 删除日志 |
+| DELETE | `/api/admin/logs/batch` | 批量删除 |
+| DELETE | `/api/admin/logs/clear` | 清空所有日志 |
+| GET | `/api/admin/logs/stats` | 日志统计（按操作类型分组） |
+
+### 2.24 MetadataController -- 元数据（/api/metadata）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/metadata/filters` | 全平台筛选选项（植物/知识/问答/传承人/资源的分类筛选选项） |
 
 ---
 
-## 四、统一响应格式 R\<T\>
+## 三、Controller编程规范
 
-所有 Controller 方法都返回 `R<T>` 类型，保证前端收到的响应格式一致：
-
-```java
-public class R<T> {
-    private int code;        // 状态码：200成功，400参数错误，401未登录，403无权限，500服务器错误
-    private String msg;      // 提示信息
-    private T data;          // 具体数据（泛型，可以是任何类型）
-    private String requestId; // 请求追踪ID，方便排查问题
-}
-```
-
-### 常用方法
+### 注解模板
 
 ```java
-// 成功响应
-R.ok()                        // {"code":200, "msg":"success", "data":null}
-R.ok(plant)                   // {"code":200, "msg":"success", "data":{植物对象}}
-R.ok("注册成功")               // {"code":200, "msg":"success", "data":"注册成功"}
-
-// 失败响应
-R.error("植物不存在")          // {"code":500, "msg":"植物不存在", "data":null}
-R.badRequest("参数错误")       // {"code":400, "msg":"参数错误", "data":null}
-R.unauthorized("请先登录")     // {"code":401, "msg":"请先登录", "data":null}
-R.forbidden("权限不足")        // {"code":403, "msg":"权限不足", "data":null}
-R.notFound("资源不存在")       // {"code":404, "msg":"资源不存在", "data":null}
-```
-
-### 为什么需要统一格式？
-
-```
-没有统一格式时，前端开发者崩溃了：
-  接口A返回：{"status": "ok", "result": {...}}
-  接口B返回：{"success": true, "data": {...}}
-  接口C返回：{"code": 0, "info": {...}}
-  接口D返回：直接报500错误，没有JSON
-
-有了统一格式后，前端开发者很开心：
-  所有接口都返回：{"code": 200, "msg": "success", "data": {...}, "requestId": "..."}
-  只需判断 code === 200 就知道是否成功
-```
-
----
-
-## 五、速率限制 @RateLimit
-
-### 什么是速率限制？
-
-**生活类比：** 药铺门口放个叫号机，每分钟只叫5个号。防止有人恶意刷号（暴力破解密码、恶意注册等）。
-
-### 怎么用？
-
-```java
-@PostMapping("/login")
-@RateLimit(value = 5, key = "user_login")   // 每秒最多5次登录请求
-public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
+@Tag(name = "模块中文名", description = "模块描述")    // Swagger分组
+@RestController                                        // REST控制器
+@RequestMapping("/api/xxx")                            // 路径前缀
+@Validated                                             // 启用参数校验
+@RequiredArgsConstructor                                // 构造器注入
+public class XxxController {
+    private final XxxService service;                  // final字段，构造器注入
     // ...
 }
-
-@PostMapping("/register")
-@RateLimit(value = 3, key = "user_register")  // 每秒最多3次注册请求
-public R<String> register(@Valid @RequestBody RegisterDTO dto) {
-    // ...
-}
 ```
 
-### @RateLimit 参数说明
-
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `value` | 10 | 每秒允许的最大请求数 |
-| `key` | "" | 限流的唯一标识，用于区分不同接口 |
-
-### 超过限制会怎样？
-
-```json
-{
-  "code": 429,
-  "msg": "操作过于频繁，请稍后再试",
-  "data": null,
-  "requestId": "x1y2z3"
-}
-```
-
-### 实现原理
-
-```
-请求到达 Controller
-       |
-       v
-RateLimitAspect 切面拦截（AOP）
-       |
-       +-- 用 Redis 计数器检查：这个 key 在过去1秒内被调用了几次？
-       |       |
-       |       +-- 未超限 --> 放行，计数器+1
-       |       +-- 已超限 --> 抛出 BusinessException(OPERATION_TOO_FREQUENT)
-       |
-       +-- Redis 不可用？降级到本地令牌桶（LocalTokenBucket）
-```
-
----
-
-## 六、权限控制
-
-### 三种权限级别
-
-```
-+-----------------------------------------------------------+
-|                    所有接口                                  |
-|                                                           |
-|  +------------------+  +------------------+  +----------+ |
-|  |   permitAll      |  |   authenticated  |  |  ADMIN   | |
-|  |   (公开访问)      |  |   (需要登录)      |  | (需管理员)| |
-|  |                  |  |                  |  |          | |
-|  | 植物列表/详情     |  | 修改密码         |  | 用户管理  | |
-|  | 知识列表/详情     |  | 发表评论         |  | 内容CRUD  | |
-|  | 传承人列表/详情   |  | 我的收藏         |  | 评论审核  | |
-|  | 登录/注册        |  | 退出登录         |  | 反馈回复  | |
-|  | 验证码           |  | 我的测验记录     |  | 文件上传  | |
-|  | AI聊天           |  |                  |  |          | |
-|  +------------------+  +------------------+  +----------+ |
-+-----------------------------------------------------------+
-```
-
-### 权限控制方式
-
-本项目使用 **Sa-Token** 注解进行权限控制：
-
-| 注解 | 作用 | 使用场景 |
-|------|------|----------|
-| `@SaCheckLogin` | 验证是否登录 | 需要登录才能访问的接口 |
-| `@SaCheckRole("admin")` | 验证角色 | 仅管理员可访问的接口 |
-| 无注解 | 公开访问 | 不需要登录的公开接口 |
-
-**示例：**
+### 参数获取方式
 
 ```java
-// 公开接口 -- 任何人都能访问
-@GetMapping("/api/plants/list")
-public R<Map<String, Object>> list() { ... }
-
-// 需要登录 -- 加 @SaCheckLogin
-@GetMapping("/api/user/me")
-@SaCheckLogin
-public R<User> me() { ... }
-
-// 仅管理员 -- 加 @SaCheckRole("admin")
-@RestController
-@RequestMapping("/api/admin")
-@SaCheckRole("admin")
-public class AdminController { ... }
-```
-
-### 权限不足时的响应
-
-| 情况 | HTTP状态码 | 响应 |
-|------|-----------|------|
-| 未登录（没带Token） | 401 | `{"code":401,"msg":"未登录或登录已过期"}` |
-| 已登录但权限不够 | 403 | `{"code":403,"msg":"权限不足"}` |
-
----
-
-## 七、完整示例：PlantController 逐行解析
-
-```java
-package com.dongmedicine.controller;
-
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.dongmedicine.common.R;
-import com.dongmedicine.common.util.PageUtils;
-import com.dongmedicine.entity.Plant;
-import com.dongmedicine.service.PlantService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Map;
-
-@RestController                    // [1] 标记为REST控制器，返回值自动转JSON
-@RequestMapping("/api/plants")     // [2] 所有接口的URL前缀
-@Validated                         // [3] 开启参数校验（@NotNull等注解才生效）
-@RequiredArgsConstructor           // [4] Lombok：自动生成构造函数，用于依赖注入
-public class PlantController {
-
-    private final PlantService service;  // [5] 注入Service（厨师），用final保证不可变
-
-    // ============================================================
-    // 接口1：获取植物列表（分页+筛选）
-    // 请求：GET /api/plants/list?page=1&size=12&category=清热药&keyword=钩藤
-    // ============================================================
-    @GetMapping("/list")
-    public R<Map<String, Object>> list(
-            @RequestParam(defaultValue = "1") Integer page,      // 页码，默认第1页
-            @RequestParam(defaultValue = "12") Integer size,     // 每页数量，默认12条
-            @RequestParam(required = false) String category,     // 分类筛选（可选）
-            @RequestParam(required = false) String usageWay,     // 用法筛选（可选）
-            @RequestParam(required = false) String keyword) {    // 关键词搜索（可选）
-        Page<Plant> pageResult = service.advancedSearchPaged(keyword, category, usageWay, page, size);
-        return R.ok(PageUtils.toMap(pageResult));  // 分页结果转Map返回
-    }
-
-    // ============================================================
-    // 接口2：搜索植物
-    // 请求：GET /api/plants/search?keyword=钩藤&page=1&size=12
-    // ============================================================
-    @GetMapping("/search")
-    public R<Map<String, Object>> search(
-            @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size) {
-        Page<Plant> pageResult = service.searchPaged(keyword, page, size);
-        return R.ok(PageUtils.toMap(pageResult));
-    }
-
-    // ============================================================
-    // 接口3：获取植物详情
-    // 请求：GET /api/plants/5
-    // ============================================================
-    @GetMapping("/{id}")
-    public R<Plant> detail(@PathVariable @NotNull Integer id) {  // 从URL路径取id
-        Plant plant = service.getDetailWithStory(id);
-        return plant == null ? R.error("植物不存在") : R.ok(plant);  // 三元表达式处理空值
-    }
-
-    // ============================================================
-    // 接口4：获取相似植物
-    // 请求：GET /api/plants/5/similar
-    // ============================================================
-    @GetMapping("/{id}/similar")
-    public R<List<Plant>> similar(@PathVariable @NotNull Integer id) {
-        return R.ok(service.getSimilarPlants(id));
-    }
-
-    // ============================================================
-    // 接口5：随机获取植物
-    // 请求：GET /api/plants/random?limit=20
-    // ============================================================
-    @GetMapping("/random")
-    public R<List<Plant>> random(
-            @RequestParam(defaultValue = "20")
-            @Min(value = 1, message = "数量不能小于1")       // 最小值校验
-            @Max(value = 100, message = "数量不能大于100")   // 最大值校验
-            Integer limit) {
-        return R.ok(service.getRandomPlants(limit));
-    }
-
-    // ============================================================
-    // 接口6：增加浏览量
-    // 请求：POST /api/plants/5/view
-    // ============================================================
-    @PostMapping("/{id}/view")
-    public R<String> incrementView(@PathVariable Integer id) {
-        service.incrementViewCount(id);
-        return R.ok("ok");
-    }
-}
-```
-
----
-
-## 八、本项目的所有控制器
-
-| 控制器 | 路径前缀 | 权限 | 说明 |
-|--------|---------|------|------|
-| PlantController | /api/plants | 公开+认证 | 药用植物列表、详情、搜索、随机 |
-| KnowledgeController | /api/knowledge | 公开+认证 | 知识库列表、详情、搜索 |
-| InheritorController | /api/inheritors | 公开+认证 | 传承人列表、详情、搜索 |
-| QaController | /api/qa | 公开 | 问答列表、搜索 |
-| ResourceController | /api/resources | 公开+认证 | 资源列表、详情、下载 |
-| UserController | /api/user | 混合 | 注册、登录、登出、改密 |
-| CaptchaController | /api/captcha | 公开 | 验证码生成 |
-| AdminController | /api/admin | ADMIN | 统一管理接口 |
-| CommentController | /api/comments | 公开+认证 | 评论发表、列表 |
-| FavoriteController | /api/favorites | 认证 | 收藏管理 |
-| FeedbackController | /api/feedback | 混合 | 反馈提交、查看 |
-| QuizController | /api/quiz | 混合 | 测验题目、提交 |
-| PlantGameController | /api/plant-game | 混合 | 植物识别游戏 |
-| ChatController | /api/chat | 混合 | AI聊天 |
-| LeaderboardController | /api/leaderboard | 公开 | 排行榜 |
-| StatisticsController | /api/stats | 公开 | 统计数据 |
-| FileUploadController | /api/upload | ADMIN | 文件上传 |
-| OperationLogController | /api/admin/logs | ADMIN | 操作日志 |
-
----
-
-## 九、常见错误与避免方法
-
-### 错误1：忘记加 @Validated 或 @Valid
-
-```java
-// 错误！@NotBlank 注解不会生效，空关键词也能通过
-@GetMapping("/search")
-public R<Map<String, Object>> search(@RequestParam @NotBlank String keyword) { ... }
-
-// 正确！类上加了 @Validated，方法参数上的校验注解才会生效
-@Validated   // <-- 必须在类上添加这个注解
-public class PlantController {
-    @GetMapping("/search")
-    public R<Map<String, Object>> search(@RequestParam @NotBlank String keyword) { ... }
-}
-
-// 对于 @RequestBody 的校验，需要在参数前加 @Valid
-@PostMapping("/login")
-public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) { ... }
-```
-
-### 错误2：Controller 里写业务逻辑
-
-```java
-// 错误！Controller 不应该包含业务逻辑
+// @PathVariable: 从URL路径提取
 @GetMapping("/{id}")
-public R<Plant> detail(@PathVariable Integer id) {
-    Plant plant = plantMapper.selectById(id);  // 直接调 Mapper
-    if (plant.getViewCount() > 1000) {          // 业务判断写在 Controller
-        plant.setStory("热门植物：" + plant.getStory());
-    }
-    return R.ok(plant);
-}
+public R<Entity> detail(@PathVariable @NotNull Integer id) { ... }
 
-// 正确！业务逻辑放在 Service 里
-@GetMapping("/{id}")
-public R<Plant> detail(@PathVariable Integer id) {
-    Plant plant = service.getDetailWithStory(id);  // 只调 Service
-    return plant == null ? R.error("植物不存在") : R.ok(plant);
-}
+// @RequestParam: 从URL查询字符串提取
+@GetMapping("/list")
+public R<Map> list(@RequestParam(defaultValue = "1") Integer page,
+                   @RequestParam(required = false) String keyword) { ... }
+
+// @RequestBody: 从JSON请求体提取
+@PostMapping
+public R<String> create(@Valid @RequestBody CreateDTO dto) { ... }
 ```
 
-### 错误3：用 @Autowired 字段注入（不推荐）
+### 分页返回统一格式
 
 ```java
-// 不推荐！字段注入，不利于测试，隐藏了依赖关系
-@Autowired
-private PlantService plantService;
+// PlantController中使用PageUtils
+Page<Plant> pageResult = service.advancedSearchPaged(...);
+return R.ok(PageUtils.toMap(pageResult));
 
-// 推荐！构造器注入，依赖关系明确，方便测试
-@RequiredArgsConstructor   // Lombok 自动生成构造函数
-public class PlantController {
-    private final PlantService service;  // final 保证不可变
-}
+// 返回结构: {"code":200, "data": {"records":[...], "total":65, "page":1, "size":12}}
 ```
 
-### 错误4：返回类型不统一
+### 手动分页（部分Controller使用）
 
 ```java
-// 错误！直接返回对象，前端不知道请求是否成功
-@GetMapping("/{id}")
-public Plant detail(@PathVariable Integer id) {
-    return service.getById(id);
-}
-
-// 正确！用 R<T> 统一封装
-@GetMapping("/{id}")
-public R<Plant> detail(@PathVariable Integer id) {
-    Plant plant = service.getDetailWithStory(id);
-    return plant == null ? R.error("植物不存在") : R.ok(plant);
-}
-```
-
-### 错误5：忘记在 SecurityConfig 中配置新接口的权限
-
-```java
-// 新增了 /api/recipes 接口，但忘记在 SecurityConfig 中配置
-// 结果：所有请求都被拦截，返回 401 或 403
-
-// 解决：在 SecurityConfig.filterChain() 中添加权限规则
-.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()
-.requestMatchers("/api/admin/recipes/**").hasRole("ADMIN")
+// CommentController、FavoriteController等使用手动分页
+int safeSize = Math.min(Math.max(size, 1), 100);
+List<DTO> all = service.listXxx();
+int start = (page - 1) * safeSize;
+int end = Math.min(start + safeSize, all.size());
+return R.ok(start < all.size() ? all.subList(start, end) : List.of());
 ```
 
 ---
 
-## 代码审查与改进建议
+## 四、权限控制说明
 
-- [严重-安全] ResourceController存在路径遍历风险，未对文件路径做规范化处理
-- [严重-安全] FileUploadController的文件删除接口存在路径注入风险
-- [严重-安全] AdminController角色白名单缺失，仅检查角色是否为admin但未限制可分配的角色值
-- [中等-缓存] MetadataController的@Cacheable因同类内部调用而完全无效（Spring AOP代理机制）
-- [中等-路由] StatisticsController与StatsController映射到同一/api/stats前缀，存在路由冲突
-- [中等-设计] 多个Controller缺少统一的异常处理模式，部分方法直接try-catch返回R.error()
-- [低-规范] 部分Controller使用@Autowired字段注入而非构造器注入
+本项目使用 **Sa-Token** 权限框架：
+
+| 控制方式 | 说明 |
+|---------|------|
+| `@SaCheckLogin`（方法级） | 要求登录，未登录返回401 |
+| `@SaCheckRole("admin")`（类级/方法级） | 要求admin角色，权限不足返回403 |
+| 无注解 | 公开接口，GET请求免登录 |
+| SaTokenConfig排除路径 | 在excludePathPatterns中配置的写操作路径也免登录 |
+| WRITE_METHODS拦截 | POST/PUT/DELETE/PATCH方法默认需要登录（除非在排除列表） |

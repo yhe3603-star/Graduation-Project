@@ -1,243 +1,295 @@
 # 页面组件目录 (views/)
 
-> 类比：想象一家侗族文化餐厅。餐厅有不同的区域——大厅（首页）、包间（详情页）、厨房（管理后台）。每个区域有自己独特的装修和功能，**views 就是这些区域**，每个 `.vue` 文件就是一个独立的"房间"。
+页面组件是直接对应一个 URL 路由的 Vue 组件，每个 `.vue` 文件代表一个完整的页面。它们组装各种子组件（来自 `components/`），通过 `composables/` 复用有状态逻辑，通过 `utils/` 调用工具函数。
 
-## 什么是页面组件（View）？
+## 全部 16 个页面
 
-页面组件是**直接对应一个 URL 路由**的 Vue 组件。当用户在浏览器地址栏输入 `/plants` 时，路由器就会把 `Plants.vue` 渲染到页面上。
+| 页面 | 路由 | 权限 | 功能说明 |
+|------|------|------|---------|
+| `Home.vue` | `/` | 公开 | 平台首页，英雄区 + 快捷导航 + 每周精选 + 最新更新 |
+| `Plants.vue` | `/plants` | 公开 | 药用资源图鉴，药材搜索/筛选/收藏/对比 |
+| `Knowledge.vue` | `/knowledge` | 公开 | 非遗医药知识库，药方疗法搜索/分类/收藏 |
+| `Inheritors.vue` | `/inheritors` | 公开 | 传承人风采，谱系展示/技艺介绍/等级标识 |
+| `Qa.vue` | `/qa` | 公开 (keepAlive) | 问答社区，问题搜索/浏览/收藏 |
+| `Resources.vue` | `/resources` | 公开 | 学习资源，文件预览/下载/收藏/批量选择 |
+| `Interact.vue` | `/interact` | 公开 | 文化互动专区，趣味答题 + 植物识别游戏 + 评论 |
+| `SolarTerms.vue` | `/solar-terms` | 公开 (keepAlive) | 二十四节气采药，季节切换/时令药材/养生提示 |
+| `About.vue` | `/about` | 公开 | 平台介绍，选题背景/平台特色/功能模块导航 |
+| `Feedback.vue` | `/feedback` | 公开 | 意见反馈表单（类型/标题/内容/联系方式） |
+| `PlantCompare.vue` | `/compare` | 公开 (keepAlive) | 药材多维度对比表（属性行 x 药材列） |
+| `Admin.vue` | `/admin` | 需登录 + 管理员 | 管理后台（仪表盘/用户/植物/知识/传承人/问答/资源/反馈/题目/评论） |
+| `PersonalCenter.vue` | `/personal` | 需登录 | 个人中心（我的收藏/答题记录/评论/账号设置/密码修改） |
+| `GlobalSearch.vue` | `/search` | 公开 | 全局搜索（自动补全/搜索历史/热门搜索/分类结果） |
+| `Visual.vue` | `/visual` | 公开 | 数据可视化（统计卡片/柱状图/饼图/地域分布图） |
+| `NotFound.vue` | `/:pathMatch(.*)*` | 公开 | 404 页面（带装饰圆圈动画） |
 
-简单来说：
-- 用户**能看到的一个完整网页** = 一个 View
-- URL 路径和 View 是**一一对应**的关系
+---
 
-## views 和 components 有什么区别？
+## Home.vue -- 首页
 
-这是新手最容易混淆的概念，用表格说清楚：
+**路由：** `/` | **权限：** 公开
 
-| 对比项 | views/（页面组件） | components/（通用组件） |
-|--------|-------------------|----------------------|
-| 类比 | 餐厅的各个区域（大厅、包间） | 餐厅里的桌椅、灯具（可复用） |
-| 对应路由 | 有，一个 View = 一个 URL | 没有，不会单独出现在地址栏 |
-| 复用性 | 通常不复用，每个页面独一份 | 高度复用，多个页面都能用 |
-| 文件大小 | 较大，组装各种子组件 | 较小，专注单一功能 |
-| 例子 | `Plants.vue`（药用植物页） | `SearchFilter.vue`（搜索筛选组件） |
+平台的门户页面，由多个区块组成：
 
-**一句话总结**：views 是"搭积木的图纸"，components 是"积木块"。views 把各种 components 组装成完整页面。
+- **英雄区（Hero Section）**：展示平台标题"非遗视角下侗乡医药数字展示平台"、副标题"保护 · 传承 · 活态传播"、统计数据卡片（植物数量、知识条目、传承人数量等，数据来自 `homeConfig.js`）、"立即探索"和"了解非遗"两个 CTA 按钮
+- **快捷导航区**：7 个功能模块入口卡片（知识库、传承人、植物图鉴、问答、互动、节气、可视化），每个有独立图标和渐变色
+- **每周精选区**：展示本周推荐的侗医药知识
+- **最新更新区**：展示平台最近更新的内容条目
 
-## 全部 14 个页面组件
+**使用的 composable：** 收藏功能、媒体显示、更新日志展示
 
-| 页面组件 | 路由路径 | 访问权限 | 功能说明 |
-|---------|---------|---------|---------|
-| `Home.vue` | `/` | 公开 | 首页，数据概览、快速导航、传承人风采 |
-| `Plants.vue` | `/plants` | 公开 | 药用植物图鉴，分类筛选、搜索、收藏 |
-| `Inheritors.vue` | `/inheritors` | 公开 | 传承人档案，级别筛选、代表案例 |
-| `Knowledge.vue` | `/knowledge` | 公开 | 知识库，多维度分类、搜索 |
-| `Qa.vue` | `/qa` | 公开 | 问答社区，AI 智能回答 |
-| `Resources.vue` | `/resources` | 公开 | 学习资源，多媒体展示与下载 |
-| `Interact.vue` | `/interact` | 公开 | 互动专区，答题、植物游戏、评论 |
-| `Visual.vue` | `/visual` | 公开 | 数据可视化，ECharts 图表展示 |
-| `PersonalCenter.vue` | `/personal` | 需登录 | 个人中心，收藏/记录/设置 |
-| `Admin.vue` | `/admin` | 需登录 + 管理员 | 管理后台，内容 CRUD/用户管理/审核 |
-| `About.vue` | `/about` | 公开 | 关于平台，项目介绍与统计数据 |
-| `Feedback.vue` | `/feedback` | 公开 | 意见反馈提交 |
-| `GlobalSearch.vue` | `/search` | 公开 | 全局搜索结果页 |
-| `NotFound.vue` | `/:pathMatch(.*)*` | 公开 | 404 页面，找不到路由时显示 |
+---
 
-## 路由懒加载 -- 为什么要用 `() => import()`？
+## Plants.vue -- 药用资源图鉴
 
-打开 `router/index.js`，你会看到所有路由都长这样：
+**路由：** `/plants` | **权限：** 公开
 
-```javascript
-// 懒加载写法：用箭头函数包裹 import
-{ path: '/plants', component: () => import('@/views/Plants.vue') }
+药材图鉴页面，展示黔东南道地药材和侗医传统药用植物：
 
-// 千万不要这样写（同步加载）：
-// { path: '/plants', component: PlantsVue }  // 这会把所有页面打包到一个文件里！
-```
+- **搜索筛选**：使用 `SearchFilter` 组件，支持关键词搜索 + 分类/用法筛选
+- **卡片网格**：使用 `CardGrid` 组件展示药材缩略图、名称、用法标签、栖息地、浏览/收藏计数
+- **收藏功能**：使用 `useFavorite('plant')` composable，每张卡片上有星形收藏按钮
+- **对比功能**：使用 `useCompare()` composable，可将药材加入对比列表（最多 3 项），通过 `compareList` 全局共享状态
+- **骨架屏**：使用 `SkeletonGridImage` 在加载时显示 12 个占位卡片
+- **分页**：使用 `Pagination` 组件实现服务端分页
+- **详情弹窗**：点击卡片打开 `PlantDetailDialog` 查看详细信息
 
-**为什么要懒加载？**
+**使用的 composable：** `useFavorite`、`useCompare`、`useMedia`
 
-类比：你不会一次性把餐厅所有区域的灯都打开，而是客人走到哪个区域，再开哪个区域的灯。
+---
 
-- 如果不用懒加载，用户打开首页时，浏览器会**一次性下载所有 14 个页面的代码**
-- 用了懒加载，用户访问 `/plants` 时，**只下载 Plants.vue 的代码**
-- 这让首页加载速度大幅提升，特别是用户可能永远不会访问 Admin 页面
+## Knowledge.vue -- 非遗医药知识库
 
-**技术原理**：`() => import()` 是 ES6 的动态导入语法，Webpack/Vite 会自动把它拆分成单独的 JS 文件（chunk），只有路由被访问时才加载。
+**路由：** `/knowledge` | **权限：** 公开
 
-## 认证守卫 -- 谁能进哪个"房间"？
+展示侗医药传统疗法和药方知识：
 
-路由通过 `meta` 字段标记权限，导航守卫在进入页面前检查：
+- **搜索筛选**：`SearchFilter` 组件，支持分类/疗法类别/疾病类别多维度筛选
+- **列表卡片**：每个条目展示疗法类别标签、标题、内容摘要（截断 80 字符）、疾病分类、浏览量/收藏量
+- **骨架屏**：`SkeletonGridCard`（12 个占位卡片）
+- **收藏**：使用 `useFavorite('knowledge')`
+- **详情弹窗**：`KnowledgeDetailDialog` 展示完整药方或疗法内容
+- **分页**：服务端分页
 
-```javascript
-// 需要登录才能访问
-{ path: '/personal', component: () => import('@/views/PersonalCenter.vue'), meta: { requiresAuth: true } }
+---
 
-// 需要登录 + 管理员身份才能访问
-{ path: '/admin', component: () => import('@/views/Admin.vue'), meta: { requiresAuth: true, requiresAdmin: true } }
+## Inheritors.vue -- 传承人风采
 
-// 公开页面，不需要任何权限
-{ path: '/plants', component: () => import('@/views/Plants.vue') }
-```
+**路由：** `/inheritors` | **权限：** 公开
 
-守卫的执行流程（简化版）：
+展示侗医药非遗传承人信息：
 
-```
-用户访问 /admin
-    |
-    v
-页面需要登录吗？（meta.requiresAuth）
-    |
-    +-- 不需要 --> 直接放行
-    |
-    +-- 需要 --> 有 token 吗？
-                    |
-                    +-- 没有 --> 跳转首页，提示登录
-                    |
-                    +-- 有 --> token 过期了吗？
-                                    |
-                                    +-- 过期了 --> 清除登录状态，跳转首页
-                                    |
-                                    +-- 没过期 --> 需要管理员吗？（meta.requiresAdmin）
-                                                    |
-                                                    +-- 不需要 --> 放行
-                                                    |
-                                                    +-- 需要 --> 是管理员吗？
-                                                                    |
-                                                                    +-- 是 --> 放行
-                                                                    |
-                                                                    +-- 否 --> 跳转首页，提示无权限
-```
+- **搜索筛选**：按姓名/技艺搜索 + 等级筛选
+- **网格卡片**：每张卡片展示头像首字、姓名、等级标签（带颜色区分：自治区级 success / 省级 warning / 市级 primary）、特长、自治区级徽章、浏览/收藏统计
+- **等级区分**：通过 `getLevelType()` 根据等级返回 Element Plus tag type
+- **收藏**：`useFavorite('inheritor')`
+- **详情弹窗**：`InheritorDetailDialog`（展示传承谱系、技艺特色、代表案例）
+- **骨架屏**：`SkeletonGridCard` + 空状态
 
-## 如何创建一个新页面？-- 五步走
+---
 
-假设你要创建一个"侗族药浴"页面：
+## Qa.vue -- 问答社区
 
-### 第 1 步：创建 Vue 文件
+**路由：** `/qa` | **权限：** 公开 | **keepAlive: true**
 
-在 `views/` 目录下新建 `HerbalBath.vue`：
+侗医药知识问答平台：
 
-```vue
-<template>
-  <div class="module-page">
-    <!-- 页面头部 -->
-    <div class="module-header">
-      <h1>侗族药浴</h1>
-      <p class="subtitle">传承千年的养生智慧</p>
-    </div>
+- **搜索筛选**：问题关键词搜索 + 分类筛选
+- **问答卡片**：问题标题（带问号图标）、答案预览（截断 60 字符）、分类标签、浏览/收藏统计、操作按钮（收藏、查看详情）
+- **骨架屏**：`SkeletonListQa`（6 个占位卡片）
+- **收藏**：`useFavorite('qa')`
+- **详情弹窗**：`QaDetailDialog`
+- **keepAlive**：页面被缓存，切换离开后状态保留
 
-    <!-- 页面主体内容 -->
-    <div class="page-container">
-      <div class="page-main">
-        <!-- 在这里组装你的子组件 -->
-        <p>药浴内容区域</p>
-      </div>
+---
 
-      <!-- 侧边栏 -->
-      <div class="page-sidebar">
-        <p>侧边栏区域</p>
-      </div>
-    </div>
-  </div>
-</template>
+## Resources.vue -- 学习资源
 
-<script setup>
-// 在这里引入需要的 composable 和组件
-import { ref, onMounted } from 'vue'
+**路由：** `/resources` | **权限：** 公开
 
-// 页面数据
-const bathList = ref([])
+侗医药学习资料库，支持多种文件类型：
 
-// 页面加载时获取数据
-onMounted(async () => {
-  // 调用 API 获取药浴数据
-})
-</script>
+- **搜索筛选**：资源名称搜索 + 分类筛选
+- **资源卡片**：每项展示文件类型图标（视频/文档/图片）、标题、描述摘要、分类标签、文件类型/扩展名/大小、浏览/收藏/下载统计
+- **复选框选择**：支持多选（用于批量操作）
+- **批量操作栏**：选中资源后出现的操作工具栏
+- **操作按钮**：收藏、预览、下载
+- **文档预览**：使用 `DocumentPreview` 组件，支持 KKFileView 在线预览
+- **骨架屏**：`SkeletonListResource`
+- **分页**：服务端分页
 
-<style scoped>
-/* 页面专属样式写在这里 */
-/* 推荐使用 CSS 变量，保持风格统一 */
-.herbal-bath-card {
-  background: var(--bg-cream);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-}
-</style>
-```
+**使用的 composable：** `useFavorite`、`useMedia`
 
-### 第 2 步：注册路由
+---
 
-打开 `router/index.js`，在 `routes` 数组中添加：
+## Interact.vue -- 文化互动专区
 
-```javascript
-{
-  path: '/herbal-bath',
-  name: 'HerbalBath',
-  component: () => import('@/views/HerbalBath.vue')
-  // 如果需要登录才能访问，加上 meta：
-  // meta: { requiresAuth: true }
-}
-```
+**路由：** `/interact` | **权限：** 公开
 
-### 第 3 步：添加导航链接
+综合互动页面，包含三个 Tab：
 
-在 `AppHeader.vue` 的导航菜单中添加入口：
+1. **趣味答题**（QuizSection 组件）：
+   - 难度选择（初级 10 题 / 中级 20 题 / 高级 30 题）
+   - 每题限时（使用 `useCountdown` 倒计时）
+   - 答题进度条 + 上一题/下一题导航
+   - 时间到自动提交
+   - 成绩展示 + 分享功能（复制或 Web Share API）
+   - 登录用户记录保存到服务端
+   - **使用的 composable：** `useQuiz`
 
-```vue
-<el-menu-item index="/herbal-bath">侗族药浴</el-menu-item>
-```
+2. **植物识别**（PlantGame 组件）：
+   - 难度选择（影响选项数量：easy 3 个 / medium 4 个 / hard 5 个）
+   - 展示植物图片，从选项中选名称
+   - 连击加分机制（连续正确 bonus +2/题，上限 +10）
+   - 限时游戏（使用 `useCountdown`，时间到自动结束）
+   - 答题后 1-1.5 秒自动切换下一题
+   - 登录用户成绩记录到服务端
+   - **使用的 composable：** `usePlantGame`
 
-### 第 4 步：测试访问
+3. **评论区**（CommentSection 组件）：
+   - 评论列表分页展示
+   - 支持回复功能（嵌套评论）
+   - 评论需要审核
+   - **使用的 composable：** `useComments`
 
-启动开发服务器后，访问 `http://localhost:5173/herbal-bath` 查看页面。
+**侧边栏**（InteractSidebar）：展示答题/游戏统计数据
 
-### 第 5 步：完善功能
+---
 
-根据需要引入 composable（如 `useFavorite`、`useInteraction`）和子组件，逐步丰富页面内容。
+## SolarTerms.vue -- 节气采药
 
-## 常见错误
+**路由：** `/solar-terms` | **权限：** 公开 | **keepAlive: true**
 
-### 错误 1：忘记用懒加载
+展示二十四节气与传统侗医药采药时令：
 
-```javascript
-// 错误：同步导入，所有页面打包到一起
-import PlantsVue from '@/views/Plants.vue'
-{ path: '/plants', component: PlantsVue }
+- **季节切换**：春夏秋冬四个 Tab，带颜色主题（春绿/夏红/秋金/冬蓝）
+- **节气卡片**：使用 `<transition-group>` 动画切换
+  - 每张卡片包含：节气图标字符、中文名、拼音、日期范围、序号
+  - 描述文字、时令药材标签（点击可跳转到植物图鉴搜索）
+  - 侗医药习俗说明、养生提示（el-alert 展示）
+- **keepAlive**：缓存页面状态
 
-// 正确：懒加载，按需加载
-{ path: '/plants', component: () => import('@/views/Plants.vue') }
-```
+---
 
-### 错误 2：在 views 里写过多业务逻辑
+## About.vue -- 关于平台
 
-页面组件应该是"组装者"，而不是"实现者"。复杂的逻辑应该抽到 composable 里：
+**路由：** `/about` | **权限：** 公开
 
-```vue
-<!-- 不好的做法：页面里塞满逻辑 -->
-<script setup>
-const data = ref([])
-const loading = ref(false)
-const fetchData = async () => { /* 50行逻辑 */ }
-const handleSearch = () => { /* 30行逻辑 */ }
-const handleFilter = () => { /* 20行逻辑 */ }
-</script>
+平台介绍页，包含三个主要区块：
 
-<!-- 好的做法：逻辑抽到 composable -->
-<script setup>
-import { useAdminData } from '@/composables'
-const { data, loading, fetchData } = useAdminData(request)
-</script>
-```
+1. **选题背景**：阐述侗乡医药的非遗地位、传承危机、平台建设目标
+2. **平台特色**：4 个特色卡片（数字化归档、知识图谱、互动体验、节气养生），带渐变色图标
+3. **功能模块导航**：可点击跳转到各功能页面
 
-### 错误 3：路由 path 不一致
+---
 
-路由的 `path` 和导航菜单的 `index` 必须完全一致，否则点击菜单无法跳转：
+## Feedback.vue -- 意见反馈
 
-```javascript
-// router/index.js
-{ path: '/herbal-bath', ... }  // 注意连字符
+**路由：** `/feedback` | **权限：** 公开
 
-// AppHeader.vue
-<el-menu-item index="/herbalBath">  // 错误！驼峰命名不一致
-<el-menu-item index="/herbal-bath">  // 正确！和路由 path 一致
-```
+用户反馈表单：
+
+- **表单字段**：反馈类型（功能建议/问题反馈/其他，el-radio-group）、标题（max 100 字）、详细描述（textarea，max 500 字）、联系方式（选填）
+- **表单验证**：必填项校验
+- **提交**：带 loading 状态，成功后重置表单
+
+---
+
+## PlantCompare.vue -- 药材对比
+
+**路由：** `/compare` | **权限：** 公开 | **keepAlive: true**
+
+多维度药材对比工具：
+
+- **对比表格**：属性为行（名称、学名、侗语名、功效、用法、栖息地等）、药材为列
+- **添加/移除**：通过搜索弹窗添加药材（最多 3 个），每个列有移除按钮
+- **清空**：一键清空所有对比
+- **图片**：每列显示药材缩略图
+- **数据来源**：`useCompare()` composable 通过 localStorage 持久化对比列表
+- **keepAlive**：缓存对比状态
+
+---
+
+## Admin.vue -- 管理后台
+
+**路由：** `/admin` | **权限：** 需登录 + 管理员角色
+
+平台管理后台，左侧 `AdminSidebar` 导航 + 右侧内容区：
+
+- **仪表盘**：`AdminDashboard` 展示各模块统计数据，点击可跳转到对应管理页
+- **标准数据表**：用户/植物/知识/传承人/问答/资源/反馈/题目/评论，使用 `AdminDataTable` 组件
+  - 服务端分页、排序
+  - 行操作（查看、编辑、删除）
+  - 用户管理特有：封禁/解封操作
+- **表单弹窗**：PlantFormDialog、KnowledgeFormDialog、InheritorFormDialog、QaFormDialog、QuizFormDialog、ResourceFormDialog，均使用 `useFormDialog` composable
+  - 支持新增/编辑
+  - 更新日志内嵌管理
+  - 数组字段自动序列化/反序列化
+- **详情弹窗**：UserDetailDialog、FeedbackDetailDialog、LogDetailDialog 等
+
+**使用的 composable：** `useAdminData`（管理全部 CRUD 操作）
+
+---
+
+## PersonalCenter.vue -- 个人中心
+
+**路由：** `/personal` | **权限：** 需登录
+
+用户个人信息管理中心：
+
+- **个人信息卡**：头像（用户名首字）、用户名、角色标签、学习统计摘要（总答题次数/平均得分/植物游戏次数/总分）
+- **快捷操作**：我的收藏、答题记录、我的评论、账号设置（4 个可跳转卡片）
+- **我的收藏**：按类型筛选（全部/药材/知识/传承人/资源/问答），分页展示，点击可跳转到详情
+- **答题记录**：答题+植物游戏记录合并按时间排序，展示难度、得分、正确率、时间
+- **我的评论**：分页展示历史评论
+- **账号设置**：修改密码表单（需验证码），修改成功后自动退出要求重新登录
+- **退出登录**：带确认弹窗
+
+**使用的 composable：** `usePersonalCenter`
+
+---
+
+## GlobalSearch.vue -- 全局搜索
+
+**路由：** `/search` | **权限：** 公开
+
+全平台统一搜索入口：
+
+- **搜索框**：`el-autocomplete` 带搜索建议（从服务端获取联想词）
+- **搜索历史**：localStorage 存储最近搜索关键词，可删除单条或清除全部
+- **热门搜索**：展示热门关键词标签，点击直接搜索
+- **搜索结果**：分 Tab 展示各类结果（全部/植物/知识/传承人/问答/资源）
+- **无结果处理**：展示搜索引导和热门关键词
+
+---
+
+## Visual.vue -- 数据可视化
+
+**路由：** `/visual` | **权限：** 公开
+
+基于 ECharts 的数据可视化大屏：
+
+- **统计卡片行**：`StatCard` 展示植物、知识、传承人、问答、资源的总数统计
+- **药方使用频次**：`ChartCard` 支持柱状图/折线图切换（el-radio-group）
+- **疗法分类占比**：`ChartCard` 饼图
+- **传承人等级分布**：`ChartCard` 柱状图
+- **药用植物分类统计**：`ChartCard` 柱状图
+- **地域分布**：`ChartCard` 柱状图 + 地区下拉筛选
+- **刷新按钮**：手动刷新所有图表数据
+
+**使用的 composable：** `useVisualData`（从 `/stats/chart` 获取图表数据）、`useInteraction`（统计数据计算）
+
+**图表配置工具：** `utils/chartConfig.js` 提供 `createBarSeries`、`createPieSeries`、`createLineSeries`、`createRadarSeries` 等工厂函数
+
+---
+
+## NotFound.vue -- 404 页面
+
+**路由：** `/:pathMatch(.*)*` | **权限：** 公开
+
+简洁的 404 页面：
+
+- **视觉**：大号"404"数字（150px，带文字阴影），标题"页面未找到"，描述文字
+- **装饰**：3 个半透明装饰圆形（靛蓝、青绿、金色），营造轻松氛围
+- **响应式**：移动端缩小字号
+- **无头部/底部导航**：`App.vue` 中通过 `isNotFoundPage` computed 判断，隐藏 Header 和 Footer

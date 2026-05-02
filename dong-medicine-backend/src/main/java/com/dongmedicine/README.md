@@ -1,435 +1,248 @@
-# Java 源代码根目录 (com/dongmedicine/)
+# Java 源码根包（com.dongmedicine）
 
-> 这是整个后端 Java 代码的"大本营"，所有业务代码都在这个包下面。
-
----
-
-## 一、什么是 Java 包（Package）？
-
-### 生活类比：文件夹分类
-
-你电脑里的文件夹是怎么组织的？
-
-```
-D:\侗族药铺\
-  +-- 药材\          <-- 按类型分类
-  |   +-- 清热药\
-  |   +-- 祛风药\
-  +-- 账本\          <-- 按用途分类
-  |   +-- 进货记录\
-  |   +-- 销售记录\
-  +-- 人员\          <-- 按角色分类
-      +-- 员工档案\
-      +-- 客户档案\
-```
-
-Java 包也是一样的道理 -- **按功能分类组织代码，避免混乱**。
-
-```
-com.dongmedicine/          <-- 我们的项目根包
-  +-- controller/          <-- 所有"服务员"放这里
-  +-- service/             <-- 所有"厨师"放这里
-  +-- mapper/              <-- 所有"仓库管理员"放这里
-  +-- entity/              <-- 所有"货物清单"放这里
-  +-- dto/                 <-- 所有"订单表格"放这里
-  +-- config/              <-- 所有"规章制度"放这里
-  +-- common/              <-- 所有"公共工具"放这里
-```
-
-> 为什么要用 `com.dongmedicine` 这么长的名字？这是 Java 的命名规范 -- 用域名的反写作为包名前缀，保证全球唯一。就像你的身份证号一样，不会和别人重复。
+> 后端Java代码的"大本营"，包含所有业务逻辑。严格遵循 **Controller → Service → Mapper** 三层架构。
 
 ---
 
-## 二、三层架构详解
-
-### 完整架构图
+## 一、包结构总览
 
 ```
-                        前端发送 HTTP 请求
-                              |
-                              v
-+---------------------------------------------------------------+
-|                     Controller 层（服务员）                     |
-|                                                               |
-|  @RestController  @GetMapping  @PostMapping  @DeleteMapping   |
-|                                                               |
-|  职责：                                                        |
-|  1. 接收请求（从URL、请求体中获取参数）                          |
-|  2. 参数校验（@Valid, @NotNull, @NotBlank）                    |
-|  3. 调用 Service 处理业务                                      |
-|  4. 用 R<T> 封装响应结果返回给前端                              |
-|                                                               |
-|  不做的事：不写业务逻辑、不直接操作数据库                        |
-+-------------------------------+-------------------------------+
-                                |
-                                v
-+---------------------------------------------------------------+
-|                      Service 层（厨师）                         |
-|                                                               |
-|  @Service  @Transactional  @Cacheable  @CacheEvict            |
-|                                                               |
-|  职责：                                                        |
-|  1. 处理业务逻辑（搜索、过滤、计算等）                          |
-|  2. 管理缓存（@Cacheable 读缓存, @CacheEvict 清缓存）          |
-|  3. 控制事务（@Transactional 保证数据一致性）                   |
-|  4. 调用 Mapper 存取数据                                       |
-|                                                               |
-|  不做的事：不接收HTTP请求、不返回HTTP响应                        |
-+-------------------------------+-------------------------------+
-                                |
-                                v
-+---------------------------------------------------------------+
-|                    Mapper 层（仓库管理员）                      |
-|                                                               |
-|  @Mapper  extends BaseMapper<T>                               |
-|                                                               |
-|  职责：                                                        |
-|  1. 继承 BaseMapper 自动获得增删改查方法                        |
-|  2. 用 @Select @Update 写自定义 SQL                            |
-|  3. 只负责和数据库交互                                         |
-|                                                               |
-|  不做的事：不写业务逻辑、不知道业务规则                          |
-+-------------------------------+-------------------------------+
-                                |
-                                v
-                        +-----------+
-                        |  MySQL    |
-                        |  数据库    |
-                        +-----------+
-```
-
-### 辅助层说明
-
-| 层 | 包 | 类比 | 职责 |
-|----|-----|------|------|
-| **Entity** | `entity/` | 货物清单 | 一个类对应数据库一张表，一个字段对应一列 |
-| **DTO** | `dto/` | 订单表格 | 前端和后端之间传递数据的"表格"，可以过滤敏感字段 |
-| **Config** | `config/` | 规章制度 | 配置 Spring Boot 的各种行为（安全、缓存、限流等） |
-| **Common** | `common/` | 公共工具 | 统一响应格式、异常处理、工具方法 |
-
----
-
-## 三、各层代码详解
-
-### 3.1 Entity 层 -- 数据库表的 Java 映射
-
-**什么是 Entity？** 一个 Entity 类 = 数据库中的一张表，一个字段 = 表中的一列。
-
-```java
-package com.dongmedicine.entity;
-
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
-import java.time.LocalDateTime;
-
-@Data                    // Lombok：自动生成 getter/setter/toString/equals/hashCode
-@TableName("plants")    // 告诉 MyBatis-Plus：这个类对应数据库的 plants 表
-public class Plant {
-
-    @TableId(type = IdType.AUTO)   // 主键，自增长
-    private Integer id;
-
-    // 下面每个字段对应 plants 表的一列
-    // MyBatis-Plus 自动把 name_cn 映射为 nameCn（下划线转驼峰）
-    private String nameCn;          // 中文名
-    private String nameDong;        // 侗语名
-    private String scientificName;  // 学名
-    private String category;        // 分类
-    private String usageWay;        // 用法
-    private String habitat;         // 生长环境
-    private String efficacy;        // 功效
-    private String story;           // 民间故事
-    private String images;          // 图片（JSON字符串）
-    private String videos;          // 视频（JSON字符串）
-    private String documents;       // 文档（JSON字符串）
-    private LocalDateTime createdAt; // 创建时间
-    private Integer viewCount;       // 浏览次数
-    private Integer favoriteCount;   // 收藏次数
-}
-```
-
-**关键注解说明：**
-
-| 注解 | 作用 | 类比 |
-|------|------|------|
-| `@Data` | 自动生成 getter/setter 等方法 | 自动写手，帮你写重复代码 |
-| `@TableName("plants")` | 指定对应的数据库表名 | 货物标签：这个箱子对应3号货架 |
-| `@TableId(type = IdType.AUTO)` | 标记主键，自增长 | 身份证号，每人唯一 |
-| `@TableField("password_hash")` | 指定字段对应的列名（不按默认规则时） | 别名标签 |
-
-> **常见错误：** 忘记加 `@Data`，导致字段无法被读取或设置，运行时报 NullPointerException。
-
-### 3.2 DTO 层 -- 数据传输对象
-
-**什么是 DTO？** DTO (Data Transfer Object) 是前端和后端之间传递数据的"表格"。为什么不直接用 Entity？因为 Entity 包含了数据库的所有字段（包括密码等敏感信息），而 DTO 可以只暴露需要的字段。
-
-```java
-package com.dongmedicine.dto;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
-
-@Data
-public class PlantDTO {
-
-    private Integer id;
-
-    @NotBlank(message = "中文名不能为空")       // 校验：不能为空
-    @Size(max = 100, message = "中文名长度不能超过100字符")  // 校验：最大长度
-    private String nameCn;
-
-    @Size(max = 100, message = "侗语名长度不能超过100字符")
-    private String nameDong;
-
-    private String category;
-    private String efficacy;
-    private String story;
-    // ... 其他字段
-
-    // Entity 转 DTO 的静态方法
-    public static PlantDTO fromEntity(Plant plant) {
-        if (plant == null) return null;
-        PlantDTO dto = new PlantDTO();
-        dto.setId(plant.getId());
-        dto.setNameCn(plant.getNameCn());
-        // ... 复制需要的字段
-        return dto;
-    }
-}
-```
-
-**Entity vs DTO 的区别：**
-
-| 对比项 | Entity | DTO |
-|--------|--------|-----|
-| 用途 | 和数据库交互 | 和前端交互 |
-| 包含密码？ | 可能包含 | 绝对不包含 |
-| 校验注解 | 少量 | 丰富（@NotBlank, @Size等） |
-| 对应关系 | 一张表 | 可能来自多张表的组合 |
-
-### 3.3 Controller 层 -- 接收请求
-
-```java
-package com.dongmedicine.controller;
-
-@RestController          // 告诉 Spring：这是一个接收 HTTP 请求的控制器
-@RequestMapping("/api/plants")  // 所有接口的 URL 前缀
-@Validated               // 开启参数校验
-@RequiredArgsConstructor // Lombok：自动生成构造函数注入
-public class PlantController {
-
-    private final PlantService service;  // 注入 Service（厨师）
-
-    // GET /api/plants/list?page=1&size=12&category=清热药
-    @GetMapping("/list")
-    public R<Map<String, Object>> list(
-            @RequestParam(defaultValue = "1") Integer page,      // URL查询参数
-            @RequestParam(defaultValue = "12") Integer size,
-            @RequestParam(required = false) String category,     // 可选参数
-            @RequestParam(required = false) String keyword) {
-        Page<Plant> pageResult = service.advancedSearchPaged(keyword, category, usageWay, page, size);
-        return R.ok(PageUtils.toMap(pageResult));  // 统一返回格式
-    }
-
-    // GET /api/plants/5
-    @GetMapping("/{id}")
-    public R<Plant> detail(@PathVariable @NotNull Integer id) {  // URL路径参数
-        Plant plant = service.getDetailWithStory(id);
-        return plant == null ? R.error("植物不存在") : R.ok(plant);
-    }
-}
-```
-
-### 3.4 Service 层 -- 业务逻辑
-
-```java
-package com.dongmedicine.service;
-
-// 接口：定义"厨师会做什么菜"
-public interface PlantService extends IService<Plant> {
-    List<Plant> advancedSearch(String keyword, String category, String usageWay);
-    Page<Plant> advancedSearchPaged(String keyword, String category, String usageWay, Integer page, Integer size);
-    Plant getDetailWithStory(Integer id);
-    void incrementViewCount(Integer id);
-    void clearCache();
-}
-```
-
-```java
-package com.dongmedicine.service.impl;
-
-@Service   // 告诉 Spring：这是一个业务逻辑类，请管理它的生命周期
-public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements PlantService {
-
-    @Autowired
-    private PlantMapper plantMapper;
-
-    @Override
-    @Cacheable(value = "plants", key = "'list:' + (#keyword ?: 'all')")  // 缓存结果
-    public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
-        LambdaQueryWrapper<Plant> qw = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(keyword)) {
-            qw.and(w -> w.like(Plant::getNameCn, keyword)
-                         .or().like(Plant::getNameDong, keyword)
-                         .or().like(Plant::getEfficacy, keyword));
-        }
-        if (StringUtils.hasText(category)) {
-            qw.eq(Plant::getCategory, category);
-        }
-        return list(qw);  // 调用 Mapper 查询
-    }
-
-    @Override
-    @CacheEvict(value = "plants", allEntries = true)  // 清除缓存
-    public void clearCache() {
-        log.info("Plant cache cleared");
-    }
-}
-```
-
-### 3.5 Mapper 层 -- 数据库操作
-
-```java
-package com.dongmedicine.mapper;
-
-@Mapper   // 告诉 MyBatis：这是一个数据库映射接口
-public interface PlantMapper extends BaseMapper<Plant> {
-    // 继承 BaseMapper<Plant> 后，自动拥有以下方法：
-    // insert(Plant)          -- 插入
-    // deleteById(id)         -- 按ID删除
-    // updateById(Plant)      -- 按ID更新
-    // selectById(id)         -- 按ID查询
-    // selectList(wrapper)    -- 条件查询
-    // selectPage(page, wrapper) -- 分页查询
-    // ... 等等
-
-    // 自定义SQL：增加浏览量
-    @Update("UPDATE plants SET view_count = IFNULL(view_count, 0) + 1 WHERE id = #{id}")
-    void incrementViewCount(Integer id);
-
-    // 自定义SQL：随机获取植物
-    @Select("SELECT * FROM plants WHERE id >= (SELECT FLOOR(RAND() * (SELECT MAX(id) FROM plants)) + 1) LIMIT #{limit}")
-    List<Plant> selectRandomPlants(@Param("limit") int limit);
-}
+com.dongmedicine/
+├── DongMedicineBackendApplication.java  # Spring Boot启动类（加载.env + @EnableCaching）
+├── controller/          # 控制器层（24个Controller，接收HTTP请求）
+├── service/             # 服务层（18个Service接口 + 实现类in impl/）
+├── mapper/              # 数据访问层（15个Mapper接口，MyBatis-Plus）
+├── entity/              # 实体类（15个Entity + BaseEntity基类）
+├── dto/                 # 数据传输对象（23个DTO，请求/响应用）
+├── config/              # 配置类（20+个，含health/和logging/子包）
+├── mq/                  # RabbitMQ（producer/生产者 + consumer/消费者）
+├── websocket/           # WebSocket（ChatWebSocketHandler）
+└── common/              # 通用模块
+    ├── constant/        #   常量（ApiPaths, RabbitMQConstants, RoleConstants）
+    ├── exception/       #   异常体系（BusinessException, ErrorCode, GlobalExceptionHandler）
+    └── util/            #   工具类（XssUtils, PageUtils, PasswordValidator等）
 ```
 
 ---
 
-## 四、一个请求的完整旅程
-
-以"获取钩藤详情"为例，看看请求是怎么从浏览器走到数据库再回来的：
+## 二、三层架构（完整版）
 
 ```
-浏览器输入: GET /api/plants/1
-    |
-    v
-[1] Spring Boot 接收请求，路由到 PlantController.detail()
-    |
-    v
-[2] Controller: @PathVariable 提取 id=1，调用 service.getDetailWithStory(1)
-    |
-    v
-[3] Service: 先查缓存 @Cacheable("plants")
-    |
-    +-- 缓存命中 --> 直接返回，不走数据库
-    |
-    +-- 缓存未命中 --> 调用 getById(1)
-        |
-        v
-[4] Mapper: 执行 SQL "SELECT * FROM plants WHERE id = 1"
-    |
-    v
-[5] MySQL 返回数据，MyBatis-Plus 自动映射为 Plant 对象
-    |
-    v
-[6] Service 把结果存入缓存，返回给 Controller
-    |
-    v
-[7] Controller 用 R.ok(plant) 封装成统一格式
-    |
-    v
-[8] Spring Boot 把 R<Plant> 序列化为 JSON 返回给浏览器
-
-浏览器收到:
-{
-  "code": 200,
-  "msg": "success",
-  "data": {
-    "id": 1,
-    "nameCn": "钩藤",
-    "nameDong": "jis xenc",
-    ...
-  },
-  "requestId": "a1b2c3d4"
-}
-```
-
-### 对应的代码追踪
-
-```java
-// [1][2] Controller 接收请求
-@GetMapping("/{id}")
-public R<Plant> detail(@PathVariable @NotNull Integer id) {
-    Plant plant = service.getDetailWithStory(id);  // 调用 Service
-    return plant == null ? R.error("植物不存在") : R.ok(plant);
-}
-
-// [3][6] Service 处理业务
-@Override
-public Plant getDetailWithStory(Integer id) {
-    return getById(id);  // 调用 Mapper（ServiceImpl 提供的方法）
-}
-
-// [4][5] Mapper 执行 SQL（BaseMapper 自动提供的 selectById 方法）
-// 实际执行: SELECT * FROM plants WHERE id = 1
-
-// [7][8] R.ok() 封装统一响应
-public static <T> R<T> ok(T data) {
-    return new R<>(200, "success", data, getRequestId());
-}
+┌──────────────────────────────────────────────────────────────────┐
+│ Controller 层 - 接收HTTP请求                                      │
+│ ────────────────────────────────                                  │
+│ 注解: @RestController + @RequestMapping + @Validated             │
+│ 注入: @RequiredArgsConstructor + private final Service            │
+│ 返回: R<T> 统一响应格式                                           │
+│                                                                  │
+│ 示例: PlantController                                             │
+│ @GetMapping("/list")              → public R<Map> list(...)       │
+│ @GetMapping("/{id}")              → public R<Plant> detail(...)   │
+│ @PostMapping("/{id}/view")        → public R<String> view(...)    │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │ 调用 service.xxx()
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│ Service 层 - 业务逻辑                                             │
+│ ────────────────────────────────                                  │
+│ 接口: extends IService<Entity>                                    │
+│ 实现: @Service + extends ServiceImpl<Mapper, Entity>              │
+│ 缓存: @Cacheable + @CacheEvict                                    │
+│ 事务: @Transactional(rollbackFor = Exception.class)              │
+│                                                                  │
+│ 示例: PlantServiceImpl                                            │
+│ advancedSearchPaged() → LambdaQueryWrapper + page()              │
+│ incrementViewCount()  → mapper.incrementViewCount(id)            │
+│ deleteWithFiles()     → removeById + fileCleanupHelper           │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │ 调用 mapper / baseMapper
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│ Mapper 层 - 数据访问                                              │
+│ ────────────────────────────────                                  │
+│ 接口: @Mapper + extends BaseMapper<Entity>                       │
+│ 自动方法: insert, deleteById, updateById, selectById,            │
+│           selectList, selectPage, selectCount ...                 │
+│ 自定义: @Select / @Update 注解                                    │
+│                                                                  │
+│ 示例: PlantMapper                                                 │
+│ incrementViewCount() → @Update("UPDATE plants SET view_count...")│
+│ searchByFullText()   → @Select("SELECT * WHERE MATCH...")        │
+│ countDistinctCategory() → @Select("SELECT COUNT(DISTINCT...)")   │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+                      ┌───────────┐
+                      │  MySQL 8  │
+                      └───────────┘
 ```
 
 ---
 
-## 五、如何添加一个新功能模块
+## 三、启动类（DongMedicineBackendApplication）
 
-假设要添加一个"侗族药方"（Recipe）模块，按以下6步操作：
+```java
+@SpringBootApplication(exclude = {UserDetailsServiceAutoConfiguration.class})
+@EnableCaching
+public class DongMedicineBackendApplication {
+    public static void main(String[] args) {
+        // 1. 加载.env文件中的环境变量
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+        dotenv.entries().forEach(e -> System.setProperty(e.getKey(), e.getValue()));
 
-### 第1步：创建 Entity（货物清单）
+        // 2. 启动Spring Boot
+        SpringApplication.run(DongMedicineBackendApplication.class, args);
+    }
+}
+```
 
+**关键设计点**：
+- `exclude = UserDetailsServiceAutoConfiguration.class`：排除Spring Security的默认用户认证（使用Sa-Token替代）
+- `@EnableCaching`：启用Spring Cache（Redis + Caffeine降级）
+- `Dotenv`：支持.env文件，开发环境无需设置系统环境变量
+
+---
+
+## 四、数据流完整示例：用户登录
+
+```
+POST /api/user/login                前端发送JSON: {"username":"admin","password":"Admin123","captchaKey":"xxx","captchaCode":"1234"}
+  │
+  ├── [Filter] RequestIdFilter → 生成16位requestId，放入MDC
+  ├── [Filter] XssFilter → 检查JSON请求体中的XSS攻击
+  │
+  ├── [Interceptor] SaTokenConfig → 路径/api/user/login在excludePathPatterns中 → 放行
+  │
+  ├── [AOP] LoggingAspect → 记录请求日志（方法、参数、IP）
+  ├── [AOP] RateLimitAspect → @RateLimit(value=5) → Redis计数器检查
+  │
+  ├── [Controller] UserController.login(@Valid @RequestBody LoginDTO dto)
+  │   ├── captchaService.validateCaptchaOrThrow(dto.captchaKey, dto.captchaCode)
+  │   │   └── 从Redis取验证码 → 比对 → 删除Redis中的验证码（一次性使用）
+  │   └── service.login(dto.username, dto.password)
+  │
+  ├── [Service] UserServiceImpl.login(username, password)
+  │   ├── 参数校验 → 查用户 → 查封禁状态
+  │   ├── BCrypt密码验证: passwordEncoder.matches(password, user.passwordHash)
+  │   ├── StpUtil.login(user.getId())  → 生成JWT Token
+  │   ├── StpUtil.getSession().set("username", user.getUsername())
+  │   ├── StpUtil.getSession().set("role", user.getRole())
+  │   └── return Map.of("token", token, "id", userId, "username", username, "role", role)
+  │
+  ├── [Controller] return R.ok(resultMap)
+  │
+  ├── [AOP] OperationLogAspect → 通过 RabbitMQ 异步记录操作日志
+  │
+  └── [响应] {"code":200,"msg":"success","data":{"token":"eyJ...","id":1,"username":"admin","role":"admin"},"requestId":"a1b2c3d4"}
+```
+
+---
+
+## 五、所有模块清单
+
+### Controller（24个）
+
+| Controller | 路径前缀 | 权限 |
+|-----------|---------|------|
+| AdminController | /api/admin | @SaCheckRole("admin") |
+| BrowseHistoryController | /api/browse-history | @SaCheckLogin（部分） |
+| CaptchaController | /api/captcha | 公开 |
+| ChatController | /api/chat | 公开 |
+| ChatHistoryController | /api/chat-history | @SaCheckLogin |
+| CommentController | /api/comments | 公开 + @SaCheckLogin |
+| ExportController | /api/admin/export | @SaCheckRole("admin") |
+| FavoriteController | /api/favorites | @SaCheckLogin |
+| FeedbackController | /api/feedback | 公开 + @SaCheckLogin |
+| FileUploadController | /api/upload | @SaCheckRole("admin") |
+| InheritorController | /api/inheritors | 公开 |
+| KnowledgeController | /api/knowledge | 公开 + @SaCheckLogin |
+| LeaderboardController | /api/leaderboard | 公开 |
+| MetadataController | /api/metadata | 公开 |
+| OperationLogController | /api/admin/logs | @SaCheckRole("admin") |
+| PlantController | /api/plants | 公开 |
+| PlantGameController | /api/plant-game | 公开 |
+| QaController | /api/qa | 公开 |
+| QuizController | /api/quiz | 公开 + @SaCheckRole("admin") |
+| ResourceController | /api/resources | 公开 |
+| SearchController | /api/search | 公开 |
+| StatisticsController | /api/stats | 公开 |
+| StatsController | /api/stats | 公开 |
+| UserController | /api/user | 公开 + @SaCheckLogin |
+
+### Service（18个接口 + 18个实现类）
+
+| Service接口 | 实现类 | 继承IService |
+|------------|--------|-------------|
+| AiChatService | AiChatServiceImpl | 否 |
+| BrowseHistoryService | BrowseHistoryServiceImpl | IService\<BrowseHistory\> |
+| CaptchaService | --（直接实现，无接口） | 否 |
+| ChatHistoryService | ChatHistoryServiceImpl | 否 |
+| CommentService | CommentServiceImpl | IService\<Comment\> |
+| FavoriteService | FavoriteServiceImpl | IService\<Favorite\> |
+| FeedbackService | FeedbackServiceImpl | IService\<Feedback\> |
+| FileUploadService | FileUploadServiceImpl | 否 |
+| InheritorService | InheritorServiceImpl | IService\<Inheritor\> |
+| KnowledgeService | KnowledgeServiceImpl | IService\<Knowledge\> |
+| OperationLogService | OperationLogServiceImpl | IService\<OperationLog\> |
+| PlantGameService | PlantGameServiceImpl | 否 |
+| PlantService | PlantServiceImpl | IService\<Plant\> |
+| PopularityAsyncService | PopularityAsyncServiceImpl | 否 |
+| QaService | QaServiceImpl | IService\<Qa\> |
+| QuizService | QuizServiceImpl | IService\<QuizQuestion\> |
+| RabbitMQOperationLogService | RabbitMQOperationLogServiceImpl | 否 |
+| ResourceService | ResourceServiceImpl | IService\<Resource\> |
+| UserService | UserServiceImpl | IService\<User\> |
+
+### Entity（15个实体类 + BaseEntity基类）
+
+| Entity | 表名 | 继承 | 核心字段 |
+|--------|------|------|---------|
+| BaseEntity | -- | -- | id, createdAt, updatedAt |
+| Plant | plants | BaseEntity | nameCn, nameDong, efficacy, story, viewCount... |
+| Knowledge | knowledge | BaseEntity | title, type, content, formula, therapyCategory... |
+| Inheritor | inheritors | BaseEntity | name, level, bio, specialties, honors... |
+| Qa | qa | BaseEntity | category, question, answer |
+| Resource | resources | BaseEntity | title, category, files, description |
+| User | users | BaseEntity | username, passwordHash, role, status |
+| Comment | comments | BaseEntity | userId, username, targetType, targetId, content, likes |
+| Favorite | favorites | BaseEntity | userId, targetType, targetId |
+| Feedback | feedback | 独立（不继承） | userId, type, title, content, status, reply |
+| QuizQuestion | quiz_questions | BaseEntity | question, options, answer, category, explanation |
+| QuizRecord | quiz_record | 独立（不继承） | userId, score, totalQuestions, correctAnswers |
+| PlantGameRecord | plant_game_record | 独立（不继承） | userId, difficulty, score, correctCount, totalCount |
+| OperationLog | operation_log | BaseEntity | userId, username, module, type, operation, method |
+| BrowseHistory | browse_history | BaseEntity | userId, targetType, targetId |
+| ChatHistory | chat_history | BaseEntity | userId, sessionId, role, content |
+
+---
+
+## 六、如何添加新功能模块
+
+以添加"侗族药方"（Recipe）为例，按以下6步操作：
+
+### 第1步：创建Entity
 ```java
 // entity/Recipe.java
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("recipes")
-public class Recipe {
-    @TableId(type = IdType.AUTO)
-    private Integer id;
-    private String nameCn;         // 方名
-    private String nameDong;       // 侗语方名
-    private String ingredients;    // 药材组成（JSON）
-    private String usage;          // 用法用量
-    private String indications;    // 主治
-    private String precautions;    // 注意事项
-    private LocalDateTime createdAt;
+public class Recipe extends BaseEntity {
+    private String nameCn, nameDong;
+    private String ingredients;  // JSON字符串
+    private String usage, indications, precautions;
 }
 ```
 
-### 第2步：创建 Mapper（仓库管理员）
-
+### 第2步：创建Mapper
 ```java
 // mapper/RecipeMapper.java
 @Mapper
 public interface RecipeMapper extends BaseMapper<Recipe> {
-    // 继承 BaseMapper 就有了基础增删改查
-    // 需要自定义SQL时再添加方法
+    // 继承BaseMapper就有所有CRUD方法
 }
 ```
 
-### 第3步：创建 Service 接口（厨师菜单）
-
+### 第3步：创建Service接口
 ```java
 // service/RecipeService.java
 public interface RecipeService extends IService<Recipe> {
@@ -438,41 +251,28 @@ public interface RecipeService extends IService<Recipe> {
 }
 ```
 
-### 第4步：创建 Service 实现类（厨师做菜）
-
+### 第4步：创建Service实现类
 ```java
 // service/impl/RecipeServiceImpl.java
 @Service
 public class RecipeServiceImpl extends ServiceImpl<RecipeMapper, Recipe> implements RecipeService {
-
     @Override
-    @Cacheable(value = "recipes", key = "'search:' + (#keyword ?: 'all') + ':' + #page")
-    public Page<Recipe> searchPaged(String keyword, Integer page, Integer size) {
-        Page<Recipe> pageParam = PageUtils.getPage(page, size);
-        LambdaQueryWrapper<Recipe> qw = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(keyword)) {
-            qw.like(Recipe::getNameCn, keyword)
-              .or().like(Recipe::getIndications, keyword);
-        }
-        return page(pageParam, qw);
-    }
+    @Cacheable(value = "recipes", key = "'search:' + (#keyword ?: 'all')")
+    public Page<Recipe> searchPaged(String keyword, Integer page, Integer size) { ... }
 
     @Override
     @CacheEvict(value = "recipes", allEntries = true)
-    public void clearCache() {}
+    public void clearCache() { }
 }
 ```
 
-### 第5步：创建 Controller（服务员）
-
+### 第5步：创建Controller
 ```java
 // controller/RecipeController.java
 @RestController
 @RequestMapping("/api/recipes")
-@Validated
 @RequiredArgsConstructor
 public class RecipeController {
-
     private final RecipeService service;
 
     @GetMapping("/list")
@@ -482,145 +282,30 @@ public class RecipeController {
             @RequestParam(required = false) String keyword) {
         return R.ok(PageUtils.toMap(service.searchPaged(keyword, page, size)));
     }
-
-    @GetMapping("/{id}")
-    public R<Recipe> detail(@PathVariable @NotNull Integer id) {
-        Recipe recipe = service.getById(id);
-        return recipe == null ? R.error("药方不存在") : R.ok(recipe);
-    }
 }
 ```
 
-### 第6步：配置安全权限
-
-在 `SecurityConfig.java` 中添加权限规则：
-
+### 第6步：注册缓存 + 配置路由权限
 ```java
-// 在 authorizeHttpRequests 中添加：
-.requestMatchers(HttpMethod.GET, "/api/recipes/**").permitAll()     // 公开可读
-.requestMatchers("/api/admin/recipes/**").hasRole("ADMIN")           // 管理需要ADMIN
-```
+// CacheConfig.java中添加
+cacheConfigurations.put("recipes", defaultConfig.entryTtl(Duration.ofHours(4)));
 
-### 完整流程图
-
-```
-创建 Entity  -->  创建 Mapper  -->  创建 Service 接口
-                                            |
-                                            v
-配置权限  <--  创建 Controller  <--  创建 Service 实现
+// SaTokenConfig.java的excludePathPatterns中添加
+"/api/recipes/list", "/api/recipes/search", "/api/recipes/{id}"
 ```
 
 ---
 
-## 六、本项目的所有模块
+## 七、模块文档导航
 
-### Entity（13个实体）
-
-| 实体类 | 对应表 | 说明 |
-|--------|--------|------|
-| Plant | plants | 药用植物 |
-| Knowledge | knowledges | 侗医药知识 |
-| Inheritor | inheritors | 传承人 |
-| Qa | qa | 问答 |
-| Resource | resources | 学习资源 |
-| User | users | 用户 |
-| Comment | comments | 评论 |
-| Favorite | favorites | 收藏 |
-| Feedback | feedback | 反馈 |
-| QuizQuestion | quiz_questions | 测验题目 |
-| QuizRecord | quiz_records | 测验记录 |
-| PlantGameRecord | plant_game_records | 植物识别游戏记录 |
-| OperationLog | operation_logs | 操作日志 |
-
-### Controller（17个控制器）
-
-| 控制器 | 路径前缀 | 说明 |
-|--------|---------|------|
-| PlantController | /api/plants | 药用植物 |
-| KnowledgeController | /api/knowledge | 侗医药知识 |
-| InheritorController | /api/inheritors | 传承人 |
-| QaController | /api/qa | 问答 |
-| ResourceController | /api/resources | 学习资源 |
-| UserController | /api/user | 用户认证 |
-| AdminController | /api/admin | 后台管理 |
-| CommentController | /api/comments | 评论 |
-| FavoriteController | /api/favorites | 收藏 |
-| FeedbackController | /api/feedback | 反馈 |
-| QuizController | /api/quiz | 测验 |
-| PlantGameController | /api/plant-game | 植物识别游戏 |
-| ChatController | /api/chat | AI聊天 |
-| LeaderboardController | /api/leaderboard | 排行榜 |
-| StatisticsController | /api/stats | 统计数据 |
-| FileUploadController | /api/upload | 文件上传 |
-| CaptchaController | /api/captcha | 验证码 |
-| OperationLogController | /api/operation-logs | 操作日志 |
-
----
-
-## 七、常见错误与避免方法
-
-### 错误1：忘记加 @Service 或 @Mapper 注解
-
-```java
-// 错误！Spring 不知道这是一个 Bean，注入时会报 NullPointerException
-public class PlantServiceImpl { ... }
-
-// 正确！@Service 告诉 Spring 来管理这个类
-@Service
-public class PlantServiceImpl { ... }
-```
-
-### 错误2：Controller 里直接写 SQL
-
-```java
-// 错误！违反三层架构，代码无法复用
-@GetMapping("/{id}")
-public R<Plant> detail(@PathVariable Integer id) {
-    Plant plant = plantMapper.selectById(id);  // Controller 不应该直接调用 Mapper
-    return R.ok(plant);
-}
-
-// 正确！通过 Service 调用
-@GetMapping("/{id}")
-public R<Plant> detail(@PathVariable Integer id) {
-    Plant plant = service.getDetailWithStory(id);  // 通过 Service
-    return R.ok(plant);
-}
-```
-
-### 错误3：Entity 字段名和数据库列名不匹配
-
-```java
-// 数据库列名是 password_hash，Java 字段名是 passwordHash
-// MyBatis-Plus 默认会把 password_hash 自动映射为 passwordHash（下划线转驼峰）
-// 但如果列名和字段名不能自动对应，需要手动指定：
-@TableField("password_hash")
-private String passwordHash;
-```
-
-### 错误4：忘记在 Service 实现类上加缓存注解
-
-```java
-// 没有 @Cacheable，每次查询都走数据库，性能差
-@Override
-public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
-    return list(qw);
-}
-
-// 加上 @Cacheable，第一次查询走数据库，后续从缓存读取
-@Override
-@Cacheable(value = "plants", key = "'list:' + (#keyword ?: 'all')")
-public List<Plant> advancedSearch(String keyword, String category, String usageWay) {
-    return list(qw);
-}
-```
-
----
-
-## 八、代码审查与改进建议
-
-- [结构] 时间字段命名不一致：部分Entity使用createdAt，部分使用createTime，但数据库列名都是created_at
-- [结构] 依赖注入方式不一致：部分类用@Autowired字段注入，部分用@RequiredArgsConstructor构造器注入
-- [安全] SaTokenConfig中大量写操作API路径绕过认证
-- [安全] XssFilter对管理员路径完全跳过XSS过滤
-- [性能] LoggingAspect和OperationLogAspect功能重叠，每个请求被AOP处理两次
+| 模块 | 文档 | 内容 |
+|------|------|------|
+| 控制器 | [controller/README.md](controller/README.md) | 24个Controller完整API端点文档 |
+| 服务层 | [service/README.md](service/README.md) | 18个Service + 缓存策略 + 事务管理 |
+| 数据层 | [mapper/README.md](mapper/README.md) | 15个Mapper + MyBatis-Plus BaseMapper |
+| 实体类 | [entity/README.md](entity/README.md) | 15个Entity + BaseEntity + 注解说明 |
+| DTO | [dto/README.md](dto/README.md) | 23个DTO + 参数校验 |
+| 配置 | [config/README.md](config/README.md) | 20+配置类完整说明 |
+| 消息队列 | [mq/README.md](mq/README.md) | 5个Producer + 5个Consumer |
+| WebSocket | [websocket/README.md](websocket/README.md) | AI聊天流式通信 |
+| 通用模块 | [common/README.md](common/README.md) | R类 + 异常体系 + 工具类 |

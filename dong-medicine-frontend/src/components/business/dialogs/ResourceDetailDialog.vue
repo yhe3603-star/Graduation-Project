@@ -122,6 +122,7 @@ import VideoPlayer from '@/components/business/media/VideoPlayer.vue';
 import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
 import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
+import request from '@/utils/request';
 
 const TYPE_NAMES = { video: '视频', document: '文档', image: '图片' };
 const TAG_TYPES = { video: 'danger', document: 'primary', image: 'success' };
@@ -221,6 +222,12 @@ const handleDialogClose = (newVisible) => {
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     loadDocuments();
+    // Record browse history
+    if (props.resource?.id) {
+      request.post('/browse-history/record', null, {
+        params: { targetType: 'resource', targetId: props.resource.id }
+      }).catch(() => {});
+    }
   } else if (videoPlayerRef.value) {
     videoPlayerRef.value.pause();
   }

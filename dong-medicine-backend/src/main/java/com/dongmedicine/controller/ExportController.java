@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -38,10 +39,12 @@ public class ExportController {
     private final CommentService commentService;
     private final FeedbackService feedbackService;
     private final QuizService quizService;
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final int MAX_EXPORT_ROWS = 10000;
+    private static final Set<String> SENSITIVE_FIELDS = Set.of(
+            "passwordHash", "password", "passwordhash", "salt", "token", "secret"
+    );
 
     @GetMapping("/{entity}")
     public void export(@PathVariable String entity,
@@ -105,7 +108,9 @@ public class ExportController {
         if (records.isEmpty()) return;
 
         Class<?> clazz = records.get(0).getClass();
-        List<Field> fields = getAllFields(clazz);
+        List<Field> fields = getAllFields(clazz).stream()
+                .filter(f -> !SENSITIVE_FIELDS.contains(f.getName()))
+                .toList();
         for (Field f : fields) {
             f.setAccessible(true);
         }

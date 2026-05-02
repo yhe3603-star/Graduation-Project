@@ -9,6 +9,7 @@ import com.dongmedicine.service.ResourceService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,7 +20,7 @@ import java.util.Map;
 @Tag(name = "元数据", description = "平台元数据分类信息")
 @RestController
 @RequestMapping("/api/metadata")
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class MetadataController {
 
     private final PlantService plantService;
@@ -28,9 +29,12 @@ public class MetadataController {
     private final InheritorService inheritorService;
     private final ResourceService resourceService;
 
+    @Lazy
+    private MetadataController self;
+
     @GetMapping("/filters")
     public R<Map<String, Object>> getAllFilters() {
-        return R.ok(getAllFiltersData());
+        return R.ok(self.getAllFiltersData());
     }
 
     @Cacheable(value = "hotData", key = "'allFilters'")

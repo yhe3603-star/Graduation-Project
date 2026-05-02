@@ -1,58 +1,12 @@
 <template>
-  <div class="ai-chat-wrapper" :class="{ 'has-sidebar': isLoggedIn }">
-    <!-- Mobile drawer toggle -->
-    <el-button
-      v-if="isLoggedIn"
-      class="sidebar-toggle-btn"
-      @click="drawerVisible = true"
-    >
-      <el-icon><ChatLineSquare /></el-icon>
-      历史会话
-    </el-button>
-
-    <!-- Sidebar for desktop -->
-    <div v-if="isLoggedIn" class="chat-sidebar">
-      <div class="sidebar-header">
-        <span class="sidebar-title">
-          <el-icon><ChatLineSquare /></el-icon>
-          历史会话
-        </span>
-        <el-button type="primary" size="small" @click="startNewChat">
-          <el-icon><Plus /></el-icon>
-          新对话
-        </el-button>
-      </div>
-      <div class="session-list" v-loading="sessionsLoading">
-        <div
-          v-for="session in sessions"
-          :key="session.id"
-          :class="['session-item', { active: session.id === currentSessionId }]"
-          @click="loadSession(session)"
-        >
-          <div class="session-info">
-            <div class="session-title">{{ session.title || '新对话' }}</div>
-            <div class="session-time">{{ formatSessionTime(session.updateTime || session.createTime) }}</div>
-          </div>
-          <el-button
-            class="session-delete-btn"
-            text
-            size="small"
-            @click.stop="deleteSession(session.id)"
-          >
-            <el-icon><Delete /></el-icon>
-          </el-button>
-        </div>
-        <el-empty v-if="!sessionsLoading && sessions.length === 0" description="暂无历史会话" :image-size="60" />
-      </div>
-    </div>
-
-    <!-- Mobile drawer -->
+  <div class="ai-chat-wrapper">
+    <!-- Drawer for session history (all screen sizes) -->
     <el-drawer
-      v-if="isLoggedIn"
       v-model="drawerVisible"
       title="历史会话"
       direction="ltr"
-      size="280px"
+      size="300px"
+      @open="loadSessions"
     >
       <div class="drawer-content">
         <div class="drawer-new-chat">
@@ -64,19 +18,19 @@
         <div class="session-list" v-loading="sessionsLoading">
           <div
             v-for="session in sessions"
-            :key="session.id"
-            :class="['session-item', { active: session.id === currentSessionId }]"
+            :key="session.sessionId"
+            :class="['session-item', { active: session.sessionId === currentSessionId }]"
             @click="selectSessionFromDrawer(session)"
           >
             <div class="session-info">
-              <div class="session-title">{{ session.title || '新对话' }}</div>
-              <div class="session-time">{{ formatSessionTime(session.updateTime || session.createTime) }}</div>
+              <div class="session-title">{{ session.preview || '新对话' }}</div>
+              <div class="session-time">{{ formatSessionTime(session.lastMessageAt) }}</div>
             </div>
             <el-button
               class="session-delete-btn"
               text
               size="small"
-              @click.stop="deleteSession(session.id)"
+              @click.stop="deleteSession(session.sessionId)"
             >
               <el-icon><Delete /></el-icon>
             </el-button>
@@ -94,12 +48,39 @@
             <el-icon><ChatDotRound /></el-icon>
             侗医智能助手
           </span>
-          <el-tag
-            :type="wsConnected ? 'success' : 'danger'"
-            size="small"
-          >
-            {{ wsConnected ? 'AI在线' : 'AI离线' }}
-          </el-tag>
+          <div class="header-actions">
+            <!-- Show session info bar when continuing a session -->
+            <div v-if="currentSessionId && !showWelcome" class="session-badge">
+              <el-icon><ChatLineSquare /></el-icon>
+              <span class="session-badge-text">继续对话</span>
+              <el-button
+                class="session-badge-new"
+                type="primary"
+                size="small"
+                plain
+                @click="startNewChat"
+              >
+                <el-icon><Plus /></el-icon>
+                新对话
+              </el-button>
+            </div>
+            <!-- Show history button when there are sessions -->
+            <el-button
+              v-if="isLoggedIn && sessions.length > 0"
+              class="history-toggle-btn"
+              size="small"
+              @click="drawerVisible = true"
+            >
+              <el-icon><ChatLineSquare /></el-icon>
+              历史会话
+            </el-button>
+            <el-tag
+              :type="wsConnected ? 'success' : 'danger'"
+              size="small"
+            >
+              {{ wsConnected ? 'AI在线' : 'AI离线' }}
+            </el-tag>
+          </div>
         </div>
       </template>
 
@@ -107,42 +88,32 @@
         ref="chatContainer"
         class="chat-container"
       >
-        <div
-          v-if="messages.length === 0"
-          class="welcome-message"
-        >
-          <div class="welcome-icon">
-            🤖
-          </div>
+        <div v-show="showWelcome" class="welcome-message">
+          <div class="welcome-icon">🤖</div>
           <p>您好！我是侗族医药智能助手</p>
-          <p class="welcome-tip">
-            您可以问我关于侗族医药的问题，例如：
-          </p>
+          <p class="welcome-tip">您可以问我关于侗族医药的问题，例如：</p>
           <div class="quick-questions">
             <el-tag
               v-for="(q, i) in quickQuestions"
               :key="i"
               class="quick-tag"
               @click="sendQuickQuestion(q)"
-            >
-              {{ q }}
-            </el-tag>
+            >{{ q }}</el-tag>
           </div>
         </div>
 
-        <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          :class="['message', msg.role]"
-        >
-          <div class="message-avatar">
-            {{ msg.role === 'user' ? '👤' : '🤖' }}
-          </div>
-          <div class="message-content">
-            <div class="message-text">
-              <!-- eslint-disable-next-line vue/no-v-html -- DOMPurify已做XSS净化 -->
-              <span v-html="renderMarkdown(msg.content)"></span>
-              <span v-if="msg.streaming" class="cursor-blink">▌</span>
+        <div v-show="!showWelcome">
+          <div
+            v-for="(msg, index) in messages"
+            :key="index"
+            :class="['message', msg.role]"
+          >
+            <div class="message-avatar">{{ msg.role === 'user' ? '👤' : '🤖' }}</div>
+            <div class="message-content">
+              <div class="message-text">
+                <span v-html="renderMarkdown(msg.content)"></span>
+                <span v-if="msg.streaming" class="cursor-blink">▌</span>
+              </div>
             </div>
           </div>
         </div>
@@ -179,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ChatDotRound, ChatLineSquare, Delete, Plus } from '@element-plus/icons-vue'
 import { marked } from 'marked'
@@ -213,6 +184,9 @@ const currentSessionId = ref(null)
 
 let ws = null
 let currentAssistantIndex = -1
+
+const forceWelcome = ref(false)
+const showWelcome = computed(() => messages.value.length === 0 && !streaming.value)
 
 const quickQuestions = [
   '侗族医药有什么特点？',
@@ -299,11 +273,10 @@ const handleWsMessage = (data) => {
       }
       streaming.value = false
       currentAssistantIndex = -1
-      // Backend returns sessionId in done message
       if (data.sessionId) {
         currentSessionId.value = data.sessionId
-        // Refresh session list after a new session is created
-        loadSessions()
+        // Do NOT update sessions list mid-conversation — sidebar stays hidden
+        // Sessions will appear on next page load after Redis→MySQL flush
       }
       scrollToBottom()
       break
@@ -314,10 +287,6 @@ const handleWsMessage = (data) => {
       }
       streaming.value = false
       currentAssistantIndex = -1
-      // Refresh session list if new session was created
-      if (currentSessionId.value) {
-        loadSessions()
-      }
       break
 
     case 'error':
@@ -341,8 +310,12 @@ const handleWsMessage = (data) => {
 
 const sendMessage = () => {
   if (!inputMessage.value.trim() || streaming.value) return
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录后再使用AI助手')
+    return
+  }
   if (!ws || ws.readyState !== WebSocket.OPEN) {
-    ElMessage.error('WebSocket未连接，请稍后重试')
+    ElMessage.error('连接已断开，请刷新页面后重试')
     return
   }
 
@@ -397,10 +370,11 @@ const renderMarkdown = (text) => {
 // Chat history methods
 const loadSessions = async () => {
   if (!isLoggedIn.value) return
+  if (sessionsLoading.value) return
   sessionsLoading.value = true
   try {
     const res = await request.get('/chat-history/sessions')
-    sessions.value = (res.data || res || [])
+    sessions.value = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
   } catch (e) {
     console.error('加载会话列表失败:', e)
     sessions.value = []
@@ -410,23 +384,36 @@ const loadSessions = async () => {
 }
 
 const loadSession = async (session) => {
-  currentSessionId.value = session.id
+  console.log('[AiChat] loadSession clicked:', session.sessionId)
+  if (!session || !session.sessionId) {
+    console.error('[AiChat] Invalid session:', session)
+    return
+  }
+  forceWelcome.value = false
+  currentSessionId.value = session.sessionId
+  // Close drawer on any screen size (mobile & desktop)
   drawerVisible.value = false
   try {
-    const res = await request.get(`/chat-history/sessions/${session.id}`)
-    const historyMessages = (res.data || res || [])
-    if (Array.isArray(historyMessages) && historyMessages.length > 0) {
-      messages.value = historyMessages.map(m => ({
+    const res = await request.get(`/chat-history/sessions/${session.sessionId}`)
+    console.log('[AiChat] loadSession response:', res)
+    const list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
+    if (list.length > 0) {
+      messages.value = list.map(m => ({
         role: m.role,
         content: m.content,
         streaming: false
       }))
+      console.log('[AiChat] Session loaded:', list.length, 'messages')
     } else {
       messages.value = []
+      console.log('[AiChat] Session has no messages')
     }
+    await nextTick()
     scrollToBottom()
+    // Refresh session list to update previews
+    loadSessions()
   } catch (e) {
-    console.error('加载会话消息失败:', e)
+    console.error('[AiChat] 加载会话消息失败:', e)
     ElMessage.error('加载会话消息失败')
   }
 }
@@ -443,9 +430,12 @@ const deleteSession = async (sessionId) => {
   }
   try {
     await request.delete(`/chat-history/sessions/${sessionId}`)
-    sessions.value = sessions.value.filter(s => s.id !== sessionId)
+    sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
     if (currentSessionId.value === sessionId) {
-      startNewChat()
+      currentSessionId.value = null
+      messages.value = []
+      currentAssistantIndex = -1
+      streaming.value = false
     }
     ElMessage.success('会话已删除')
   } catch (e) {
@@ -454,12 +444,49 @@ const deleteSession = async (sessionId) => {
   }
 }
 
-const startNewChat = () => {
+const resetToWelcome = () => {
   currentSessionId.value = null
   messages.value = []
   currentAssistantIndex = -1
   streaming.value = false
   drawerVisible.value = false
+  forceWelcome.value = true
+}
+
+const startNewChat = () => {
+  console.log('[AiChat] startNewChat clicked, messages:', messages.value.length)
+  if (streaming.value && ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'stop' }))
+  }
+  resetToWelcome()
+  // Force DOM update then scroll to top
+  nextTick(() => {
+    nextTick(() => {
+      if (chatContainer.value) {
+        chatContainer.value.scrollTop = 0
+        console.log('[AiChat] scrolled to top, welcome visible:', messages.value.length === 0)
+      }
+    })
+  })
+}
+
+const updateLocalSession = (sid) => {
+  const existing = sessions.value.find(s => s.sessionId === sid)
+  const lastMsg = messages.value.length > 0 ? messages.value[0] : null
+  const preview = lastMsg ? (lastMsg.content.length > 50 ? lastMsg.content.substring(0, 50) + '...' : lastMsg.content) : '新对话'
+  const now = new Date().toISOString()
+  if (existing) {
+    existing.preview = preview
+    existing.messageCount = messages.value.length
+    existing.lastMessageAt = now
+  } else {
+    sessions.value.unshift({
+      sessionId: sid,
+      preview: preview,
+      messageCount: messages.value.length,
+      lastMessageAt: now
+    })
+  }
 }
 
 const startNewChatFromDrawer = () => {
@@ -483,21 +510,43 @@ const formatSessionTime = (time) => {
   return d.toLocaleDateString('zh-CN')
 }
 
+// Watch login state changes to connect/disconnect WebSocket
+watch(() => userStore.isLoggedIn, (loggedIn) => {
+  isLoggedIn.value = loggedIn
+  if (loggedIn) {
+    loadSessions()
+    if (!ws || ws.readyState === WebSocket.CLOSED) {
+      connectWebSocket()
+    }
+  } else {
+    if (ws) {
+      ws.close()
+      ws = null
+      wsConnected.value = false
+    }
+    sessions.value = []
+    messages.value = []
+    currentSessionId.value = null
+  }
+})
+
 onMounted(() => {
+  forceWelcome.value = false
   isLoggedIn.value = userStore.isLoggedIn
   if (isLoggedIn.value) {
     loadSessions()
+    connectWebSocket()
   }
-  connectWebSocket()
 })
 
 onActivated(() => {
+  forceWelcome.value = false
   isLoggedIn.value = userStore.isLoggedIn
   if (isLoggedIn.value) {
     loadSessions()
-  }
-  if (!ws || ws.readyState === WebSocket.CLOSED) {
-    connectWebSocket()
+    if (!ws || ws.readyState === WebSocket.CLOSED) {
+      connectWebSocket()
+    }
   }
 })
 
@@ -520,48 +569,110 @@ onUnmounted(() => {
 <style scoped>
 .ai-chat-wrapper {
   display: flex;
+  flex-direction: column;
   gap: var(--space-lg);
   margin-top: 16px;
   min-height: 500px;
 }
 
-/* Sidebar toggle for mobile */
-.sidebar-toggle-btn {
-  display: none;
-  margin-bottom: var(--space-md);
+/* Chat card */
+.ai-chat-card {
+  flex: 1;
+  border-radius: var(--radius-lg);
+  min-width: 0;
 }
 
-/* Sidebar */
-.chat-sidebar {
-  width: 260px;
-  flex-shrink: 0;
-  background: var(--text-inverse);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+.ai-chat-card :deep(.el-card__body) {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 400px;
 }
 
-.sidebar-header {
+.chat-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
-.sidebar-title {
+.header-title {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-md);
+  gap: 8px;
+  font-weight: 600;
   color: var(--dong-indigo);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* Session badge — shown when continuing a previous session */
+.session-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, rgba(40, 180, 99, 0.08), rgba(26, 82, 118, 0.06));
+  border: 1px solid rgba(40, 180, 99, 0.2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  color: var(--dong-jade-dark);
+}
+
+.session-badge .el-icon {
+  font-size: 14px;
+}
+
+.session-badge-text {
+  font-weight: var(--font-weight-medium);
+}
+
+.session-badge-new {
+  margin-left: 4px;
+  font-size: var(--font-size-xs) !important;
+  padding: 2px 10px !important;
+}
+
+/* History toggle button */
+.history-toggle-btn {
+  font-size: var(--font-size-xs);
+}
+
+/* Drawer */
+:deep(.el-drawer__body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.drawer-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.drawer-new-chat {
+  padding: var(--space-md) var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.drawer-new-chat .el-button {
+  width: 100%;
+}
+
+/* Session list (in drawer) */
 .session-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-sm);
 }
@@ -620,52 +731,11 @@ onUnmounted(() => {
   color: var(--color-danger);
 }
 
-/* Drawer */
-.drawer-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.drawer-new-chat {
-  padding: var(--space-md) var(--space-sm);
-  border-bottom: 1px solid var(--border-light);
-}
-
-.drawer-new-chat .el-button {
-  width: 100%;
-}
-
-/* Chat card */
-.ai-chat-card {
-  flex: 1;
-  border-radius: var(--radius-lg);
-  min-width: 0;
-}
-
-.ai-chat-card :deep(.el-card__body) {
-  display: flex;
-  flex-direction: column;
-  height: calc(100% - 56px);
-}
-
-.chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: var(--dong-indigo);
-}
-
+/* Chat container */
 .chat-container {
   flex: 1;
-  height: 400px;
+  min-height: 300px;
+  max-height: 500px;
   overflow-y: auto;
   padding: 16px;
   background: var(--bg-rice);
@@ -816,23 +886,9 @@ onUnmounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .ai-chat-wrapper {
-    flex-direction: column;
-  }
-
-  .chat-sidebar {
-    display: none;
-  }
-
-  .sidebar-toggle-btn {
-    display: flex;
-    width: 100%;
-  }
-
   .chat-container {
     height: 350px;
   }
-
   .message-content {
     max-width: 90%;
   }
@@ -843,15 +899,17 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: center;
   }
-
   .chat-container {
     height: 300px;
     padding: 12px;
   }
-
   .message-text {
     padding: 10px 12px;
     font-size: 13px;
+  }
+  .session-badge {
+    font-size: 11px;
+    padding: 3px 8px;
   }
 }
 </style>

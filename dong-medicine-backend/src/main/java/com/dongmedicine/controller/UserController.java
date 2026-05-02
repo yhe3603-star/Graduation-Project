@@ -77,7 +77,9 @@ public class UserController {
     public R<Map<String, Object>> validate() {
         try {
             Integer userId = SecurityUtils.getCurrentUserId();
-            return R.ok(Map.of("valid", true, "id", userId));
+            String username = SecurityUtils.getCurrentUsername();
+            String role = SecurityUtils.getCurrentUserRole();
+            return R.ok(Map.of("valid", true, "id", userId, "username", username, "role", role));
         } catch (BusinessException e) {
             return R.ok(Map.of("valid", false));
         }

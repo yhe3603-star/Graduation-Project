@@ -29,4 +29,14 @@ public class BrowseHistoryController {
         int safeLimit = Math.min(Math.max(limit, 1), 200);
         return R.ok(browseHistoryService.getMyHistory(userId, safeLimit));
     }
+
+    @PostMapping("/record")
+    @SaCheckLogin
+    public R<String> record(
+            @RequestParam String targetType,
+            @RequestParam Integer targetId) {
+        Integer userId = SecurityUtils.getCurrentUserId();
+        browseHistoryService.record(userId, targetType, targetId);
+        return R.ok("ok");
+    }
 }

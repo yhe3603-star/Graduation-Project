@@ -68,7 +68,7 @@
                 :class="{ favorited: isItemFavorited(item.id) }"
                 @click.stop="toggleFavorite(item)"
               >
-                <el-icon><component :is="isItemFavorited(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
+                <el-icon><component :is="isItemFavorited(item.id) ? StarFilled : Star" /></el-icon>
               </el-button>
             </div>
           </div>

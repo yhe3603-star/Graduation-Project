@@ -6,12 +6,16 @@
  * 
  * 样式层级结构：
  * 1. variables.css - CSS变量定义（颜色、字体、间距等）
- * 2. base.css - 基础样式（重置、排版、通用布局）
- * 3. components.css - 组件样式（卡片、按钮、表单等）
- * 4. pages.css - 页面样式（各页面特定样式）
+ * 2. theme-override.css - Element Plus 全局主题覆盖
+ * 3. dong-patterns.css - 侗族文化纹样与装饰
+ * 4. base.css - 基础样式（重置、排版、通用布局）
+ * 5. components.css - 组件样式（卡片、按钮、表单等）
+ * 6. pages.css - 页面样式（各页面特定样式）
  */
 
 @import './variables.css';
+@import './theme-override.css';
+@import './dong-patterns.css';
 @import './base.css';
 @import './components.css';
 @import './pages.css';

@@ -66,11 +66,9 @@ export function useMediaDisplay(data, options = {}) {
     return parseMediaList(filesData)
   })
 
-  const { images, videos, documents } = computed(() => separateMediaByType(allFiles.value)).value
-
-  const imageList = computed(() => images)
-  const videoList = computed(() => videos)
-  const documentList = computed(() => documents)
+  const imageList = computed(() => separateMediaByType(allFiles.value).images)
+  const videoList = computed(() => separateMediaByType(allFiles.value).videos)
+  const documentList = computed(() => separateMediaByType(allFiles.value).documents)
 
   const imagePreviewList = computed(() => imageList.value.map(img => img.url))
 

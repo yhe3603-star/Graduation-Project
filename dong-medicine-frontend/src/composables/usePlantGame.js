@@ -3,6 +3,15 @@ import { ElMessage } from 'element-plus'
 import { useCountdown } from './useInteraction'
 import { logOperationWarn } from '@/utils'
 
+function fisherYatesShuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 export const usePlantGame = (request, isLoggedIn) => {
   const difficulty = ref('easy')
   const plantsForGame = ref([])
@@ -93,9 +102,9 @@ export const usePlantGame = (request, isLoggedIn) => {
     const correctName = currentPlant.value.nameCn
     const otherPlants = plantsForGame.value.filter(p => p.nameCn !== correctName)
     const optionCount = OPTION_COUNT[difficulty.value] || 3
-    const shuffled = otherPlants.sort(() => Math.random() - 0.5).slice(0, optionCount - 1)
+    const shuffled = [...otherPlants].sort(() => Math.random() - 0.5).slice(0, optionCount - 1)
     const allOptions = [correctName, ...shuffled.map(p => p.nameCn)]
-    options.value = allOptions.sort(() => Math.random() - 0.5)
+    options.value = fisherYatesShuffle(allOptions)
   }
 
   const checkAnswer = (answer) => {

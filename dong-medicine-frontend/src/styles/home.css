@@ -6,15 +6,21 @@
 
 .hero-section {
   position: relative;
-  padding: var(--space-4xl) var(--space-3xl);
+  padding: 64px 48px;
   border-radius: var(--radius-2xl);
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-3xl);
   overflow: hidden;
-  background: linear-gradient(135deg, var(--dong-indigo) 0%, var(--dong-indigo-dark) 50%, var(--dong-indigo) 100%);
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(40, 180, 99, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(201, 162, 39, 0.1) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, rgba(26, 82, 118, 0.3) 0%, transparent 70%),
+    linear-gradient(160deg, #0a2e45 0%, var(--dong-indigo) 30%, #0d3d5c 60%, var(--dong-indigo-dark) 100%);
   color: var(--text-inverse);
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0 20px 60px rgba(26, 82, 118, 0.3);
+  border: 1px solid rgba(201, 162, 39, 0.15);
 }
 
 .hero-bg {
@@ -25,14 +31,17 @@
 .hero-pattern {
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0L55 20L75 25L55 30L50 50L45 30L25 25L45 20Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E");
-  background-size: 100px 100px;
-  animation: patternMove 20s linear infinite;
+  background-image:
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.04' stroke-width='0.5'%3E%3Cpath d='M30 0L35 15L50 20L35 25L30 40L25 25L10 20L25 15Z'/%3E%3Cpath d='M30 20L32 28L40 30L32 32L30 40L28 32L20 30L28 28Z' fill='%23ffffff' fill-opacity='0.02'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2340b480' stroke-opacity='0.03' stroke-width='0.5'%3E%3Cpath d='M60 0L65 30L90 40L65 50L60 80L55 50L30 40L55 30Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 60px 60px, 120px 120px;
+  animation: patternMove 30s linear infinite;
+  opacity: 0.8;
 }
 
 @keyframes patternMove {
-  0% { background-position: 0 0; }
-  100% { background-position: 100px 100px; }
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 60px 60px, 120px 120px; }
 }
 
 .hero-glow {
@@ -246,11 +255,26 @@
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-sm);
   animation: fadeInUp 0.6s ease-out var(--delay, 0s) both;
+  border: 1px solid var(--border-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, transparent 60%, rgba(201, 162, 39, 0.03) 100%);
+  pointer-events: none;
 }
 
 .nav-card:hover {
   transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-xl);
+  border-color: rgba(201, 162, 39, 0.3);
 }
 
 .nav-icon {
@@ -603,7 +627,10 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background:
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cpath d='M30 0L33 15L45 20L33 25L30 40L27 25L15 20L27 15Z' fill='%23ffffff' fill-opacity='0.04'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2340b480' stroke-opacity='0.03' stroke-width='0.5'%3E%3Cpath d='M60 0L65 30L90 40L65 50L60 80L55 50L30 40L55 30Z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 60px 60px, 120px 120px;
 }
 
 .cta-content {

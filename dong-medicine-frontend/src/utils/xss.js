@@ -41,11 +41,12 @@ const HTML_ENTITIES = {
 }
 
 const SQL_INJECTION_PATTERNS = [
-  /\b(select|insert|update|delete|drop|create|alter|truncate|exec|execute)\b/gi,
-  /\b(union)\b.*\b(select|insert|update|delete)\b/gi,
-  /(--|#|\/\*|\*\/|;|\|\|)/g,
+  /\b(union)\b\s+(all\s+)?\b(select)\b/gi,
+  /(--|#|\/\*|\*\/)\s*[^\s]*/g,
+  /;\s*(select|insert|update|delete|drop|create|alter|truncate|exec)\b/gi,
   /\b(or|and)\b\s+\d+\s*=\s*\d+/gi,
-  /\b(or|and)\b\s+['"]\w+['"]\s*=\s*['"]\w+['"]/gi
+  /\b(or|and)\b\s+['"]\w+['"]\s*=\s*['"]\w+['"]/gi,
+  /\b(drop\s+(table|database)|truncate\s+table|exec\s*\(|execute\s*\()\b/gi
 ]
 
 export function sanitize(input) {
@@ -56,25 +57,41 @@ export function sanitize(input) {
 export function sanitizeHtml(input) {
   if (!input || typeof input !== 'string') return input
 
-  return input
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<script[^>]*\/>/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, 'onxxx=')
-    .replace(/eval\s*\(/gi, 'evalxxx(')
-    .replace(/expression\s*\(/gi, 'expressionxxx(')
-    .replace(/vbscript:/gi, '')
-    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-    .replace(/<object[^>]*>.*?<\/object>/gi, '')
-    .replace(/<(embed|link|meta)[^>]*\/>/gi, '')
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(input, 'text/html')
+
+    doc.querySelectorAll('script,iframe,object,embed,link,meta,base,form,style,svg,math').forEach(el => el.remove())
+
+    doc.querySelectorAll('*').forEach(el => {
+      for (const attr of Array.from(el.attributes)) {
+        const name = attr.name.toLowerCase()
+        if (name.startsWith('on') || name === 'srcdoc' || name === 'xlink:href') {
+          el.removeAttribute(attr.name)
+        }
+        if (name === 'href' || name === 'src' || name === 'action') {
+          const val = attr.value.trim().toLowerCase()
+          if (val.startsWith('javascript:') || val.startsWith('vbscript:') || val.startsWith('data:')) {
+            el.removeAttribute(attr.name)
+          }
+        }
+      }
+    })
+
+    return doc.body.innerHTML
+  } catch {
+    return stripHtmlTags(input)
+  }
 }
 
 export function containsXss(input) {
-  return input && typeof input === 'string' && XSS_PATTERNS.some(p => p.test(input))
+  if (!input || typeof input !== 'string') return false
+  return XSS_PATTERNS.some(p => { p.lastIndex = 0; return p.test(input) })
 }
 
 export function containsSqlInjection(input) {
-  return input && typeof input === 'string' && SQL_INJECTION_PATTERNS.some(p => p.test(input))
+  if (!input || typeof input !== 'string') return false
+  return SQL_INJECTION_PATTERNS.some(p => { p.lastIndex = 0; return p.test(input) })
 }
 
 export function stripHtmlTags(input) {

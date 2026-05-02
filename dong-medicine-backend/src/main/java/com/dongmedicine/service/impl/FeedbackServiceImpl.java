@@ -1,7 +1,9 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Feedback;
 import com.dongmedicine.entity.User;
 import com.dongmedicine.common.exception.BusinessException;
@@ -41,6 +43,14 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
         return list(new LambdaQueryWrapper<Feedback>()
                 .eq(Feedback::getUserId, userId)
                 .orderByDesc(Feedback::getCreatedAt));
+    }
+
+    @Override
+    public Page<Feedback> listByUserIdPaged(Integer userId, Integer page, Integer size) {
+        return page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Feedback>()
+                        .eq(Feedback::getUserId, userId)
+                        .orderByDesc(Feedback::getCreatedAt));
     }
 
     @Override

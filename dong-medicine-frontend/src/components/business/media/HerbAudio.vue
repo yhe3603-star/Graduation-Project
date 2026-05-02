@@ -12,7 +12,7 @@
       >
         <span class="audio-icon">
           <el-icon :size="iconSize">
-            <component :is="isPlaying ? 'VideoPause' : 'VideoPlay'" />
+            <component :is="isPlaying ? VideoPause : VideoPlay" />
           </el-icon>
         </span>
         <span v-if="showLabel" class="audio-label">

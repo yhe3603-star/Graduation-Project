@@ -64,15 +64,25 @@
 </template>
 
 <script setup>
+import { watch } from 'vue';
 import { View, Star, QuestionFilled, CircleCheckFilled } from '@element-plus/icons-vue';
+import request from '@/utils/request';
 
-defineProps({
+const props = defineProps({
   visible: { type: Boolean, default: false },
   qa: { type: Object, default: null },
   isFavorited: { type: Boolean, default: false }
 });
 
 defineEmits(['update:visible', 'toggle-favorite']);
+
+watch(() => props.visible, (newVal) => {
+  if (newVal && props.qa?.id) {
+    request.post('/browse-history/record', null, {
+      params: { targetType: 'qa', targetId: props.qa.id }
+    }).catch(() => {});
+  }
+});
 </script>
 
 <style scoped>

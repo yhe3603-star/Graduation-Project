@@ -164,6 +164,7 @@ import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
 import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
+import request from '@/utils/request';
 
 const LEVEL_TYPES = { '省级': 'warning', '自治区级': 'success', '州级': 'primary', '市级': 'primary', '县级': 'info' };
 
@@ -333,6 +334,12 @@ watch(() => props.visible, (newVal) => {
   if (newVal) {
     activeMediaTab.value = videoList.value?.length > 0 ? 'video' : 'image';
     loadDocuments();
+    // Record browse history
+    if (props.inheritor?.id) {
+      request.post('/browse-history/record', null, {
+        params: { targetType: 'inheritor', targetId: props.inheritor.id }
+      }).catch(() => {});
+    }
   } else if (videoPlayerRef.value) {
     videoPlayerRef.value.pause();
   }

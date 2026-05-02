@@ -76,7 +76,7 @@
           @click="showAll = !showAll"
         >
           {{ showAll ? '收起' : `查看全部 (${logs.length})` }}
-          <el-icon><component :is="showAll ? 'ArrowUp' : 'ArrowDown'" /></el-icon>
+          <el-icon><component :is="showAll ? ArrowUp : ArrowDown" /></el-icon>
         </el-button>
       </div>
     </div>

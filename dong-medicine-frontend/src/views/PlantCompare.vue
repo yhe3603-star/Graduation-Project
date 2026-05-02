@@ -25,7 +25,7 @@
           <el-button type="primary" :disabled="comparePlants.length >= MAX_COMPARE" @click="searchVisible = true">
             <el-icon><Plus /></el-icon>添加对比
           </el-button>
-          <el-button text type="danger" @click="clearCompare">
+          <el-button text type="danger" @click="handleClearAll">
             <el-icon><Delete /></el-icon>清空全部
           </el-button>
         </div>
@@ -64,7 +64,7 @@
                       type="danger"
                       text
                       class="remove-btn"
-                      @click="removeFromCompare(plant.id)"
+                      @click="handleRemovePlant(plant.id)"
                     >
                       <el-icon><Close /></el-icon>移除
                     </el-button>
@@ -215,7 +215,7 @@
                 class="bar-thumb-item"
               >
                 {{ item.nameCn }}
-                <el-icon class="bar-remove" @click.stop="removeFromCompare(item.id)"><Close /></el-icon>
+                <el-icon class="bar-remove" @click.stop="handleRemovePlant(item.id)"><Close /></el-icon>
               </span>
             </div>
           </div>
@@ -287,14 +287,14 @@ const getAllImages = (plant) => {
     try {
       const parsed = JSON.parse(plant.images)
       return Array.isArray(parsed)
-        ? parsed.map(i => getImgUrl(typeof i === 'string' ? i : i.url))
+        ? parsed.map(i => getImgUrl(typeof i === 'string' ? i : (i.url || i.path || '')))
         : plant.images.split(',').map(s => getImgUrl(s.trim()))
     } catch {
       return plant.images.split(',').map(s => getImgUrl(s.trim()))
     }
   }
   if (Array.isArray(plant.images)) {
-    return plant.images.map(i => getImgUrl(typeof i === 'string' ? i : i.url))
+    return plant.images.map(i => getImgUrl(typeof i === 'string' ? i : (i.url || i.path || '')))
   }
   return []
 }
@@ -375,6 +375,16 @@ const startCompare = () => {
   if (compareList.value.length < 2) return
   const ids = compareList.value.map(p => p.id).join(',')
   router.push({ path: '/compare', query: { ids } })
+}
+
+const handleRemovePlant = (id) => {
+  removeFromCompare(id)
+  comparePlants.value = comparePlants.value.filter(p => p.id !== id)
+}
+
+const handleClearAll = () => {
+  clearCompare()
+  comparePlants.value = []
 }
 
 watch(() => route.query.ids, (newVal) => {

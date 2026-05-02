@@ -94,7 +94,7 @@ export function usePersonalCenter(request, updateUserState) {
   const allRecords = computed(() => {
     const quiz = quizRecords.value.map(r => ({ ...r, type: 'quiz' }))
     const game = gameRecords.value.map(r => ({ ...r, type: 'game' }))
-    return [...quiz, ...game].sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
+    return [...quiz, ...game].sort((a, b) => new Date(b.createdAt || b.createTime) - new Date(a.createdAt || a.createTime))
   })
 
   const paginatedRecords = computed(() => {
@@ -153,7 +153,8 @@ export function usePersonalCenter(request, updateUserState) {
         captchaCode: passwordForm.value.captchaCode
       })
       ElMessage.success('密码修改成功，请重新登录')
-      handleLogout()
+      userStore.clearAuth()
+      router.push('/')
     } catch (e) {
       logOperationWarn('修改密码')
       ElMessage.error(e.msg || '密码修改失败')

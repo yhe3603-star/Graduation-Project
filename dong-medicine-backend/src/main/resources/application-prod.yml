@@ -47,7 +47,7 @@ spring:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:admin}
-    password: ${RABBITMQ_PASSWORD:rabbitmq123}
+    password: ${RABBITMQ_PASSWORD}
     virtual-host: /
     connection-timeout: 10000
     requested-heartbeat: 60
@@ -77,7 +77,7 @@ sa-token:
   is-read-body: false
   is-read-header: true
   token-prefix: Bearer
-  jwt-secret-key: ${JWT_SECRET:default-prod-secret-key-please-change-in-production-at-least-32-chars}
+  jwt-secret-key: ${JWT_SECRET}
 
 app:
   cors:
@@ -116,7 +116,7 @@ file:
 
 logging:
   level:
-    com.dongmedicine: DEBUG
+    com.dongmedicine: INFO
     cn.dev33.satoken: ERROR
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

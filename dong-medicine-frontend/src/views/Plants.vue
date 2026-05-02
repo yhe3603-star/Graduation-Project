@@ -48,7 +48,7 @@
               :class="{ favorited: isItemFavorited(item.id) }"
               @click.stop="toggleFavoriteCard(item)"
             >
-              <el-icon><component :is="isItemFavorited(item.id) ? 'StarFilled' : 'Star'" /></el-icon>
+              <el-icon><component :is="isItemFavorited(item.id) ? StarFilled : Star" /></el-icon>
             </el-button>
             <el-button
               :type="isInCompare(item.id) ? 'success' : 'default'"
@@ -57,7 +57,7 @@
               :disabled="!isInCompare(item.id) && compareList.length >= MAX_COMPARE"
               @click.stop="handleCompareToggle(item)"
             >
-              <el-icon><component :is="isInCompare(item.id) ? 'CircleCheck' : 'Plus'" /></el-icon>
+              <el-icon><component :is="isInCompare(item.id) ? CircleCheck : Plus" /></el-icon>
               {{ isInCompare(item.id) ? '已加入' : '加入对比' }}
             </el-button>
           </template>

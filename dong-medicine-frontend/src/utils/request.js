@@ -32,29 +32,35 @@ function onRefreshFailed() {
 }
 
 function generateRequestKey(config) {
+  if (!config) return ''
   const { method, url, params, data } = config
   return [method, url, JSON.stringify(params), JSON.stringify(data)].join('&')
 }
 
 function addPendingRequest(config) {
-  if (config.cancelToken) return
-  
+  if (config.signal) return
+
+  // 读操作不做去重取消（GET是幂等的，并发重复读取不会造成数据问题）
+  const method = (config.method || 'get').toLowerCase()
+  if (method === 'get' || method === 'head' || method === 'options') return
+
   const key = generateRequestKey(config)
   if (pendingRequests.has(key)) {
-    const cancel = pendingRequests.get(key)
-    cancel(`请求被取消: ${config.url}`)
+    const controller = pendingRequests.get(key)
+    controller.abort(`请求被取消: ${config.url}`)
   }
-  
-  config.cancelToken = new axios.CancelToken(cancel => {
-    if (!pendingRequests.has(key)) {
-      pendingRequests.set(key, cancel)
-    }
-  })
+
+  const controller = new AbortController()
+  if (!pendingRequests.has(key)) {
+    pendingRequests.set(key, controller)
+  }
+  config.signal = controller.signal
 }
 
 function removePendingRequest(config) {
+  if (!config) return
   const key = generateRequestKey(config)
-  if (pendingRequests.has(key)) {
+  if (key && pendingRequests.has(key)) {
     pendingRequests.delete(key)
   }
 }
@@ -78,8 +84,8 @@ function removePendingRequest(config) {
  * @returns {void}
  */
 export function cancelAllRequests() {
-  pendingRequests.forEach((cancel, key) => {
-    cancel('请求被取消: 页面切换')
+  pendingRequests.forEach((controller, key) => {
+    controller.abort('请求被取消: 页面切换')
   })
   pendingRequests.clear()
 }
@@ -90,9 +96,9 @@ export function cancelAllRequests() {
  * @returns {void}
  */
 export function cancelRequestByUrl(url) {
-  pendingRequests.forEach((cancel, key) => {
+  pendingRequests.forEach((controller, key) => {
     if (key.includes(url)) {
-      cancel(`请求被取消: ${url}`)
+      controller.abort(`请求被取消: ${url}`)
       pendingRequests.delete(key)
     }
   })
@@ -309,13 +315,7 @@ request.interceptors.response.use(
         }
       }
       
-      ["token", "userId", "userName", "role"].forEach(key => {
-        try {
-          localStorage.removeItem(key)
-        } catch {
-          // ignore
-        }
-      })
+      window.dispatchEvent(new CustomEvent('auth-expired'))
       ElMessage.warning("登录已过期，请重新登录")
       return Promise.reject(err.response?.data || err)
     }

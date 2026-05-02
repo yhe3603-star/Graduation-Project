@@ -84,18 +84,6 @@
         </el-input>
       </div>
       <el-tooltip
-        :content="isDark ? '切换亮色模式' : '切换暗色模式'"
-        placement="bottom"
-      >
-        <el-button
-          class="action-btn"
-          circle
-          @click="toggleDark"
-        >
-          <el-icon><component :is="isDark ? Sunny : Moon" /></el-icon>
-        </el-button>
-      </el-tooltip>
-      <el-tooltip
         content="返回上一页"
         placement="bottom"
       >
@@ -197,7 +185,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { HomeFilled, Document, User, Picture, ChatDotRound, More, ArrowDown, Search, ArrowLeft, Setting, SwitchButton, Aim, Folder, DataLine, InfoFilled, Menu, Moon, Sunny, Calendar } from "@element-plus/icons-vue";
+import { HomeFilled, Document, User, Picture, ChatDotRound, More, ArrowDown, Search, ArrowLeft, Setting, SwitchButton, Aim, Folder, DataLine, InfoFilled, Menu, Calendar } from "@element-plus/icons-vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -207,24 +195,6 @@ defineEmits(["logout", "showLogin", "showRegister"]);
 
 const activeIndex = computed(() => route.path);
 const searchKeyword = ref("");
-const isDark = ref(false);
-
-const toggleDark = () => {
-  isDark.value = !isDark.value;
-  document.documentElement.classList.toggle("dark", isDark.value);
-  try { localStorage.setItem("theme", isDark.value ? "dark" : "light"); } catch {}
-};
-
-const initDark = () => {
-  try {
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      isDark.value = true;
-      document.documentElement.classList.add("dark");
-    }
-  } catch {}
-};
-initDark();
 
 const navItems = [
   { path: "/", label: "首页", icon: HomeFilled },
@@ -257,35 +227,139 @@ const goToSearch = () => {
 </script>
 
 <style scoped>
-.dong-header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 64px; background: linear-gradient(135deg, var(--dong-blue), var(--dong-indigo-dark)); color: var(--text-inverse); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); }
-.logo-area { display: flex; align-items: center; gap: 10px; cursor: pointer; flex-shrink: 0; }
-.logo-icon { width: 36px; height: 36px; color: var(--text-inverse); }
+.dong-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 64px;
+  background:
+    /* 侗锦纹样叠加 */
+    repeating-linear-gradient(
+      45deg,
+      transparent 0px,
+      transparent 8px,
+      rgba(255, 255, 255, 0.015) 8px,
+      rgba(255, 255, 255, 0.015) 10px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0px,
+      transparent 8px,
+      rgba(255, 255, 255, 0.015) 8px,
+      rgba(255, 255, 255, 0.015) 10px
+    ),
+    linear-gradient(135deg, #0a2a3f 0%, var(--dong-indigo) 40%, var(--dong-indigo-dark) 100%);
+  color: var(--text-inverse);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+  border-bottom: 2px solid rgba(201, 162, 39, 0.3);
+}
+
+.logo-area { display: flex; align-items: center; gap: 12px; cursor: pointer; flex-shrink: 0; }
+.logo-icon { width: 38px; height: 38px; color: var(--text-inverse); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
 .logo-text { display: flex; flex-direction: column; }
-.logo-title { font-size: 16px; font-weight: 700; letter-spacing: 1px; }
-.logo-sub { font-size: 10px; opacity: 0.7; }
-.nav-menu { display: flex; align-items: center; gap: 2px; }
-.nav-item { display: flex; align-items: center; gap: 4px; padding: 8px 12px; color: rgba(255, 255, 255, 0.85); text-decoration: none; border-radius: 8px; transition: all 0.2s; font-size: 14px; }
-.nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.15); color: var(--text-inverse); }
+.logo-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #fff 0%, #e8d5a3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo-sub { font-size: 10px; opacity: 0.65; letter-spacing: 1px; }
+.nav-menu { display: flex; align-items: center; gap: 4px; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.25s ease;
+  font-size: 14px;
+  position: relative;
+}
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background: var(--dong-gold-light);
+  border-radius: 1px;
+}
 .more-trigger .arrow { font-size: 10px; margin-left: 2px; }
-.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.search-box { width: 200px; }
-.search-box :deep(.el-input__wrapper) { background: rgba(255, 255, 255, 0.1); border: none; box-shadow: none; }
+.header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.search-box { width: 220px; }
+.search-box :deep(.el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: none;
+  transition: all 0.3s;
+}
+.search-box :deep(.el-input__wrapper:hover) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
 .search-box :deep(.el-input__inner) { color: var(--text-inverse); }
-.search-box :deep(.el-input__inner::placeholder) { color: rgba(255, 255, 255, 0.5); }
-.action-btn { background: rgba(255, 255, 255, 0.1); border: none; color: var(--text-inverse); }
-.action-btn:hover { background: rgba(255, 255, 255, 0.2); }
-.user-avatar-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 6px 12px; border-radius: 10px; transition: background 0.2s; background: rgba(255, 255, 255, 0.08); }
-.user-avatar-wrap:hover { background: rgba(255, 255, 255, 0.15); }
-.user-avatar { background: linear-gradient(135deg, var(--dong-green), var(--dong-jade-dark)); flex-shrink: 0; border: 2px solid rgba(255, 255, 255, 0.3); }
+.search-box :deep(.el-input__inner::placeholder) { color: rgba(255, 255, 255, 0.4); }
+.action-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-inverse);
+  transition: all 0.25s;
+}
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+.user-avatar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 5px 14px;
+  border-radius: 20px;
+  transition: all 0.25s;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.user-avatar-wrap:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.user-avatar {
+  background: linear-gradient(135deg, var(--dong-jade), var(--dong-jade-dark));
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
 .user-info { display: flex; flex-direction: column; gap: 2px; }
 .user-name { font-size: 14px; font-weight: 600; color: var(--text-inverse); }
 .user-role { font-size: 11px; color: #ffd700; font-weight: 500; }
-.dropdown-arrow { font-size: 10px; opacity: 0.8; }
+.dropdown-arrow { font-size: 10px; opacity: 0.6; }
 .mobile-menu-btn { display: none; }
 
 @media (max-width: 1200px) {
   .nav-item { padding: 8px 10px; font-size: 13px; }
-  .search-box { width: 160px; }
+  .search-box { width: 170px; }
 }
 
 @media (max-width: 1024px) {
@@ -299,7 +373,7 @@ const goToSearch = () => {
 }
 
 @media (max-width: 768px) {
-  .dong-header { padding: 0 12px; }
+  .dong-header { padding: 0 16px; }
   .desktop-nav { display: none; }
   .desktop-search { display: none; }
   .mobile-menu-btn { display: inline-block; }
@@ -309,11 +383,11 @@ const goToSearch = () => {
 }
 
 @media (max-width: 480px) {
-  .dong-header { padding: 0 8px; gap: 4px; }
-  .logo-area { gap: 6px; }
+  .dong-header { padding: 0 12px; gap: 4px; }
+  .logo-area { gap: 8px; }
   .logo-title { font-size: 14px; }
-  .header-actions { gap: 4px; }
+  .header-actions { gap: 6px; }
   .action-btn { width: 32px; height: 32px; }
-  .user-avatar-wrap { padding: 4px; }
+  .user-avatar-wrap { padding: 4px 10px; }
 }
 </style>

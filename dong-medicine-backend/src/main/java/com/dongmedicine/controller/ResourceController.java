@@ -43,7 +43,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class ResourceController {
 
     private final ResourceService service;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Value("${file.upload.base-path:./public}")
     private String uploadPath;
@@ -117,9 +117,16 @@ public class ResourceController {
             return;
         }
 
-        Path filePath = fileUrl.startsWith("/") 
-                ? Paths.get(uploadPath, fileUrl.substring(1)) 
-                : Paths.get(uploadPath, fileUrl);
+        Path basePath = Paths.get(uploadPath).normalize();
+        Path filePath = (fileUrl.startsWith("/")
+                ? Paths.get(uploadPath, fileUrl.substring(1))
+                : Paths.get(uploadPath, fileUrl)).normalize();
+
+        if (!filePath.startsWith(basePath)) {
+            log.warn("检测到路径遍历攻击: fileUrl={}, resolvedPath={}", fileUrl, filePath);
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "非法文件路径");
+            return;
+        }
 
         File file = filePath.toFile();
         if (!file.exists() || !file.isFile()) {
@@ -193,9 +200,15 @@ public class ResourceController {
                         continue;
                     }
 
-                    Path filePath = fileUrl.startsWith("/")
+                    Path basePath = Paths.get(uploadPath).normalize();
+                    Path filePath = (fileUrl.startsWith("/")
                             ? Paths.get(uploadPath, fileUrl.substring(1))
-                            : Paths.get(uploadPath, fileUrl);
+                            : Paths.get(uploadPath, fileUrl)).normalize();
+
+                    if (!filePath.startsWith(basePath)) {
+                        log.warn("批量下载检测到路径遍历攻击: fileUrl={}, resolvedPath={}", fileUrl, filePath);
+                        continue;
+                    }
 
                     File file = filePath.toFile();
                     if (!file.exists() || !file.isFile()) {

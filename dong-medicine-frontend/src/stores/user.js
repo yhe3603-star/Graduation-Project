@@ -106,8 +106,11 @@ export const useUserStore = defineStore('user', () => {
   
   const isLoggedIn = computed(() => {
     if (!token.value) return false
+    // UUID token (sa-token uuid style): no dots, existence = logged in
+    if (!token.value.includes('.')) return true
+    // JWT token: parse and check expiry; corrupted/invalid = not logged in
     const payload = decodeJwtPayload(token.value)
-    if (!payload) return true
+    if (!payload) return false
     return !isTokenExpired(token.value, { useBuffer: false })
   })
   const userName = computed(() => username.value)
@@ -233,10 +236,10 @@ export const useUserStore = defineStore('user', () => {
     try {
       const res = await request.get('/user/validate', { skipAuthRefresh: true })
       if (res.code === 200 && res.data) {
-        userId.value = res.data.id
-        username.value = res.data.username
-        role.value = res.data.role || 'user'
-        
+        userId.value = res.data.id || userId.value
+        username.value = res.data.username || username.value
+        role.value = res.data.role || role.value || 'user'
+
         safeSetItem('userId', userId.value)
         safeSetItem('userName', username.value)
         safeSetItem('role', role.value)
@@ -315,14 +318,23 @@ export const useUserStore = defineStore('user', () => {
     const storedRole = safeGetItem('role')
     
     if (storedToken) {
-      const payload = decodeJwtPayload(storedToken)
-      if (!payload || !isTokenExpired(storedToken, { useBuffer: false })) {
+      // UUID token (no dots): restore directly, backend will validate
+      if (!storedToken.includes('.')) {
         token.value = storedToken
         userId.value = storedUserId || ''
         username.value = storedUsername || ''
         role.value = storedRole || ''
       } else {
-        clearAuth()
+        // JWT token: check expiry before restoring
+        const payload = decodeJwtPayload(storedToken)
+        if (payload && !isTokenExpired(storedToken, { useBuffer: false })) {
+          token.value = storedToken
+          userId.value = storedUserId || ''
+          username.value = storedUsername || ''
+          role.value = storedRole || ''
+        } else {
+          clearAuth()
+        }
       }
     }
   }

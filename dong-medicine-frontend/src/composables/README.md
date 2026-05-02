@@ -1,622 +1,355 @@
 # 组合式函数目录 (composables/)
 
-> 类比：想象一本**可复用的菜谱**。做酸菜鱼需要"腌鱼片"、"炒酸菜"、"调汤底"三个步骤，你把这些步骤封装成一个"酸菜鱼菜谱"。以后每次做酸菜鱼，只需要翻开菜谱照着做就行，不用从头想步骤。**Composable 就是这种菜谱**，把复杂的逻辑封装起来，在多个组件中复用。
+Composable（组合式函数）是 Vue 3 Composition API 中封装和复用**有状态逻辑**的标准方式。每个 composable 以 `use` 开头，返回包含响应式数据（`ref`/`computed`）和操作方法（普通函数）的对象。
 
-## 什么是 Composable？
-
-Composable（组合式函数）是 Vue 3 中**封装和复用有状态逻辑**的标准方式。它是一个以 `use` 开头的函数，内部使用 Vue 的响应式 API（`ref`、`computed`、`watch` 等），返回响应式数据和方法。
-
-简单来说：
-- **工具函数（utils）**：无状态的纯函数，输入相同就输出相同，如 `formatTime()`
-- **组合式函数（composables）**：有状态的逻辑封装，包含响应式数据，如 `useQuiz()`
-
-```javascript
-// 工具函数：无状态，纯计算
-function formatTime(date) {
-  return date.toLocaleString()
-}
-
-// 组合式函数：有状态，包含响应式数据和操作方法
-function useQuiz() {
-  const score = ref(0)           // 响应式状态
-  const currentQuestion = ref(0) // 响应式状态
-  const nextQuestion = () => {   // 操作方法
-    currentQuestion.value++
-  }
-  return { score, currentQuestion, nextQuestion }
-}
-```
-
-## 为什么用 Composable 而不是 Mixin？
-
-Vue 2 时代用 Mixin 复用逻辑，但 Mixin 有很多问题：
-
-| 问题 | Mixin | Composable |
-|------|-------|------------|
-| 命名冲突 | 多个 Mixin 可能有同名变量，不知道用谁的 | 显式解构，`const { score } = useQuiz()`，来源清晰 |
-| 数据来源不明 | 模板里看到 `score`，不知道来自哪个 Mixin | 一看就知道 `score` 来自 `useQuiz()` |
-| 类型推断差 | TypeScript 很难推断 Mixin 的类型 | 完美的 TypeScript 支持 |
-| 参数传递 | 无法传参 | 可以传参 `useQuiz(request, isLoggedIn)` |
-
-**一句话总结**：Composable 是 Mixin 的升级版，更清晰、更灵活、更安全。
+> **与 utils 的区别：** utils 是无状态的纯函数（相同输入严格返回相同输出），composables 包含 Vue 响应式状态和组件生命周期。
 
 ---
 
-## 全部 12 个 Composable
+## 全部 14 个 Composable
 
-| 文件 | 导出函数 | 功能描述 |
-|------|---------|---------|
-| `useFavorite.js` | `useFavorite` | 收藏/取消收藏、浏览量更新 |
-| `useQuiz.js` | `useQuiz` | 趣味答题完整流程（选题、计时、提交、分享） |
-| `usePlantGame.js` | `usePlantGame` | 植物识别游戏（选难度、答题、连击加分） |
-| `useAdminData.js` | `useAdminData`, `useAdminDialogs`, `useAdminActions` | 管理后台数据加载、对话框管理、CRUD 操作 |
-| `useInteraction.js` | `useCountdown`, `useComments`, `usePagination`, `useFilter`, `useStats` | 交互功能（倒计时、评论、分页、筛选、统计） |
-| `useVisualData.js` | `useVisualData` | 数据可视化图表数据计算 |
-| `useMedia.js` | `useDocumentPreview`, `useMediaTabs`, `useDocumentList`, `useMediaDisplay`, `useFileInfo` | 媒体文件展示与预览 |
-| `useFormDialog.js` | `useFormDialog` | 表单对话框（新增/编辑模式切换、更新日志） |
-| `useUpdateLog.js` | `useUpdateLog`, `useUpdateLogDisplay` | 更新日志的增删改查与展示 |
-| `usePersonalCenter.js` | `usePersonalCenter` | 个人中心（收藏、答题记录、密码修改、退出） |
-| `useDebounce.js` | `useDebounceFn`, `useDebounce` | 防抖函数和防抖值 |
-| `useErrorHandler.js` | `useErrorHandler` | 统一错误处理（API 错误、业务错误码） |
+| 文件 | 导出函数 | 用途 |
+|------|---------|------|
+| `useAdminData.js` | `useAdminSection` 等 | 管理后台各模块的数据获取与分页管理 |
+| `useCompare.js` | `useCompare` | 药材对比功能（localStorage 持久化，最多 3 项） |
+| `useDebounce.js` | `useDebounceFn`、`useDebounce` | 防抖函数（延迟执行） |
+| `useErrorHandler.js` | `useErrorHandler` | 全局异步错误处理与展示 |
+| `useFavorite.js` | `useFavorite` | 收藏功能（增删查、计数更新、浏览量递增） |
+| `useFileUpload.js` | `useFileUpload` | 文件上传通用逻辑（图片/视频/文档） |
+| `useFormDialog.js` | `useFormDialog` | CRUD 表单对话框（含更新日志管理） |
+| `useInteraction.js` | `useCountdown`、`useComments`、`usePagination`、`useFilter`、`useStats` | 交互功能工具集 |
+| `useMedia.js` | `useDocumentPreview`、`useMediaTabs`、`useDocumentList`、`useMediaDisplay`、`useFileInfo` | 媒体显示通用逻辑 |
+| `usePersonalCenter.js` | `usePersonalCenter` | 个人中心全部功能（收藏、记录、评论、设置） |
+| `usePlantGame.js` | `usePlantGame` | 植物识别游戏逻辑 |
+| `useQuiz.js` | `useQuiz` | 趣味答题逻辑 |
+| `useUpdateLog.js` | `useUpdateLog`、`useUpdateLogDisplay` | 更新日志增删改查 |
+| `useVisualData.js` | `useVisualData` | 数据可视化数据获取 |
 
 ---
 
-## 核心 Composable 详解
+## useFavorite(type) -- 收藏功能
 
-### useFavorite -- 收藏功能
+**文件：** `useFavorite.js`
 
-收藏是多个页面共享的功能（植物、知识、传承人、资源都可以收藏），所以抽成 composable：
+通用的收藏功能 composable，被所有需要收藏的模块复用。
 
-```javascript
+**参数：** `type` (String) -- 收藏目标类型，可选 `'plant'` | `'knowledge'` | `'inheritor'` | `'resource'` | `'qa'`
+
+**返回值：**
+
+| 属性/方法 | 类型 | 说明 |
+|-----------|------|------|
+| `favorites` | Ref<Array> | 当前用户的全部收藏列表 |
+| `items` | Ref<Array> | 关联的数据列表（用于更新收藏计数） |
+| `isLoggedIn` | ComputedRef<Boolean> | 是否已登录 |
+| `isFavorited(id)` | Function | 判断指定 id 是否已收藏 |
+| `loadFavorites()` | Function | 从服务端加载收藏列表 |
+| `toggleFavorite(id, isFav)` | Function | 切换收藏状态，未登录弹出提示，返回 Boolean |
+| `updateItemCount(id, delta)` | Function | 本地更新收藏计数（+1/-1），避免刷新列表 |
+| `incrementViewCount(id)` | Function | 增加浏览量（POST 请求，失败不报错） |
+
+**使用示例：**
+
+```js
 import { useFavorite } from '@/composables'
 
-// 在组件中使用，传入收藏类型
-const { isFavorited, toggleFavorite, loadFavorites } = useFavorite('plant')
+const { favorites, isFavorited, toggleFavorite, loadFavorites } = useFavorite('plant')
 
-// 检查某个植物是否已收藏
-const favorited = isFavorited(plantId)  // 返回 true/false
-
-// 切换收藏状态（已收藏则取消，未收藏则添加）
-await toggleFavorite(plantId, isFavorited(plantId))
-
-// 页面加载时获取收藏列表
-onMounted(() => loadFavorites())
-```
-
-**内部逻辑**：
-1. `loadFavorites`：请求 `/favorites/my` 获取当前用户的所有收藏
-2. `isFavorited(id)`：在本地收藏列表中查找，判断是否已收藏
-3. `toggleFavorite(id, isFav)`：
-   - 已收藏 -> 请求 `DELETE /favorites/{type}/{id}`，从列表移除
-   - 未收藏 -> 请求 `POST /favorites/{type}/{id}`，添加到列表
-4. 未登录时点击收藏，提示"请先登录"
-
----
-
-### useQuiz -- 趣味答题
-
-答题功能涉及多个状态和步骤，是典型的复杂逻辑封装：
-
-```javascript
-import { useQuiz } from '@/composables'
-
-const request = inject('request')
-const isLoggedIn = computed(() => !!sessionStorage.getItem('token'))
-
-const {
-  // 状态
-  isQuizStarted,        // 是否已开始答题
-  selectedQuestions,    // 当前题目列表
-  currentQuestion,      // 当前题目索引
-  userAnswers,          // 用户答案数组
-  quizFinished,         // 是否已交卷
-  finalScore,           // 最终得分
-  correctCount,         // 正确题数
-  formattedTime,        // 倒计时显示（如 "04:30"）
-  isLowTime,            // 是否剩余不足 10 秒
-  selectedDifficulty,   // 当前难度
-
-  // 方法
-  setDifficulty,        // 设置难度（easy/medium/hard）
-  startNewQuiz,         // 开始新答题
-  nextQuestion,         // 下一题
-  prevQuestion,         // 上一题
-  submitQuiz,           // 提交答卷
-  resetQuiz,            // 重置答题
-  shareQuizResult       // 分享成绩
-} = useQuiz(request, isLoggedIn)
-```
-
-**答题流程**：
-
-```
-选择难度（初级10题/中级20题/高级30题）
-    |
-    v
-点击"开始答题" --> startNewQuiz()
-    |
-    v
-倒计时开始（5分钟）
-    |
-    v
-逐题作答 --> nextQuestion() / prevQuestion()
-    |
-    +-- 时间到 --> 自动交卷 autoSubmit()
-    +-- 手动交卷 --> submitQuiz()
-    |
-    v
-显示成绩 --> finalScore, correctCount
-    |
-    v
-分享成绩 --> shareQuizResult()
-```
-
-**难度配置**：
-
-```javascript
-const difficultyConfig = {
-  easy:   { label: '初级', count: 10, scorePerQuestion: 10, time: 5 },  // 10题，每题10分，5分钟
-  medium: { label: '中级', count: 20, scorePerQuestion: 15, time: 5 },  // 20题，每题15分，5分钟
-  hard:   { label: '高级', count: 30, scorePerQuestion: 20, time: 5 }   // 30题，每题20分，5分钟
+// 在卡片点击时
+const toggleFavoriteCard = async (item) => {
+  await toggleFavorite(item.id, isFavorited(item.id))
 }
 ```
 
----
-
-### usePlantGame -- 植物识别游戏
-
-植物识别游戏比答题更复杂，包含连击加分机制：
-
-```javascript
-import { usePlantGame } from '@/composables'
-
-const {
-  // 状态
-  currentPlant,         // 当前植物（显示图片，猜名字）
-  options,              // 选项列表
-  answered,             // 是否已回答当前题
-  selectedAnswer,       // 选中的答案
-  gameScore,            // 游戏分数
-  streak,               // 连击次数
-  totalQuestions,       // 总答题数
-  correctAnswers,       // 正确数
-  gameFinished,         // 游戏是否结束
-  formattedTime,        // 倒计时
-
-  // 方法
-  loadPlants,           // 加载植物数据
-  selectDifficulty,     // 选择难度
-  startGame,            // 开始游戏
-  checkAnswer,          // 检查答案
-  resetGame,            // 重置游戏
-  submitGameScore       // 提交游戏分数
-} = usePlantGame(request, isLoggedIn)
-```
-
-**连击加分机制**：
-
-```javascript
-const checkAnswer = (answer) => {
-  if (answered.value) return  // 已经回答过了，不能重复
-  answered.value = true
-  selectedAnswer.value = answer
-  totalQuestions.value++
-
-  const isCorrect = answer === currentPlant.value.nameCn
-  if (isCorrect) {
-    correctAnswers.value++
-    streak.value++  // 连击 +1
-    const baseScore = SCORE_CONFIG[difficulty.value]  // 基础分：10/15/20
-    const bonus = Math.min(streak.value - 1, 5) * 2   // 连击奖励：最高 +10
-    gameScore.value += baseScore + bonus
-    // 连击 1 次：0 奖励  |  连击 3 次：+4  |  连击 6 次：+10（上限）
-  } else {
-    streak.value = 0  // 答错，连击归零
-  }
-}
-```
-
-**难度影响选项数量**：
-
-```javascript
-const OPTION_COUNT = {
-  easy: 3,     // 3 选 1
-  medium: 4,   // 4 选 1
-  hard: 5      // 5 选 1
-}
-```
+**设计要点：**
+- 未登录时收藏操作会提示"请先登录"并返回 false
+- 收藏成功/取消时通过 `updateItemCount` 本地更新计数，避免额外 API 请求
+- 浏览量递增失败只打 debug 日志，不影响用户体验
 
 ---
 
-### useAdminData -- 管理后台数据管理
+## useQuiz(request, isLoggedIn) -- 趣味答题
 
-管理后台是最复杂的页面，数据管理拆成了三个 composable：
+**文件：** `useQuiz.js`
 
-#### useAdminData -- 数据加载
+**参数：**
+- `request` -- Axios 实例
+- `isLoggedIn` -- ComputedRef<Boolean>（从 userStore 获取）
 
-```javascript
-import { useAdminData } from '@/composables'
+**核心逻辑：**
 
-const {
-  // 各模块数据
-  users, knowledgeList, inheritorsList, plantsList,
-  qaList, resourcesList, feedbackList, quizList,
-  commentsList, logList, adminStats,
+1. **难度配置：** 三个难度等级
+   - easy（初级）：10 题，每题 10 分，限时 5 分钟
+   - medium（中级）：20 题，每题 15 分，限时 5 分钟
+   - hard（高级）：30 题，每题 20 分，限时 5 分钟
 
-  // 分页信息
-  pagination,
+2. **开始答题：** `startNewQuiz()` 从 `/quiz/questions` 获取题目（传入 count 和 scorePerQuestion 参数），重置答题状态，启动倒计时
 
-  // 排序后的数据（待处理的排在前面）
-  sortedComments,   // 评论：待审核的排前面
-  sortedFeedback,   // 反馈：待处理的排前面
+3. **答题导航：** `nextQuestion()` / `prevQuestion()` 在当前题目索引范围内切换
 
-  // 方法
-  fetchData,          // 加载所有数据
-  handleAdminPage,    // 翻页
-  handleAdminSize     // 改变每页条数
-} = useAdminData(request)
-```
+4. **提交答卷：** `submitQuiz(isAutoSubmit)` 提交答案数组（包含 `questionId` 和 `answer`），获取成绩（score + correct）
 
-#### useAdminDialogs -- 对话框管理
+5. **超时自动提交：** 通过 `watch(isExpired)` 监听，倒计时归零时自动调用 `autoSubmit()`
 
-```javascript
-const {
-  dialogVisible,     // 表单对话框是否可见
-  detailVisible,     // 详情对话框是否可见
-  currentDetail,     // 当前查看的详情数据
-  formData,          // 表单数据
+6. **分享功能：** 通过 `navigator.share`（移动端）或 `navigator.clipboard.writeText`（桌面端）分享成绩
 
-  openDialog,        // 打开新增对话框
-  viewDetail,        // 查看详情
-  editItem           // 打开编辑对话框（预填数据）
-} = useAdminDialogs()
-```
-
-#### useAdminActions -- CRUD 操作
-
-```javascript
-const {
-  saveItem,          // 保存（新增或更新）
-  deleteItem,        // 删除（带确认弹窗）
-  approveComment,    // 审核通过评论
-  rejectComment,     // 拒绝评论
-  batchDeleteLogs,   // 批量删除日志
-  clearAllLogs,      // 清空所有日志
-  replyFeedback      // 回复反馈
-} = useAdminActions(request, fetchData)
-```
+7. **历史记录：** 登录用户提交后可获取答题历史，`bestScore` computed 计算最高分
 
 ---
 
-### useInteraction -- 交互功能集合
+## usePlantGame(request, isLoggedIn) -- 植物识别游戏
 
-这个文件导出多个独立的 composable，按需使用：
+**文件：** `usePlantGame.js`
 
-#### useCountdown -- 倒计时
+**核心逻辑：**
 
-```javascript
-import { useCountdown } from '@/composables'
+1. **难度与选项数：**
+   - easy：3 个选项，每题基础分 10
+   - medium：4 个选项，每题基础分 15
+   - hard：5 个选项，每题基础分 20
 
-const { formattedTime, isRunning, isExpired, isLowTime, start, stop, reset } = useCountdown(5)
-// 参数 5 表示 5 分钟
+2. **加载植物数据：** `loadPlants()` 从 `/plants/random?limit=50` 获取 50 个随机植物
 
-start()   // 开始倒计时
-// formattedTime.value 变化：05:00 -> 04:59 -> ... -> 00:00
-// isLowTime.value 在剩余 10 秒时变为 true（可以变红提醒）
-// isExpired.value 在倒计时结束时变为 true
+3. **开始游戏：** `startGame()` 重置分数/连击/计数，启动 3 分钟倒计时
 
-reset(3)  // 重置为 3 分钟
-stop()    // 暂停倒计时
-```
+4. **选项生成：** 从植物池中随机选 1 个正确植物 + N-1 个干扰项，随机排序
 
-#### useComments -- 评论功能
+5. **答题与连击加分：**
+   - 答对：`streak++`，得分 = 基础分 + min(streak-1, 5) * 2（最多额外 +10）
+   - 答错：`streak = 0`，得分为 0
+   - 答后 1 秒（正确）或 1.5 秒（错误）自动切换到下一题
 
-```javascript
-const { comments, loadComments, handleCommentPost, currentPage, totalItems } = useComments(request, isLoggedIn)
+6. **超时自动结束：** `watch(isExpired)` 监听，时间到调用 `autoEndGame()`
 
-// 加载评论列表
-loadComments()
+7. **保存成绩：** 登录用户且分数 > 0 时 POST 到 `/plant-game/submit`
 
-// 发表评论
-handleCommentPost('这个钩藤的介绍很详细！', null, () => {
-  console.log('评论成功')
-}, () => {
-  console.log('评论失败')
-})
-```
-
-#### usePagination -- 前端分页
-
-```javascript
-const { currentPage, pageSize, paginatedList, resetPage } = usePagination(12)
-
-// 对列表进行分页切割
-const pageItems = paginatedList(allItems)
-// currentPage=1, pageSize=12 时，返回 allItems[0..11]
-// currentPage=2, pageSize=12 时，返回 allItems[12..23]
-```
-
-#### useFilter -- 前端筛选
-
-```javascript
-const { keyword, filters, filteredList, setFilter, clearFilters } = useFilter(
-  items,                    // 要筛选的列表
-  ['nameCn', 'category']   // 搜索字段
-)
-
-keyword.value = '钩藤'     // 按关键词搜索
-setFilter('category', '藤本')  // 按分类筛选
-clearFilters()              // 清除所有筛选
-```
-
-#### useStats -- 统计数据
-
-```javascript
-const stats = useStats(items, [
-  { value: 'count', label: '总数' },
-  { value: 'views', label: '总浏览' },
-  { value: 'favorites', label: '总收藏' }
-])
-// 返回 computed：[{ value: 50, label: '总数' }, { value: 1200, label: '总浏览' }, ...]
-```
+8. **清理定时器：** `onUnmounted` 中清除倒计时和 nextPlant 定时器
 
 ---
 
-### useVisualData -- 图表数据计算
+## useInteraction.js -- 交互功能工具集
 
-数据可视化页面需要从多个 API 获取数据，再计算成 ECharts 需要的格式：
+**文件：** `useInteraction.js`
 
-```javascript
-import { useVisualData } from '@/composables'
+导出 4 个通用 composable：
 
-const { loading, stats, chartData, regionList, fetchData } = useVisualData(request)
+### useCountdown(durationMinutes)
 
-// 加载数据
-await fetchData()
+倒计时器，用于答题和游戏限时。
 
-// stats：各模块总数
-stats.value  // { plants: 50, knowledge: 30, inheritors: 15, qa: 40, resources: 20 }
+**参数：** `durationMinutes` (Number, default: 3) -- 倒计时分钟数
 
-// chartData：ECharts 图表数据
-chartData.value.therapyCategories  // 疗法分类饼图数据
-chartData.value.inheritorLevels    // 传承人级别柱状图数据
-chartData.value.plantCategories    // 植物分类柱状图数据
-chartData.value.plantDistribution  // 植物分布地图数据
-chartData.value.knowledgePopularity // 知识热度排行
-chartData.value.formulaFreq        // 药方使用频率
-chartData.value.userTrend          // 用户趋势折线图
-```
+**返回值：**
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `formattedTime` | ComputedRef<String> | `MM:SS` 格式时间 |
+| `isRunning` | Ref<Boolean> | 计时器运行中 |
+| `isExpired` | Ref<Boolean> | 计时器已归零 |
+| `isLowTime` | ComputedRef<Boolean> | 剩余 <= 10 秒 |
+| `start()` | Function | 启动计时器 |
+| `stop()` | Function | 停止计时器 |
+| `reset(minutes?)` | Function | 重置计时器 |
+| `forceExpire()` | Function | 强制归零 |
 
-**数据计算过程**：
+**实现：** 使用 `setInterval(1000)` 每秒递减 `totalSeconds`。`onUnmounted` 自动清理定时器。
 
-```
-请求 5 个 API（并行）
-    |
-    v
-提取分页数据
-    |
-    v
-计算各类图表数据：
-  - 疗法分类：按 therapyCategory 分组计数
-  - 传承人级别：按 level（国家/省/市/县）分组计数
-  - 植物分类：按 category 分组计数，取前 8
-  - 植物分布：解析 distribution 字段，按省份分组
-  - 知识热度：按 popularity 排序，取前 10
-  - 药方频率：筛选 type='药方' 的知识，按浏览量排序
-  - 用户趋势：请求 /stats/trend 接口
-```
+### useComments(request, isLoggedIn)
+
+评论列表管理。
+
+**返回值：** `comments`、`commentLoading`、`loadComments()`、`handleCommentPost(content, replyData, onSuccess, onError)`、分页相关
+
+### usePagination(defaultSize)
+
+客户端分页。
+
+**返回值：** `currentPage`、`pageSize`、`paginatedList(list)`、`resetPage()`
+
+### useFilter(items, filterFields)
+
+客户端过滤。
+
+**返回值：** `keyword`、`filters`、`filteredList`（computed）、`setFilter(key, value)`、`clearFilters()`
+
+### useStats(items, config)
+
+统计数据计算。
+
+**参数：** `config` -- 配置数组 `[{ label: '总数', value: 'count' }, { label: '总浏览', value: 'views' }]`
+
+**返回值：** ComputedRef<Array> -- 统计结果
 
 ---
 
-## 如何创建一个新的 Composable
-
-假设你要创建一个"药浴预约"的 composable：
-
-### 第 1 步：创建文件
-
-在 `composables/` 目录下新建 `useHerbalBath.js`，文件名以 `use` 开头：
-
-```javascript
-// composables/useHerbalBath.js
-import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-
-// composable 就是一个函数，以 use 开头
-export function useHerbalBath(request) {
-  // 1. 定义响应式状态
-  const bathList = ref([])          // 药浴列表
-  const loading = ref(false)        // 加载状态
-  const selectedType = ref('all')   // 选中的药浴类型
-
-  // 2. 定义计算属性
-  const filteredList = computed(() => {
-    if (selectedType.value === 'all') return bathList.value
-    return bathList.value.filter(b => b.type === selectedType.value)
-  })
-
-  // 3. 定义方法
-  const fetchBathList = async () => {
-    loading.value = true
-    try {
-      const res = await request.get('/herbal-bath/list')
-      bathList.value = res?.data?.records || []
-    } catch (e) {
-      ElMessage.error('加载药浴数据失败')
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const makeReservation = async (bathId) => {
-    try {
-      await request.post(`/herbal-bath/${bathId}/reserve`)
-      ElMessage.success('预约成功')
-      return true
-    } catch (e) {
-      ElMessage.error('预约失败')
-      return false
-    }
-  }
-
-  // 4. 返回所有需要暴露的状态和方法
-  return {
-    bathList,
-    loading,
-    selectedType,
-    filteredList,
-    fetchBathList,
-    makeReservation
-  }
-}
-```
-
-### 第 2 步：在组件中使用
+## useCountdown 的用法示例（来自 QuizSection）
 
 ```vue
 <script setup>
-import { inject, onMounted } from 'vue'
-import { useHerbalBath } from '@/composables'
+import { useCountdown } from '@/composables/useInteraction'
 
-const request = inject('request')
-const { filteredList, loading, selectedType, fetchBathList, makeReservation } = useHerbalBath(request)
-
-onMounted(fetchBathList)
+const { formattedTime, isRunning, isExpired, isLowTime, start: startTimer, stop: stopTimer, reset: resetTimer } = useCountdown(5)
 </script>
 
 <template>
-  <div v-loading="loading">
-    <el-select v-model="selectedType">
-      <el-option label="全部" value="all" />
-      <el-option label="足浴" value="foot" />
-      <el-option label="全身浴" value="full" />
-    </el-select>
-
-    <div v-for="bath in filteredList" :key="bath.id">
-      <h3>{{ bath.name }}</h3>
-      <el-button @click="makeReservation(bath.id)">预约</el-button>
-    </div>
+  <div class="timer" :class="{ 'timer-warning': isLowTime }">
+    {{ formattedTime }}
   </div>
 </template>
 ```
 
-### 第 3 步：在 index.js 中导出（可选）
+---
 
-如果希望从 `@/composables` 统一导入，在 `composables/index.js` 中添加：
+## usePersonalCenter(request, updateUserState) -- 个人中心
 
-```javascript
-export * from './useHerbalBath'
-```
+**文件：** `usePersonalCenter.js`
+
+**参数：**
+- `request` -- Axios 实例
+- `updateUserState` -- 更新全局用户状态的回调函数
+
+**导出的常量：**
+- `actions` -- 快捷操作配置：我的收藏(Star)、答题记录(EditPen)、我的评论(ChatDotRound)、账号设置(Setting)
+- `typeIconMap` -- 收藏类型到图标的映射
+- `typeTagMap` -- 收藏类型到 Element Plus tag type 的映射
+- `typeNameMap` -- 收藏类型到中文名称的映射
+
+**核心功能：**
+
+1. **数据获取 `fetchUserData()`：** 使用 `Promise.all` 并行请求收藏列表、答题记录、植物游戏记录、评论列表，通过 `extractData()` 提取数据
+
+2. **收藏管理：** `filteredFavorites` 按类型筛选，`paginatedFavorites` 分页展示，`goToDetail(item)` 根据类型跳转
+
+3. **密码修改：** 使用 `createPasswordValidator()` 生成验证规则，POST 到 `/user/change-password`，成功后自动退出
+
+4. **退出登录：** `ElMessageBox.confirm` 确认后调用 `userStore.logout()`，然后 `updateUserState()` 刷新全局状态
+
+5. **辅助函数：** `formatTime`、`getDifficultyName`、`getScoreClass`、`getTypeIcon`、`getTypeTag`、`getTypeName`
 
 ---
 
-## Composable 编写规范
+## useCompare() -- 药材对比
 
-### 命名规范
-- 文件名：`useXxx.js`（驼峰命名）
-- 导出函数：`useXxx`（与文件名一致）
+**文件：** `useCompare.js`
 
-### 参数规范
-- 外部依赖通过参数传入（如 `request`、`isLoggedIn`），而不是在 composable 内部导入
-- 这样方便测试，也方便在不同上下文中复用
+**核心机制：** 共享响应式状态 + localStorage 持久化
 
-### 返回值规范
-- 返回一个对象，包含所有需要暴露的状态和方法
-- 状态用 `ref` 或 `computed`，方法用普通函数
-- 不要返回 `reactive` 对象，容易丢失响应性
+```js
+// 模块级共享状态（跨组件共享同一个 ref）
+const compareList = ref(loadFromStorage())
 
-### 清理规范
-- 如果 composable 内部有定时器、事件监听等，必须在 `onUnmounted` 中清理
-
-```javascript
-import { onUnmounted } from 'vue'
-
-export function useCountdown(minutes) {
-  let timer = null
-
-  const start = () => {
-    timer = setInterval(() => { /* ... */ }, 1000)
-  }
-
-  // 组件销毁时自动清理定时器
-  onUnmounted(() => {
-    if (timer) clearInterval(timer)
-  })
-
-  return { start }
-}
+// 自动持久化
+watch(compareList, saveToStorage, { deep: true })
 ```
+
+**返回值：**
+| 属性 | 说明 |
+|------|------|
+| `compareList` | Ref<Array> -- 对比列表（共享状态） |
+| `isInCompare(id)` | 判断是否在对比列表中 |
+| `addToCompare(plant)` | 添加（最多 3 项，超过返回 false） |
+| `removeFromCompare(id)` | 移除 |
+| `clearCompare()` | 清空 |
+| `MAX_COMPARE` | 最大对比数 = 3 |
 
 ---
 
-## 常见错误
+## useAdminData.js -- 管理后台数据
 
-### 错误 1：在 composable 外部调用
+**文件：** `useAdminData.js`
 
-```javascript
-// 错误：composable 内部用了 onMounted、onUnmounted 等，
-// 必须在 setup 函数中调用，否则生命周期钩子不生效
-const { score } = useQuiz(request, isLoggedIn)  // 在组件外部调用！
+**导出：** `useAdminSection(request, path, options)`
 
-// 正确：在 <script setup> 中调用
-<script setup>
-const { score } = useQuiz(request, isLoggedIn)
-</script>
-```
+**功能：**
+- 通用的管理后台数据加载逻辑
+- 自动处理分页响应（适配多种 `{ data, data.data, data.data.records }` 结构）
+- `load(force)` 加载数据（缓存已加载状态，force 强制刷新）
+- `setPage(page)` / `setSize(size)` 切换分页并重新加载
 
-### 错误 2：忘记返回需要的状态
-
-```javascript
-// 错误：忘记返回 loading，组件无法访问
-export function useHerbalBath(request) {
-  const loading = ref(false)
-  const fetchList = async () => { loading.value = true; /* ... */ }
-  return { fetchList }  // loading 没有返回！
-}
-
-// 正确：返回所有组件需要的状态和方法
-export function useHerbalBath(request) {
-  const loading = ref(false)
-  const fetchList = async () => { loading.value = true; /* ... */ }
-  return { loading, fetchList }
-}
-```
-
-### 错误 3：在 composable 中硬编码依赖
-
-```javascript
-// 错误：直接导入 request，无法替换，不方便测试
-import request from '@/utils/request'
-export function useHerbalBath() {
-  const res = await request.get('/bath/list')
-}
-
-// 正确：通过参数传入依赖
-export function useHerbalBath(request) {
-  const res = await request.get('/bath/list')
-}
-// 使用时：const { ... } = useHerbalBath(inject('request'))
-```
-
-### 错误 4：不清理副作用
-
-```javascript
-// 错误：定时器没有被清理，组件销毁后还在执行
-export function usePolling() {
-  setInterval(() => { /* 轮询数据 */ }, 5000)
-}
-
-// 正确：组件销毁时清理定时器
-export function usePolling() {
-  let timer = setInterval(() => { /* 轮询数据 */ }, 5000)
-  onUnmounted(() => clearInterval(timer))
-}
-```
+**使用方式：** 在 `Admin.vue` 中为每个模块创建 section 实例，统一管理 CRUD 操作流程。
 
 ---
 
-## 代码审查与改进建议
+## useFormDialog.js -- 表单对话框
 
-- [响应性] useMedia.js中对computed结果立即.value解构，导致images/videos/documents变成普通值而非响应式引用
-- [响应性] useFavorite.js和usePersonalCenter.js直接读取sessionStorage而非使用Pinia Store，sessionStorage不是响应式的
-- [安全] useDebounce.js中onUnmounted在setup外调用会崩溃，应添加调用环境检查
-- [一致性] useInteraction.js和useAdminData.js对同一工具函数(logFetchError)使用不同导入路径
+**文件：** `useFormDialog.js`
+
+CRUD 表单对话框的通用逻辑。
+
+**参数：**
+- `getDefaultForm` -- 返回默认表单对象的函数
+- `options` -- 配置选项：
+  - `validate(form)` -- 自定义验证函数
+  - `autoLogMessages` -- 自动日志消息映射 `{ create: '新增数据', update: '更新数据' }`
+  - `arrayFields` -- 需要序列化为 JSON 字符串的数组字段
+  - `singleArrayFields` -- 取第一个元素的数组字段
+
+**返回值：**
+| 属性 | 说明 |
+|------|------|
+| `form` | 响应式表单对象 |
+| `saving` | 保存 loading 状态 |
+| `isEdit` | Computed -- 根据 `form.id` 判断是否为编辑模式 |
+| `updateLogs` | Computed -- 解析后的更新日志数组 |
+| `initForm(data)` | 初始化表单（新增/编辑） |
+| `getFormData()` | 获取提交数据（自动追加更新日志） |
+| `handleSave()` | 验证并返回是否通过 |
+| 日志相关 | `handleAddLog`、`handleEditLog`、`handleDeleteLog`、`handleSaveLog` |
+
+---
+
+## useDebounce.js -- 防抖
+
+**导出：**
+
+- `useDebounceFn(fn, delay)` -- 返回防抖后的函数，带 `.cancel()` 方法，组件卸载时自动清理
+- `useDebounce(value, delay)` -- 对响应式值进行防抖，返回 `ComputedRef`
+
+---
+
+## useErrorHandler.js -- 错误处理
+
+全局异步错误处理 composable，统一捕获和展示错误信息。
+
+---
+
+## useMedia.js -- 媒体显示
+
+**导出 5 个 composable：**
+
+- `useDocumentPreview()` -- 文档预览弹窗状态管理（`previewVisible`、`previewDocument`、`openPreview(doc)`、`closePreview()`）
+- `useMediaTabs(defaultTab)` -- 媒体 Tab 切换（activeTab、videoPlayerRef、isVideoTab、handleTabChange -- 切换时暂停视频）
+- `useDocumentList(parseDocumentList)` -- 文档列表加载
+- `useMediaDisplay(data, options)` -- 从数据中提取图片/视频/文档列表，计算 `hasImages`、`hasVideos`、`hasDocuments`、`hasMedia`
+- `useFileInfo(data, options)` -- 从数据中提取单个文件信息（url、name、size、type、ext）
+
+---
+
+## useFileUpload.js -- 文件上传
+
+**文件：** `useFileUpload.js`
+
+**函数签名：** `useFileUpload({ type, extensions, extensionLabel, uploadPath, simulateProgress, props, emit })`
+
+**功能：**
+- 统一管理上传状态（fileList、uploading）
+- 自动拼接上传 URL（含 baseURL）和 Authorization 请求头
+- 上传前校验（格式、大小、数量限制）
+- 删除前确认 + 服务器文件删除
+- modelValue 双向绑定支持
+- 支持模拟进度条（图片上传）
+
+被 ImageUploader、VideoUploader、DocumentUploader 三个组件复用。
+
+---
+
+## useVisualData.js -- 数据可视化数据
+
+**文件：** `useVisualData.js`
+
+**导出：** `useVisualData(request)`
+
+**功能：**
+- 从 `/stats/chart` 获取全部图表数据（分类统计、地域分布、使用频次、热度排行）
+- 从 `/stats/trend` 获取用户增长趋势（失败时使用 7 天空数据兜底）
+- 数据映射到 `chartData` ref（`therapyCategories`、`inheritorLevels`、`plantCategories`、`formulaFreq`、`plantDistribution` 等）
+- `regionList` computed 从分布数据中提取唯一地区列表

@@ -10,6 +10,7 @@ import com.dongmedicine.entity.Plant;
 import com.dongmedicine.service.BrowseHistoryService;
 import com.dongmedicine.service.PlantService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Tag(name = "药用资源图鉴", description = "侗乡药用植物信息查询与图文展示")
 @RestController
 @RequestMapping("/api/plants")
@@ -60,7 +62,7 @@ public class PlantController {
             try {
                 browseHistoryService.record(userId, "plant", id);
             } catch (Exception e) {
-                // Silently ignore browse history recording failures
+                log.debug("记录浏览历史失败", e);
             }
         }
         return R.ok(plant);

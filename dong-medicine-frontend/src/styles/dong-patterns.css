@@ -1,0 +1,288 @@
+/**
+ * 侗族文化纹样与装饰元素
+ * 基于侗族织锦、铜鼓、蓝靛染等传统视觉符号
+ * 通过 CSS 渐变和几何图形还原传统纹样美学
+ */
+
+/* === 侗锦菱形纹（核心纹样） === */
+/* 侗锦以菱形为主体结构，寓意天地四方 */
+.dong-brocade-bg {
+  background:
+    /* 主菱形网格 */
+    linear-gradient(45deg, transparent 40%, rgba(26, 82, 118, 0.04) 40%, rgba(26, 82, 118, 0.04) 60%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, rgba(26, 82, 118, 0.04) 40%, rgba(26, 82, 118, 0.04) 60%, transparent 60%),
+    var(--bg-rice);
+  background-size: 24px 24px;
+}
+
+/* 侗锦细纹 — 用于卡片背景 */
+.dong-brocade-subtle {
+  background:
+    linear-gradient(45deg, transparent 45%, rgba(26, 82, 118, 0.02) 45%, rgba(26, 82, 118, 0.02) 55%, transparent 55%),
+    linear-gradient(-45deg, transparent 45%, rgba(40, 180, 99, 0.02) 45%, rgba(40, 180, 99, 0.02) 55%, transparent 55%),
+    #fff;
+  background-size: 16px 16px;
+}
+
+/* === 蓝靛染纹理 === */
+.dong-indigo-texture {
+  background:
+    /* 深浅渐变模拟蓝靛染色自然不均匀感 */
+    linear-gradient(180deg,
+      rgba(26, 82, 118, 0.03) 0%,
+      transparent 20%,
+      rgba(26, 82, 118, 0.02) 40%,
+      transparent 60%,
+      rgba(26, 82, 118, 0.04) 80%,
+      transparent 100%
+    ),
+    var(--bg-rice);
+}
+
+/* === 铜鼓同心纹 — 用于圆形装饰元素 === */
+.dong-drum-pattern {
+  position: relative;
+}
+
+.dong-drum-pattern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      transparent 0px,
+      transparent 6px,
+      rgba(201, 162, 39, 0.08) 6px,
+      rgba(201, 162, 39, 0.08) 7px
+    ),
+    repeating-radial-gradient(
+      circle at center,
+      transparent 0px,
+      transparent 12px,
+      rgba(201, 162, 39, 0.05) 12px,
+      rgba(201, 162, 39, 0.05) 13px
+    );
+}
+
+/* === 织锦边框纹样 — 用于卡片或区域顶部 === */
+.dong-border-top {
+  position: relative;
+}
+
+.dong-border-top::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--dong-indigo) 0px,
+    var(--dong-indigo) 8px,
+    var(--dong-jade) 8px,
+    var(--dong-jade) 12px,
+    var(--dong-gold) 12px,
+    var(--dong-gold) 16px,
+    var(--bg-rice) 16px,
+    var(--bg-rice) 18px
+  );
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+}
+
+/* === 菱形装饰分割线 === */
+.dong-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  border: none;
+  height: 1px;
+  background: var(--border-medium);
+}
+
+.dong-divider::before,
+.dong-divider::after {
+  content: '◆';
+  font-size: 10px;
+  color: var(--dong-gold);
+  flex-shrink: 0;
+}
+
+/* === 织锦角花 — 卡片四角装饰 === */
+.dong-corner-decorated {
+  position: relative;
+}
+
+.dong-corner-decorated::before,
+.dong-corner-decorated::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--dong-gold);
+  border-style: solid;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.dong-corner-decorated::before {
+  top: 8px;
+  left: 8px;
+  border-width: 2px 0 0 2px;
+}
+
+.dong-corner-decorated::after {
+  bottom: 8px;
+  right: 8px;
+  border-width: 0 2px 2px 0;
+}
+
+/* === 渐变薄雾背景（用于 Hero 等大区域）=== */
+.dong-mist-bg {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(40, 180, 99, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(26, 82, 118, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(201, 162, 39, 0.04) 0%, transparent 40%),
+    var(--bg-rice);
+}
+
+/* === 山水意境背景（侗乡山水） === */
+.dong-landscape-bg {
+  background:
+    /* 远山轮廓 */
+    linear-gradient(175deg,
+      var(--bg-rice) 0%,
+      var(--bg-rice) 60%,
+      transparent 60%
+    ),
+    /* 云雾 */
+    radial-gradient(ellipse at 30% 55%, rgba(26, 82, 118, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 50%, rgba(40, 180, 99, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, var(--bg-rice) 0%, var(--bg-rice-dark) 100%);
+}
+
+/* === 药草叶脉装饰线 === */
+.dong-herb-line {
+  position: relative;
+  padding-left: var(--space-xl);
+}
+
+.dong-herb-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(
+    180deg,
+    var(--dong-jade),
+    var(--dong-indigo),
+    var(--dong-jade)
+  );
+  border-radius: var(--radius-full);
+}
+
+/* === 关键词标签样式 === */
+.dong-keyword {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: rgba(26, 82, 118, 0.06);
+  color: var(--dong-indigo);
+  border: 1px solid transparent;
+}
+
+.dong-keyword:hover {
+  background: rgba(26, 82, 118, 0.12);
+  border-color: rgba(26, 82, 118, 0.2);
+  transform: translateY(-1px);
+}
+
+.dong-keyword--active {
+  background: var(--dong-indigo);
+  color: #fff;
+}
+
+/* === 非遗徽章 === */
+.dong-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: linear-gradient(135deg, var(--dong-gold) 0%, var(--dong-gold-light) 100%);
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+/* === 标题装饰线（左侧草药绿竖线 + 金色菱形）=== */
+.dong-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--dong-indigo);
+  margin-bottom: var(--space-xl);
+}
+
+.dong-section-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(180deg, var(--dong-jade), var(--dong-indigo));
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.dong-section-title::after {
+  content: '◆';
+  font-size: 8px;
+  color: var(--dong-gold);
+  opacity: 0.6;
+}
+
+/* === 悬浮光晕效果 === */
+.dong-glow-hover {
+  transition: all var(--transition-normal);
+}
+
+.dong-glow-hover:hover {
+  box-shadow:
+    0 0 0 2px rgba(26, 82, 118, 0.1),
+    0 8px 32px rgba(26, 82, 118, 0.12),
+    0 0 60px rgba(40, 180, 99, 0.06);
+}
+
+/* === 金色渐变文字 === */
+.dong-text-gold {
+  background: linear-gradient(135deg, var(--dong-gold) 0%, var(--dong-gold-light) 50%, #e8c547 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* === 波浪分隔线（侗族水纹） === */
+.dong-wave-divider {
+  height: 24px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 20px,
+      rgba(26, 82, 118, 0.06) 20px,
+      rgba(26, 82, 118, 0.06) 22px
+    );
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 24'%3E%3Cpath d='M0 12 Q150 0 300 12 Q450 24 600 12 Q750 0 900 12 Q1050 24 1200 12 L1200 24 L0 24 Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 24'%3E%3Cpath d='M0 12 Q150 0 300 12 Q450 24 600 12 Q750 0 900 12 Q1050 24 1200 12 L1200 24 L0 24 Z' fill='black'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+}

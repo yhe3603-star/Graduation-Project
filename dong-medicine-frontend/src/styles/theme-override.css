@@ -1,0 +1,346 @@
+/**
+ * Element Plus 全局主题覆盖 — 侗族医药品牌色系
+ * 将 Element Plus 默认蓝色替换为侗族靛蓝+青绿体系
+ */
+
+:root {
+  /* === Element Plus 主色覆盖 === */
+  --el-color-primary: var(--dong-indigo);
+  --el-color-primary-light-1: #1e6390;
+  --el-color-primary-light-2: #2674a3;
+  --el-color-primary-light-3: #2e85b5;
+  --el-color-primary-light-4: #3d96c4;
+  --el-color-primary-light-5: #5aaed6;
+  --el-color-primary-light-6: #7dc4e5;
+  --el-color-primary-light-7: #a3d8f0;
+  --el-color-primary-light-8: #c9eaf8;
+  --el-color-primary-light-9: #e8f5fb;
+  --el-color-primary-dark-1: #15456b;
+
+  --el-color-success: var(--dong-jade);
+  --el-color-warning: var(--dong-gold-light);
+  --el-color-danger: #e74c3c;
+  --el-color-info: #5a7d8a;
+
+  /* === 边框圆角 === */
+  --el-border-radius-base: var(--radius-sm);
+  --el-border-radius-small: var(--radius-xs);
+  --el-border-radius-round: var(--radius-xl);
+
+  /* === 字体 === */
+  --el-font-family: var(--font-body);
+}
+
+/* === 按钮全局覆盖 === */
+.el-button--primary {
+  --el-button-bg-color: var(--dong-indigo);
+  --el-button-border-color: var(--dong-indigo);
+  --el-button-hover-bg-color: var(--dong-indigo-light);
+  --el-button-hover-border-color: var(--dong-indigo-light);
+  --el-button-active-bg-color: var(--dong-indigo-dark);
+  --el-button-active-border-color: var(--dong-indigo-dark);
+  background: linear-gradient(135deg, var(--dong-indigo), var(--dong-indigo-dark)) !important;
+  border: none !important;
+  transition: all var(--transition-normal);
+}
+
+.el-button--primary:hover {
+  background: linear-gradient(135deg, var(--dong-indigo-light), var(--dong-indigo)) !important;
+  box-shadow: 0 4px 16px rgba(26, 82, 118, 0.3);
+  transform: translateY(-1px);
+}
+
+.el-button--primary:active {
+  transform: translateY(0);
+}
+
+.el-button--success {
+  --el-button-bg-color: var(--dong-jade);
+  --el-button-border-color: var(--dong-jade);
+  --el-button-hover-bg-color: var(--dong-jade-light);
+  --el-button-hover-border-color: var(--dong-jade-light);
+  background: linear-gradient(135deg, var(--dong-jade), var(--dong-jade-dark)) !important;
+  border: none !important;
+}
+
+.el-button--warning {
+  --el-button-bg-color: var(--dong-gold-light);
+  --el-button-border-color: var(--dong-gold-light);
+  background: linear-gradient(135deg, var(--dong-gold-light), #e8930c) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+/* === 标签全局覆盖 === */
+.el-tag--primary {
+  --el-tag-bg-color: rgba(26, 82, 118, 0.1);
+  --el-tag-border-color: rgba(26, 82, 118, 0.2);
+  --el-tag-text-color: var(--dong-indigo);
+}
+
+.el-tag--success {
+  --el-tag-bg-color: rgba(40, 180, 99, 0.1);
+  --el-tag-border-color: rgba(40, 180, 99, 0.2);
+  --el-tag-text-color: var(--dong-jade-dark);
+}
+
+.el-tag--warning {
+  --el-tag-bg-color: rgba(245, 166, 35, 0.1);
+  --el-tag-border-color: rgba(245, 166, 35, 0.2);
+  --el-tag-text-color: #c47f1a;
+}
+
+/* === 输入框覆盖 === */
+.el-input__wrapper {
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  box-shadow: 0 0 0 1px var(--border-medium) inset;
+}
+
+.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--dong-indigo-light) inset;
+}
+
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--dong-indigo) inset, 0 0 0 3px rgba(26, 82, 118, 0.1);
+}
+
+.el-input__inner {
+  color: var(--text-primary);
+}
+
+.el-input__inner::placeholder {
+  color: var(--text-muted);
+}
+
+/* === 下拉菜单覆盖 === */
+.el-dropdown-menu {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  padding: var(--space-xs);
+}
+
+.el-dropdown-menu__item {
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.el-dropdown-menu__item:hover {
+  background: rgba(26, 82, 118, 0.06);
+  color: var(--dong-indigo);
+}
+
+/* === 对话框覆盖 === */
+.el-dialog {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+.el-dialog__header {
+  padding: var(--space-xl) var(--space-xl) var(--space-md);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.el-dialog__title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-semibold);
+  color: var(--dong-indigo);
+  font-size: var(--font-size-lg);
+}
+
+.el-dialog__body {
+  padding: var(--space-xl);
+}
+
+.el-dialog__footer {
+  padding: var(--space-md) var(--space-xl) var(--space-xl);
+  border-top: 1px solid var(--border-light);
+}
+
+/* === 消息提示覆盖 === */
+.el-message {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.el-message--success {
+  --el-message-bg-color: rgba(40, 180, 99, 0.08);
+  border-color: rgba(40, 180, 99, 0.2);
+}
+
+.el-message--error {
+  --el-message-bg-color: rgba(231, 76, 60, 0.08);
+  border-color: rgba(231, 76, 60, 0.2);
+}
+
+/* === 分页器覆盖 === */
+.el-pagination .el-pager li.is-active {
+  background: var(--dong-indigo);
+  border-radius: var(--radius-sm);
+}
+
+.el-pagination .el-pager li:hover {
+  color: var(--dong-indigo);
+}
+
+/* === 单选/复选覆盖 === */
+.el-radio__input.is-checked .el-radio__inner {
+  background: var(--dong-indigo);
+  border-color: var(--dong-indigo);
+}
+
+.el-radio__input.is-checked + .el-radio__label {
+  color: var(--dong-indigo);
+}
+
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background: var(--dong-indigo);
+  border-color: var(--dong-indigo);
+}
+
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: var(--dong-indigo);
+}
+
+/* === 开关覆盖 === */
+.el-switch.is-checked .el-switch__core {
+  background: var(--dong-jade);
+  border-color: var(--dong-jade);
+}
+
+/* === 滑块覆盖 === */
+.el-slider__bar {
+  background: var(--dong-indigo);
+}
+
+.el-slider__button {
+  border-color: var(--dong-indigo);
+}
+
+/* === 选项卡覆盖 === */
+.el-tabs__item.is-active {
+  color: var(--dong-indigo);
+}
+
+.el-tabs__item:hover {
+  color: var(--dong-indigo-light);
+}
+
+.el-tabs__active-bar {
+  background: linear-gradient(to right, var(--dong-indigo), var(--dong-jade));
+}
+
+/* === 菜单覆盖 === */
+.el-menu {
+  border-right-color: var(--border-light);
+}
+
+.el-menu-item.is-active {
+  color: var(--dong-indigo);
+  background: rgba(26, 82, 118, 0.05);
+}
+
+.el-menu-item:hover {
+  color: var(--dong-indigo);
+  background: rgba(26, 82, 118, 0.03);
+}
+
+/* === 步骤条覆盖 === */
+.el-step.is-process .el-step__icon {
+  background: var(--dong-indigo);
+  border-color: var(--dong-indigo);
+}
+
+.el-step.is-finish .el-step__icon {
+  background: var(--dong-jade);
+  border-color: var(--dong-jade);
+}
+
+.el-step.is-finish .el-step__title {
+  color: var(--dong-jade);
+}
+
+/* === 进度条覆盖 === */
+.el-progress-bar__inner {
+  background: linear-gradient(to right, var(--dong-indigo), var(--dong-jade));
+}
+
+/* === 文字链接覆盖 === */
+.el-link.el-link--primary {
+  --el-link-text-color: var(--dong-indigo);
+  --el-link-hover-text-color: var(--dong-indigo-light);
+}
+
+/* === 头像覆盖 === */
+.el-avatar {
+  font-family: var(--font-display);
+}
+
+/* === 骨架屏覆盖 === */
+.el-skeleton__item {
+  background: linear-gradient(90deg, var(--bg-rice-dark) 25%, var(--bg-rice) 50%, var(--bg-rice-dark) 75%);
+}
+
+/* === 表格覆盖 === */
+.el-table th.el-table__cell {
+  background: rgba(26, 82, 118, 0.04);
+  color: var(--dong-indigo);
+  font-weight: var(--font-weight-semibold);
+}
+
+.el-table .el-table__row:hover > td {
+  background: rgba(26, 82, 118, 0.02);
+}
+
+/* === 加载覆盖 === */
+.el-loading-spinner .path {
+  stroke: var(--dong-indigo);
+}
+
+/* === 滚动条覆盖 === */
+.el-scrollbar__thumb {
+  background: rgba(26, 82, 118, 0.3);
+}
+
+.el-scrollbar__thumb:hover {
+  background: rgba(26, 82, 118, 0.5);
+}
+
+/* === 折叠面板覆盖 === */
+.el-collapse-item__header {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.el-collapse-item__header:hover {
+  color: var(--dong-indigo);
+}
+
+/* === 走马灯覆盖 === */
+.el-carousel__indicator.is-active button {
+  background: var(--dong-indigo);
+}
+
+.el-carousel__arrow {
+  background: rgba(26, 82, 118, 0.15);
+  color: var(--dong-indigo);
+}
+
+.el-carousel__arrow:hover {
+  background: rgba(26, 82, 118, 0.3);
+}
+
+/* === 空状态覆盖 === */
+.el-empty__description {
+  color: var(--text-muted);
+}
+
+/* === 表单验证覆盖 === */
+.el-form-item.is-error .el-input__wrapper {
+  box-shadow: 0 0 0 1px var(--color-danger) inset;
+}
+
+.el-form-item__error {
+  color: var(--color-danger);
+}

@@ -1,8 +1,10 @@
 package com.dongmedicine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.common.exception.BusinessException;
+import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.*;
 import com.dongmedicine.mapper.*;
 import com.dongmedicine.mq.producer.StatisticsProducer;
@@ -99,11 +101,27 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     }
 
     @Override
+    public Page<Map<String, Object>> getMyFavoritesPaged(Integer userId, Integer page, Integer size) {
+        Page<Favorite> favPage = page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Favorite>()
+                        .eq(Favorite::getUserId, userId)
+                        .orderByDesc(Favorite::getCreatedAt));
+
+        List<Map<String, Object>> records = buildFavoriteResults(favPage.getRecords());
+        Page<Map<String, Object>> result = new Page<>(favPage.getCurrent(), favPage.getSize(), favPage.getTotal());
+        result.setRecords(records);
+        return result;
+    }
+
+    @Override
     public List<Map<String, Object>> getMyFavorites(Integer userId) {
         List<Favorite> favorites = list(new LambdaQueryWrapper<Favorite>()
                 .eq(Favorite::getUserId, userId)
                 .orderByDesc(Favorite::getCreatedAt));
+        return buildFavoriteResults(favorites);
+    }
 
+    private List<Map<String, Object>> buildFavoriteResults(List<Favorite> favorites) {
         if (favorites.isEmpty()) {
             return new ArrayList<>();
         }
@@ -115,7 +133,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
                 ));
 
         Map<String, Map<Integer, Object>> dataCache = new HashMap<>();
-        
+
         groupedIds.forEach((type, ids) -> {
             Map<Integer, Object> typeData = batchQueryByType(type, ids);
             dataCache.put(type, typeData);

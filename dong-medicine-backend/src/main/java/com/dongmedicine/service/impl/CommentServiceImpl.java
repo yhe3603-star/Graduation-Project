@@ -61,11 +61,35 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
+    public Page<CommentDTO> listApprovedPaged(String targetType, Integer targetId, Integer page, Integer size) {
+        Page<Comment> entityPage = page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Comment>()
+                        .eq(Comment::getTargetType, targetType)
+                        .eq(Comment::getTargetId, targetId)
+                        .eq(Comment::getStatus, "approved")
+                        .orderByDesc(Comment::getCreatedAt));
+        Page<CommentDTO> dtoPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+        dtoPage.setRecords(entityPage.getRecords().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        return dtoPage;
+    }
+
+    @Override
     public List<CommentDTO> listByUserId(Integer userId) {
         return list(new LambdaQueryWrapper<Comment>()
                 .eq(Comment::getUserId, userId)
                 .orderByDesc(Comment::getCreatedAt)).stream()
                 .map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<CommentDTO> listByUserIdPaged(Integer userId, Integer page, Integer size) {
+        Page<Comment> entityPage = page(PageUtils.getPage(page, size),
+                new LambdaQueryWrapper<Comment>()
+                        .eq(Comment::getUserId, userId)
+                        .orderByDesc(Comment::getCreatedAt));
+        Page<CommentDTO> dtoPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+        dtoPage.setRecords(entityPage.getRecords().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        return dtoPage;
     }
 
     @Override

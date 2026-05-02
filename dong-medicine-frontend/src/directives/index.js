@@ -136,35 +136,40 @@ export const vFocus = {
 export const vPermission = {
   mounted(el, binding) {
     const { value } = binding
-    const role = sessionStorage.getItem('role') || 'user'
+    const role = localStorage.getItem('role') || 'user'
     const requiredRoles = Array.isArray(value) ? value : [value]
-    
+
     if (value && !requiredRoles.includes(role) && role.toUpperCase() !== 'ADMIN') {
       el.parentNode?.removeChild(el)
     }
   }
 }
 
+function createLoadingElement() {
+  const loadingEl = document.createElement('div')
+  loadingEl.className = 'loading-spinner'
+  const spinner = document.createElement('div')
+  spinner.className = 'spinner'
+  loadingEl.appendChild(spinner)
+  return loadingEl
+}
+
 export const vLoading = {
   mounted(el, binding) {
     if (binding.value) {
       el.classList.add('loading')
-      const loadingEl = document.createElement('div')
-      loadingEl.className = 'loading-spinner'
-      loadingEl.innerHTML = '<div class="spinner"></div>'
+      const loadingEl = createLoadingElement()
       el.appendChild(loadingEl)
       el._loadingEl = loadingEl
     }
   },
-  
+
   updated(el, binding) {
     if (binding.value !== binding.oldValue) {
       if (binding.value) {
         el.classList.add('loading')
         if (!el._loadingEl) {
-          const loadingEl = document.createElement('div')
-          loadingEl.className = 'loading-spinner'
-          loadingEl.innerHTML = '<div class="spinner"></div>'
+          const loadingEl = createLoadingElement()
           el.appendChild(loadingEl)
           el._loadingEl = loadingEl
         }

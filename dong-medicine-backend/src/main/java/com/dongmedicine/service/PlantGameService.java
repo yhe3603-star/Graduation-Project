@@ -1,5 +1,6 @@
 package com.dongmedicine.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.dto.PlantGameSubmitDTO;
 import com.dongmedicine.entity.PlantGameRecord;
 
@@ -11,4 +12,6 @@ public interface PlantGameService {
     Integer calculateScore(PlantGameSubmitDTO dto);
 
     List<PlantGameRecord> getUserRecords(Integer userId);
+
+    Page<PlantGameRecord> getUserRecordsPaged(Integer userId, Integer page, Integer size);
 }

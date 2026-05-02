@@ -383,6 +383,12 @@ watch(() => props.visible, (newVal) => {
     activeMediaTab.value = videoList.value.length > 0 ? 'video' : 'document';
     loadDocuments();
     loadRelatedPlants();
+    // Record browse history
+    if (props.knowledge?.id) {
+      request.post('/browse-history/record', null, {
+        params: { targetType: 'knowledge', targetId: props.knowledge.id }
+      }).catch(() => {});
+    }
   } else if (videoPlayerRef.value) {
     videoPlayerRef.value.pause();
   }

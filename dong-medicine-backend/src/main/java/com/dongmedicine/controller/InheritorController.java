@@ -10,15 +10,20 @@ import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.service.BrowseHistoryService;
 import com.dongmedicine.service.InheritorService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
 @Tag(name = "传承人风采", description = "侗乡医药非遗传承人信息查询与展示")
+@Slf4j
 @RestController
 @RequestMapping("/api/inheritors")
+@Validated
 @RequiredArgsConstructor
 public class InheritorController {
 
@@ -37,7 +42,7 @@ public class InheritorController {
 
     @GetMapping("/search")
     public R<Map<String, Object>> search(
-            @RequestParam String keyword,
+            @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "12") Integer size) {
         Page<Inheritor> pageResult = service.searchPaged(keyword, page, size);
@@ -53,7 +58,7 @@ public class InheritorController {
             try {
                 browseHistoryService.record(userId, "inheritor", id);
             } catch (Exception e) {
-                // Silently ignore
+                log.debug("记录浏览历史失败", e);
             }
         }
         return R.ok(in);

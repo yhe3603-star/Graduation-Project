@@ -296,13 +296,3 @@ textarea:focus-visible,
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-muted: #888;
-    --text-inverse: #1a1a1a;
-    --bg-rice: #121212;
-    --bg-rice-dark: #1e1e1e;
-  }
-}

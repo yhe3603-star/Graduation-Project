@@ -42,29 +42,32 @@ public class BrowseHistoryServiceImpl extends ServiceImpl<BrowseHistoryMapper, B
 
     @Override
     public List<Map<String, Object>> getMyHistory(Integer userId, int limit) {
-        // Get recent unique browse entries (deduplicated by targetType + targetId)
-        List<BrowseHistory> all = list(new LambdaQueryWrapper<BrowseHistory>()
-                .eq(BrowseHistory::getUserId, userId)
-                .orderByDesc(BrowseHistory::getCreatedAt));
+        try {
+            List<BrowseHistory> all = list(new LambdaQueryWrapper<BrowseHistory>()
+                    .eq(BrowseHistory::getUserId, userId)
+                    .orderByDesc(BrowseHistory::getCreatedAt));
 
-        // Deduplicate by targetType+targetId, keep most recent
-        Map<String, BrowseHistory> deduped = new LinkedHashMap<>();
-        for (BrowseHistory h : all) {
-            String key = h.getTargetType() + ":" + h.getTargetId();
-            deduped.putIfAbsent(key, h);
+            Map<String, BrowseHistory> deduped = new LinkedHashMap<>();
+            for (BrowseHistory h : all) {
+                String key = h.getTargetType() + ":" + h.getTargetId();
+                deduped.putIfAbsent(key, h);
+            }
+
+            return deduped.values().stream()
+                    .limit(limit)
+                    .map(h -> {
+                        Map<String, Object> m = new LinkedHashMap<>();
+                        m.put("id", h.getId());
+                        m.put("userId", h.getUserId());
+                        m.put("targetType", h.getTargetType());
+                        m.put("targetId", h.getTargetId());
+                        m.put("browseTime", h.getCreatedAt());
+                        return m;
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("查询浏览历史失败: userId={}, error={}", userId, e.getMessage(), e);
+            return Collections.emptyList();
         }
-
-        return deduped.values().stream()
-                .limit(limit)
-                .map(h -> {
-                    Map<String, Object> m = new LinkedHashMap<>();
-                    m.put("id", h.getId());
-                    m.put("userId", h.getUserId());
-                    m.put("targetType", h.getTargetType());
-                    m.put("targetId", h.getTargetId());
-                    m.put("browseTime", h.getCreatedAt());
-                    return m;
-                })
-                .collect(Collectors.toList());
     }
 }

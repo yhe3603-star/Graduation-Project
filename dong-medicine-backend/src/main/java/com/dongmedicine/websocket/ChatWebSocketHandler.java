@@ -12,6 +12,8 @@ import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import reactor.core.Disposable;
 
+import jakarta.annotation.PreDestroy;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
@@ -19,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -26,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private static final int MAX_CHAT_THREADS = 50;
+    private static final int MAX_MESSAGE_LENGTH = 2000;
 
     private final AiChatService aiChatService;
     private final ChatHistoryService chatHistoryService;
@@ -51,6 +55,23 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         this.aiChatService = aiChatService;
         this.chatHistoryService = chatHistoryService;
         this.objectMapper = objectMapper;
+    }
+
+    @PreDestroy
+    public void destroy() {
+        chatExecutor.shutdown();
+        try {
+            if (!chatExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                chatExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            chatExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+        activeSubscriptions.values().forEach(d -> {
+            if (d != null && !d.isDisposed()) d.dispose();
+        });
+        log.info("ChatWebSocketHandler 已关闭");
     }
 
     @Override
@@ -84,6 +105,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             sendError(session, "消息内容不能为空");
             return;
         }
+        if (userMessage.length() > MAX_MESSAGE_LENGTH) {
+            sendError(session, "消息内容不能超过" + MAX_MESSAGE_LENGTH + "字符");
+            return;
+        }
 
         String wsSessionId = session.getId();
         Disposable prev = activeSubscriptions.get(wsSessionId);
@@ -96,7 +121,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String chatSessionId = json.has("sessionId") && !json.path("sessionId").asText().isBlank()
                 ? json.path("sessionId").asText()
                 : chatSessionIds.computeIfAbsent(wsSessionId, k -> UUID.randomUUID().toString());
-        chatSessionIds.putIfAbsent(wsSessionId, chatSessionId);
+        // Always update mapping so disconnect handler flushes the correct session
+        chatSessionIds.put(wsSessionId, chatSessionId);
 
         String userIdStr = getUserId(session);
         Integer userId = "anonymous".equals(userIdStr) ? null : Integer.parseInt(userIdStr);
@@ -104,12 +130,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         log.info("WebSocket聊天请求: wsSessionId={}, chatSessionId={}, userId={}, messageLength={}",
                 wsSessionId, chatSessionId, userId, userMessage.length());
 
-        // Save user message to database
+        // Save user message to Redis (deferred MySQL persist on disconnect)
         if (userId != null) {
             try {
-                chatHistoryService.saveMessage(userId, chatSessionId, "user", userMessage);
+                chatHistoryService.saveMessageToRedis(userId, chatSessionId, "user", userMessage);
             } catch (Exception e) {
-                log.warn("保存用户消息失败: userId={}, chatSessionId={}", userId, chatSessionId, e);
+                log.warn("保存用户消息到Redis失败: userId={}, chatSessionId={}", userId, chatSessionId, e);
             }
         }
 
@@ -129,12 +155,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                         sendJson(session, Map.of("type", "done", "content", fullReply, "sessionId", chatSessionId));
                         ChatController.recordRequest(true);
 
-                        // Save assistant response to database
+                        // Save assistant response to Redis
                         if (userId != null) {
                             try {
-                                chatHistoryService.saveMessage(userId, chatSessionId, "assistant", fullReply);
+                                chatHistoryService.saveMessageToRedis(userId, chatSessionId, "assistant", fullReply);
                             } catch (Exception e) {
-                                log.warn("保存AI回复失败: userId={}, chatSessionId={}", userId, chatSessionId, e);
+                                log.warn("保存AI回复到Redis失败: userId={}, chatSessionId={}", userId, chatSessionId, e);
                             }
                         }
 
@@ -171,15 +197,28 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        String sessionId = session.getId();
-        sessions.remove(sessionId);
-        chatSessionIds.remove(sessionId);
-        Disposable subscription = activeSubscriptions.remove(sessionId);
+        String wsSessionId = session.getId();
+        String chatSessionId = chatSessionIds.remove(wsSessionId);
+        sessions.remove(wsSessionId);
+        Disposable subscription = activeSubscriptions.remove(wsSessionId);
         if (subscription != null && !subscription.isDisposed()) {
             subscription.dispose();
-            log.info("WebSocket连接关闭，取消AI请求: sessionId={}", sessionId);
         }
-        log.info("WebSocket连接关闭: sessionId={}, status={}", sessionId, status);
+
+        // Flush Redis messages to MySQL on disconnect
+        if (chatSessionId != null) {
+            String userIdStr = getUserId(session);
+            if (!"anonymous".equals(userIdStr)) {
+                try {
+                    Integer userId = Integer.parseInt(userIdStr);
+                    chatHistoryService.flushSessionToMysql(userId, chatSessionId);
+                    log.info("WebSocket断开，会话已持久化: userId={}, chatSessionId={}", userId, chatSessionId);
+                } catch (Exception e) {
+                    log.warn("WebSocket断开持久化失败: chatSessionId={}", chatSessionId, e);
+                }
+            }
+        }
+        log.info("WebSocket连接关闭: wsSessionId={}, chatSessionId={}, status={}", wsSessionId, chatSessionId, status);
     }
 
     @Override

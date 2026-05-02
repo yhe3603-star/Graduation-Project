@@ -14,12 +14,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Tag(name = "非遗知识库", description = "侗乡医药知识查询、检索、浏览统计")
 @RestController
 @RequestMapping("/api/knowledge")
@@ -67,7 +69,7 @@ public class KnowledgeController {
             try {
                 browseHistoryService.record(userId, "knowledge", id);
             } catch (Exception e) {
-                // Silently ignore
+                log.debug("记录浏览历史失败", e);
             }
         }
         return R.ok(knowledge);
@@ -88,6 +90,7 @@ public class KnowledgeController {
     }
 
     @PostMapping("/feedback")
+    @SaCheckLogin
     public R<String> feedback(
             @RequestParam @NotNull(message = "知识ID不能为空") Integer knowledgeId,
             @RequestParam @NotBlank(message = "反馈内容不能为空") String content) {

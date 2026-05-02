@@ -251,6 +251,7 @@ import request from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import { Lock, SwitchButton, User, EditPen, Star, View, Clock, ArrowRight, TrendCharts, Trophy, Cherry } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
+import { extractData } from '@/utils'
 import Pagination from '@/components/business/display/Pagination.vue'
 import CaptchaInput from '@/components/business/interact/CaptchaInput.vue'
 import { usePersonalCenter, actions, typeIconMap, typeTagMap, typeNameMap } from '@/composables/usePersonalCenter'
@@ -379,14 +380,14 @@ const hasScoreData = ref(false)
 function buildScoreTrendData() {
   // Collect all quiz scores with timestamps
   const quizPoints = quizRecords.value.map(r => ({
-    date: r.createTime ? new Date(r.createTime).toISOString().slice(0, 10) : '',
+    date: (r.createdAt || r.createTime) ? new Date(r.createdAt || r.createTime).toISOString().slice(0, 10) : '',
     score: Number(r.score || 0),
     type: 'quiz'
   }))
 
   // Collect all game scores with timestamps
   const gamePoints = gameRecords.value.map(r => ({
-    date: r.createTime ? new Date(r.createTime).toISOString().slice(0, 10) : '',
+    date: (r.createdAt || r.createTime) ? new Date(r.createdAt || r.createTime).toISOString().slice(0, 10) : '',
     score: Number(r.score || 0),
     type: 'game'
   }))
@@ -546,9 +547,24 @@ watch(
 )
 
 // Watch tab changes to load data and init chart
-watch(activeTab, (tab) => {
+watch(activeTab, async (tab) => {
   if (tab === 'stats') {
-    nextTick(() => { initScoreChart() })
+    statsLoading.value = true
+    try {
+      if (isLoggedIn.value) {
+        const [quizRes, gameRes] = await Promise.all([
+          request.get('/quiz/records').catch(() => ({})),
+          request.get('/plant-game/records').catch(() => ({}))
+        ])
+        quizRecords.value = extractData(quizRes)
+        gameRecords.value = extractData(gameRes)
+      }
+      computeStudyStats()
+      await nextTick()
+      initScoreChart()
+    } finally {
+      statsLoading.value = false
+    }
   }
   if (tab === 'history') {
     loadBrowseHistory()
@@ -810,8 +826,9 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   font-weight: var(--font-weight-bold);
-  color: #000000;
+  color: #ffffff;
   font-size: 18px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .record-score.score-high {

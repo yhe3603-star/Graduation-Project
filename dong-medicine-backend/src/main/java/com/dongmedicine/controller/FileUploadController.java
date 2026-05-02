@@ -79,7 +79,7 @@ public class FileUploadController {
             return deleted ? R.ok("文件删除成功", true) : R.error("文件删除失败");
         } catch (Exception e) {
             log.error("文件删除失败", e);
-            return R.error("文件删除失败: " + e.getMessage());
+            return R.error("文件删除失败");
         }
     }
 
@@ -89,7 +89,7 @@ public class FileUploadController {
             return result.isSuccess() ? R.ok(result) : R.error(result.getMessage());
         } catch (Exception e) {
             log.error("{}上传失败", type, e);
-            return R.error(type + "上传失败: " + e.getMessage());
+            return R.error(type + "上传失败");
         }
     }
 
@@ -98,7 +98,7 @@ public class FileUploadController {
             return R.ok(uploader.get());
         } catch (Exception e) {
             log.error("{}上传失败", type, e);
-            return R.error(type + "上传失败: " + e.getMessage());
+            return R.error(type + "上传失败");
         }
     }
 }

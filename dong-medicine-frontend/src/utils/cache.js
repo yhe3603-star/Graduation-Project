@@ -196,4 +196,8 @@ export const stopCacheCleanup = () => {
 
 startCacheCleanup()
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', stopCacheCleanup)
+}
+
 export default cache

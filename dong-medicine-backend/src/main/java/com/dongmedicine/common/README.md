@@ -1,407 +1,357 @@
-# 公共模块目录 (common/)
+# Common 模块 -- 通用工具与基础组件
 
-> 类比：common 模块就像药铺的**工具箱** -- 称药的秤、包药的纸、贴标签的笔，这些工具每个岗位都需要用。公共模块里放的就是整个项目通用的工具类和基础类。
-
-## 什么是公共模块？
-
-在一个项目中，有很多代码是**各个模块都会用到**的。比如：
-- 每个接口都需要统一的返回格式
-- 每个地方都可能抛出业务异常
-- 每个接口都需要获取当前登录用户
-- 每个输入都需要检查有没有恶意代码
-
-如果每个模块都自己写一套，就会重复代码、风格不一致。公共模块就是把这些**通用功能**集中在一起，让大家统一使用。
+> 通用模块是项目的"公共工具箱"——统一响应格式、异常处理、安全工具、常量定义等，所有模块共享。
 
 ---
 
-## 目录结构
+## 一、目录结构
 
 ```
 common/
-├── constant/                    # 常量定义
-│   └── RoleConstants.java       #   角色常量（user/admin）
-├── exception/                   # 异常处理
-│   ├── BusinessException.java   #   业务异常类
-│   ├── ErrorCode.java           #   错误码枚举
-│   └── GlobalExceptionHandler.java  # 全局异常处理器
-├── util/                        # 工具类
-│   ├── FileCleanupHelper.java   #   文件清理助手
-│   ├── FileTypeUtils.java       #   文件类型检测
-│   ├── PageUtils.java           #   分页工具
-│   ├── PasswordValidator.java   #   密码验证器
-│   ├── SensitiveDataUtils.java  #   敏感数据脱敏
-│   └── XssUtils.java            #   XSS防护工具
-├── R.java                       # 统一响应封装
-├── SecurityUtils.java           # 安全工具类
-└── README.md
+├── constant/
+│   ├── ApiPaths.java              # API路径常量（按模块组织）
+│   ├── RabbitMQConstants.java     # RabbitMQ队列/交换机/路由键常量
+│   └── RoleConstants.java         # 角色常量（ROLE_USER="user", ROLE_ADMIN="admin"）
+├── exception/
+│   ├── BusinessException.java     # 业务异常类（30+种静态工厂方法）
+│   ├── ErrorCode.java             # 错误码枚举（按模块分类：1xxx-9xxx）
+│   └── GlobalExceptionHandler.java # 全局异常处理器（20+种异常类型映射）
+├── util/
+│   ├── FileCleanupHelper.java     # 文件清理助手（解析JSON字段中的文件路径并删除）
+│   ├── FileTypeUtils.java         # 文件类型检测（MIME类型、扩展名判断）
+│   ├── IpUtils.java               # 客户端IP获取（处理代理/反向代理）
+│   ├── PageUtils.java             # 分页工具（getPage归一化 + escapeLike防注入 + toMap转换）
+│   ├── PasswordValidator.java     # 密码强度验证器（长度/字符类型/强度评分）
+│   ├── SensitiveDataUtils.java    # 敏感数据脱敏（手机号/身份证/邮箱等）
+│   └── XssUtils.java              # XSS检测与清洗（30+种危险模式）
+├── R.java                         # 统一响应封装（泛型类，10+种静态工厂方法）
+└── SecurityUtils.java             # 安全工具类（封装Sa-Token StpUtil，提供静态方法）
 ```
 
 ---
 
-## 核心类详解
+## 二、R.java -- 统一响应封装
 
-### 1. R.java -- 统一响应封装
+文件：`common/R.java`
 
-> 类比：R 就像药铺的**标准药袋** -- 不管什么药，都装在同样格式的袋子里，外面贴上标签（状态码、消息、内容），顾客一看就知道药有没有配好。
-
-所有 Controller 接口的返回值都使用 `R<T>` 包装，保证前端收到的响应格式一致。
+项目最核心的通用类之一。所有Controller接口都返回 `R<T>`，保证前端收到的JSON格式完全一致。
 
 ```java
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class R<T> {
-    private int code;          // 状态码：200=成功，其他=失败
-    private String msg;        // 消息：成功时"success"，失败时错误描述
-    private T data;            // 数据：泛型，可以是任何类型
-    private String requestId;  // 请求ID：用于追踪问题
+    private static final int SUCCESS = 200;
+    private static final int BAD_REQUEST = 400;
+    private static final int UNAUTHORIZED = 401;
+    private static final int FORBIDDEN = 403;
+    private static final int NOT_FOUND = 404;
+    private static final int ERROR = 500;
+
+    private int code;           // 状态码
+    private String msg;         // 提示信息
+    private T data;             // 实际数据（泛型）
+    private String requestId;   // 请求追踪ID（从MDC获取）
+
+    // 静态工厂方法
+    public static <T> R<T> ok()                        { return new R<>(200, "success", null, getRequestId()); }
+    public static <T> R<T> ok(T data)                  { return new R<>(200, "success", data, getRequestId()); }
+    public static <T> R<T> ok(String msg, T data)      { return new R<>(200, msg, data, getRequestId()); }
+    public static <T> R<T> error(String msg)           { return new R<>(500, msg, null, getRequestId()); }
+    public static <T> R<T> error(int code, String msg) { return new R<>(code, msg, null, getRequestId()); }
+    public static <T> R<T> error(ErrorCode errorCode)  { return new R<>(errorCode.getCode(), errorCode.getMessage(), null, getRequestId()); }
+    public static <T> R<T> error(ErrorCode ec, String msg) { return new R<>(ec.getCode(), msg, null, getRequestId()); }
+    public static <T> R<T> unauthorized(String msg)    { return new R<>(401, msg, null, getRequestId()); }
+    public static <T> R<T> forbidden(String msg)       { return new R<>(403, msg, null, getRequestId()); }
+    public static <T> R<T> notFound(String msg)        { return new R<>(404, msg, null, getRequestId()); }
+    public static <T> R<T> badRequest(String msg)      { return new R<>(400, msg, null, getRequestId()); }
+
+    public boolean isSuccess() { return this.code == SUCCESS; }
+
+    private static String getRequestId() {
+        String requestId = MDC.get(RequestIdFilter.REQUEST_ID_MDC_KEY);
+        return requestId != null ? requestId : "";
+    }
 }
 ```
 
-**使用示例**：
+**requestId来源**：由 `RequestIdFilter` 在每个请求开始时生成16位UUID，放入SLF4J MDC上下文。`R`类通过MDC获取，确保每个响应都包含可追踪的requestId。
 
+**Typical使用**：
 ```java
-@RestController
-@RequestMapping("/api/plants")
-public class PlantController {
-
-    // 成功返回（无数据）
-    @DeleteMapping("/{id}")
-    public R<Void> deletePlant(@PathVariable Integer id) {
-        plantService.deletePlant(id);
-        return R.ok();  // {"code":200, "msg":"success", "data":null}
-    }
-
-    // 成功返回（有数据）
-    @GetMapping("/{id}")
-    public R<Plant> getPlant(@PathVariable Integer id) {
-        Plant plant = plantService.getPlant(id);
-        return R.ok(plant);  // {"code":200, "msg":"success", "data":{...}}
-    }
-
-    // 成功返回（自定义消息）
-    @PostMapping
-    public R<Plant> addPlant(@RequestBody PlantDTO dto) {
-        Plant plant = plantService.addPlant(dto);
-        return R.ok("添加成功", plant);  // {"code":200, "msg":"添加成功", "data":{...}}
-    }
-
-    // 失败返回
-    @GetMapping("/search")
-    public R<Page<Plant>> search(String keyword) {
-        if (keyword == null || keyword.isEmpty()) {
-            return R.badRequest("搜索关键词不能为空");
-            // {"code":400, "msg":"搜索关键词不能为空", "data":null}
-        }
-        return R.ok(plantService.search(keyword));
-    }
-
-    // 使用ErrorCode返回
-    public R<Plant> getPlantById(Integer id) {
-        Plant plant = plantService.getPlant(id);
-        if (plant == null) {
-            return R.error(ErrorCode.PLANT_NOT_FOUND);
-            // {"code":2002, "msg":"植物信息不存在", "data":null}
-        }
-        return R.ok(plant);
-    }
-}
+// Controller中
+return R.ok(data);                              // 200 + data
+return R.ok("操作成功");                         // 200 + msg
+return R.error("服务器错误");                     // 500
+return R.badRequest("参数错误");                 // 400
+return R.unauthorized("请先登录");               // 401
+return R.forbidden("权限不足");                  // 403
+return R.notFound("资源不存在");                 // 404
+return R.error(ErrorCode.USER_NOT_FOUND);       // 1001 + "用户不存在"
 ```
-
-**R 提供的静态方法一览**：
-
-| 方法 | code | 用途 |
-|------|------|------|
-| `R.ok()` | 200 | 成功，无数据 |
-| `R.ok(data)` | 200 | 成功，有数据 |
-| `R.ok(msg, data)` | 200 | 成功，自定义消息 |
-| `R.error(msg)` | 500 | 通用错误 |
-| `R.error(code, msg)` | 自定义 | 自定义错误码 |
-| `R.error(ErrorCode)` | ErrorCode中的code | 使用错误码枚举 |
-| `R.unauthorized(msg)` | 401 | 未登录 |
-| `R.forbidden(msg)` | 403 | 权限不足 |
-| `R.notFound(msg)` | 404 | 资源不存在 |
-| `R.badRequest(msg)` | 400 | 请求参数错误 |
-
-**常见错误**：
-- Controller 直接返回实体类而不是 `R<T>`，导致前端收到的格式不一致
-- 在 Service 层使用 `R.error()` -- R 应该只在 Controller 层使用，Service 层应该抛 `BusinessException`
-- 忘记检查 `R.isSuccess()`，直接取 data 导致空指针
 
 ---
 
-### 2. ErrorCode.java -- 错误码体系
+## 三、异常体系
 
-> 类比：ErrorCode 就像药铺的**故障代码表** -- 每种故障都有一个编号，看到编号就知道是什么问题。
+### 3.1 ErrorCode -- 错误码枚举
 
-错误码按照模块分类，方便快速定位问题：
+文件：`common/exception/ErrorCode.java`
+
+按模块范围分类，共30+个错误码：
 
 | 范围 | 模块 | 示例 |
 |------|------|------|
-| 0 | 成功 | `SUCCESS(0, "操作成功")` |
-| 1xxx | 用户相关 | `USER_NOT_FOUND(1001)`, `PASSWORD_WRONG(1003)` |
-| 2xxx | 资源相关 | `PLANT_NOT_FOUND(2002)`, `KNOWLEDGE_NOT_FOUND(2003)` |
-| 3xxx | 参数相关 | `PARAM_ERROR(3001)`, `PARAM_MISSING(3002)` |
-| 4xxx | 文件相关 | `FILE_UPLOAD_ERROR(4001)`, `FILE_SIZE_EXCEEDED(4003)` |
-| 5xxx | 操作相关 | `DUPLICATE_OPERATION(5001)`, `OPERATION_TOO_FREQUENT(5002)` |
-| 6xxx | 基础设施 | `DATABASE_ERROR(6001)`, `CACHE_ERROR(6002)` |
-| 7xxx | AI服务 | `AI_SERVICE_ERROR(7001)` |
-| 9xxx | 系统错误 | `SYSTEM_ERROR(9001)`, `UNKNOWN_ERROR(9999)` |
+| 200 | 成功 | SUCCESS(200, "操作成功") |
+| 1xxx | 用户 | USER_NOT_FOUND(1001), USER_ALREADY_EXISTS(1002), PASSWORD_WRONG(1003), PASSWORD_TOO_WEAK(1004), TOKEN_EXPIRED(1005), TOKEN_INVALID(1006), PERMISSION_DENIED(1007), ACCOUNT_DISABLED(1008), LOGIN_REQUIRED(1009) |
+| 2xxx | 资源 | RESOURCE_NOT_FOUND(2001), PLANT_NOT_FOUND(2002), KNOWLEDGE_NOT_FOUND(2003), INHERITOR_NOT_FOUND(2004) |
+| 3xxx | 参数 | PARAM_ERROR(3001), PARAM_MISSING(3002), PARAM_FORMAT_ERROR(3003), PARAM_OUT_OF_RANGE(3004) |
+| 4xxx | 文件 | FILE_UPLOAD_ERROR(4001), FILE_TYPE_NOT_ALLOWED(4002), FILE_SIZE_EXCEEDED(4003), FILE_NOT_FOUND(4004) |
+| 5xxx | 操作 | DUPLICATE_OPERATION(5001), OPERATION_TOO_FREQUENT(5002), OPERATION_FAILED(5003) |
+| 6xxx | 基础设施 | DATABASE_ERROR(6001), CACHE_ERROR(6002), NETWORK_ERROR(6003) |
+| 7xxx | AI | AI_SERVICE_ERROR(7001), AI_RESPONSE_ERROR(7002) |
+| 9xxx | 系统 | SYSTEM_ERROR(9001), UNKNOWN_ERROR(9999) |
+
+### 3.2 BusinessException -- 业务异常
+
+文件：`common/exception/BusinessException.java`
 
 ```java
-// 使用示例
-// 在 Service 中抛出异常时使用 ErrorCode
-throw new BusinessException(ErrorCode.PLANT_NOT_FOUND);
-throw new BusinessException(ErrorCode.PARAM_ERROR, "搜索关键词不能为空");
+public class BusinessException extends RuntimeException {
+    private final ErrorCode errorCode;
 
-// 根据 code 反查 ErrorCode
-ErrorCode errorCode = ErrorCode.getByCode(1001);  // 返回 USER_NOT_FOUND
-```
+    // 构造函数
+    public BusinessException(ErrorCode errorCode) { ... }
+    public BusinessException(ErrorCode errorCode, String message) { ... }
 
-**常见错误**：
-- 新增错误码时不按分类编号，随意定义，导致混乱
-- 错误消息写得太技术化（如 "NullPointerException"），用户看不懂
-- 同一种错误在不同地方用不同的 code，前端难以统一处理
-
----
-
-### 3. GlobalExceptionHandler.java -- 全局异常处理器
-
-> 类比：GlobalExceptionHandler 就像药铺的**应急处理中心** -- 不管哪个岗位出了问题，都统一到这里处理，保证给顾客的回复格式一致。
-
-不用全局异常处理器时，每个 Controller 都要写 try-catch，代码又多又乱。有了全局异常处理器，所有异常都会被自动捕获并转换成统一的 `R<T>` 格式返回给前端。
-
-```java
-@RestControllerAdvice  // 告诉 Spring：这个类负责处理所有 Controller 的异常
-public class GlobalExceptionHandler {
-
-    // 处理业务异常（我们主动抛出的）
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<R<?>> handleBusinessException(BusinessException e) {
-        log.warn("业务异常: code={}, message={}", e.getErrorCode().getCode(), e.getMessage());
-        // 根据ErrorCode映射HTTP状态码
-        HttpStatus status = mapBusinessErrorCode(e.getErrorCode());
-        return ResponseEntity.status(status)
-                .body(R.error(e.getErrorCode(), e.getMessage()));
-    }
-
-    // 处理参数验证异常（@Valid 触发的）
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public R<?> handleValidationException(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
-        return R.error(ErrorCode.PARAM_FORMAT_ERROR, message);
-    }
-
-    // 处理数据库异常
-    @ExceptionHandler(DataAccessException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public R<?> handleDatabaseException(Exception e) {
-        log.error("数据库异常: ", e);
-        return R.error(ErrorCode.DATABASE_ERROR);
-    }
-
-    // 兜底：处理所有未捕获的异常
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public R<?> handleException(Exception e) {
-        log.error("未知异常: ", e);
-        return R.error(ErrorCode.UNKNOWN_ERROR);
-    }
+    // 静态工厂方法（30+种）
+    public static BusinessException notFound(String msg)   { return new BusinessException(RESOURCE_NOT_FOUND, msg); }
+    public static BusinessException badRequest(String msg) { return new BusinessException(PARAM_ERROR, msg); }
+    public static BusinessException unauthorized(String m) { return new BusinessException(TOKEN_INVALID, msg); }
+    public static BusinessException forbidden(String msg)  { return new BusinessException(PERMISSION_DENIED, msg); }
+    public static BusinessException conflict(String msg)   { return new BusinessException(DUPLICATE_OPERATION, msg); }
+    public static BusinessException userNotFound()         { return new BusinessException(USER_NOT_FOUND); }
+    public static BusinessException userAlreadyExists()    { return new BusinessException(USER_ALREADY_EXISTS); }
+    public static BusinessException passwordWrong()        { return new BusinessException(PASSWORD_WRONG); }
+    public static BusinessException passwordTooWeak()      { return new BusinessException(PASSWORD_TOO_WEAK); }
+    public static BusinessException permissionDenied()     { return new BusinessException(PERMISSION_DENIED); }
+    public static BusinessException systemError()          { return new BusinessException(SYSTEM_ERROR); }
 }
 ```
 
-**异常处理流程**：
+### 3.3 GlobalExceptionHandler -- 全局异常处理
 
-```
-Controller 中抛出异常
-  |
-  v
-Spring 捕获异常，寻找匹配的 @ExceptionHandler
-  |
-  v
-BusinessException?        --> 返回 R.error(ErrorCode, message) + 对应HTTP状态码
-NotLoginException?        --> 返回 R.error(LOGIN_REQUIRED) + 401
-NotRoleException?         --> 返回 R.error(PERMISSION_DENIED) + 403
-MethodArgumentNotValid?   --> 返回 R.error(PARAM_FORMAT_ERROR, 验证消息)
-DataAccessException?      --> 返回 R.error(DATABASE_ERROR)
-AccessDeniedException?    --> 返回 R.error(PERMISSION_DENIED)
-其他 Exception?           --> 返回 R.error(UNKNOWN_ERROR)
-```
+文件：`common/exception/GlobalExceptionHandler.java`
 
-**ErrorCode 到 HTTP 状态码的映射**：
+使用 `@RestControllerAdvice` 统一拦截所有Controller的异常，返回统一的 `R<T>` 格式。
 
-| ErrorCode | HTTP 状态码 | 含义 |
-|-----------|-------------|------|
-| USER_NOT_FOUND, PLANT_NOT_FOUND 等 | 404 | 资源不存在 |
-| TOKEN_EXPIRED, TOKEN_INVALID | 401 | 未认证 |
-| PERMISSION_DENIED | 403 | 无权限 |
-| USER_ALREADY_EXISTS, DUPLICATE_OPERATION | 409 | 冲突 |
-| OPERATION_TOO_FREQUENT | 429 | 请求太频繁 |
-| PARAM_ERROR, PARAM_MISSING 等 | 400 | 参数错误 |
-| SYSTEM_ERROR, DATABASE_ERROR | 500 | 服务器内部错误 |
+处理的异常类型（20+种）：
 
-**常见错误**：
-- 在 Controller 中用 try-catch 捕获异常后返回 R.error()，而不是让全局处理器处理 -- 这会导致代码重复
-- 在全局处理器中打印了完整的异常堆栈到生产日志，可能泄露敏感信息 -- 本项目已处理：生产环境只打印类名
-- 异常处理器顺序不对，具体的异常要放在通用异常前面
+| 异常类型 | HTTP状态码 | 错误码 |
+|---------|-----------|--------|
+| BusinessException | 根据ErrorCode映射 | 根据ErrorCode |
+| NotLoginException (Sa-Token) | 401 | LOGIN_REQUIRED |
+| NotRoleException (Sa-Token) | 403 | PERMISSION_DENIED |
+| MethodArgumentNotValidException | 400 | PARAM_FORMAT_ERROR |
+| BindException | 400 | PARAM_FORMAT_ERROR |
+| ConstraintViolationException | 400 | PARAM_FORMAT_ERROR |
+| MissingServletRequestParameterException | 400 | PARAM_MISSING |
+| MethodArgumentTypeMismatchException | 400 | PARAM_FORMAT_ERROR |
+| HttpMessageNotReadableException | 400 | PARAM_FORMAT_ERROR |
+| HttpRequestMethodNotSupportedException | 405 | PARAM_FORMAT_ERROR |
+| MaxUploadSizeExceededException | 400 | FILE_SIZE_EXCEEDED |
+| MultipartException | 400 | FILE_UPLOAD_ERROR |
+| DataIntegrityViolationException | 409 | DUPLICATE_OPERATION |
+| EmptyResultDataAccessException | 404 | RESOURCE_NOT_FOUND |
+| DataAccessException / SQLException | 500 | DATABASE_ERROR |
+| SocketTimeoutException | 504 | NETWORK_ERROR |
+| NullPointerException | 500 | SYSTEM_ERROR |
+| RuntimeException | 500 | SYSTEM_ERROR |
+| Exception（兜底） | 500 | UNKNOWN_ERROR |
+
+**生产环境保护**：在生产环境(`spring.profiles.active=prod`)下，系统异常只记录异常类名，不输出完整堆栈，防止敏感信息泄露。
 
 ---
 
-### 4. SecurityUtils.java -- 安全工具类
+## 四、SecurityUtils -- 安全工具类
 
-> 类比：SecurityUtils 就像药铺的**前台查询系统**，随时能查到"当前来访者是谁、什么身份"。
+文件：`common/SecurityUtils.java`
 
-封装了 Sa-Token 的 `StpUtil` API，提供更简洁的静态方法：
+封装 Sa-Token 的 `StpUtil` API，提供静态方法简化调用：
 
 ```java
 public final class SecurityUtils {
+    // 获取当前用户ID（未登录抛异常）
+    public static Integer getCurrentUserId() { ... }
 
-    // 获取当前登录用户ID（未登录返回null）
-    public static Integer getCurrentUserId() {
-        if (!StpUtil.isLogin()) return null;
-        return StpUtil.getLoginIdAsInt();
-    }
+    // 获取当前用户ID（未登录返回null）
+    public static Integer getCurrentUserIdOrNull() { ... }
 
-    // 获取当前登录用户名
-    public static String getCurrentUsername() {
-        if (!StpUtil.isLogin()) return null;
-        return StpUtil.getSession().get("username").toString();
-    }
+    // 获取当前用户名（未登录抛异常）
+    public static String getCurrentUsername() { ... }
 
-    // 获取当前用户角色
-    public static String getCurrentUserRole() {
-        if (!StpUtil.isLogin()) return null;
-        return StpUtil.getSession().get("role").toString();
-    }
+    // 获取当前用户名（未登录返回null）
+    public static String getCurrentUsernameOrNull() { ... }
+
+    // 获取当前用户角色（未登录返回"user"）
+    public static String getCurrentUserRole() { ... }
 
     // 是否已登录
-    public static boolean isAuthenticated() {
-        return StpUtil.isLogin();
-    }
+    public static boolean isAuthenticated() { return StpUtil.isLogin(); }
 
-    // 是否是管理员
-    public static boolean isAdmin() {
-        String role = getCurrentUserRole();
-        return "admin".equalsIgnoreCase(role);
-    }
+    // 是否管理员
+    public static boolean isAdmin() { ... }
 }
 ```
 
 **使用示例**：
+```java
+// Controller中
+Integer userId = SecurityUtils.getCurrentUserId();
+
+// Service中（获取可选登录用户）
+Integer userId = SecurityUtils.getCurrentUserIdOrNull();
+if (userId != null) {
+    browseHistoryService.record(userId, "plant", plantId);
+}
+```
+
+---
+
+## 五、常量定义
+
+### 5.1 RoleConstants -- 角色常量
 
 ```java
-@Service
-public class FavoriteServiceImpl implements FavoriteService {
+public final class RoleConstants {
+    public static final String ROLE_USER = "user";
+    public static final String ROLE_ADMIN = "admin";
 
-    public void addFavorite(Integer plantId) {
-        // 不需要从Controller传userId过来，直接获取
-        Integer userId = SecurityUtils.getCurrentUserId();
-
-        if (userId == null) {
-            throw new BusinessException(ErrorCode.LOGIN_REQUIRED);
-        }
-
-        // ... 收藏逻辑
+    public static boolean isValid(String role) {
+        return ROLE_USER.equals(role) || ROLE_ADMIN.equals(role);
     }
 }
 ```
 
-**在 Controller 中的使用：**
+### 5.2 RabbitMQConstants -- RabbitMQ常量
 
 ```java
-@GetMapping("/me")
-@SaCheckLogin
-public R<User> me() {
-    Integer userId = SecurityUtils.getCurrentUserId();
-    return R.ok(userService.getUserInfo(userId));
+public class RabbitMQConstants {
+    public static final String EXCHANGE_DIRECT = "dong.medicine.direct";
+    public static final String EXCHANGE_TOPIC = "dong.medicine.topic";
+
+    public static final String QUEUE_OPERATION_LOG = "operation.log.queue";
+    public static final String QUEUE_FEEDBACK = "feedback.queue";
+    public static final String QUEUE_FILE_PROCESS = "file.process.queue";
+    public static final String QUEUE_STATISTICS = "statistics.queue";
+    public static final String QUEUE_NOTIFICATION = "notification.queue";
+
+    // 路由键 + 死信队列常量 ...
 }
 ```
 
-**原理**：SecurityUtils 封装了 Sa-Token 的 `StpUtil` API，登录状态由 Sa-Token 的 SaTokenFilter 管理。
+### 5.3 ApiPaths -- API路径常量
 
-**常见错误**：
-- 在异步线程中调用 SecurityUtils 返回 null -- Sa-Token 的上下文默认只在请求线程中可用，异步线程需要额外配置
-- 在未登录的接口中调用 getCurrentUserId() 不做 null 检查，导致空指针异常
-- 在构造函数或 @PostConstruct 方法中调用 -- 此时请求还没进来，Sa-Token 上下文是空的
+按模块组织（User/Knowledge/Inheritor/Plant/Qa/Quiz/PlantGame/Resource/Comment/Favorite/Feedback/Visual/Admin/File/Chat），但当前Controller中未统一使用该常量类。
 
 ---
 
-### 5. XssUtils.java -- XSS防护工具
+## 六、工具类
 
-> 类比：XssUtils 就像药铺的**毒物检测仪** -- 检查输入的内容中有没有"毒药"（恶意脚本），有的话就中和掉。
-
-XssUtils 提供了30多种危险模式的检测，是 XssFilter 的底层工具。详见 [util/README.md](util/README.md)。
-
----
-
-### 6. PasswordValidator.java -- 密码验证器
-
-> 类比：PasswordValidator 就像药铺的**锁匠** -- 检查你选的锁够不够安全。
+### 6.1 PageUtils -- 分页工具
 
 ```java
-// 使用示例
-PasswordValidator.ValidationResult result = PasswordValidator.validate("Abc12345");
+public class PageUtils {
+    // 创建标准化分页对象（page>=1, size 1-100）
+    public static <T> Page<T> getPage(Integer page, Integer size) { ... }
 
-if (result.isValid()) {
-    System.out.println("密码强度: " + result.getStrengthLabel());  // "中等"
-    System.out.println("强度分数: " + result.getStrength());        // 3
-} else {
-    System.out.println("错误: " + result.getMessage());  // "密码长度不能少于8位"
+    // 转义LIKE查询特殊字符（防止LIKE注入）
+    public static String escapeLike(String keyword) {
+        return keyword.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+    }
+
+    // 将Page结果转换为前端需要的Map格式
+    public static Map<String, Object> toMap(Page<?> pageResult) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("records", pageResult.getRecords());
+        data.put("total", pageResult.getTotal());
+        data.put("page", pageResult.getCurrent());
+        data.put("size", pageResult.getSize());
+        return data;
+    }
 }
 ```
 
-**密码规则**：
-- 最短8位，最长50位
-- 必须包含字母和数字
-- 不能包含空格
-- 强度评分：弱/一般/中等/强/非常强
+### 6.2 XssUtils -- XSS防护工具
 
-详见 [util/README.md](util/README.md)。
+```java
+public final class XssUtils {
+    // 30+种危险模式正则：<script>, javascript:, on*=, <iframe>, eval(), expression()等
+    private static final Pattern[] DANGEROUS_PATTERNS = { ... };
 
----
+    // 检测是否包含XSS攻击代码
+    public static boolean containsXss(String input) { ... }
 
-## 各模块之间的关系
+    // HTML实体编码清洗（& → &amp;, < → &lt;, > → &gt;）
+    public static String sanitize(String input) { ... }
 
-```
-Controller 层
-  |  使用 R<T> 返回结果
-  |  使用 SecurityUtils 获取当前用户
-  |  使用 @RateLimit 限流
-  |
-  v
-Service 层
-  |  抛出 BusinessException(ErrorCode)
-  |  使用 PasswordValidator 验证密码
-  |  使用 PageUtils 处理分页
-  |
-  v
-全局异常处理器
-  |  捕获所有异常
-  |  转换为 R<T> 统一格式
-  |
-  v
-前端收到统一格式的 JSON 响应
+    // 移除HTML标签（删除<script>...</script>等）
+    public static String sanitizeHtml(String input) { ... }
+
+    // URL安全校验（只允许http/https/相对路径）
+    public static String sanitizeUrl(String url) { ... }
+
+    // 文件名安全处理（移除路径分隔符、限制长度255）
+    public static String sanitizeFileName(String fileName) { ... }
+
+    // SQL注入检测
+    public static boolean containsSqlInjection(String input) { ... }
+}
 ```
 
----
+### 6.3 PasswordValidator -- 密码强度验证
 
-## 常见问题
+```java
+public class PasswordValidator {
+    public static ValidationResult validate(String password) {
+        // 规则：
+        // - 长度：6-50位
+        // - 必须包含字母和数字
+        // - 不能包含空格
+        // - 强度评分：弱/一般/中等/强/非常强
+    }
+}
+```
 
-**Q: 为什么 R 中有 requestId 字段？**
-A: requestId 是由 RequestIdFilter 生成的唯一标识，贯穿整个请求链路。当用户反馈问题时，提供 requestId 可以快速在日志中定位到对应的请求记录。
+### 6.4 IpUtils -- 客户端IP获取
 
-**Q: 什么时候用 R.error()，什么时候抛 BusinessException？**
-A: 简单的参数校验可以直接在 Controller 中返回 `R.badRequest()`。但涉及业务逻辑的错误（如"用户不存在"、"密码错误"），应该在 Service 层抛出 `BusinessException`，由全局异常处理器统一转换为 `R<T>`。这样代码更清晰，异常处理更集中。
+```java
+public class IpUtils {
+    // 从请求中获取真实客户端IP
+    // 处理反向代理情况：X-Forwarded-For → X-Real-IP → RemoteAddr
+    public static String getClientIp(HttpServletRequest request) { ... }
+}
+```
 
-**Q: SecurityUtils.getCurrentUserId() 返回 null 怎么办？**
-A: 说明当前请求没有登录。如果这个接口需要登录，应该抛出 `BusinessException(ErrorCode.LOGIN_REQUIRED)`。如果接口是可选登录的，要做 null 判断。
+### 6.5 FileCleanupHelper -- 文件清理
 
----
+```java
+@Component
+public class FileCleanupHelper {
+    // 解析JSON字符串（如["/images/plants/1.jpg"]）中的文件路径
+    // 逐个删除磁盘上的文件
+    public void deleteFilesFromJson(String jsonStr) { ... }
+}
+```
 
-## 代码审查与改进建议
+### 6.6 FileTypeUtils -- 文件类型判断
 
-- **[安全] SecurityUtils中获取当前用户ID的方式需确保Sa-Token会话有效**
-- **[结构] R类的静态工厂方法应增加更多语义化方法**：如`R.created()`、`R.noContent()`等
+```java
+public class FileTypeUtils {
+    // 根据文件扩展名获取MIME类型
+    public static String getMimeType(String fileName) { ... }
+
+    // 获取文件展示名称（资源名 + 扩展名）
+    public static String getDisplayName(String fileName, String resourceTitle) { ... }
+}
+```

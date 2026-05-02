@@ -14,7 +14,9 @@ import com.dongmedicine.entity.QuizRecord;
 import com.dongmedicine.service.QuizService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -22,8 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 @Tag(name = "趣味答题", description = "侗乡医药知识趣味答题与题目管理")
+@Slf4j
 @RestController
 @RequestMapping("/api/quiz")
+@Validated
 @RequiredArgsConstructor
 public class QuizController {
 

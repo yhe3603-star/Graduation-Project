@@ -20,14 +20,16 @@
             返回首页
           </el-button>
         </div>
-        <el-collapse v-if="showDetails" class="error-details">
-          <el-collapse-item title="错误详情" name="details">
-            <pre>{{ errorStack }}</pre>
-          </el-collapse-item>
-        </el-collapse>
-        <el-button text class="toggle-details" @click="showDetails = !showDetails">
-          {{ showDetails ? '隐藏详情' : '显示详情' }}
-        </el-button>
+        <template v-if="isDev">
+          <el-collapse v-if="showDetails" class="error-details">
+            <el-collapse-item title="错误详情" name="details">
+              <pre>{{ errorStack }}</pre>
+            </el-collapse-item>
+          </el-collapse>
+          <el-button text class="toggle-details" @click="showDetails = !showDetails">
+            {{ showDetails ? '隐藏详情' : '显示详情' }}
+          </el-button>
+        </template>
       </div>
     </div>
   </div>
@@ -41,6 +43,7 @@ import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
+const isDev = import.meta.env.DEV
 const hasError = ref(false)
 const errorMessage = ref('')
 const errorStack = ref('')

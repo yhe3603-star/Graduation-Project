@@ -152,6 +152,7 @@ import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
 import HerbAudio from '@/components/business/media/HerbAudio.vue';
+import request from '@/utils/request';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -195,6 +196,12 @@ watch(() => props.visible, (newVal) => {
     activeTab.value = videoList.value.length > 0 ? 'video' : 'image';
     loadDocuments();
     if (videoPlayerRef.value) videoPlayerRef.value.switchToVideo(0);
+    // Record browse history
+    if (props.plant?.id) {
+      request.post('/browse-history/record', null, {
+        params: { targetType: 'plant', targetId: props.plant.id }
+      }).catch(() => {});
+    }
   } else if (videoPlayerRef.value) {
     videoPlayerRef.value.pause();
   }

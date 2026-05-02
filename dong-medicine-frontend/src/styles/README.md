@@ -1,376 +1,367 @@
 # 样式目录 (styles/)
 
-> 类比：想象你在装修一家侗族文化餐厅。你需要决定墙壁刷什么颜色、桌椅用什么材质、灯光明暗如何、走道多宽。**CSS 就是装修方案**，而 styles 目录就是存放所有装修图纸的文件夹。
+项目的全局样式系统，基于 **CSS 自定义属性（CSS Variables）** 构建完整的设计标记体系，覆盖 Element Plus 默认主题并融入侗族文化视觉风格。
 
-## 什么是 CSS？
+## 文件清单
 
-CSS（层叠样式表，Cascading Style Sheets）是用来控制网页**外观和布局**的语言。HTML 决定页面"有什么内容"，CSS 决定内容"长什么样"。
-
-```css
-/* 选择器 { 属性: 值; } */
-.card {
-  background: white;        /* 背景色：白色 */
-  border-radius: 16px;      /* 圆角：16像素 */
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);  /* 阴影 */
-  padding: 24px;            /* 内边距：24像素 */
-}
-```
-
-## 什么是 CSS 变量？
-
-> 类比：想象一个调色板，上面贴着标签——"主色"贴在靛蓝色上、"成功色"贴在青绿色上。当你想换主色时，只需要把"主色"标签换到另一个颜色上，所有用了"主色"的地方都会自动更新。**CSS 变量就是这个标签**。
-
-```css
-/* 定义变量（在调色板上贴标签） */
-:root {
-  --dong-indigo: #1A5276;    /* 侗族靛蓝：主色 */
-  --dong-jade: #28B463;      /* 侗族青绿：成功色 */
-}
-
-/* 使用变量（根据标签取颜色） */
-.card-title {
-  color: var(--dong-indigo);  /* 用标签引用，而不是写死 #1A5276 */
-}
-
-.btn-success {
-  background: var(--dong-jade);  /* 如果将来青绿色要换，只改一处 */
-}
-```
-
-**为什么不用直接写颜色值？** 因为项目中有上百个地方用了主色，如果某天要换主色调，没有变量的话你要改上百处，有了变量只需改 1 处。
+| 文件 | 职责 | 说明 |
+|------|------|------|
+| `index.css` | 样式入口 | 按层级顺序 `@import` 所有样式文件 |
+| `variables.css` | CSS 变量定义 | 颜色、字体、间距、阴影、圆角、动画等设计标记 |
+| `theme-override.css` | Element Plus 主题覆盖 | 将 Element Plus 默认蓝色替换为侗族品牌色 |
+| `dong-patterns.css` | 侗族文化纹样 | 侗锦纹样背景、装饰图案 |
+| `base.css` | 基础样式 | 全局 reset、排版、链接、图片、滚动条 |
+| `common.css` | 通用工具类 | 布局、文字、间距、Flex 等 utility class |
+| `components.css` | 组件样式 | 卡片、按钮、表单、弹窗等跨组件复用样式 |
+| `pages.css` | 页面样式 | 各页面特定布局样式 |
+| `home.css` | 首页样式 | 首页专用（Hero 区、导航卡片、精选区等） |
+| `dialog-common.css` | 弹窗通用样式 | 详情弹窗、表单弹窗的共享样式 |
+| `media-common.css` | 媒体通用样式 | 媒体组件（图片轮播、视频播放器）通用样式 |
+| `Visual.css` | 可视化页样式 | 数据可视化页面专用布局 |
+| `scss/_variables.scss` | SCSS 变量 | 全局注入的 SCSS 变量（颜色、断点等） |
+| `scss/_mixins.scss` | SCSS 混合宏 | 全局注入的 SCSS mixins（flex-center、text-ellipsis 等） |
 
 ---
 
-## 设计系统 -- variables.css
+## 样式层级结构
 
-这是整个项目样式的"根基"，定义了所有 CSS 变量。其他样式文件都依赖它。
+`styles/index.css` 按以下顺序导入：
 
-### 侗族文化色彩体系
+```
+1. variables.css        -- 基础：CSS 设计标记
+2. theme-override.css   -- 覆盖：Element Plus 主题
+3. dong-patterns.css    -- 装饰：侗族纹样
+4. base.css             -- 重置：全局 reset + 排版
+5. components.css       -- 组件：复用组件样式
+6. pages.css            -- 页面：页面级样式
+7. media-common.css     -- 媒体：媒体组件样式
+```
 
-本项目的配色灵感来自侗族传统文化：
+---
 
-| 变量名 | 颜色值 | 文化含义 | 用途 |
-|--------|--------|---------|------|
-| `--dong-indigo` | `#1A5276` | 侗族传统服饰主色调，象征智慧与传承 | 主色、标题、导航 |
-| `--dong-jade` | `#28B463` | 侗乡山水与草药，寓意生机与希望 | 成功提示、按钮 |
-| `--dong-gold` | `#c9a227` | 非遗荣誉与匠人精神 | 警告提示、收藏按钮 |
-| `--dong-copper` | `#b87333` | 铜器质感，体现古朴韵味 | 装饰元素 |
+## variables.css -- CSS 设计标记
+
+基于侗族传统文化色彩构建的设计系统：
+
+### 品牌色系
 
 ```css
 :root {
   /* 核心品牌色 */
-  --dong-indigo: #1A5276;
+  --dong-indigo: #1A5276;       /* 靛蓝 - 侗族传统服饰主色调 */
   --dong-indigo-dark: #0d3d5c;
   --dong-indigo-light: #2e7d9a;
-  --dong-jade: #28B463;
+  --dong-jade: #28B463;         /* 青绿 - 侗乡山水与草药 */
   --dong-jade-dark: #1e8e4a;
   --dong-jade-light: #58d68d;
-  --dong-gold: #c9a227;
+  --dong-gold: #c9a227;         /* 金铜 - 非遗荣誉 */
   --dong-gold-light: #f5a623;
   --dong-copper: #b87333;
+
+  /* 背景色系（传统纸张质感） */
+  --bg-rice: #f8f5f0;           /* 暖米色全局背景 */
+  --bg-rice-dark: #f0ebe3;
+  --bg-paper: #faf8f5;
+  --bg-cream: #fffdf9;
+
+  /* 功能色 */
+  --color-primary: var(--dong-indigo);
+  --color-success: var(--dong-jade);
+  --color-warning: var(--dong-gold-light);
+  --color-danger: #e74c3c;
+  --color-info: #3498db;
 }
 ```
 
-### 背景色系 -- 传统纸张质感
+### 文字色
 
-| 变量名 | 颜色值 | 用途 |
-|--------|--------|------|
-| `--bg-rice` | `#f8f5f0` | 页面主背景（米白色，像宣纸） |
-| `--bg-rice-dark` | `#f0ebe3` | 滚动条轨道、悬停背景 |
-| `--bg-paper` | `#faf8f5` | 内容区背景 |
-| `--bg-cream` | `#fffdf9` | 卡片内背景 |
+| 变量 | 值 | 用途 |
+|------|-----|------|
+| `--text-primary` | `#1a1a1a` | 正文 |
+| `--text-secondary` | `#555` | 次要文字 |
+| `--text-muted` | `#888` | 弱化文字 |
+| `--text-light` | `#aaa` | 极浅文字 |
+| `--text-inverse` | `#fff` | 反白文字（深色背景上） |
 
-### 间距系统
+### 阴影系统（基于靛蓝色调）
 
-```css
-:root {
-  --space-xs: 4px;    /* 极小间距：图标和文字之间 */
-  --space-sm: 8px;    /* 小间距：同组元素之间 */
-  --space-md: 12px;   /* 中间距：表单项之间 */
-  --space-lg: 16px;   /* 大间距：卡片内边距 */
-  --space-xl: 24px;   /* 超大间距：区块之间 */
-  --space-2xl: 32px;  /* 区块外边距 */
-  --space-3xl: 48px;  /* 页面级间距 */
-  --space-4xl: 64px;  /* 最大间距 */
-}
-```
-
-**为什么用 4px 倍数？** 这是设计界的黄金法则，4 的倍数让视觉节奏和谐统一，不会出现"差一点对不齐"的问题。
-
-### 字体系统
-
-```css
-:root {
-  /* 字体族 */
-  --font-display: "Noto Serif SC", "宋体", serif;     /* 标题用衬线体，文化感 */
-  --font-body: "Noto Sans SC", "Microsoft YaHei", sans-serif;  /* 正文用无衬线体，易读 */
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;  /* 代码用等宽字体 */
-
-  /* 字号梯度 */
-  --font-size-xs: 11px;    /* 辅助信息 */
-  --font-size-sm: 13px;    /* 次要文字 */
-  --font-size-base: 14px;  /* 正文（默认） */
-  --font-size-md: 16px;    /* 小标题 */
-  --font-size-lg: 18px;    /* 区块标题 */
-  --font-size-xl: 20px;    /* 页面标题 */
-  --font-size-2xl: 24px;   /* 大标题 */
-  --font-size-3xl: 32px;   /* 超大标题 */
-  --font-size-4xl: 42px;   /* 首页主标题 */
-}
-```
-
-### 阴影系统
-
-```css
-:root {
-  --shadow-xs: 0 1px 4px rgba(26, 82, 118, 0.04);    /* 几乎看不到，微妙的层次感 */
-  --shadow-sm: 0 2px 8px rgba(26, 82, 118, 0.06);    /* 卡片默认阴影 */
-  --shadow-md: 0 4px 16px rgba(26, 82, 118, 0.08);   /* 悬停时阴影 */
-  --shadow-lg: 0 8px 32px rgba(26, 82, 118, 0.12);   /* 弹出层阴影 */
-  --shadow-xl: 0 16px 48px rgba(26, 82, 118, 0.16);  /* 模态框阴影 */
-  --shadow-glow: 0 0 40px rgba(40, 180, 99, 0.15);   /* 青绿发光效果 */
-}
-```
-
-注意阴影颜色用的是 `rgba(26, 82, 118, ...)` -- 这是侗族靛蓝色的半透明版，而不是纯黑色，让阴影更柔和、更有品牌感。
+| 变量 | 值 | 用途 |
+|------|-----|------|
+| `--shadow-xs` | `0 1px 4px rgba(26,82,118,0.04)` | 微阴影 |
+| `--shadow-sm` | `0 2px 8px rgba(26,82,118,0.06)` | 小阴影 |
+| `--shadow-md` | `0 4px 16px rgba(26,82,118,0.08)` | 中阴影 |
+| `--shadow-lg` | `0 8px 32px rgba(26,82,118,0.12)` | 大阴影 |
+| `--shadow-xl` | `0 16px 48px rgba(26,82,118,0.16)` | 超大阴影 |
+| `--shadow-glow` | `0 0 40px rgba(40,180,99,0.15)` | 青绿发光 |
 
 ### 圆角系统
 
 ```css
-:root {
-  --radius-xs: 4px;     /* 小标签 */
-  --radius-sm: 8px;     /* 输入框 */
-  --radius-md: 12px;    /* 按钮 */
-  --radius-lg: 16px;    /* 卡片 */
-  --radius-xl: 20px;    /* 大卡片 */
-  --radius-2xl: 24px;   /* 弹窗 */
-  --radius-full: 9999px; /* 完全圆形（头像、标签） */
-}
+--radius-xs: 4px; --radius-sm: 8px; --radius-md: 12px;
+--radius-lg: 16px; --radius-xl: 20px; --radius-2xl: 24px; --radius-full: 9999px;
+```
+
+### 字体系统
+
+```css
+--font-display: "Noto Serif SC", "Source Han Serif SC", "宋体", serif;   /* 标题用衬线体 */
+--font-body: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif; /* 正文用无衬线 */
+--font-mono: "JetBrains Mono", "Fira Code", monospace;                     /* 代码用等宽 */
+
+--font-size-xs: 11px; --font-size-sm: 13px; --font-size-base: 14px;
+--font-size-md: 16px; --font-size-lg: 18px; --font-size-xl: 20px;
+--font-size-2xl: 24px; --font-size-3xl: 32px; --font-size-4xl: 42px;
 ```
 
 ### 动画系统
 
+| 变量 | 值 | 用途 |
+|------|-----|------|
+| `--transition-fast` | `0.15s ease` | 微交互 |
+| `--transition-normal` | `0.25s ease` | 常规过渡 |
+| `--transition-slow` | `0.4s ease` | 慢速过渡 |
+| `--transition-bounce` | `0.4s cubic-bezier(0.34, 1.56, 0.64, 1)` | 弹性过渡 |
+
+### 布局系统
+
 ```css
-:root {
-  --transition-fast: 0.15s ease;           /* 快速反馈：按钮悬停 */
-  --transition-normal: 0.25s ease;         /* 标准过渡：卡片悬停 */
-  --transition-slow: 0.4s ease;            /* 慢速过渡：页面切换 */
-  --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);  /* 弹跳效果 */
-}
+--container-max: 1400px;    /* 内容最大宽度 */
+--sidebar-width: 300px;     /* 侧边栏宽度 */
+--header-height: 64px;      /* 顶部导航高度 */
 ```
 
 ### Z-Index 层级
 
 ```css
+--z-dropdown: 100; --z-sticky: 200; --z-fixed: 300;
+--z-modal-backdrop: 400; --z-modal: 500;
+--z-popover: 600; --z-tooltip: 700;
+```
+
+---
+
+## theme-override.css -- Element Plus 主题覆盖
+
+将 Element Plus 组件库的默认蓝色系替换为侗族品牌色：
+
+```css
 :root {
-  --z-dropdown: 100;        /* 下拉菜单 */
-  --z-sticky: 200;          /* 粘性定位 */
-  --z-fixed: 300;           /* 固定定位 */
-  --z-modal-backdrop: 400;  /* 遮罩层 */
-  --z-modal: 500;           /* 弹窗 */
-  --z-popover: 600;         /* 气泡提示 */
-  --z-tooltip: 700;         /* 工具提示（最上层） */
+  --el-color-primary: var(--dong-indigo);
+  --el-color-success: var(--dong-jade);
+  --el-color-warning: var(--dong-gold-light);
+  --el-color-danger: #e74c3c;
+  --el-color-info: #5a7d8a;
+
+  --el-border-radius-base: var(--radius-sm);
+  --el-font-family: var(--font-body);
 }
 ```
 
-**为什么从 100 开始？** 避免和 Element Plus 等第三方库的 z-index 冲突，留出空间。
+还包括按钮（primary/success/warning/danger 的 hover/active 状态色）、标签、输入框、表格、分页等具体组件的样式微调覆盖。
 
 ---
 
-## 如何在组件中使用 CSS 变量
+## dong-patterns.css -- 侗族文化纹样
 
-### 在 `<style>` 中使用
+定义侗族传统织锦纹样作为 CSS 背景装饰图案：
 
-```vue
-<template>
-  <div class="plant-card">
-    <h3 class="plant-name">钩藤</h3>
-    <p class="plant-desc">清热平肝，息风定惊</p>
-  </div>
-</template>
+- **菱形纹**（`--pattern-diamond`）：侗锦中最常见的菱形几何纹
+- **波纹纹**（`--pattern-wave`）：象征山水
+- **编织纹**（`--pattern-weave`）：十字交错编织纹理
+- **太阳纹**（`--pattern-sun`）：侗族铜鼓上的太阳纹
 
-<style scoped>
-.plant-card {
-  /* 使用变量而不是硬编码 */
-  background: var(--bg-cream);              /* 米白背景 */
-  border-radius: var(--radius-lg);          /* 大圆角 */
-  padding: var(--space-xl);                 /* 大内边距 */
-  box-shadow: var(--shadow-sm);             /* 小阴影 */
-  transition: all var(--transition-normal); /* 标准过渡 */
-}
-
-.plant-card:hover {
-  box-shadow: var(--shadow-lg);             /* 悬停时大阴影 */
-  transform: translateY(-4px);              /* 上浮效果 */
-}
-
-.plant-name {
-  color: var(--dong-indigo);                /* 侗族靛蓝标题 */
-  font-family: var(--font-display);         /* 衬线字体 */
-  font-size: var(--font-size-lg);           /* 大字号 */
-  margin-bottom: var(--space-sm);           /* 小下边距 */
-}
-
-.plant-desc {
-  color: var(--text-muted);                 /* 灰色描述文字 */
-  font-size: var(--font-size-sm);           /* 小字号 */
-  line-height: var(--line-height-normal);   /* 标准行高 */
-}
-</style>
-```
-
-### 在 JavaScript 中使用
-
-```javascript
-// 读取 CSS 变量的值
-const rootStyles = getComputedStyle(document.documentElement)
-const primaryColor = rootStyles.getPropertyValue('--dong-indigo')  // "#1A5276"
-
-// 动态修改 CSS 变量（比如切换主题色）
-document.documentElement.style.setProperty('--dong-indigo', '#2c3e50')
-```
+通过 `background` `repeating-linear-gradient` 技术实现，无需加载外部图片资源。
 
 ---
 
-## 文件清单与职责
+## base.css -- 基础样式
 
-| 文件 | 加载顺序 | 职责 | 说明 |
-|------|---------|------|------|
-| `variables.css` | 第 1 个 | CSS 变量定义 | 颜色、字体、间距、阴影等所有设计令牌 |
-| `base.css` | 第 2 个 | 基础样式 | 全局重置、排版、布局工具类、动画关键帧 |
-| `components.css` | 第 3 个 | 组件样式 | 卡片、按钮、标签、表单等通用组件样式 |
-| `pages.css` | 第 4 个 | 页面样式 | 各页面特定的布局和样式 |
-| `media-common.css` | 第 5 个 | 媒体样式 | 图片、视频、文档等媒体相关样式 |
-| `common.css` | 额外 | 通用补充 | 模块页面布局、卡片、徽章等补充样式 |
-| `dialog-common.css` | 额外 | 弹窗样式 | 对话框通用样式 |
-| `home.css` | 额外 | 首页样式 | 首页专属样式 |
-| `Visual.css` | 额外 | 可视化样式 | 数据可视化页面专属样式 |
-| `index.css` | 入口 | 统一导入 | 按顺序导入上述核心文件 |
-
-### 加载顺序为什么重要？
-
-CSS 的规则是"后写的覆盖先写的"，所以加载顺序决定了优先级：
-
-```
-variables.css  -->  base.css  -->  components.css  -->  pages.css
-   (变量定义)      (基础重置)     (组件样式)         (页面样式，优先级最高)
-```
-
-这就像装修的顺序：先确定材料（variables），再打地基（base），然后装家具（components），最后挂画（pages）。
+- **全局重置**：`box-sizing: border-box`，margin/padding 清零
+- **HTML/Body**：16px 字号，平滑滚动，抗锯齿渲染，全局背景使用 CSS 径向渐变（青绿 + 靛蓝微光 + 暖米底色）
+- **标题排版**：使用 `--font-display` 衬线字体（`h1` 42px 到 `h6` 16px）
+- **链接**：靛蓝色，hover 时变浅
+- **响应式图片**：`max-width: 100%; height: auto`
+- **自定义滚动条样式**：细窄滚动条（6px 宽），靛蓝色滑块
+- **选中文本**：靛蓝色背景 + 白色文字
+- **通用布局类**：`.module-page`（列表页容器）、`.module-header`（页面标题区，含背景装饰和底部渐变线）
 
 ---
 
-## 如何添加新样式
+## common.css -- 通用工具类
 
-### 原则 1：优先使用 CSS 变量
+提供常用的 utility class：
+
+- **布局**：`.flex-center`、`.flex-between`、`.grid-2col` 等
+- **文字**：`.text-center`、`.text-muted`、`.text-ellipsis`（单行和多行）、`.text-inverse` 等
+- **间距**：`.mt-{size}`、`.mb-{size}`、`.p-{size}` 系列（映射到 CSS 变量间距值）
+- **显示**：`.hide-mobile`、`.show-mobile` 等响应式显隐
+
+---
+
+## components.css -- 组件样式
+
+跨组件复用的样式：
+
+- **卡片样式**：`.card-base`（基础卡片）、`.card-hover`（hover 上浮 translateY(-4px) + 阴影增强）
+- **按钮变体**：`.btn-jade`（青绿色按钮）、`.btn-gold`（金色按钮）、`.btn-outline-indigo`（靛蓝描边按钮）等
+- **标签变体**：`.tag-level-province`（省级传承人标签）等
+- **空状态**：`.empty-state` 统一样式
+- **统计卡片**：`.stat-card-base` 统计数值展示
+- **加载状态**：`.loading-overlay` 遮罩层
+
+---
+
+## home.css -- 首页专用样式
+
+首页特有的视觉样式：
+
+- **Hero 区域**：靛蓝/青绿渐变背景 + 光晕效果（`hero-glow`），标题文字渐变色，统计数据卡片毛玻璃效果（`backdrop-filter: blur`）
+- **快捷导航**：7 个模块卡片 staggered 入场动画（CSS `--delay` 自定义属性 + `@keyframes fadeInUp`）
+- **每周精选**：大卡片 + 毛玻璃图片遮罩 + 悬浮信息层
+- **最新更新**：列表条目 hover 左侧边框高亮效果
+
+---
+
+## pages.css -- 页面布局样式
+
+各页面级别的布局样式：
+
+- 模块页通用布局（`.module-page` 带 max-width 居中、`.module-header` 标题区块背景 + 渐变底线）
+- 各页面特定容器（`.plants-container`、`.knowledge-container`、`.inheritor-grid` 等）
+- 搜索区域样式（全局搜索大搜索框、各列表页搜索 + 筛选标签行）
+- 详情弹窗内容区排版
+- 管理后台侧边栏 + 内容区布局
+
+---
+
+## dialog-common.css -- 弹窗通用样式
+
+详情弹窗和表单弹窗的共享样式：
+
+- 详情内容排版（属性键值对、描述文本段落）
+- 媒体区域（图片预览容器、视频容器）
+- 底部操作栏（固定定位 + 背景渐变遮罩）
+- 弹窗最大宽度 + 响应式适配（移动端全屏弹窗）
+
+---
+
+## media-common.css -- 媒体通用样式
+
+- 图片轮播容器和缩略图导航（底部小圆点导航）
+- 视频播放器控制栏（播放/暂停/进度条）
+- 文档列表项展示（文件图标 + 文件名 + 操作按钮行）
+- 文件类型图标统一样式
+
+---
+
+## Visual.css -- 数据可视化页样式
+
+`Visual.vue` 页面专用：
+
+- 统计卡片行布局（`display: grid; grid-template-columns: repeat(5, 1fr)`）
+- 图表卡片网格布局（2 列、全宽）
+- 图表切换控件位置（右上角绝对定位）
+- 响应式断点处理（移动端单列布局）
+
+---
+
+## scss/ -- SCSS 辅助文件
+
+### _variables.scss
+
+SCSS 变量定义，与 `variables.css` 中的 CSS 变量对应，额外定义响应式断点：
+
+```scss
+// 品牌色 SCSS 变量
+$dong-indigo: #1A5276;
+$dong-jade: #28B463;
+$dong-gold: #c9a227;
+
+// 响应式断点
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1400px;
+```
+
+### _mixins.scss
+
+SCSS 混合宏，通过 Vite 配置**全局自动注入**到每个 `<style lang="scss">` 块：
+
+```scss
+@mixin flex-center { display: flex; align-items: center; justify-content: center; }
+@mixin flex-between { display: flex; align-items: center; justify-content: space-between; }
+@mixin text-ellipsis($lines: 1) { overflow: hidden; text-overflow: ellipsis; /* 单行 + 多行支持 */ }
+@mixin card-hover { transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  &:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); } }
+@mixin respond-to($breakpoint) { @media (max-width: $breakpoint) { @content; } }
+```
+
+**Vite 全局注入配置（`vite.config.js`）：**
+
+```js
+css: {
+  preprocessorOptions: {
+    scss: {
+      additionalData: `@use "@/styles/scss/variables" as *;\n@use "@/styles/scss/mixins" as *;\n`,
+      api: "modern-compiler",
+    },
+  },
+},
+```
+
+这意味着在任何 `.vue` 文件的 `<style lang="scss">` 中都可以**直接使用** SCSS 变量和 mixins，无需手动 `@import`。
+
+---
+
+## 样式使用指南
+
+### 引用 CSS 设计标记
 
 ```css
-/* 不好：硬编码颜色值 */
 .my-card {
-  background: #f8f5f0;
-  border-radius: 16px;
-  color: #1A5276;
+  background: var(--bg-paper);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  transition: box-shadow var(--transition-normal);
 }
-
-/* 好：使用 CSS 变量 */
-.my-card {
-  background: var(--bg-rice);
-  border-radius: var(--radius-lg);
-  color: var(--dong-indigo);
-}
-```
-
-### 原则 2：组件样式用 scoped
-
-```vue
-<!-- 好：scoped 限制样式只作用于当前组件 -->
-<style scoped>
-.plant-card { ... }
-</style>
-
-<!-- 不好：全局样式可能污染其他组件 -->
-<style>
-.plant-card { ... }
-</style>
-```
-
-### 原则 3：通用样式放 styles/，组件专属放组件内
-
-```
-通用样式（多个组件都用）  -->  styles/components.css
-组件专属样式（只有自己用） -->  组件内的 <style scoped>
-页面专属样式（只有某页面用） -->  styles/pages.css 或页面组件内
-```
-
-### 原则 4：新增 CSS 变量时，加在 variables.css
-
-```css
-/* 在 variables.css 的 :root 中添加新变量 */
-:root {
-  /* ... 已有变量 ... */
-
-  /* 新增：药浴主题色 */
-  --dong-herbal: #8B7355;
-  --dong-herbal-light: #C4A87C;
+.my-card:hover {
+  box-shadow: var(--shadow-md);
 }
 ```
 
----
+### 使用 SCSS 变量和 mixins
 
-## 常见错误
+```scss
+<style lang="scss" scoped>
+// _variables.scss 和 _mixins.scss 已全局注入，无需手动 import
+.my-section {
+  @include flex-center;
+  padding: $space-xl;
 
-### 错误 1：不使用 CSS 变量，到处写死颜色
-
-```css
-/* 错误：如果将来要换主色，要改几十个地方 */
-.card-title { color: #1A5276; }
-.btn-primary { background: #1A5276; }
-.nav-link { color: #1A5276; }
-
-/* 正确：只改 variables.css 一处即可 */
-.card-title { color: var(--dong-indigo); }
-.btn-primary { background: var(--dong-indigo); }
-.nav-link { color: var(--dong-indigo); }
-```
-
-### 错误 2：用 !important 强制覆盖
-
-```css
-/* 错误：!important 会破坏 CSS 优先级规则，后期难以维护 */
-.my-button { color: white !important; }
-
-/* 正确：通过提高选择器特异性来覆盖 */
-.card .my-button { color: white; }
-/* 或者检查为什么被覆盖，从根本上解决 */
-```
-
-### 错误 3：在全局样式中写太具体的选择器
-
-```css
-/* 错误：全局样式太具体，可能影响其他页面 */
-.views .plants .card .title { font-size: 20px; }
-
-/* 正确：使用通用的 CSS 类名 */
-.card-title { font-size: var(--font-size-xl); }
-```
-
-### 错误 4：忘记考虑响应式
-
-```css
-/* 错误：只考虑了桌面端，手机上可能溢出 */
-.sidebar {
-  width: 300px;
-  float: right;
-}
-
-/* 正确：加上响应式断点 */
-.sidebar {
-  width: 300px;
-}
-
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 100%;  /* 手机上占满宽度 */
+  @include respond-to($breakpoint-md) {
+    padding: $space-md;
   }
 }
+
+.my-title {
+  color: $dong-indigo;
+  @include text-ellipsis(2);
+}
+</style>
 ```
+
+### 品牌色使用建议
+
+| 场景 | 推荐变量 |
+|------|---------|
+| 主色/标题/链接 | `--dong-indigo` (#1A5276) |
+| 成功/通过/药用植物 | `--dong-jade` (#28B463) |
+| 强调/荣誉/特殊标记 | `--dong-gold` (#c9a227) |
+| 页面背景 | `--bg-rice` (#f8f5f0) |
+| 卡片背景 | `--bg-paper` (#faf8f5) |
+| 正文 | `--text-primary` (#1a1a1a) |
+| 辅助文字 | `--text-secondary` (#555) |
