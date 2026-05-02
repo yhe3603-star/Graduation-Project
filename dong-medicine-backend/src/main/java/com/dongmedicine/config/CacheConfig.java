@@ -25,12 +25,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Configuration
 @EnableCaching
@@ -38,17 +35,8 @@ public class CacheConfig {
 
     private static final Logger log = LoggerFactory.getLogger(CacheConfig.class);
 
-    @Value("${app.cache.enabled:true}")
-    private boolean cacheEnabled;
-
     @Value("${app.cache.max-size:1000}")
     private int maxCacheSize;
-
-    @Value("${app.cache.expire-minutes:60}")
-    private int defaultExpireMinutes;
-
-    private final AtomicBoolean redisRecovered = new AtomicBoolean(false);
-    private final AtomicReference<CacheManager> currentCacheManager = new AtomicReference<>();
 
     private ObjectMapper createObjectMapper() {
         ObjectMapper om = new ObjectMapper();
@@ -62,101 +50,178 @@ public class CacheConfig {
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
-        
         Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(createObjectMapper(), Object.class);
-        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-        
-        template.setKeySerializer(stringRedisSerializer);
-        template.setHashKeySerializer(stringRedisSerializer);
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+        template.setKeySerializer(stringSerializer);
+        template.setHashKeySerializer(stringSerializer);
         template.setValueSerializer(serializer);
         template.setHashValueSerializer(serializer);
         template.afterPropertiesSet();
-        
         return template;
     }
 
     @Bean
     @Primary
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        CacheManager manager;
+        CacheManager caffeineManager = createCaffeineCacheManager();
+
         try {
             connectionFactory.getConnection().ping();
-            log.info("Redis connection successful, using Redis cache manager");
-            manager = createRedisCacheManager(connectionFactory);
+            log.info("Redis available — Caffeine(L1) + Redis(L2) two-level cache active");
+            CacheManager redisManager = createRedisCacheManager(connectionFactory);
+            return new TwoLevelCacheManager(caffeineManager, redisManager);
         } catch (Exception e) {
-            log.warn("Redis connection failed, falling back to in-memory cache: {}", e.getMessage());
-            manager = createFallbackCacheManager();
-            scheduleRedisRecoveryCheck(connectionFactory);
+            log.warn("Redis unavailable — Caffeine-only cache active (no persistence across restarts)");
+            return caffeineManager;
         }
-        currentCacheManager.set(manager);
-        return manager;
     }
 
-    private void scheduleRedisRecoveryCheck(RedisConnectionFactory connectionFactory) {
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "redis-recovery-check");
-            t.setDaemon(true);
-            return t;
-        });
-        scheduler.scheduleWithFixedDelay(() -> {
-            if (redisRecovered.get()) {
-                scheduler.shutdown();
-                return;
-            }
-            try {
-                connectionFactory.getConnection().ping();
-                redisRecovered.set(true);
-                log.warn("=== Redis连接已恢复，请重启应用以启用Redis缓存 ===");
-                scheduler.shutdown();
-            } catch (Exception ignored) {
-                // Redis still unavailable
-            }
-        }, 60, 60, TimeUnit.SECONDS);
+    private CaffeineCacheManager createCaffeineCacheManager() {
+        CaffeineCacheManager manager = new CaffeineCacheManager();
+        manager.setCaffeine(Caffeine.newBuilder()
+                .maximumSize(maxCacheSize)
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .expireAfterAccess(30, TimeUnit.MINUTES)
+                .recordStats());
+        return manager;
     }
 
     private CacheManager createRedisCacheManager(RedisConnectionFactory connectionFactory) {
         Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(createObjectMapper(), Object.class);
-        
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(1))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
                 .disableCachingNullValues();
 
-        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
-        
-        cacheConfigurations.put("plants", defaultConfig.entryTtl(Duration.ofHours(6)));
-        cacheConfigurations.put("knowledges", defaultConfig.entryTtl(Duration.ofHours(6)));
-        cacheConfigurations.put("inheritors", defaultConfig.entryTtl(Duration.ofHours(6)));
-        cacheConfigurations.put("resources", defaultConfig.entryTtl(Duration.ofHours(4)));
-        cacheConfigurations.put("users", defaultConfig.entryTtl(Duration.ofMinutes(30)));
-        cacheConfigurations.put("quizQuestions", defaultConfig.entryTtl(Duration.ofHours(12)));
-        cacheConfigurations.put("searchResults", defaultConfig.entryTtl(Duration.ofMinutes(5)));
-        cacheConfigurations.put("hotData", defaultConfig.entryTtl(Duration.ofHours(1)));
-        
-        log.info("Redis cache manager initialized with custom TTL configurations");
+        Map<String, RedisCacheConfiguration> configs = new HashMap<>();
+        configs.put("plants", defaultConfig.entryTtl(Duration.ofHours(6)));
+        configs.put("knowledges", defaultConfig.entryTtl(Duration.ofHours(6)));
+        configs.put("inheritors", defaultConfig.entryTtl(Duration.ofHours(6)));
+        configs.put("resources", defaultConfig.entryTtl(Duration.ofHours(4)));
+        configs.put("users", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        configs.put("quizQuestions", defaultConfig.entryTtl(Duration.ofHours(12)));
+        configs.put("searchResults", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        configs.put("hotData", defaultConfig.entryTtl(Duration.ofHours(1)));
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
-                .withInitialCacheConfigurations(cacheConfigurations)
+                .withInitialCacheConfigurations(configs)
                 .transactionAware()
                 .build();
     }
 
-    private CacheManager createFallbackCacheManager() {
-        log.info("Using Caffeine cache manager as fallback with max size: {}", maxCacheSize);
-        
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        cacheManager.setCaffeine(Caffeine.newBuilder()
-                .maximumSize(maxCacheSize)
-                .expireAfterWrite(defaultExpireMinutes, TimeUnit.MINUTES)
-                .expireAfterAccess(defaultExpireMinutes, TimeUnit.MINUTES)
-                .recordStats());
-        
-        cacheManager.setCacheNames(java.util.Arrays.asList(
-            "plants", "knowledges", "inheritors", "resources",
-            "users", "quizQuestions", "searchResults", "hotData"
-        ));
-        
-        return cacheManager;
+    /**
+     * Two-level cache: Caffeine (L1, fast in-memory) → Redis (L2, distributed/persistent).
+     * Reads check Caffeine first, then Redis, then DB.
+     * Writes go to both levels to keep them in sync.
+     */
+    private static class TwoLevelCacheManager implements CacheManager {
+
+        private final CacheManager l1;
+        private final CacheManager l2;
+
+        TwoLevelCacheManager(CacheManager l1, CacheManager l2) {
+            this.l1 = l1;
+            this.l2 = l2;
+        }
+
+        @Override
+        public org.springframework.cache.Cache getCache(String name) {
+            org.springframework.cache.Cache c1 = l1.getCache(name);
+            org.springframework.cache.Cache c2 = l2.getCache(name);
+            if (c1 == null && c2 == null) return null;
+            return new TwoLevelCache(
+                c1 != null ? c1 : new NoOpCache(name),
+                c2 != null ? c2 : new NoOpCache(name)
+            );
+        }
+
+        @Override
+        public java.util.Collection<String> getCacheNames() {
+            java.util.Set<String> names = new java.util.LinkedHashSet<>();
+            names.addAll(l1.getCacheNames());
+            names.addAll(l2.getCacheNames());
+            return names;
+        }
+    }
+
+    private static class TwoLevelCache implements org.springframework.cache.Cache {
+        private final org.springframework.cache.Cache l1;
+        private final org.springframework.cache.Cache l2;
+
+        TwoLevelCache(org.springframework.cache.Cache l1, org.springframework.cache.Cache l2) {
+            this.l1 = l1;
+            this.l2 = l2;
+        }
+
+        @Override
+        public String getName() { return l1.getName(); }
+
+        @Override
+        public Object getNativeCache() { return l1.getNativeCache(); }
+
+        @Override
+        public ValueWrapper get(Object key) {
+            ValueWrapper v = l1.get(key);
+            if (v != null) return v;
+            v = l2.get(key);
+            if (v != null) l1.put(key, v.get());
+            return v;
+        }
+
+        @Override
+        public <T> T get(Object key, Class<T> type) {
+            T v = l1.get(key, type);
+            if (v != null) return v;
+            v = l2.get(key, type);
+            if (v != null) l1.put(key, v);
+            return v;
+        }
+
+        @Override
+        public void put(Object key, Object value) {
+            l1.put(key, value);
+            l2.put(key, value);
+        }
+
+        @Override
+        public void evict(Object key) {
+            l1.evict(key);
+            l2.evict(key);
+        }
+
+        @Override
+        public void clear() {
+            l1.clear();
+            l2.clear();
+        }
+    }
+
+    private static class NoOpCache implements org.springframework.cache.Cache {
+        private final String name;
+
+        NoOpCache(String name) { this.name = name; }
+
+        @Override
+        public String getName() { return name; }
+
+        @Override
+        public Object getNativeCache() { return null; }
+
+        @Override
+        public ValueWrapper get(Object key) { return null; }
+
+        @Override
+        public <T> T get(Object key, Class<T> type) { return null; }
+
+        @Override
+        public void put(Object key, Object value) {}
+
+        @Override
+        public void evict(Object key) {}
+
+        @Override
+        public void clear() {}
     }
 }
