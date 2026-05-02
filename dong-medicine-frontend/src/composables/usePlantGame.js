@@ -1,7 +1,7 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCountdown } from './useInteraction'
-import { logOperationWarn } from '@/utils'
+import { logOperationWarn, extractData } from '@/utils'
 
 function fisherYatesShuffle(arr) {
   const a = [...arr]
@@ -58,7 +58,8 @@ export const usePlantGame = (request, isLoggedIn) => {
   const loadPlants = async () => {
     try {
       const res = await request.get('/plants/random?limit=50')
-      plantsForGame.value = res?.data?.data || res?.data || []
+      const raw = res?.data?.data || res?.data || []
+      plantsForGame.value = Array.isArray(raw) ? raw : []
       plantsLoaded.value = plantsForGame.value.length > 0
     } catch {
       ElMessage.error('加载植物数据失败')
@@ -184,13 +185,21 @@ export const usePlantGame = (request, isLoggedIn) => {
     }
     try {
       const res = await request.get('/plant-game/records')
-      gameRecords.value = res?.data?.data || res?.data || []
+      gameRecords.value = extractData(res)
     } catch (e) {
       console.debug('加载游戏记录失败:', e)
     }
   }
 
-  const totalGameScore = computed(() => gameRecords.value.reduce((sum, r) => sum + (r.score || 0), 0))
+  const totalGameScore = computed(() => {
+    const historical = Array.isArray(gameRecords.value) ? gameRecords.value.reduce((sum, r) => sum + (r.score || 0), 0) : 0
+    return historical + (gameFinished.value ? gameScore.value : 0)
+  })
+
+  const gameCount = computed(() => {
+    const historical = Array.isArray(gameRecords.value) ? gameRecords.value.length : 0
+    return historical + (gameFinished.value ? 1 : 0)
+  })
 
   onUnmounted(() => {
     stopTimer()
@@ -203,6 +212,6 @@ export const usePlantGame = (request, isLoggedIn) => {
   return {
     difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, gameStarted, submittingGame, gameRecords, plantsLoaded,
     formattedTime, isRunning, isExpired, isLowTime,
-    loadPlants, selectDifficulty, startGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, totalGameScore,
+    loadPlants, selectDifficulty, startGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, totalGameScore, gameCount,
   }
 }

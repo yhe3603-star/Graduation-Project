@@ -2,7 +2,9 @@
   <div class="resources-page module-page">
     <div class="module-header">
       <h1>学习资源</h1>
-      <p class="subtitle">侗医药学习资料库</p>
+      <p class="subtitle">
+侗医药学习资料库
+</p>
     </div>
 
     <div class="resources-container">
@@ -38,13 +40,19 @@
             </div>
             <div class="resource-card-body" @click="openResource(item)">
               <div class="resource-icon" :class="getTypeClass(getFileInfo(item).type)">
-                <el-icon :size="28"><component :is="getTypeIcon(getFileInfo(item).type)" /></el-icon>
+                <el-icon :size="28">
+<component :is="getTypeIcon(getFileInfo(item).type)" />
+</el-icon>
               </div>
               <div class="resource-info">
                 <h3>{{ item.title }}</h3>
-                <p class="resource-desc">{{ (item.description || '').substring(0, 60) }}...</p>
+                <p class="resource-desc">
+{{ (item.description || '').substring(0, 60) }}...
+</p>
                 <div class="resource-meta">
-                  <el-tag size="small" effect="light">{{ item.category }}</el-tag>
+                  <el-tag size="small" effect="light">
+{{ item.category }}
+</el-tag>
                   <span class="resource-type">{{ getTypeName(getFileInfo(item).type) }}</span>
                   <span v-if="getFileExt(getFileInfo(item).url)" class="resource-ext">{{ getFileExt(getFileInfo(item).url).toUpperCase() }}</span>
                   <span v-if="getFileInfo(item).size" class="resource-size">{{ formatSize(getFileInfo(item).size) }}</span>
@@ -94,7 +102,9 @@
             <el-button type="primary" :loading="batchDownloading" @click="batchDownload">
               <el-icon><Download /></el-icon>批量下载
             </el-button>
-            <el-button @click="clearSelection">取消</el-button>
+            <el-button @click="clearSelection">
+取消
+</el-button>
           </div>
         </div>
       </div>

@@ -24,10 +24,6 @@ src/
 │   ├── useInteraction.js  # 交互功能（倒计时、评论、分页、过滤、统计）
 │   ├── useMedia.js        # 媒体显示（文档预览、媒体Tabs、文件信息）
 │   ├── usePersonalCenter.js # 个人中心全部功能
-│   ├── useStudyStats.js   # 学习统计数据 + ECharts 图表
-│   ├── useBrowseHistory.js # 浏览历史管理
-│   ├── useChatWebSocket.js # AI 聊天 WebSocket 连接与消息处理
-│   ├── useChatSessions.js  # AI 聊天会话管理（CRUD）
 │   ├── usePlantGame.js    # 植物识别游戏
 │   ├── useQuiz.js         # 趣味答题功能
 │   ├── useUpdateLog.js    # 更新日志管理
@@ -43,11 +39,11 @@ src/
 │   ├── adminUtils.js      # 管理后台工具（表格列配置、标签映射）
 │   └── validators.js      # 表单验证规则工厂（密码等）
 ├── components/            # 组件库（三层架构）
-│   ├── base/              # 基础组件（ErrorBoundary、VirtualList、BaseDetailDialog）
+│   ├── base/              # 基础组件（ErrorBoundary、VirtualList）
 │   ├── common/            # 通用组件（骨架屏、PageLoading）
 │   └── business/          # 业务组件
 │       ├── layout/        # AppHeader、AppFooter
-│       ├── display/       # SearchFilter、AiChatCard、ai-chat/ 等
+│       ├── display/       # SearchFilter、CardGrid、ChartCard 等
 │       ├── interact/      # CommentSection、QuizSection、PlantGame 等
 │       ├── media/         # ImageCarousel、VideoPlayer 等
 │       ├── upload/        # ImageUploader、FileUploader 等
@@ -65,7 +61,7 @@ src/
 │   ├── About.vue          # 关于平台
 │   ├── Feedback.vue       # 意见反馈
 │   ├── Admin.vue          # 管理后台
-│   ├── PersonalCenter.vue # 个人中心（子组件在 personal-center/）
+│   ├── PersonalCenter.vue # 个人中心
 │   ├── GlobalSearch.vue   # 全局搜索
 │   ├── Visual.vue         # 数据可视化
 │   └── NotFound.vue       # 404 页面
@@ -77,7 +73,9 @@ src/
 │   ├── base.css           # 基础样式（reset、标题、链接、图片）
 │   ├── common.css         # 通用样式工具类
 │   ├── components.css     # 组件样式（卡片、按钮、表单等）
+│   ├── home.css           # 首页专用样式
 │   ├── pages.css          # 各页面布局样式
+│   ├── dialog-common.css  # 弹窗通用样式
 │   ├── media-common.css   # 媒体组件通用样式
 │   ├── Visual.css         # 数据可视化页样式
 │   └── scss/              # SCSS 变量和 mixins（全局注入）

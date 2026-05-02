@@ -1,9 +1,9 @@
 <template>
-  <BaseDetailDialog 
+  <el-dialog 
     :model-value="visible" 
     :title="inheritor?.name" 
     width="min(800px, 90vw)"
-    dialog-class="inheritor-detail-dialog"
+    class="inheritor-detail-dialog"
     @update:model-value="handleDialogClose"
   >
     <div class="dialog-content">
@@ -73,14 +73,10 @@
             </div>
             <div class="timeline-content">
               <div class="timeline-tag">
-                <el-tag :type="item.tagType" size="small" effect="dark">
-{{ item.phase }}
-</el-tag>
+                <el-tag :type="item.tagType" size="small" effect="dark">{{ item.phase }}</el-tag>
                 <span v-if="item.year" class="timeline-year">{{ item.year }}</span>
               </div>
-              <p class="timeline-desc">
-{{ item.description }}
-</p>
+              <p class="timeline-desc">{{ item.description }}</p>
             </div>
           </div>
         </div>
@@ -157,11 +153,10 @@
       :document="previewDoc"
       @download="handleDocumentDownload"
     />
-  </BaseDetailDialog>
+  </el-dialog>
 </template>
 
 <script setup>
-import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { ref, computed, watch } from 'vue';
 import { Clock, Film, Medal, Reading, School, Star, Trophy, VideoPlay, Picture, Document } from '@element-plus/icons-vue';
 import VideoPlayer from '@/components/business/media/VideoPlayer.vue';
@@ -359,6 +354,7 @@ const handleDocumentDownload = downloadDocument;
 </script>
 
 <style scoped>
+@import '@/styles/dialog-common.css';
 
 .inheritor-detail-dialog :deep(.el-dialog__body) {
   overflow-x: hidden;

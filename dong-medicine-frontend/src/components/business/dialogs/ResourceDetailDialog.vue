@@ -1,10 +1,10 @@
 <template>
-  <BaseDetailDialog 
+  <el-dialog 
     :model-value="visible" 
     :title="resource?.title" 
     width="min(900px, 95vw)"
     destroy-on-close
-    dialog-class="resource-detail-dialog"
+    class="resource-detail-dialog"
     @update:model-value="handleDialogClose"
   >
     <div class="resource-content">
@@ -112,11 +112,10 @@
       :document="relatedDocPreview"
       @download="handleDocumentDownload"
     />
-  </BaseDetailDialog>
+  </el-dialog>
 </template>
 
 <script setup>
-import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { ref, computed, watch } from 'vue';
 import { Document, View, Download, Star } from '@element-plus/icons-vue';
 import VideoPlayer from '@/components/business/media/VideoPlayer.vue';
@@ -253,6 +252,7 @@ const handleDocumentDownload = (doc) => {
 </script>
 
 <style scoped>
+@import '@/styles/dialog-common.css';
 
 .preview-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light); }
 .file-ext { font-size: 12px; color: #666; background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-weight: 500; }

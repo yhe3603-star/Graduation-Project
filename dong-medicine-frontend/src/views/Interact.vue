@@ -8,11 +8,11 @@
     </div>
 
     <div class="interact-container">
-      <InteractSidebar 
+      <InteractSidebar
         ref="sidebarRef"
-        :quiz-count="quizRecords.length"
+        :quiz-count="quizCount"
         :best-score="bestScore"
-        :game-count="gameRecords.length"
+        :game-count="gameCount"
         :total-game-score="totalGameScore"
       />
 
@@ -124,13 +124,13 @@ const sidebarRef = ref(null);
 const {
   isQuizStarted, selectedQuestions, userAnswers, currentQuestion, quizFinished, finalScore, correctCount, quizLoading, submitting, quizRecords, selectedDifficulty,
   formattedTime: quizFormattedTime, isLowTime: quizIsLowTime,
-  setDifficulty: setQuizDifficulty, startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz, shareQuizResult, loadQuizRecords, bestScore,
+  setDifficulty: setQuizDifficulty, startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz, shareQuizResult, loadQuizRecords, bestScore, quizCount,
 } = useQuiz(request, isLoggedIn);
 
 const {
   difficulty, currentPlant, options, answered, selectedAnswer, gameScore, streak, totalQuestions, correctAnswers, gameFinished, gameStarted, submittingGame, gameRecords, plantsLoaded,
   formattedTime: gameFormattedTime, isLowTime: gameIsLowTime,
-  selectDifficulty: setGameDifficulty, startGame: startPlantGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore,
+  selectDifficulty: setGameDifficulty, startGame: startPlantGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore, gameCount,
 } = usePlantGame(request, isLoggedIn);
 
 const { comments, commentLoading, loadComments, handleCommentPost, currentPage, pageSize, totalItems, handlePageChange, handleSizeChange } = useComments(request, isLoggedIn);

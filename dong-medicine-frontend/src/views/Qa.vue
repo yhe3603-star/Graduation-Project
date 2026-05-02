@@ -103,7 +103,9 @@
           @click="$router.push('/feedback')"
         >
           <div class="feedback-entry">
-            <el-icon :size="24"><EditPen /></el-icon>
+            <el-icon :size="24">
+<EditPen />
+</el-icon>
             <div class="feedback-entry-text">
               <span class="feedback-entry-title">有问题？反馈给我们</span>
               <span class="feedback-entry-desc">提交建议或问题，我们会尽快处理</span>

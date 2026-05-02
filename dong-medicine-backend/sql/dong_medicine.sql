@@ -838,7 +838,7 @@ CREATE TABLE `chat_history` (
   INDEX `idx_user_session`(`user_id` ASC, `session_id` ASC) USING BTREE,
   INDEX `idx_session_id`(`session_id` ASC) USING BTREE,
   INDEX `idx_created_at`(`created_at` DESC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'AI聊天历史记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 25 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'AI聊天历史记录表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for browse_history
@@ -854,4 +854,81 @@ CREATE TABLE `browse_history` (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_target`(`target_type` ASC, `target_id` ASC) USING BTREE,
   INDEX `idx_created_at`(`created_at` DESC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户浏览历史记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 46 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户浏览历史记录表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of browse_history
+-- ----------------------------
+INSERT INTO `browse_history` VALUES (1, 3, 'plant', 1, '2026-04-10 09:15:23');
+INSERT INTO `browse_history` VALUES (2, 3, 'plant', 5, '2026-04-10 09:22:17');
+INSERT INTO `browse_history` VALUES (3, 3, 'knowledge', 1, '2026-04-10 10:05:44');
+INSERT INTO `browse_history` VALUES (4, 3, 'plant', 8, '2026-04-11 14:30:12');
+INSERT INTO `browse_history` VALUES (5, 3, 'inheritor', 1, '2026-04-11 15:10:33');
+INSERT INTO `browse_history` VALUES (6, 3, 'knowledge', 5, '2026-04-12 08:45:21');
+INSERT INTO `browse_history` VALUES (7, 3, 'plant', 11, '2026-04-12 09:12:56');
+INSERT INTO `browse_history` VALUES (8, 3, 'knowledge', 15, '2026-04-13 11:20:08');
+INSERT INTO `browse_history` VALUES (9, 3, 'inheritor', 4, '2026-04-13 14:55:42');
+INSERT INTO `browse_history` VALUES (10, 3, 'plant', 3, '2026-04-14 16:08:37');
+INSERT INTO `browse_history` VALUES (11, 4, 'plant', 2, '2026-04-08 10:30:15');
+INSERT INTO `browse_history` VALUES (12, 4, 'knowledge', 3, '2026-04-08 11:15:42');
+INSERT INTO `browse_history` VALUES (13, 4, 'plant', 7, '2026-04-09 09:22:33');
+INSERT INTO `browse_history` VALUES (14, 4, 'inheritor', 2, '2026-04-09 10:45:18');
+INSERT INTO `browse_history` VALUES (15, 4, 'knowledge', 7, '2026-04-10 08:12:55');
+INSERT INTO `browse_history` VALUES (16, 4, 'plant', 12, '2026-04-10 14:33:27');
+INSERT INTO `browse_history` VALUES (17, 4, 'plant', 9, '2026-04-11 16:20:44');
+INSERT INTO `browse_history` VALUES (18, 4, 'knowledge', 10, '2026-04-12 09:08:16');
+INSERT INTO `browse_history` VALUES (19, 4, 'inheritor', 8, '2026-04-12 11:45:33');
+INSERT INTO `browse_history` VALUES (20, 4, 'plant', 15, '2026-04-13 15:22:09');
+INSERT INTO `browse_history` VALUES (21, 4, 'knowledge', 17, '2026-04-14 10:18:47');
+INSERT INTO `browse_history` VALUES (22, 4, 'plant', 4, '2026-04-15 08:55:23');
+INSERT INTO `browse_history` VALUES (23, 5, 'inheritor', 3, '2026-04-07 13:25:18');
+INSERT INTO `browse_history` VALUES (24, 5, 'knowledge', 2, '2026-04-07 14:10:44');
+INSERT INTO `browse_history` VALUES (25, 5, 'plant', 13, '2026-04-08 09:40:22');
+INSERT INTO `browse_history` VALUES (26, 5, 'knowledge', 6, '2026-04-09 11:55:37');
+INSERT INTO `browse_history` VALUES (27, 5, 'inheritor', 10, '2026-04-09 15:30:12');
+INSERT INTO `browse_history` VALUES (28, 5, 'plant', 6, '2026-04-10 10:22:48');
+INSERT INTO `browse_history` VALUES (29, 5, 'knowledge', 12, '2026-04-11 08:15:33');
+INSERT INTO `browse_history` VALUES (30, 5, 'inheritor', 5, '2026-04-11 14:42:19');
+INSERT INTO `browse_history` VALUES (31, 5, 'plant', 10, '2026-04-12 16:08:55');
+INSERT INTO `browse_history` VALUES (32, 5, 'knowledge', 20, '2026-04-13 09:33:27');
+INSERT INTO `browse_history` VALUES (33, 5, 'plant', 16, '2026-04-14 11:20:44');
+INSERT INTO `browse_history` VALUES (34, 5, 'inheritor', 9, '2026-04-15 13:45:18');
+INSERT INTO `browse_history` VALUES (35, 6, 'plant', 1, '2026-04-12 08:30:15');
+INSERT INTO `browse_history` VALUES (36, 6, 'knowledge', 1, '2026-04-12 09:15:42');
+INSERT INTO `browse_history` VALUES (37, 6, 'plant', 5, '2026-04-13 10:22:33');
+INSERT INTO `browse_history` VALUES (38, 6, 'inheritor', 1, '2026-04-13 11:45:18');
+INSERT INTO `browse_history` VALUES (39, 6, 'knowledge', 4, '2026-04-14 14:12:55');
+INSERT INTO `browse_history` VALUES (40, 6, 'plant', 8, '2026-04-14 15:33:27');
+INSERT INTO `browse_history` VALUES (41, 1, 'plant', 1, '2026-04-05 08:00:00');
+INSERT INTO `browse_history` VALUES (42, 1, 'plant', 5, '2026-04-06 09:15:00');
+INSERT INTO `browse_history` VALUES (43, 1, 'knowledge', 1, '2026-04-07 10:30:00');
+INSERT INTO `browse_history` VALUES (44, 1, 'inheritor', 1, '2026-04-08 11:45:00');
+INSERT INTO `browse_history` VALUES (45, 1, 'plant', 11, '2026-04-09 14:00:00');
+
+-- ----------------------------
+-- Records of chat_history
+-- ----------------------------
+INSERT INTO `chat_history` VALUES (1, 3, 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'user', '侗族药浴有哪些功效？', '2026-04-10 10:10:15');
+INSERT INTO `chat_history` VALUES (2, 3, 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'assistant', '侗族药浴是侗族传统疗法的重要组成部分，主要功效包括：\n1. 祛风除湿：通过药物煎汤浸泡全身，促进血液循环，排出体内湿气；\n2. 舒筋活络：药浴能缓解肌肉酸痛，改善关节活动度；\n3. 活血化瘀：促进气血运行，对跌打损伤有辅助疗效；\n4. 清热解毒：常用金银花、钩藤等清热药材，对皮肤问题有改善作用；\n5. 养生保健：定期药浴可增强体质，预防疾病。\n\n常用药材有透骨草、艾叶、钩藤、血藤、杜仲等。建议每周2-3次，水温40-45℃，浸泡20-30分钟。', '2026-04-10 10:10:18');
+INSERT INTO `chat_history` VALUES (3, 3, 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'user', '钩藤可以治疗什么病？', '2026-04-10 10:12:30');
+INSERT INTO `chat_history` VALUES (4, 3, 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'assistant', '钩藤是侗族常用药物，主要功效和适应症包括：\n1. 清热平肝：用于肝阳上亢所致的头痛眩晕；\n2. 息风定惊：是治疗小儿惊风的要药，对惊痫抽搐有显著疗效；\n3. 感冒夹惊：外感风热兼有惊惕不安者可用；\n4. 妊娠子痫：孕妇因肝风内动所致的子痫。\n\n侗族民间流传，一位老猎人发现山中藤蔓能治小儿惊风。其孙突发高热惊厥，老猎人取此藤煎水服用，孩子很快平静下来。从此侗家人便知道这种带钩的藤能治惊风，代代相传至今。', '2026-04-10 10:12:33');
+INSERT INTO `chat_history` VALUES (5, 3, 'f1e2d3c4-b5a6-9876-5432-109876543210', 'user', '侗医艾灸疗法是怎么操作的？', '2026-04-12 08:50:10');
+INSERT INTO `chat_history` VALUES (6, 3, 'f1e2d3c4-b5a6-9876-5432-109876543210', 'assistant', '侗医艾灸疗法的操作方法如下：\n1. 选材：以艾叶为主要材料，制成艾条或艾柱；\n2. 选穴：根据病情选取相应穴位，常用穴位有关元、气海、三阴交等；\n3. 操作：点燃艾条，对准穴位熏灼，距离皮肤2-3cm；\n4. 时间：每次15-20分钟，以患者感觉温热舒适为度；\n5. 注意事项：防止烫伤，孕妇腹部和腰骶部不宜施灸。\n\n侗族艾灸对妇科疾病、风湿疼痛有显著疗效，是侗族传统外治法之一。', '2026-04-12 08:50:13');
+INSERT INTO `chat_history` VALUES (7, 4, 'b2c3d4e5-f6a7-8901-2345-678901234567', 'user', '透骨草能治跌打损伤吗？怎么用？', '2026-04-09 11:20:30');
+INSERT INTO `chat_history` VALUES (8, 4, 'b2c3d4e5-f6a7-8901-2345-678901234567', 'assistant', '透骨草是侗医治疗跌打损伤的常用药，具有祛风除湿、舒筋活血、止痛的功效。\n\n用法：\n1. 外用：将透骨草捣烂敷在患处，可加适量白酒调匀，每日换药1-2次；\n2. 药浴：取透骨草30g，加水煎煮后用于浸泡患处或全身药浴；\n3. 内服：可煎水服用，但需遵医嘱。\n\n侗族传说古时一位药农上山采药扭伤脚踝，发现路边一种小草捣烂敷在患处，片刻后疼痛减轻。因能透入筋骨治病，故名透骨草。', '2026-04-09 11:20:33');
+INSERT INTO `chat_history` VALUES (9, 4, 'b2c3d4e5-f6a7-8901-2345-678901234567', 'user', '杜仲有什么功效？', '2026-04-09 11:25:45');
+INSERT INTO `chat_history` VALUES (10, 4, 'b2c3d4e5-f6a7-8901-2345-678901234567', 'assistant', '杜仲是贵州道地药材，侗族地区广泛分布，主要功效包括：\n1. 补肝肾：增强肝肾功能，改善腰膝酸软；\n2. 强筋骨：用于肾虚腰痛、筋骨无力；\n3. 安胎：用于妊娠漏血、胎动不安。\n\n侗族民间常用杜仲治疗腰膝酸痛。传说一位侗族老人腰痛多年，服用杜仲后腰痛消失，行走自如。从此杜仲成为侗家强腰健骨的良药。常用方法有煎汤内服、泡酒饮用等。', '2026-04-09 11:25:48');
+INSERT INTO `chat_history` VALUES (11, 4, 'c3d4e5f6-a7b8-9012-3456-789012345678', 'user', '侗族有哪些传统疗法？', '2026-04-11 16:25:10');
+INSERT INTO `chat_history` VALUES (12, 4, 'c3d4e5f6-a7b8-9012-3456-789012345678', 'assistant', '侗族传统疗法丰富多样，主要包括：\n1. 药浴疗法：用药物煎汤浸泡全身或局部，祛风除湿、舒筋活络；\n2. 艾灸疗法：以艾叶熏灼穴位，温经散寒、防治疾病；\n3. 推拿疗法：通过手法作用于体表，舒筋活络、行气活血；\n4. 拔罐疗法：利用负压吸附皮肤，祛风除湿、活血化瘀；\n5. 熏蒸疗法：用药物蒸汽熏蒸患处，祛风除湿；\n6. 刮痧疗法：刮拭皮肤活血化瘀、祛风解表；\n7. 火疗疗法：药物燃烧产热作用于患处，温经散寒；\n8. 小儿推拿：特定手法作用于小儿穴位，治疗儿科疾病。\n\n这些疗法都是侗族人民长期与疾病斗争中积累的宝贵经验。', '2026-04-11 16:25:13');
+INSERT INTO `chat_history` VALUES (13, 5, 'd4e5f6a7-b8c9-0123-4567-890123456789', 'user', '侗族药浴养生方用了哪些药材？', '2026-04-08 14:15:20');
+INSERT INTO `chat_history` VALUES (14, 5, 'd4e5f6a7-b8c9-0123-4567-890123456789', 'assistant', '侗族药浴养生方的主要药材有：\n1. 透骨草30g：祛风除湿、舒筋活血；\n2. 艾叶30g：温经止血、散寒止痛；\n3. 钩藤20g：清热平肝、息风定惊；\n4. 血藤20g：补血活血、通络；\n5. 杜仲15g：补肝肾、强筋骨；\n6. 金银花15g：清热解毒。\n\n使用方法：将药物加水煎煮30分钟，倒入浴桶中，加水调至适宜温度（40-45℃），浸泡全身20-30分钟，每周2-3次。此方能促进血液循环，祛风除湿，舒筋活络。', '2026-04-08 14:15:23');
+INSERT INTO `chat_history` VALUES (15, 5, 'd4e5f6a7-b8c9-0123-4567-890123456789', 'user', '七叶一枝花真的能治蛇伤吗？', '2026-04-08 14:20:35');
+INSERT INTO `chat_history` VALUES (16, 5, 'd4e5f6a7-b8c9-0123-4567-890123456789', 'assistant', '是的，七叶一枝花（又名重楼）是侗医治疗蛇伤的重要药物。\n\n功效：清热解毒、消肿止痛、凉肝定惊，对蛇虫咬伤有显著疗效。\n\n侗族民间称其为"重楼"，相传古时侗寨流行恶疮，一位侗族药师梦见仙人指点，在深山找到七叶一枝花，治愈了众多患者，从此侗家人将其视为神药。\n\n在侗医蛇伤急救方中，七叶一枝花常与八角莲配伍使用，捣烂外敷伤口周围，同时配合内服药物。但需注意，严重蛇伤应及时送医，不可仅依赖草药。', '2026-04-08 14:20:38');
+INSERT INTO `chat_history` VALUES (17, 5, 'e5f6a7b8-c9d0-1234-5678-901234567890', 'user', '侗族传承人谭锦宁擅长什么？', '2026-04-11 14:50:22');
+INSERT INTO `chat_history` VALUES (18, 5, 'e5f6a7b8-c9d0-1234-5678-901234567890', 'assistant', '谭锦宁是侗族医药自治区级代表性传承人，主要擅长：\n1. 侗族医药：精通传统侗药理论与临床应用；\n2. 骨伤治疗：擅长传统接骨术，治疗各类骨伤；\n3. 蛇伤救治：对毒蛇咬伤有丰富的救治经验；\n4. 药浴疗法：传承并发展侗族药浴养生方法。\n\n他于2002年创立谭氏侗族医药传承工作室，2015年被认定为侗族医药代表性传承人，2016年获自治区级非物质文化遗产保护性示范户。在2020-2022年度评估中获"优秀"等次，治疗骨伤蛇伤患者数千例，培养了多位侗医药传承人。', '2026-04-11 14:50:25');
+INSERT INTO `chat_history` VALUES (19, 6, 'f6a7b8c9-d0e1-2345-6789-012345678901', 'user', '天麻有什么功效？怎么服用？', '2026-04-12 09:20:15');
+INSERT INTO `chat_history` VALUES (20, 6, 'f6a7b8c9-d0e1-2345-6789-012345678901', 'assistant', '天麻是贵州道地药材，黔东南是天麻的主产区，主要功效包括：\n1. 息风止痉：用于肝风内动、惊痫抽搐；\n2. 平抑肝阳：治疗眩晕头痛；\n3. 祛风通络：改善肢体麻木、手足不遂。\n\n侗族民间常用天麻治疗头晕头痛。传说一位侗族老人常年头痛，服用天麻后头痛消失。因天麻能治"诸风"，侗家人称其为"定风神草"。\n\n服用方法：煎汤内服，常用量3-10g；也可研末冲服。天麻常与钩藤配伍使用，增强平肝息风之效。', '2026-04-12 09:20:18');
+INSERT INTO `chat_history` VALUES (21, 6, 'f6a7b8c9-d0e1-2345-6789-012345678901', 'user', '侗族药浴和普通泡澡有什么区别？', '2026-04-12 09:25:30');
+INSERT INTO `chat_history` VALUES (22, 6, 'f6a7b8c9-d0e1-2345-6789-012345678901', 'assistant', '侗族药浴与普通泡澡有本质区别：\n1. 药物配方：侗族药浴使用特定草药配方，如透骨草、艾叶、钩藤等，具有明确的药理作用；\n2. 煎煮工艺：药材需加水煎煮30分钟以上，充分释放有效成分；\n3. 水温控制：药浴水温严格控制在40-45℃，既能促进药物吸收又不会烫伤；\n4. 疗程规范：每周2-3次，每次20-30分钟，有明确的治疗周期；\n5. 辨证施浴：根据不同体质和病症选用不同药方，如风湿用祛风方、妇科用温经方等；\n6. 历史传承：侗族药浴已有数百年历史，是侗族人民与疾病斗争的智慧结晶。\n\n普通泡澡主要是清洁和放松，而侗族药浴是具有明确治疗目的的传统疗法。', '2026-04-12 09:25:33');
+INSERT INTO `chat_history` VALUES (23, 1, 'a7b8c9d0-e1f2-3456-7890-123456789012', 'user', '请介绍一下侗族医药的整体情况', '2026-04-05 08:10:00');
+INSERT INTO `chat_history` VALUES (24, 1, 'a7b8c9d0-e1f2-3456-7890-123456789012', 'assistant', '侗族医药是中国传统医药的重要组成部分，主要特点如下：\n1. 历史悠久：侗族医药有数百年传承历史，是侗族人民在长期与疾病斗争中积累的宝贵经验；\n2. 理论独特：侗医认为人体与自然和谐统一，强调"天人合一"的整体观念；\n3. 疗法丰富：包括药浴、艾灸、推拿、拔罐、熏蒸、刮痧、火疗等多种外治法；\n4. 药材丰富：黔东南、广西三江、湖南通道等侗族聚居区盛产钩藤、透骨草、九节茶、杜仲等道地药材；\n5. 传承有序：目前有自治区级、市级、县级等多位非物质文化遗产代表性传承人；\n6. 实用性强：对风湿骨痛、跌打损伤、妇科疾病、蛇伤等有显著疗效。\n\n侗族医药已列入非物质文化遗产保护名录，正在得到更好的保护与传承。', '2026-04-05 08:10:03');

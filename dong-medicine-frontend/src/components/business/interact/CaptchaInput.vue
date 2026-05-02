@@ -18,9 +18,11 @@
         alt="验证码"
         class="captcha-image"
         title="点击刷新验证码"
-      />
+      >
       <div v-else class="captcha-loading">
-        <el-icon class="is-loading"><Loading /></el-icon>
+        <el-icon class="is-loading">
+<Loading />
+</el-icon>
         <span>加载中</span>
       </div>
     </div>

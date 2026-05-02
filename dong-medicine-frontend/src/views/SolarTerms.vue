@@ -2,7 +2,9 @@
   <div class="solar-terms-page module-page">
     <div class="module-header">
       <h1>节气采药</h1>
-      <p class="subtitle">二十四节气与侗医药采集时令 — 顺应天时，药效更佳</p>
+      <p class="subtitle">
+二十四节气与侗医药采集时令 — 顺应天时，药效更佳
+</p>
     </div>
 
     <div class="season-tabs">
@@ -15,7 +17,9 @@
         @click="activeSeason = season.key"
       >
         <div class="season-icon">
-          <el-icon :size="28"><component :is="season.icon" /></el-icon>
+          <el-icon :size="28">
+<component :is="season.icon" />
+</el-icon>
         </div>
         <span class="season-name">{{ season.label }}</span>
         <span class="season-count">{{ getSeasonTerms(season.key).length }}节气</span>
@@ -35,20 +39,26 @@
               <span class="term-char">{{ term.icon }}</span>
             </div>
             <div class="term-title-area">
-              <h3 class="term-name">{{ term.name }}</h3>
+              <h3 class="term-name">
+{{ term.name }}
+</h3>
               <span class="term-pinyin">{{ term.pinyin }}</span>
               <span class="term-dates">
                 <el-icon><Calendar /></el-icon>
                 {{ term.dateRange }}
               </span>
             </div>
-            <div class="term-order">No.{{ term.order }}</div>
+            <div class="term-order">
+No.{{ term.order }}
+</div>
           </div>
 
           <el-divider />
 
           <div class="term-body">
-            <p class="term-desc">{{ term.description }}</p>
+            <p class="term-desc">
+{{ term.description }}
+</p>
 
             <div v-if="term.herbs.length > 0" class="term-herbs">
               <h4>

@@ -13,7 +13,9 @@
         <div class="header-left">
           <h2>{{ menuTitles[activeMenu] }}</h2>
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/' }">
+首页
+</el-breadcrumb-item>
             <el-breadcrumb-item>管理后台</el-breadcrumb-item>
             <el-breadcrumb-item>{{ menuTitles[activeMenu] }}</el-breadcrumb-item>
           </el-breadcrumb>
@@ -59,10 +61,18 @@
             </el-tag>
           </template>
           <template #actions="{ row }">
-            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewUser(row)">查看</el-button>
-            <el-button v-if="row.status !== 'banned' && row.role !== 'admin'" type="danger" size="small" @click="confirmBanUser(row)">封禁</el-button>
-            <el-button v-if="row.status === 'banned'" type="success" size="small" style="color: var(--text-inverse);" @click="confirmUnbanUser(row)">解封</el-button>
-            <el-button type="danger" size="small" @click="deleteUser(row.id)">删除</el-button>
+            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewUser(row)">
+查看
+</el-button>
+            <el-button v-if="row.status !== 'banned' && row.role !== 'admin'" type="danger" size="small" @click="confirmBanUser(row)">
+封禁
+</el-button>
+            <el-button v-if="row.status === 'banned'" type="success" size="small" style="color: var(--text-inverse);" @click="confirmUnbanUser(row)">
+解封
+</el-button>
+            <el-button type="danger" size="small" @click="deleteUser(row.id)">
+删除
+</el-button>
           </template>
         </AdminDataTable>
 
@@ -83,11 +93,17 @@
             @delete="(id) => confirmDelete('确定删除？', () => request.delete(`${item.deletePath}/${id}`))"
           >
             <template v-if="item.key === 'resources'" #fileType="{ row }">
-              <el-tag :type="getResourceFileType(row).tagType">{{ getResourceFileType(row).text }}</el-tag>
+              <el-tag :type="getResourceFileType(row).tagType">
+{{ getResourceFileType(row).text }}
+</el-tag>
             </template>
-            <template v-if="item.key === 'resources'" #fileSize="{ row }">{{ getResourceFileSize(row) }}</template>
+            <template v-if="item.key === 'resources'" #fileSize="{ row }">
+{{ getResourceFileSize(row) }}
+</template>
             <template v-if="item.key === 'quiz'" #correctAnswer="{ row }">
-              <el-tag type="success">{{ getCorrectAnswerContent(row) }}</el-tag>
+              <el-tag type="success">
+{{ getCorrectAnswerContent(row) }}
+</el-tag>
             </template>
           </AdminDataTable>
         </template>
@@ -106,10 +122,18 @@
           @delete="deleteComment"
         >
           <template #actions="{ row }">
-            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewComment(row)">查看</el-button>
-            <el-button v-if="row.status !== 'approved'" type="success" size="small" style="color: var(--text-inverse);" @click="approveComment(row)">通过</el-button>
-            <el-button v-if="row.status === 'pending'" type="warning" size="small" style="color: var(--text-inverse);" @click="rejectComment(row)">拒绝</el-button>
-            <el-button type="danger" size="small" @click="deleteComment(row.id)">删除</el-button>
+            <el-button type="info" size="small" style="color: var(--text-inverse);" @click="viewComment(row)">
+查看
+</el-button>
+            <el-button v-if="row.status !== 'approved'" type="success" size="small" style="color: var(--text-inverse);" @click="approveComment(row)">
+通过
+</el-button>
+            <el-button v-if="row.status === 'pending'" type="warning" size="small" style="color: var(--text-inverse);" @click="rejectComment(row)">
+拒绝
+</el-button>
+            <el-button type="danger" size="small" @click="deleteComment(row.id)">
+删除
+</el-button>
           </template>
         </AdminDataTable>
 
@@ -127,15 +151,23 @@
           @delete="deleteFeedback"
         >
           <template #actions="{ row }">
-            <el-button type="primary" size="small" style="color: var(--text-inverse);" @click="viewFeedback(row)">查看</el-button>
-            <el-button v-if="row.status !== 'resolved'" type="success" size="small" style="color: var(--text-inverse);" @click="resolveFeedback(row)">处理</el-button>
-            <el-button type="danger" size="small" @click="deleteFeedback(row.id)">删除</el-button>
+            <el-button type="primary" size="small" style="color: var(--text-inverse);" @click="viewFeedback(row)">
+查看
+</el-button>
+            <el-button v-if="row.status !== 'resolved'" type="success" size="small" style="color: var(--text-inverse);" @click="resolveFeedback(row)">
+处理
+</el-button>
+            <el-button type="danger" size="small" @click="deleteFeedback(row.id)">
+删除
+</el-button>
           </template>
         </AdminDataTable>
 
         <div v-if="activeMenu === 'logs'" class="logs-section">
           <div class="logs-toolbar">
-            <el-checkbox v-model="isAllLogsChecked" :indeterminate="isLogsIndeterminate" @change="toggleAllLogs">全选</el-checkbox>
+            <el-checkbox v-model="isAllLogsChecked" :indeterminate="isLogsIndeterminate" @change="toggleAllLogs">
+全选
+</el-checkbox>
             <el-button type="danger" :disabled="selectedLogIds.size === 0" @click="batchDeleteSelectedLogs">
               <el-icon><Delete /></el-icon>批量删除 ({{ selectedLogIds.size }})
             </el-button>
@@ -145,7 +177,7 @@
           </div>
           <div class="virtual-log-wrapper">
             <div class="virtual-log-header">
-              <span class="vlc vlc-check"></span>
+              <span class="vlc vlc-check" />
               <span class="vlc vlc-module">模块</span>
               <span class="vlc vlc-type">类型</span>
               <span class="vlc vlc-user">用户</span>

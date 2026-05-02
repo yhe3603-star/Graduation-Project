@@ -1,9 +1,9 @@
 <template>
-  <BaseDetailDialog 
+  <el-dialog 
     :model-value="visible" 
     :title="plant?.nameCn" 
     width="min(800px, 90vw)"
-    dialog-class="plant-detail-dialog"
+    class="plant-detail-dialog"
     @update:model-value="handleDialogClose"
   >
     <div class="dialog-content">
@@ -140,11 +140,10 @@
       :document="previewDoc"
       @download="handleDocumentDownload"
     />
-  </BaseDetailDialog>
+  </el-dialog>
 </template>
 
 <script setup>
-import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { ref, computed, watch } from 'vue';
 import { View, Star, Document, VideoPlay, Picture } from '@element-plus/icons-vue';
 import VideoPlayer from '@/components/business/media/VideoPlayer.vue';
@@ -224,6 +223,7 @@ const handleDocumentDownload = downloadDocument;
 </script>
 
 <style scoped>
+@import '@/styles/dialog-common.css';
 
 .plant-detail-dialog :deep(.el-dialog__body) {
   overflow-x: hidden;

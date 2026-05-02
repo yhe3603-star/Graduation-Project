@@ -121,7 +121,17 @@
           <el-icon><ArrowRight /></el-icon>
         </el-button>
         <el-button
-          v-else
+          v-if="current < questions.length - 1"
+          type="warning"
+          :loading="submitting"
+          size="large"
+          @click="$emit('submit')"
+        >
+          <el-icon><Check /></el-icon>
+          提前交卷
+        </el-button>
+        <el-button
+          v-if="current >= questions.length - 1"
           type="success"
           :loading="submitting"
           size="large"

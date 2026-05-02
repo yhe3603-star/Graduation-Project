@@ -1,9 +1,15 @@
 <template>
   <div class="not-found-page">
     <div class="not-found-content">
-      <div class="error-code">404</div>
-      <h1 class="error-title">页面未找到</h1>
-      <p class="error-description">抱歉，您访问的页面不存在或已被移除</p>
+      <div class="error-code">
+404
+</div>
+      <h1 class="error-title">
+页面未找到
+</h1>
+      <p class="error-description">
+抱歉，您访问的页面不存在或已被移除
+</p>
     </div>
     <div class="decoration">
       <div class="circle circle-1" />

@@ -70,10 +70,11 @@ public class SaTokenConfig implements WebMvcConfigurer {
             "/api/qa/search",
             "/api/qa/{id}/view",
 
-            // ========== 测验-只读接口 ==========
+            // ========== 测验接口（允许未登录答题） ==========
             "/api/quiz/questions",
             "/api/quiz/list",
             "/api/quiz/records",
+            "/api/quiz/submit",
 
             // ========== 学习资源-只读接口 ==========
             "/api/resources/list",

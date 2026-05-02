@@ -12,6 +12,7 @@ import com.dongmedicine.entity.QuizRecord;
 import com.dongmedicine.mapper.QuizQuestionMapper;
 import com.dongmedicine.mapper.QuizRecordMapper;
 import com.dongmedicine.service.QuizService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class QuizServiceImpl implements QuizService {
 
@@ -35,8 +37,17 @@ public class QuizServiceImpl implements QuizService {
     @Override
     public List<QuizQuestionDTO> getRandomQuestions(int count) {
         int questionCount = count > 0 ? count : DEFAULT_QUESTION_COUNT;
-        List<QuizQuestion> questions = questionMapper.selectRandomQuestions(questionCount);
-        return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
+        try {
+            List<QuizQuestion> questions = questionMapper.selectRandomQuestions(questionCount);
+            if (questions == null || questions.isEmpty()) {
+                log.warn("题库为空，请确认 quiz_questions 表有数据");
+                return Collections.emptyList();
+            }
+            return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("查询随机题目失败，SQL可能不兼容当前数据库: ", e);
+            throw new BusinessException(ErrorCode.DATABASE_ERROR, "题库查询失败，请检查数据库表和数据");
+        }
     }
 
     @Override
@@ -85,9 +96,11 @@ public class QuizServiceImpl implements QuizService {
                 continue;
             }
             QuizQuestion q = questionMap.get(dto.getQuestionId());
-            if (q != null && q.getCorrectAnswer() != null
-                    && q.getCorrectAnswer().trim().equalsIgnoreCase(dto.getAnswer() != null ? dto.getAnswer().trim() : "")) {
-                score += actualScorePerQuestion;
+            if (q != null) {
+                String correctText = q.getAnswer();
+                if (correctText != null && correctText.trim().equalsIgnoreCase(dto.getAnswer().trim())) {
+                    score += actualScorePerQuestion;
+                }
             }
         }
         return score;

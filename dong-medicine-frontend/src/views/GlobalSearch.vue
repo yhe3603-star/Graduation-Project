@@ -125,7 +125,9 @@
           <div v-else>
             <el-empty description="未找到相关结果" />
             <div class="recommend-section">
-              <p class="recommend-title">无结果？试试以下推荐</p>
+              <p class="recommend-title">
+无结果？试试以下推荐
+</p>
               <div class="recommend-tags">
                 <el-tag
                   v-for="r in recommendedItems"
@@ -163,7 +165,9 @@
           <div v-else>
             <el-empty description="该类型暂无搜索结果" />
             <div class="recommend-section">
-              <p class="recommend-title">无结果？试试以下推荐</p>
+              <p class="recommend-title">
+无结果？试试以下推荐
+</p>
               <div class="recommend-tags">
                 <el-tag
                   v-for="r in recommendedItems"

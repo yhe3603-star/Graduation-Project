@@ -1,5 +1,5 @@
 <template>
-  <div ref="chartContainer" class="knowledge-graph" :style="containerStyle"></div>
+  <div ref="chartContainer" class="knowledge-graph" :style="containerStyle" />
 </template>
 
 <script setup>

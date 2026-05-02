@@ -45,6 +45,7 @@ class QuizServiceImplTest {
         q.setId(id);
         q.setQuestion(question);
         q.setCorrectAnswer(correctAnswer);
+        q.setAnswer(options.length > 0 ? options[0] : correctAnswer);
         q.setOptionList(List.of(options));
         return q;
     }
@@ -107,16 +108,26 @@ class QuizServiceImplTest {
     @DisplayName("calculateScore - 计分逻辑测试")
     class CalculateScore {
 
+        private QuizQuestion createFullTextQuestion(Integer id, String question, String answerText, String correctLetter) {
+            QuizQuestion q = new QuizQuestion();
+            q.setId(id);
+            q.setQuestion(question);
+            q.setAnswer(answerText);
+            q.setCorrectAnswer(correctLetter);
+            q.setOptionList(List.of(answerText, "错误选项B", "错误选项C", "错误选项D"));
+            return q;
+        }
+
         @Test
         @DisplayName("全部答对应返回满分")
         void shouldReturnFullScoreForAllCorrect() {
-            QuizQuestion q1 = createQuestion(1, "Q1", "A", "A", "B", "C", "D");
-            QuizQuestion q2 = createQuestion(2, "Q2", "B", "A", "B", "C", "D");
+            QuizQuestion q1 = createFullTextQuestion(1, "Q1", "清热平肝", "A");
+            QuizQuestion q2 = createFullTextQuestion(2, "Q2", "活血化瘀", "B");
             when(questionMapper.selectBatchIds(anyCollection())).thenReturn(List.of(q1, q2));
 
             List<AnswerDTO> answers = List.of(
-                    createAnswer(1, "A"),
-                    createAnswer(2, "B")
+                    createAnswer(1, "清热平肝"),
+                    createAnswer(2, "活血化瘀")
             );
 
             int score = quizService.calculateScore(answers, 10);
@@ -126,10 +137,10 @@ class QuizServiceImplTest {
         @Test
         @DisplayName("大小写不敏感匹配")
         void shouldBeCaseInsensitive() {
-            QuizQuestion q = createQuestion(1, "Q1", "Correct", "Correct", "Wrong", "", "");
+            QuizQuestion q = createFullTextQuestion(1, "Q1", "Correct Answer", "A");
             when(questionMapper.selectBatchIds(anyCollection())).thenReturn(List.of(q));
 
-            List<AnswerDTO> answers = List.of(createAnswer(1, "correct"));
+            List<AnswerDTO> answers = List.of(createAnswer(1, "correct answer"));
             int score = quizService.calculateScore(answers, 10);
             assertThat(score).isEqualTo(10);
         }
@@ -137,10 +148,10 @@ class QuizServiceImplTest {
         @Test
         @DisplayName("前后空格不影响匹配")
         void shouldTrimWhitespace() {
-            QuizQuestion q = createQuestion(1, "Q1", "Answer", "Answer", "B", "C", "D");
+            QuizQuestion q = createFullTextQuestion(1, "Q1", "清热平肝", "A");
             when(questionMapper.selectBatchIds(anyCollection())).thenReturn(List.of(q));
 
-            List<AnswerDTO> answers = List.of(createAnswer(1, "  Answer  "));
+            List<AnswerDTO> answers = List.of(createAnswer(1, "  清热平肝  "));
             int score = quizService.calculateScore(answers, 10);
             assertThat(score).isEqualTo(10);
         }
@@ -148,10 +159,10 @@ class QuizServiceImplTest {
         @Test
         @DisplayName("全部答错应返回0分")
         void shouldReturnZeroForAllWrong() {
-            QuizQuestion q1 = createQuestion(1, "Q1", "A", "A", "B", "C", "D");
+            QuizQuestion q1 = createFullTextQuestion(1, "Q1", "清热平肝", "A");
             when(questionMapper.selectBatchIds(anyCollection())).thenReturn(List.of(q1));
 
-            List<AnswerDTO> answers = List.of(createAnswer(1, "B"));
+            List<AnswerDTO> answers = List.of(createAnswer(1, "活血化瘀"));
             int score = quizService.calculateScore(answers, 10);
             assertThat(score).isEqualTo(0);
         }
@@ -159,10 +170,10 @@ class QuizServiceImplTest {
         @Test
         @DisplayName("自定义每题分值")
         void shouldUseCustomScorePerQuestion() {
-            QuizQuestion q = createQuestion(1, "Q1", "A", "A", "B", "C", "D");
+            QuizQuestion q = createFullTextQuestion(1, "Q1", "清热平肝", "A");
             when(questionMapper.selectBatchIds(anyCollection())).thenReturn(List.of(q));
 
-            List<AnswerDTO> answers = List.of(createAnswer(1, "A"));
+            List<AnswerDTO> answers = List.of(createAnswer(1, "清热平肝"));
             int score = quizService.calculateScore(answers, 5);
             assertThat(score).isEqualTo(5);
         }
@@ -184,12 +195,12 @@ class QuizServiceImplTest {
         @Test
         @DisplayName("题目ID不存在应跳过")
         void shouldSkipNonExistentQuestionId() {
-            QuizQuestion q1 = createQuestion(1, "Q1", "A", "A", "B", "C", "D");
+            QuizQuestion q1 = createFullTextQuestion(1, "Q1", "清热平肝", "A");
             when(questionMapper.selectBatchIds(anyCollection())).thenReturn(List.of(q1));
 
             List<AnswerDTO> answers = List.of(
-                    createAnswer(1, "A"),
-                    createAnswer(999, "B")
+                    createAnswer(1, "清热平肝"),
+                    createAnswer(999, "活血化瘀")
             );
             int score = quizService.calculateScore(answers, 10);
             assertThat(score).isEqualTo(10);
@@ -198,7 +209,7 @@ class QuizServiceImplTest {
         @Test
         @DisplayName("空答案文本应跳过该题")
         void shouldSkipEmptyAnswerText() {
-            QuizQuestion q = createQuestion(1, "Q1", "A", "A", "B", "C", "D");
+            QuizQuestion q = createFullTextQuestion(1, "Q1", "清热平肝", "A");
             when(questionMapper.selectBatchIds(anyCollection())).thenReturn(List.of(q));
 
             List<AnswerDTO> answers = List.of(createAnswer(1, ""));
@@ -229,13 +240,17 @@ class QuizServiceImplTest {
         @Test
         @DisplayName("成功提交应保存记录并返回分数")
         void shouldSaveRecordAndReturnScore() {
-            QuizQuestion q1 = createQuestion(1, "Q1", "A", "A", "B", "C", "D");
-            QuizQuestion q2 = createQuestion(2, "Q2", "B", "A", "B", "C", "D");
+            QuizQuestion q1 = new QuizQuestion();
+            q1.setId(1); q1.setQuestion("Q1"); q1.setAnswer("清热平肝"); q1.setCorrectAnswer("A");
+            q1.setOptionList(List.of("清热平肝", "B", "C", "D"));
+            QuizQuestion q2 = new QuizQuestion();
+            q2.setId(2); q2.setQuestion("Q2"); q2.setAnswer("活血化瘀"); q2.setCorrectAnswer("B");
+            q2.setOptionList(List.of("A", "活血化瘀", "C", "D"));
             when(questionMapper.selectBatchIds(anyCollection())).thenReturn(List.of(q1, q2));
 
             List<AnswerDTO> answers = List.of(
-                    createAnswer(1, "A"),
-                    createAnswer(2, "B")
+                    createAnswer(1, "清热平肝"),
+                    createAnswer(2, "活血化瘀")
             );
 
             int score = quizService.submit(100, answers, 10);

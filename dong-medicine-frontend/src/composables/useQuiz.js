@@ -1,7 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCountdown } from './useInteraction'
-import { logFetchError } from '@/utils'
+import { logFetchError, extractData } from '@/utils'
 
 export const useQuiz = (request, isLoggedIn) => {
   const isQuizStarted = ref(false)
@@ -49,7 +49,12 @@ export const useQuiz = (request, isLoggedIn) => {
           scorePerQuestion: config.scorePerQuestion
         } 
       })
-      selectedQuestions.value = res?.data?.data || res?.data || []
+      const raw = res?.data?.data || res?.data || []
+      selectedQuestions.value = Array.isArray(raw) ? raw : []
+      if (selectedQuestions.value.length === 0) {
+        ElMessage.warning('题库为空，暂无可用题目')
+        return
+      }
       userAnswers.value = new Array(selectedQuestions.value.length).fill('')
       currentQuestion.value = 0
       isQuizStarted.value = true
@@ -79,9 +84,11 @@ export const useQuiz = (request, isLoggedIn) => {
 
   const submitQuiz = async (isAutoSubmit = false) => {
     if (!isAutoSubmit) {
-      const unanswered = userAnswers.value.filter(a => !a).length
-      if (unanswered > 0) {
-        ElMessage.warning(`还有 ${unanswered} 题未作答，未作答题目将按答错处理`)
+      const answered = userAnswers.value.filter(a => a).length
+      const total = selectedQuestions.value.length
+      if (answered === 0) {
+        ElMessage.warning('你还没有作答任何题目')
+        return
       }
     }
     stopTimer()
@@ -102,7 +109,7 @@ export const useQuiz = (request, isLoggedIn) => {
       if (isLoggedIn.value) {
         try {
           const quizRes = await request.get('/quiz/records')
-          quizRecords.value = quizRes?.data?.data?.records || quizRes?.data?.data || []
+          quizRecords.value = extractData(quizRes)
         } catch (e) {
           console.debug('加载答题记录失败:', e)
         }
@@ -128,20 +135,27 @@ export const useQuiz = (request, isLoggedIn) => {
   const loadQuizRecords = async () => {
     try {
       const res = await request.get('/quiz/records')
-      quizRecords.value = res?.data?.data?.records || res?.data?.data || []
+      quizRecords.value = extractData(res)
     } catch (e) {
       console.debug('加载答题记录失败:', e)
     }
   }
 
   const bestScore = computed(() => {
-    const scores = quizRecords.value.map(r => r.score || 0)
-    return scores.length ? Math.max(...scores) : 0
+    const historicalScores = Array.isArray(quizRecords.value) ? quizRecords.value.map(r => r.score || 0) : []
+    const currentScore = finalScore.value || 0
+    const allScores = [...historicalScores, currentScore]
+    return allScores.length ? Math.max(...allScores) : 0
+  })
+
+  const quizCount = computed(() => {
+    const historical = Array.isArray(quizRecords.value) ? quizRecords.value.length : 0
+    return historical + (quizFinished.value ? 1 : 0)
   })
 
   return {
     isQuizStarted, selectedQuestions, userAnswers, currentQuestion, quizFinished, finalScore, correctCount, quizLoading, submitting, quizRecords, selectedDifficulty, difficultyConfig,
     formattedTime, isRunning, isExpired, isLowTime,
-    setDifficulty, startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz, shareQuizResult, loadQuizRecords, bestScore,
+    setDifficulty, startNewQuiz, resetQuiz, nextQuestion, prevQuestion, submitQuiz, shareQuizResult, loadQuizRecords, bestScore, quizCount,
   }
 }

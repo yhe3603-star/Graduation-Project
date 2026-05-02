@@ -126,28 +126,36 @@
         <div class="compliance-grid">
           <div class="compliance-card">
             <div class="compliance-icon privacy">
-              <el-icon :size="24"><Lock /></el-icon>
+              <el-icon :size="24">
+<Lock />
+</el-icon>
             </div>
             <h4>隐私保护</h4>
             <p>本平台严格保护传承人及用户隐私，传承人联系方式不予公开展示。用户个人信息仅用于平台功能服务，不会向第三方泄露。</p>
           </div>
           <div class="compliance-card">
             <div class="compliance-icon medical">
-              <el-icon :size="24"><FirstAidKit /></el-icon>
+              <el-icon :size="24">
+<FirstAidKit />
+</el-icon>
             </div>
             <h4>医疗免责声明</h4>
             <p>本平台所有医药知识内容仅供科普学习，不构成医疗建议。如有健康问题，请前往正规医疗机构就诊，切勿自行用药。</p>
           </div>
           <div class="compliance-card">
             <div class="compliance-icon copyright">
-              <el-icon :size="24"><Document /></el-icon>
+              <el-icon :size="24">
+<Document />
+</el-icon>
             </div>
             <h4>版权声明</h4>
             <p>平台图片、视频及文档资料均标注来源，尊重原作者知识产权。如涉及版权问题，请通过反馈渠道联系我们处理。</p>
           </div>
           <div class="compliance-card">
             <div class="compliance-icon sustainable">
-              <el-icon :size="24"><RefreshRight /></el-icon>
+              <el-icon :size="24">
+<RefreshRight />
+</el-icon>
             </div>
             <h4>可持续运营</h4>
             <p>平台设有内容更新日志与后台运营管理功能，确保知识内容的持续维护与更新迭代，保障非遗数字资源的长期可用性。</p>

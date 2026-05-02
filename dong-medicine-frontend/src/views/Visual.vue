@@ -2,7 +2,9 @@
   <div class="visual-page module-page">
     <div class="module-header">
       <h1>数据可视化</h1>
-      <p class="subtitle">地域分布可视化 · 使用频次统计 · 传承人分布</p>
+      <p class="subtitle">
+地域分布可视化 · 使用频次统计 · 传承人分布
+</p>
       <el-button
         type="primary"
         size="small"
@@ -38,8 +40,12 @@
               v-model="freqChartType"
               size="small"
             >
-              <el-radio-button value="bar">柱状图</el-radio-button>
-              <el-radio-button value="line">折线图</el-radio-button>
+              <el-radio-button value="bar">
+柱状图
+</el-radio-button>
+              <el-radio-button value="line">
+折线图
+</el-radio-button>
             </el-radio-group>
           </template>
         </ChartCard>

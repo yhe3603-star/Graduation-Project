@@ -1,5 +1,5 @@
 <template>
-  <BaseDetailDialog
+  <el-dialog
     :model-value="visible"
     title="用户详情"
     width="500px"
@@ -60,11 +60,10 @@
         </el-button>
       </div>
     </template>
-  </BaseDetailDialog>
+  </el-dialog>
 </template>
 
 <script setup>
-import BaseDetailDialog from '@/components/base/BaseDetailDialog.vue'
 import { formatTime } from '@/utils/adminUtils';
 import { ElMessage, ElMessageBox } from 'element-plus';
 

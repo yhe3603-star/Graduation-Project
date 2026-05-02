@@ -74,7 +74,8 @@ export function useComments(request, isLoggedIn) {
         }
       })
       const data = res?.data || {}
-      comments.value = data.records || data || []
+      const raw = data.records || data || []
+      comments.value = Array.isArray(raw) ? raw : []
       totalItems.value = data.total || comments.value.length
     } catch (err) {
       logFetchError('评论列表', err)
@@ -168,11 +169,12 @@ export const useFilter = (items, filterFields = []) => {
 
 export const useStats = (items, config = []) => {
   return computed(() => {
+    const list = Array.isArray(items.value) ? items.value : []
     return config.map(({ value, label, compute }) => {
       if (compute) return { value: compute(items.value), label }
-      if (value === 'count') return { value: items.value.length, label }
-      if (value === 'views') return { value: items.value.reduce((sum, item) => sum + (item.viewCount || 0), 0), label }
-      if (value === 'favorites') return { value: items.value.reduce((sum, item) => sum + (item.favoriteCount || 0), 0), label }
+      if (value === 'count') return { value: list.length, label }
+      if (value === 'views') return { value: list.reduce((sum, item) => sum + (item.viewCount || 0), 0), label }
+      if (value === 'favorites') return { value: list.reduce((sum, item) => sum + (item.favoriteCount || 0), 0), label }
       return { value: 0, label }
     })
   })
