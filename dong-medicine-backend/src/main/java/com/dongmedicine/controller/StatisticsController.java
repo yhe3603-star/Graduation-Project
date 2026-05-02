@@ -44,6 +44,17 @@ public class StatisticsController {
         Map.entry("吉林", "吉林省"), Map.entry("黑龙江", "黑龙江省")
     );
 
+    @GetMapping("/overview")
+    public R<Map<String, Object>> getOverview() {
+        Map<String, Long> counts = getCounts();
+        Map<String, Object> overview = new LinkedHashMap<>();
+        overview.put("plants", counts.getOrDefault("plants", 0L));
+        overview.put("formulas", counts.getOrDefault("knowledge", 0L));
+        overview.put("inheritors", counts.getOrDefault("inheritors", 0L));
+        overview.put("therapies", knowledgeMapper.countDistinctTherapyCategory());
+        return R.ok(overview);
+    }
+
     @GetMapping("/chart")
     public R<Map<String, Object>> getChartData() {
         Map<String, Object> data = new LinkedHashMap<>();

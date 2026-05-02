@@ -101,17 +101,26 @@
             v-if="allResults.length > 0"
             class="result-grid"
           >
-            <SearchResultCard
+            <div
               v-for="item in paginatedResults"
               :key="item.id + item.type"
-              :item="item"
-              :icon="getTypeIcon(item.type)"
-              :highlighted-title="highlightText(item.title || item.nameCn || item.name || item.question)"
-              :highlighted-desc="highlightText((item.description || item.bio || item.efficacy || item.answer || '').substring(0, 60)) + '...'"
-              :tag-type="getTypeTag(item.type)"
-              :tag-name="getTypeName(item.type)"
-              @click="goToDetail"
-            />
+              class="result-card"
+              @click="goToDetail(item)"
+            >
+              <div class="result-icon">
+                <el-icon><component :is="getTypeIcon(item.type)" /></el-icon>
+              </div>
+              <div class="result-info">
+                <h4 v-html="highlightText(item.title || item.nameCn || item.name || item.question)" />
+                <p v-html="highlightText((item.description || item.bio || item.efficacy || item.answer || '').substring(0, 60)) + '...'" />
+              </div>
+              <el-tag
+                size="small"
+                :type="getTypeTag(item.type)"
+              >
+                {{ getTypeName(item.type) }}
+              </el-tag>
+            </div>
           </div>
           <div v-else>
             <el-empty description="未找到相关结果" />
@@ -198,7 +207,6 @@ import { onMounted, ref, computed, watch } from "vue";
 import request from '@/utils/request';
 import { useRoute, useRouter } from "vue-router";
 import { ChatDotRound, Clock, Document, FolderOpened, Picture, Search, User } from "@element-plus/icons-vue";
-import SearchResultCard from './global-search/SearchResultCard.vue'
 
 const router = useRouter();
 const route = useRoute();
