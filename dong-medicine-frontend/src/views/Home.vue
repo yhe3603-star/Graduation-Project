@@ -41,21 +41,6 @@
       </div>
     </section>
 
-    <section class="quick-nav">
-      <div v-for="(item, i) in quickEntries" :key="i" class="nav-card" :style="{ '--delay': i * 0.1 + 's' }" @click="$router.push(item.path)">
-        <div class="nav-icon" :style="{ background: item.color }">
-          <el-icon :size="32"><component :is="item.icon" /></el-icon>
-        </div>
-        <div class="nav-content">
-          <h3>{{ item.title }}</h3>
-          <p>{{ item.desc }}</p>
-        </div>
-        <div class="nav-arrow">
-          <el-icon><ArrowRight /></el-icon>
-        </div>
-      </div>
-    </section>
-
     <section class="weekly-featured-section">
       <div class="section-header">
         <div class="header-left">
@@ -249,34 +234,6 @@
       </div>
     </section>
 
-    <section v-if="featuredInheritors.length" class="inheritors-section">
-      <div class="section-header">
-        <div class="header-left">
-          <h2 class="section-title">传承人风采</h2>
-          <p class="section-desc">守护侗医药文化的使者</p>
-        </div>
-        <el-button type="primary" text class="view-all-btn" @click="$router.push('/inheritors')">
-          查看全部
-          <el-icon><ArrowRight /></el-icon>
-        </el-button>
-      </div>
-      <div class="inheritors-grid">
-        <div v-for="(item, i) in featuredInheritors" :key="item.id" class="inheritor-card" :style="{ '--delay': i * 0.1 + 's' }" @click="$router.push('/inheritors')">
-          <div class="inheritor-avatar">
-            <span>{{ (item.name || '传').charAt(0) }}</span>
-          </div>
-          <div class="inheritor-content">
-            <h4>{{ item.name }}</h4>
-            <div class="inheritor-level" :class="getLevelClass(item.level)">{{ item.level }}</div>
-            <p class="inheritor-specialty">{{ item.specialties || '侗医药传承' }}</p>
-          </div>
-          <div v-if="item.level === '省级' || item.level === '自治区级'" class="inheritor-badge">
-            <el-icon><Medal /></el-icon>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section class="extend-section">
       <div class="section-header">
         <div class="header-left">
@@ -320,13 +277,12 @@ import { computed, onMounted, ref } from 'vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
 import { Aim, ArrowRight, ChatDotRound, Clock, Compass, DataLine, Document, Folder, InfoFilled, Medal, Picture, Star, TrendCharts, User, View } from '@element-plus/icons-vue'
-import { quickEntries, coreModules, extendModules, getLevelClass, createHeroStats } from '@/config/homeConfig'
+import { coreModules, extendModules, createHeroStats } from '@/config/homeConfig'
 import { extractPageData, logFetchError, getFirstImage, formatTime } from "@/utils";
 
 const router = useRouter()
 
 const stats = ref({ plants: 21, formulas: 12, inheritors: 10, therapies: 6 })
-const featuredInheritors = ref([])
 const latestItems = ref([])
 const hotCloudItems = ref([])
 const weeklyFeatured = ref(null)
@@ -440,7 +396,6 @@ onMounted(async () => {
 
     stats.value.plants = plantsData.total || stats.value.plants
     stats.value.inheritors = inheritorsData.total || stats.value.inheritors
-    featuredInheritors.value = inheritorsData.records.slice(0, 4)
 
     latestItems.value = buildLatestItems(
       plantsData.records.slice(0, 20),

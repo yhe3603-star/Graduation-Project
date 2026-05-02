@@ -124,7 +124,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import request from '@/utils/request';
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -257,6 +257,21 @@ onMounted(() => { loadMetadata(); loadQaData(); });
 watch(() => route.path, (newPath) => {
   if (newPath === '/qa') loadQaData();
 });
+
+watch(() => route.query.id, async (id) => {
+  if (!id) return
+  const numId = Number(id)
+  await nextTick()
+  const item = allQa.value.find(q => q.id === numId)
+  if (item) {
+    showDetail(item)
+  } else {
+    try {
+      const res = await request.get(`/qa/${numId}`)
+      if (res.data) showDetail(res.data)
+    } catch {}
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>

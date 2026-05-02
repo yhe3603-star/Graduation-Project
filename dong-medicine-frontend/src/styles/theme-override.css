@@ -165,13 +165,32 @@
 }
 
 .el-message--success {
-  --el-message-bg-color: rgba(40, 180, 99, 0.08);
-  border-color: rgba(40, 180, 99, 0.2);
+  --el-message-bg-color: rgba(40, 180, 99, 0.88);
+  --el-message-border-color: rgba(40, 180, 99, 0.9);
+  --el-message-text-color: #fff;
+}
+
+.el-message--warning {
+  --el-message-bg-color: rgba(230, 162, 60, 0.92);
+  --el-message-border-color: rgba(230, 162, 60, 0.95);
+  --el-message-text-color: #fff;
 }
 
 .el-message--error {
-  --el-message-bg-color: rgba(231, 76, 60, 0.08);
-  border-color: rgba(231, 76, 60, 0.2);
+  --el-message-bg-color: rgba(231, 76, 60, 0.9);
+  --el-message-border-color: rgba(231, 76, 60, 0.95);
+  --el-message-text-color: #fff;
+}
+
+.el-message--info {
+  --el-message-bg-color: rgba(144, 147, 153, 0.9);
+  --el-message-border-color: rgba(144, 147, 153, 0.95);
+  --el-message-text-color: #fff;
+}
+
+.el-message--info {
+  --el-message-bg-color: rgba(144, 147, 153, 0.15);
+  border-color: rgba(144, 147, 153, 0.35);
 }
 
 /* === 分页器覆盖 === */

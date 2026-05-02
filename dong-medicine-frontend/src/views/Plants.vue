@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import request from '@/utils/request';
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -311,6 +311,21 @@ onMounted(() => { loadMetadata(); loadPlantsData(); });
 watch(() => route.path, (newPath) => {
   if (newPath === '/plants') loadPlantsData();
 });
+
+watch(() => route.query.id, async (id) => {
+  if (!id) return
+  const numId = Number(id)
+  await nextTick()
+  const item = allPlants.value.find(p => p.id === numId)
+  if (item) {
+    showDetail(item)
+  } else {
+    try {
+      const res = await request.get(`/plants/${numId}`)
+      if (res.data) showDetail(res.data)
+    } catch {}
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>

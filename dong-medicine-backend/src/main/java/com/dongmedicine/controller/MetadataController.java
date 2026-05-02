@@ -30,7 +30,7 @@ public class MetadataController {
     private final ResourceService resourceService;
 
     @Lazy
-    private MetadataController self;
+    private final MetadataController self;
 
     @GetMapping("/filters")
     public R<Map<String, Object>> getAllFilters() {

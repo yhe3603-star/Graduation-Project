@@ -1,15 +1,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Avatar, ChatDotRound, Document, EditPen, Folder, Lock, Picture, Setting, Star, SwitchButton, User } from '@element-plus/icons-vue'
+import { Avatar, ChatDotRound, DataAnalysis, Document, EditPen, Folder, Lock, Picture, Setting, Star, SwitchButton, User } from '@element-plus/icons-vue'
 import { logFetchError, logOperationWarn, extractData } from '@/utils'
 import { useUserStore } from '@/stores/user'
 import { createPasswordValidator } from '@/utils/validators'
 
 export const actions = [
+  { key: 'stats', icon: DataAnalysis, label: '学习统计' },
   { key: 'favorites', icon: Star, label: '我的收藏' },
   { key: 'quiz', icon: EditPen, label: '答题记录' },
-  { key: 'comments', icon: ChatDotRound, label: '我的评论' },
   { key: 'settings', icon: Setting, label: '账号设置' }
 ]
 
@@ -46,7 +46,7 @@ export function usePersonalCenter(request, updateUserState) {
   const isAdmin = computed(() => userStore.isAdmin)
 
   const pageLoading = ref(false)
-  const activeTab = ref('favorites')
+  const activeTab = ref('stats')
   const favoriteType = ref('all')
   const favorites = ref([])
   const quizRecords = ref([])
@@ -138,7 +138,10 @@ export function usePersonalCenter(request, updateUserState) {
       resource: '/resources',
       qa: '/qa'
     }
-    router.push(`${pathMap[item.type] || ''}/${item.targetId || item.id}`)
+    const basePath = pathMap[item.type]
+    if (basePath) {
+      router.push({ path: basePath, query: { id: item.targetId || item.id } })
+    }
   }
 
   const handleChangePassword = async () => {

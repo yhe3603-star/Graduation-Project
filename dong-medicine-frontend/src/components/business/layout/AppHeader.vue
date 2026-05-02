@@ -204,11 +204,11 @@ const navItems = [
   { path: "/resources", label: "学习资源", icon: Folder },
   { path: "/qa", label: "问答", icon: ChatDotRound },
   { path: "/interact", label: "文化互动", icon: Aim },
-  { path: "/visual", label: "数据可视化", icon: DataLine },
-  { path: "/solar-terms", label: "节气采药", icon: Calendar }
+  { path: "/visual", label: "数据可视化", icon: DataLine }
 ];
 
 const moreItems = [
+  { path: "/solar-terms", label: "节气采药", icon: Calendar },
   { path: "/feedback", label: "意见反馈", icon: InfoFilled },
   { path: "/about", label: "关于非遗", icon: InfoFilled }
 ];
@@ -301,7 +301,7 @@ const goToSearch = () => {
   transform: translateX(-50%);
   width: 16px;
   height: 2px;
-  background: var(--dong-gold-light);
+  background: var(--dong-jade);
   border-radius: 1px;
 }
 .more-trigger .arrow { font-size: 10px; margin-left: 2px; }

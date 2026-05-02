@@ -111,7 +111,7 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref, watch } from "vue";
+import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
 import request from '@/utils/request';
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -406,6 +406,21 @@ onMounted(() => { loadMetadata(); loadResourcesData(); });
 watch(() => route.path, (newPath) => {
   if (newPath === '/resources') loadResourcesData();
 });
+
+watch(() => route.query.id, async (id) => {
+  if (!id) return
+  const numId = Number(id)
+  await nextTick()
+  const item = allResources.value.find(r => r.id === numId)
+  if (item) {
+    openResource(item)
+  } else {
+    try {
+      const res = await request.get(`/resources/${numId}`)
+      if (res.data) openResource(res.data)
+    } catch {}
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>
