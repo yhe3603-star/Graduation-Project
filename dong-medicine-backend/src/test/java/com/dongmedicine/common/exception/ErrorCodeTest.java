@@ -32,9 +32,15 @@ class ErrorCodeTest {
         }
 
         @Test
-        @DisplayName("0应返回SUCCESS")
+        @DisplayName("0应返回UNKNOWN_ERROR因为无code为0的枚举")
         void zeroCode() {
-            assertEquals(ErrorCode.SUCCESS, ErrorCode.getByCode(0));
+            assertEquals(ErrorCode.UNKNOWN_ERROR, ErrorCode.getByCode(0));
+        }
+
+        @Test
+        @DisplayName("200应返回SUCCESS")
+        void successCode() {
+            assertEquals(ErrorCode.SUCCESS, ErrorCode.getByCode(200));
         }
     }
 

@@ -35,9 +35,10 @@ public class QuizController {
 
     @GetMapping("/questions")
     public R<List<QuizQuestionDTO>> list(
-            @RequestParam(defaultValue = "10") @jakarta.validation.constraints.Max(50) int count,
+            @RequestParam(defaultValue = "10") int count,
             @RequestParam(defaultValue = "10") int scorePerQuestion) {
-        return R.ok(service.getRandomQuestions(count));
+        int safeCount = Math.min(Math.max(count, 1), 50);
+        return R.ok(service.getRandomQuestions(safeCount));
     }
 
     @PostMapping("/submit")

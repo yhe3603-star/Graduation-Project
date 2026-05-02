@@ -1,17 +1,20 @@
 package com.dongmedicine.controller;
 
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.service.PlantService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
@@ -32,11 +35,16 @@ class PlantControllerTest {
     @InjectMocks
     private PlantController plantController;
 
+    private MockedStatic<SecurityUtils> securityUtilsMock;
+
     private Plant testPlant;
     private Page<Plant> testPage;
 
     @BeforeEach
     void setUp() {
+        securityUtilsMock = mockStatic(SecurityUtils.class);
+        securityUtilsMock.when(SecurityUtils::getCurrentUserIdOrNull).thenReturn(null);
+
         testPlant = new Plant();
         testPlant.setId(1);
         testPlant.setNameCn("钩藤");
@@ -44,6 +52,11 @@ class PlantControllerTest {
 
         testPage = new Page<>(1, 12, 1);
         testPage.setRecords(Arrays.asList(testPlant));
+    }
+
+    @AfterEach
+    void tearDown() {
+        securityUtilsMock.close();
     }
 
     @Test
