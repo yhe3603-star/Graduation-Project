@@ -7,6 +7,7 @@ import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Qa;
 import com.dongmedicine.mapper.QaMapper;
+import com.dongmedicine.service.PopularityAsyncService;
 import com.dongmedicine.service.QaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaService {
+
+    private final PopularityAsyncService popularityAsyncService;
 
     @Override
     public List<Qa> listByCategory(String category) {
@@ -56,6 +59,22 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
     }
 
     @Override
+    public Page<Qa> advancedSearchPaged(String keyword, String category, Integer page, Integer size) {
+        Page<Qa> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Qa> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(category)) {
+            qw.eq(Qa::getCategory, category);
+        }
+        if (StringUtils.hasText(keyword)) {
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(w -> w.like(Qa::getQuestion, escapedKeyword)
+                    .or().like(Qa::getAnswer, escapedKeyword));
+        }
+        qw.orderByDesc(Qa::getPopularity);
+        return page(pageParam, qw);
+    }
+
+    @Override
     public Page<Qa> searchPaged(String keyword, Integer page, Integer size) {
         if (!StringUtils.hasText(keyword)) {
             throw BusinessException.badRequest("搜索关键词不能为空");
@@ -67,6 +86,14 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
                 .or().like(Qa::getAnswer, escapedKeyword)
                 .orderByDesc(Qa::getPopularity);
         return page(pageParam, qw);
+    }
+
+    public Qa getDetail(Integer id) {
+        Qa qa = getById(id);
+        if (qa != null) {
+            popularityAsyncService.incrementQaViewAndPopularity(id);
+        }
+        return qa;
     }
 
     @Override

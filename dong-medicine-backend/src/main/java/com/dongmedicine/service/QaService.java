@@ -9,9 +9,12 @@ import java.util.Map;
 public interface QaService extends IService<Qa> {
     List<Qa> listByCategory(String category);
     Page<Qa> pageByCategory(String category, Integer page, Integer size);
+
+    Page<Qa> advancedSearchPaged(String keyword, String category, Integer page, Integer size);
     List<Qa> search(String keyword);
     Page<Qa> searchPaged(String keyword, Integer page, Integer size);
     void incrementViewCount(Integer id);
+    Qa getDetail(Integer id);
 
     /**
      * 获取问答统计数据（使用SQL聚合查询，避免全表加载）

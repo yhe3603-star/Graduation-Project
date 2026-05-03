@@ -77,7 +77,7 @@ public class ResourceController {
 
     @GetMapping("/{id}")
     public R<Resource> getById(@PathVariable Integer id) {
-        Resource resource = service.getById(id);
+        Resource resource = service.getDetail(id);
         if (resource == null) throw BusinessException.notFound("资源不存在");
         return R.ok(resource);
     }

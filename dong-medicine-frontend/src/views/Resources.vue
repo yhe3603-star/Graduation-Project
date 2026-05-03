@@ -315,17 +315,9 @@ const handleFilter = (filters) => {
 };
 
 // ========== Resource Actions ==========
-const openResource = async (item) => {
+const openResource = (item) => {
   currentResource.value = item;
   previewVisible.value = true;
-  try {
-    await request.post(`/resources/${item.id}/view`);
-    const idx = allResources.value.findIndex(r => r.id === item.id);
-    if (idx > -1) {
-      allResources.value[idx].viewCount = (allResources.value[idx].viewCount || 0) + 1;
-      statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
-    }
-  } catch {}
 };
 
 const isCurrentFavorited = computed(() => currentResource.value && isFavorited(currentResource.value.id));

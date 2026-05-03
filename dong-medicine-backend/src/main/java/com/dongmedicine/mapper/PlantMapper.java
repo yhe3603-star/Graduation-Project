@@ -22,6 +22,9 @@ public interface PlantMapper extends BaseMapper<Plant> {
     @Update("UPDATE plants SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
     void incrementPopularity(Integer id);
 
+    @Update("UPDATE plants SET view_count = IFNULL(view_count, 0) + 3, popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
+    void incrementViewCount3AndPopularity(Integer id);
+
     @Select("SELECT * FROM plants WHERE id >= (SELECT FLOOR(RAND() * (SELECT MAX(id) FROM plants)) + 1) LIMIT #{limit}")
     List<Plant> selectRandomPlants(@Param("limit") int limit);
 
@@ -60,4 +63,7 @@ public interface PlantMapper extends BaseMapper<Plant> {
 
     @Select("SELECT distribution AS name, COUNT(*) AS value FROM plants WHERE distribution IS NOT NULL AND distribution != '' GROUP BY distribution ORDER BY value DESC LIMIT #{limit}")
     List<Map<String, Object>> countByDistribution(@Param("limit") int limit);
+
+    @Select("SELECT name_cn AS name, view_count AS value FROM plants WHERE view_count > 0 ORDER BY view_count DESC LIMIT #{limit}")
+    List<Map<String, Object>> topByViewCount(@Param("limit") int limit);
 }

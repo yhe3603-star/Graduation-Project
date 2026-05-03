@@ -9,6 +9,7 @@ import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.mapper.InheritorMapper;
 import com.dongmedicine.service.InheritorService;
+import com.dongmedicine.service.PopularityAsyncService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
     private InheritorMapper inheritorMapper;
     @Autowired
     private FileCleanupHelper fileCleanupHelper;
+    @Autowired
+    private PopularityAsyncService popularityAsyncService;
 
     @Override
     public List<Inheritor> getAllInheritors() {
@@ -79,6 +82,23 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
     }
 
     @Override
+    public Page<Inheritor> advancedSearchPaged(String keyword, String level, String sortBy, Integer page, Integer size) {
+        Page<Inheritor> pageParam = PageUtils.getPage(page, size);
+        LambdaQueryWrapper<Inheritor> qw = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(level)) {
+            qw.eq(Inheritor::getLevel, level);
+        }
+        if (StringUtils.hasText(keyword)) {
+            String escapedKeyword = PageUtils.escapeLike(keyword);
+            qw.and(w -> w.like(Inheritor::getName, escapedKeyword)
+                    .or().like(Inheritor::getSpecialties, escapedKeyword));
+        }
+        qw.orderByDesc("experience".equals(sortBy), Inheritor::getExperienceYears)
+          .orderByAsc(!"experience".equals(sortBy), Inheritor::getName);
+        return page(pageParam, qw);
+    }
+
+    @Override
     public Page<Inheritor> searchPaged(String keyword, Integer page, Integer size) {
         if (!StringUtils.hasText(keyword)) {
             throw BusinessException.badRequest("搜索关键词不能为空");
@@ -95,7 +115,11 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
     @Override
     @Cacheable(value = "inheritors", key = "'detail:' + #id")
     public Inheritor getDetailWithExtras(Integer id) {
-        return getById(id);
+        Inheritor inheritor = getById(id);
+        if (inheritor != null) {
+            popularityAsyncService.incrementInheritorViewAndPopularity(id);
+        }
+        return inheritor;
     }
 
     @Override
@@ -158,5 +182,10 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
         Map<String, List<String>> map = new LinkedHashMap<>();
         map.put("level", inheritorMapper.selectDistinctLevel());
         return map;
+    }
+
+    @Override
+    public List<Map<String, Object>> topByViewCount(int limit) {
+        return inheritorMapper.topByViewCount(limit);
     }
 }

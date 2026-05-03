@@ -184,6 +184,13 @@ CREATE TABLE IF NOT EXISTS operation_log (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS search_history (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    keyword VARCHAR(200) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 MERGE INTO users (username, password_hash, role, status) KEY(username) VALUES
     ('admin', '$2a$10$XejjJoAUe4OwKQuC1OnfLOmGw0WQfHpLp6ZPK68x85LLrR48MuPKO', 'admin', 'active'),
     ('testuser', '$2a$10$XejjJoAUe4OwKQuC1OnfLOmGw0WQfHpLp6ZPK68x85LLrR48MuPKO', 'user', 'active');

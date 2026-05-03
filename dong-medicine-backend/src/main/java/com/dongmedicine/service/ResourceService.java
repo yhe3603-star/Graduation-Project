@@ -9,6 +9,7 @@ import java.util.Map;
 public interface ResourceService extends IService<Resource> {
     void incrementDownload(Integer id);
     void incrementViewCount(Integer id);
+    Resource getDetail(Integer id);
     List<Resource> listByCategoryAndKeyword(String category, String keyword);
     List<Resource> listByCategoryAndKeywordAndType(String category, String keyword, String fileType);
     Page<Resource> pageByCategoryAndKeywordAndType(String category, String keyword, String fileType, Integer page, Integer size);

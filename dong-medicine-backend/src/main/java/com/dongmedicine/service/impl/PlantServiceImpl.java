@@ -10,6 +10,7 @@ import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.mapper.PlantMapper;
 import com.dongmedicine.service.PlantService;
+import com.dongmedicine.service.PopularityAsyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +34,7 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
     private static final int DEFAULT_SEARCH_LIMIT = 50;
 
     private final FileCleanupHelper fileCleanupHelper;
+    private final PopularityAsyncService popularityAsyncService;
 
     @Value("${app.search.use-fulltext:true}")
     private boolean useFullTextSearch;
@@ -144,7 +146,11 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
 
     @Override
     public Plant getDetailWithStory(Integer id) {
-        return getById(id);
+        Plant plant = getById(id);
+        if (plant != null) {
+            popularityAsyncService.incrementPlantViewAndPopularity(id);
+        }
+        return plant;
     }
 
     @Override
@@ -203,5 +209,10 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
         map.put("category", baseMapper.selectDistinctCategory());
         map.put("usageWay", baseMapper.selectDistinctUsageWay());
         return map;
+    }
+
+    @Override
+    public List<Map<String, Object>> topByViewCount(int limit) {
+        return baseMapper.topByViewCount(limit);
     }
 }

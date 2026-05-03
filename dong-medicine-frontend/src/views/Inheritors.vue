@@ -206,19 +206,9 @@ const handleFilter = (filters) => {
 
 const isFavorited = computed(() => currentInheritor.value && isItemFavorited(currentInheritor.value.id));
 
-const showDetail = async (item) => {
+const showDetail = (item) => {
   currentInheritor.value = item;
   detailVisible.value = true;
-  try {
-    await request.post(`/inheritors/${item.id}/view`);
-    const idx = allInheritors.value.findIndex(i => i.id === item.id);
-    if (idx > -1) {
-      allInheritors.value[idx].viewCount = (allInheritors.value[idx].viewCount || 0) + 1;
-      statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
-    }
-  } catch (e) {
-    console.debug('浏览量更新失败:', e)
-  }
 };
 
 const toggleFavorite = () => { if (currentInheritor.value) doToggleFavorite(currentInheritor.value.id, isItemFavorited(currentInheritor.value.id)); };

@@ -123,6 +123,7 @@ import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
 import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import request from '@/utils/request';
+import { useUserStore } from '@/stores/user';
 
 const TYPE_NAMES = { video: '视频', document: '文档', image: '图片' };
 const TAG_TYPES = { video: 'danger', document: 'primary', image: 'success' };
@@ -139,6 +140,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'toggle-favorite', 'download']);
+const userStore = useUserStore();
 
 const documentList = ref([]);
 const documentsLoading = ref(false);
@@ -222,8 +224,8 @@ const handleDialogClose = (newVisible) => {
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     loadDocuments();
-    // Record browse history
-    if (props.resource?.id) {
+    // Record browse history (only when logged in)
+    if (props.resource?.id && userStore.isLoggedIn) {
       request.post('/browse-history/record', null, {
         params: { targetType: 'resource', targetId: props.resource.id }
       }).catch(() => {});

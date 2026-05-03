@@ -67,6 +67,7 @@
 import { watch } from 'vue';
 import { View, Star, QuestionFilled, CircleCheckFilled } from '@element-plus/icons-vue';
 import request from '@/utils/request';
+import { useUserStore } from '@/stores/user';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -75,9 +76,10 @@ const props = defineProps({
 });
 
 defineEmits(['update:visible', 'toggle-favorite']);
+const userStore = useUserStore();
 
 watch(() => props.visible, (newVal) => {
-  if (newVal && props.qa?.id) {
+  if (newVal && props.qa?.id && userStore.isLoggedIn) {
     request.post('/browse-history/record', null, {
       params: { targetType: 'qa', targetId: props.qa.id }
     }).catch(() => {});

@@ -2,6 +2,7 @@ package com.dongmedicine.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Qa;
@@ -29,8 +30,9 @@ public class QaController {
     public R<Map<String, Object>> list(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "12") Integer size,
-            @RequestParam(required = false) String category) {
-        Page<Qa> pageResult = service.pageByCategory(category, page, size);
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String keyword) {
+        Page<Qa> pageResult = service.advancedSearchPaged(keyword, category, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
@@ -41,6 +43,13 @@ public class QaController {
             @RequestParam(defaultValue = "12") Integer size) {
         Page<Qa> pageResult = service.searchPaged(keyword, page, size);
         return R.ok(PageUtils.toMap(pageResult));
+    }
+
+    @GetMapping("/{id}")
+    public R<Qa> detail(@PathVariable Integer id) {
+        Qa qa = service.getDetail(id);
+        if (qa == null) throw BusinessException.notFound("问答不存在");
+        return R.ok(qa);
     }
 
     @PostMapping("/{id}/view")

@@ -7,6 +7,7 @@ import com.dongmedicine.common.util.FileCleanupHelper;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.Resource;
 import com.dongmedicine.mapper.ResourceMapper;
+import com.dongmedicine.service.PopularityAsyncService;
 import com.dongmedicine.service.ResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> implements ResourceService {
 
     private final FileCleanupHelper fileCleanupHelper;
+    private final PopularityAsyncService popularityAsyncService;
 
     @Override
     public void incrementDownload(Integer id) {
@@ -46,6 +48,14 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
         } catch (Exception e) {
             log.error("Failed to increment view count for resource id: {}", id, e);
         }
+    }
+
+    public Resource getDetail(Integer id) {
+        Resource resource = getById(id);
+        if (resource != null) {
+            popularityAsyncService.incrementResourceViewAndPopularity(id);
+        }
+        return resource;
     }
 
     @Override

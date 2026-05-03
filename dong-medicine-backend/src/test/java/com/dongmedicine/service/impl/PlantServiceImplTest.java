@@ -5,6 +5,7 @@ import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.FileCleanupHelper;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.mapper.PlantMapper;
+import com.dongmedicine.service.PopularityAsyncService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,9 @@ class PlantServiceImplTest {
 
     @Mock
     private FileCleanupHelper fileCleanupHelper;
+
+    @Mock
+    private PopularityAsyncService popularityAsyncService;
 
     @InjectMocks
     private PlantServiceImpl plantService;

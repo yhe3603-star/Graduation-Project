@@ -21,6 +21,44 @@
       </div>
     </div>
 
+    <el-card
+      shadow="never"
+      class="dashboard-card dashboard-row"
+    >
+      <template #header>
+        <span>数据趋势</span>
+      </template>
+      <el-tabs v-model="activeChartTab">
+        <el-tab-pane
+          label="用户增长"
+          name="userGrowth"
+        >
+          <div
+            ref="userGrowthChartRef"
+            style="height: 320px;"
+          />
+        </el-tab-pane>
+        <el-tab-pane
+          label="内容浏览"
+          name="contentViews"
+        >
+          <div
+            ref="contentViewsChartRef"
+            style="height: 320px;"
+          />
+        </el-tab-pane>
+        <el-tab-pane
+          label="搜索热词"
+          name="searchKeywords"
+        >
+          <div
+            ref="searchKeywordsChartRef"
+            style="height: 320px;"
+          />
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
+
     <el-row
       :gutter="24"
       class="dashboard-row"
@@ -113,9 +151,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
 import * as echarts from 'echarts/core'
-import { PieChart, BarChart } from 'echarts/charts'
+import { LineChart, BarChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -125,7 +163,7 @@ import {
 import { CanvasRenderer } from 'echarts/renderers'
 
 echarts.use([
-  PieChart,
+  LineChart,
   BarChart,
   TitleComponent,
   TooltipComponent,
@@ -138,7 +176,6 @@ import { DataLine, User, Document, Avatar, Picture, ChatDotRound, Folder, EditPe
 import request from "@/utils/request";
 
 const props = defineProps({
-  /** 来自 GET /api/admin/stats，用于概览数字（避免全表拉取） */
   stats: { type: Object, default: null },
   users: { type: Array, default: () => [] },
   knowledge: { type: Array, default: () => [] },
@@ -157,8 +194,10 @@ const currentPage = ref(1);
 const pageSize = ref(5);
 const logCount = ref(0);
 
-const plantChartRef = ref(null);
-const knowledgeChartRef = ref(null);
+const activeChartTab = ref('userGrowth');
+const userGrowthChartRef = ref(null);
+const contentViewsChartRef = ref(null);
+const searchKeywordsChartRef = ref(null);
 const chartInstances = [];
 
 const formatTime = (time) => time ? new Date(time).toLocaleString('zh-CN') : '无';
@@ -174,57 +213,119 @@ const loadLogStats = async () => {
   }
 };
 
-const loadCharts = async () => {
-  try {
-    const [plantRes, knowRes] = await Promise.all([
-      request.get('/admin/stats/plants-distribution'),
-      request.get('/admin/stats/knowledge-popularity')
-    ]);
-    
-    if (plantChartRef.value) {
-      const plantChart = echarts.init(plantChartRef.value);
-      chartInstances.push(plantChart);
-      const data = plantRes.data || plantRes;
-      plantChart.setOption({
-        tooltip: { trigger: 'item' },
-        series: [{
-          name: '植物分布',
-          type: 'pie',
-          radius: '50%',
-          data: data.map(item => ({ name: item.name || '未知', value: item.value })),
-          emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
-        }]
-      });
-    }
+const initChart = (el) => {
+  const chart = echarts.init(el);
+  chartInstances.push(chart);
+  return chart;
+};
 
-    if (knowledgeChartRef.value) {
-      const knowChart = echarts.init(knowledgeChartRef.value);
-      chartInstances.push(knowChart);
-      const data = knowRes.data || knowRes;
-      const names = data.map(item => (item.name || '').substring(0, 10));
-      const values = data.map(item => item.value);
-      knowChart.setOption({
-        tooltip: { trigger: 'axis' },
-        xAxis: { type: 'category', data: names, axisLabel: { interval: 0, rotate: 30 } },
-        yAxis: { type: 'value' },
-        series: [{ data: values, type: 'bar', itemStyle: { color: '#3498db' } }]
-      });
-    }
+const loadUserGrowthChart = async () => {
+  if (!userGrowthChartRef.value) return;
+  try {
+    const res = await request.get('/admin/stats/user-growth');
+    const data = res.data || res;
+    const chart = initChart(userGrowthChartRef.value);
+    chart.setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, right: 20, bottom: 30, left: 50 },
+      xAxis: { type: 'category', data: data.dates || [], boundaryGap: false },
+      yAxis: { type: 'value', minInterval: 1 },
+      series: [{
+        data: data.counts || [],
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        itemStyle: { color: '#667eea' },
+        areaStyle: {
+          color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: 'rgba(102,126,234,0.3)' }, { offset: 1, color: 'rgba(102,126,234,0.02)' }]
+          }
+        }
+      }]
+    });
   } catch (e) {
-    console.error('Failed to load charts:', e);
+    console.error('用户增长图表加载失败:', e);
   }
 };
 
+const loadContentViewsChart = async () => {
+  if (!contentViewsChartRef.value) return;
+  try {
+    const res = await request.get('/admin/stats/content-views');
+    const data = (res.data || res || []).reverse();
+    const chart = initChart(contentViewsChartRef.value);
+    chart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { top: 10, right: 20, bottom: 30, left: 120 },
+      xAxis: { type: 'value' },
+      yAxis: { type: 'category', data: data.map(d => (d.name || '').substring(0, 12)) },
+      series: [{
+        data: data.map(d => d.value),
+        type: 'bar',
+        barWidth: '50%',
+        itemStyle: {
+          color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
+            colorStops: [{ offset: 0, color: '#3498db' }, { offset: 1, color: '#2ecc71' }]
+          },
+          borderRadius: [0, 4, 4, 0]
+        }
+      }]
+    });
+  } catch (e) {
+    console.error('内容浏览图表加载失败:', e);
+  }
+};
+
+const loadSearchKeywordsChart = async () => {
+  if (!searchKeywordsChartRef.value) return;
+  try {
+    const res = await request.get('/admin/stats/search-keywords');
+    const data = (res.data || res || []).reverse();
+    const chart = initChart(searchKeywordsChartRef.value);
+    chart.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { top: 10, right: 20, bottom: 30, left: 80 },
+      xAxis: { type: 'value' },
+      yAxis: { type: 'category', data: data.map(d => d.name) },
+      series: [{
+        data: data.map(d => d.value),
+        type: 'bar',
+        barWidth: '50%',
+        itemStyle: {
+          color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
+            colorStops: [{ offset: 0, color: '#e74c3c' }, { offset: 1, color: '#f39c12' }]
+          },
+          borderRadius: [0, 4, 4, 0]
+        }
+      }]
+    });
+  } catch (e) {
+    console.error('搜索热词图表加载失败:', e);
+  }
+};
+
+const chartLoaders = { userGrowth: loadUserGrowthChart, contentViews: loadContentViewsChart, searchKeywords: loadSearchKeywordsChart };
+const loadedTabs = new Set();
+
+const loadActiveChart = () => {
+  const tab = activeChartTab.value;
+  if (!loadedTabs.has(tab)) {
+    loadedTabs.add(tab);
+    nextTick(() => chartLoaders[tab]?.());
+  }
+};
+
+watch(activeChartTab, loadActiveChart);
+
 onMounted(() => {
   loadLogStats();
-  nextTick(() => {
-    loadCharts();
-  });
+  nextTick(loadActiveChart);
 });
 
 onUnmounted(() => {
-  chartInstances.forEach(chart => chart?.dispose())
-  chartInstances.length = 0
+  chartInstances.forEach(chart => chart?.dispose());
+  chartInstances.length = 0;
 });
 
 const n = (key, fallbackArr) => {

@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface InheritorMapper extends BaseMapper<Inheritor> {
@@ -20,6 +21,9 @@ public interface InheritorMapper extends BaseMapper<Inheritor> {
 
     @Update("UPDATE inheritors SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
     void incrementPopularity(Integer id);
+
+    @Update("UPDATE inheritors SET view_count = IFNULL(view_count, 0) + 3, popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
+    void incrementViewCount3AndPopularity(Integer id);
 
     // ===== 统计查询方法 =====
 
@@ -36,4 +40,7 @@ public interface InheritorMapper extends BaseMapper<Inheritor> {
 
     @Select("SELECT DISTINCT level FROM inheritors WHERE level IS NOT NULL AND level != '' ORDER BY level")
     List<String> selectDistinctLevel();
+
+    @Select("SELECT name, view_count AS value FROM inheritors WHERE view_count > 0 ORDER BY view_count DESC LIMIT #{limit}")
+    List<Map<String, Object>> topByViewCount(@Param("limit") int limit);
 }

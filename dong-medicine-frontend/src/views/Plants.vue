@@ -183,19 +183,9 @@ const handleFilter = (filters) => {
 
 const isFavorited = computed(() => currentPlant.value && isItemFavorited(currentPlant.value.id));
 
-const showDetail = async (plant) => {
+const showDetail = (plant) => {
   currentPlant.value = plant;
   detailVisible.value = true;
-  try {
-    await request.post(`/plants/${plant.id}/view`);
-    const idx = allPlants.value.findIndex(p => p.id === plant.id);
-    if (idx > -1) {
-      allPlants.value[idx].viewCount = (allPlants.value[idx].viewCount || 0) + 1;
-      statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
-    }
-  } catch (e) {
-    console.debug('浏览量更新失败:', e);
-  }
 };
 
 const toggleFavorite = () => { if (currentPlant.value) doToggleFavorite(currentPlant.value.id, isFavorited.value); };

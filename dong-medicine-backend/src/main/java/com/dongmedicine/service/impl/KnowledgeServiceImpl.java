@@ -144,7 +144,7 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     public Knowledge getDetailWithRelated(Integer id) {
         Knowledge knowledge = getById(id);
         if (knowledge != null) {
-            popularityAsyncService.incrementKnowledgePopularity(id);
+            popularityAsyncService.incrementKnowledgeViewAndPopularity(id);
         }
         return knowledge;
     }
@@ -239,5 +239,10 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         map.put("diseaseCategory", baseMapper.selectDistinctDiseaseCategory());
         map.put("herbCategory", baseMapper.selectDistinctHerbCategory());
         return map;
+    }
+
+    @Override
+    public List<Map<String, Object>> topByViewCount(int limit) {
+        return baseMapper.topByViewCount(limit);
     }
 }

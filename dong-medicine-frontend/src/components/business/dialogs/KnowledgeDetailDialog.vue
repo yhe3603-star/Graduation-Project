@@ -291,6 +291,7 @@ import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
 import KnowledgeGraph from '@/components/business/display/KnowledgeGraph.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
+import { useUserStore } from '@/stores/user';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -300,6 +301,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'toggle-favorite']);
 const router = useRouter();
+const userStore = useUserStore();
 
 const activeMediaTab = ref('video');
 const documentList = ref([]);
@@ -383,8 +385,8 @@ watch(() => props.visible, (newVal) => {
     activeMediaTab.value = videoList.value.length > 0 ? 'video' : 'document';
     loadDocuments();
     loadRelatedPlants();
-    // Record browse history
-    if (props.knowledge?.id) {
+    // Record browse history (only when logged in)
+    if (props.knowledge?.id && userStore.isLoggedIn) {
       request.post('/browse-history/record', null, {
         params: { targetType: 'knowledge', targetId: props.knowledge.id }
       }).catch(() => {});

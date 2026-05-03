@@ -165,6 +165,7 @@ import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
 import request from '@/utils/request';
+import { useUserStore } from '@/stores/user';
 
 const LEVEL_TYPES = { '省级': 'warning', '自治区级': 'success', '州级': 'primary', '市级': 'primary', '县级': 'info' };
 
@@ -175,6 +176,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:visible', 'toggle-favorite']);
+const userStore = useUserStore();
 
 const activeMediaTab = ref('video');
 const documentList = ref([]);
@@ -334,8 +336,8 @@ watch(() => props.visible, (newVal) => {
   if (newVal) {
     activeMediaTab.value = videoList.value?.length > 0 ? 'video' : 'image';
     loadDocuments();
-    // Record browse history
-    if (props.inheritor?.id) {
+    // Record browse history (only when logged in)
+    if (props.inheritor?.id && userStore.isLoggedIn) {
       request.post('/browse-history/record', null, {
         params: { targetType: 'inheritor', targetId: props.inheritor.id }
       }).catch(() => {});

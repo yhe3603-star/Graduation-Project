@@ -35,8 +35,9 @@ public class InheritorController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "12") Integer size,
             @RequestParam(required = false) String level,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "name") String sortBy) {
-        Page<Inheritor> pageResult = service.pageByLevel(level, sortBy, page, size);
+        Page<Inheritor> pageResult = service.advancedSearchPaged(keyword, level, sortBy, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 

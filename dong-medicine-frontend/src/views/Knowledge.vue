@@ -211,19 +211,9 @@ const handleFilter = (filters) => {
 
 const isFavorited = computed(() => currentItem.value && isItemFavorited(currentItem.value.id));
 
-const showDetail = async (item) => {
+const showDetail = (item) => {
   currentItem.value = item;
   detailVisible.value = true;
-  try {
-    await request.post(`/knowledge/${item.id}/view`);
-    const idx = allKnowledge.value.findIndex(k => k.id === item.id);
-    if (idx > -1) {
-      allKnowledge.value[idx].viewCount = (allKnowledge.value[idx].viewCount || 0) + 1;
-      statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
-    }
-  } catch (e) {
-    console.debug('浏览量更新失败:', e);
-  }
 };
 
 const toggleFavorite = (item) => {

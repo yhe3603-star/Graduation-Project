@@ -932,3 +932,57 @@ INSERT INTO `chat_history` VALUES (21, 6, 'f6a7b8c9-d0e1-2345-6789-012345678901'
 INSERT INTO `chat_history` VALUES (22, 6, 'f6a7b8c9-d0e1-2345-6789-012345678901', 'assistant', '侗族药浴与普通泡澡有本质区别：\n1. 药物配方：侗族药浴使用特定草药配方，如透骨草、艾叶、钩藤等，具有明确的药理作用；\n2. 煎煮工艺：药材需加水煎煮30分钟以上，充分释放有效成分；\n3. 水温控制：药浴水温严格控制在40-45℃，既能促进药物吸收又不会烫伤；\n4. 疗程规范：每周2-3次，每次20-30分钟，有明确的治疗周期；\n5. 辨证施浴：根据不同体质和病症选用不同药方，如风湿用祛风方、妇科用温经方等；\n6. 历史传承：侗族药浴已有数百年历史，是侗族人民与疾病斗争的智慧结晶。\n\n普通泡澡主要是清洁和放松，而侗族药浴是具有明确治疗目的的传统疗法。', '2026-04-12 09:25:33');
 INSERT INTO `chat_history` VALUES (23, 1, 'a7b8c9d0-e1f2-3456-7890-123456789012', 'user', '请介绍一下侗族医药的整体情况', '2026-04-05 08:10:00');
 INSERT INTO `chat_history` VALUES (24, 1, 'a7b8c9d0-e1f2-3456-7890-123456789012', 'assistant', '侗族医药是中国传统医药的重要组成部分，主要特点如下：\n1. 历史悠久：侗族医药有数百年传承历史，是侗族人民在长期与疾病斗争中积累的宝贵经验；\n2. 理论独特：侗医认为人体与自然和谐统一，强调"天人合一"的整体观念；\n3. 疗法丰富：包括药浴、艾灸、推拿、拔罐、熏蒸、刮痧、火疗等多种外治法；\n4. 药材丰富：黔东南、广西三江、湖南通道等侗族聚居区盛产钩藤、透骨草、九节茶、杜仲等道地药材；\n5. 传承有序：目前有自治区级、市级、县级等多位非物质文化遗产代表性传承人；\n6. 实用性强：对风湿骨痛、跌打损伤、妇科疾病、蛇伤等有显著疗效。\n\n侗族医药已列入非物质文化遗产保护名录，正在得到更好的保护与传承。', '2026-04-05 08:10:03');
+
+-- ----------------------------
+-- Table structure for search_history
+-- ----------------------------
+DROP TABLE IF EXISTS `search_history`;
+CREATE TABLE `search_history`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` int NULL DEFAULT NULL COMMENT '用户ID（可为空，游客搜索）',
+  `keyword` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '搜索关键词',
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '搜索时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_keyword`(`keyword` ASC) USING BTREE,
+  INDEX `idx_created_at`(`created_at` DESC) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '搜索历史记录' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of search_history
+-- ----------------------------
+INSERT INTO `search_history` VALUES (1, 1, '钩藤', '2026-04-28 08:10:00');
+INSERT INTO `search_history` VALUES (2, 3, '药浴', '2026-04-28 09:15:00');
+INSERT INTO `search_history` VALUES (3, 4, '透骨草', '2026-04-28 10:20:00');
+INSERT INTO `search_history` VALUES (4, 5, '艾灸', '2026-04-28 11:30:00');
+INSERT INTO `search_history` VALUES (5, 6, '天麻', '2026-04-28 14:00:00');
+INSERT INTO `search_history` VALUES (6, 1, '药浴', '2026-04-29 08:30:00');
+INSERT INTO `search_history` VALUES (7, 3, '钩藤', '2026-04-29 09:45:00');
+INSERT INTO `search_history` VALUES (8, 4, '传承人', '2026-04-29 10:00:00');
+INSERT INTO `search_history` VALUES (9, 5, '杜仲', '2026-04-29 11:15:00');
+INSERT INTO `search_history` VALUES (10, 6, '风湿', '2026-04-29 14:30:00');
+INSERT INTO `search_history` VALUES (11, 1, '七叶一枝花', '2026-04-30 08:00:00');
+INSERT INTO `search_history` VALUES (12, 3, '药浴', '2026-04-30 09:00:00');
+INSERT INTO `search_history` VALUES (13, 4, '钩藤', '2026-04-30 10:30:00');
+INSERT INTO `search_history` VALUES (14, 5, '侗医', '2026-04-30 11:00:00');
+INSERT INTO `search_history` VALUES (15, 6, '透骨草', '2026-04-30 14:00:00');
+INSERT INTO `search_history` VALUES (16, 1, '药浴', '2026-05-01 08:20:00');
+INSERT INTO `search_history` VALUES (17, 3, '传承人', '2026-05-01 09:30:00');
+INSERT INTO `search_history` VALUES (18, 4, '钩藤', '2026-05-01 10:00:00');
+INSERT INTO `search_history` VALUES (19, 5, '天麻', '2026-05-01 11:45:00');
+INSERT INTO `search_history` VALUES (20, 6, '艾灸', '2026-05-01 14:15:00');
+INSERT INTO `search_history` VALUES (21, 1, '风湿', '2026-05-02 08:10:00');
+INSERT INTO `search_history` VALUES (22, 3, '钩藤', '2026-05-02 09:20:00');
+INSERT INTO `search_history` VALUES (23, 4, '药浴', '2026-05-02 10:45:00');
+INSERT INTO `search_history` VALUES (24, 5, '透骨草', '2026-05-02 11:30:00');
+INSERT INTO `search_history` VALUES (25, 6, '侗医', '2026-05-02 14:00:00');
+INSERT INTO `search_history` VALUES (26, 1, '药浴', '2026-05-03 08:30:00');
+INSERT INTO `search_history` VALUES (27, 3, '七叶一枝花', '2026-05-03 09:00:00');
+INSERT INTO `search_history` VALUES (28, 4, '钩藤', '2026-05-03 10:15:00');
+INSERT INTO `search_history` VALUES (29, 5, '杜仲', '2026-05-03 11:00:00');
+INSERT INTO `search_history` VALUES (30, 6, '药浴', '2026-05-03 14:30:00');
+INSERT INTO `search_history` VALUES (31, 1, '钩藤', '2026-05-04 08:00:00');
+INSERT INTO `search_history` VALUES (32, 3, '艾灸', '2026-05-04 09:15:00');
+INSERT INTO `search_history` VALUES (33, 4, '传承人', '2026-05-04 10:30:00');
+INSERT INTO `search_history` VALUES (34, 5, '药浴', '2026-05-04 11:00:00');
+INSERT INTO `search_history` VALUES (35, 6, '天麻', '2026-05-04 14:00:00');

@@ -1,9 +1,12 @@
 package com.dongmedicine.controller;
 
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.SecurityUtils;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.entity.Plant;
+import com.dongmedicine.entity.SearchHistory;
+import com.dongmedicine.mapper.SearchHistoryMapper;
 import com.dongmedicine.service.InheritorService;
 import com.dongmedicine.service.KnowledgeService;
 import com.dongmedicine.service.PlantService;
@@ -24,11 +27,21 @@ public class SearchController {
     private final PlantService plantService;
     private final KnowledgeService knowledgeService;
     private final InheritorService inheritorService;
+    private final SearchHistoryMapper searchHistoryMapper;
 
     @GetMapping("/suggest")
     public R<List<Map<String, Object>>> suggest(@RequestParam(defaultValue = "") String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return R.ok(List.of());
+        }
+
+        try {
+            SearchHistory sh = new SearchHistory();
+            sh.setUserId(SecurityUtils.getCurrentUserIdOrNull());
+            sh.setKeyword(keyword.trim());
+            searchHistoryMapper.insert(sh);
+        } catch (Exception e) {
+            log.debug("记录搜索历史失败: {}", e.getMessage());
         }
 
         List<Map<String, Object>> results = new ArrayList<>();

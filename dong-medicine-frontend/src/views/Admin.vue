@@ -355,12 +355,15 @@ const standardTables = [
   { key: 'quiz', formType: 'quiz', deletePath: '/quiz' }
 ]
 
+const entityMap = { users: 'users', knowledge: 'knowledge', inheritors: 'inheritors', plants: 'plants', qa: 'qa', resources: 'resources', quiz: 'quiz-questions', comments: 'comments', feedback: 'feedback' }
+
 const getTableConfig = (key) => {
   const config = TABLE_CONFIGS[key]
   return {
     title: config.title,
     titleName: config.titleName,
     columns: config.columns,
+    entity: entityMap[key] || '',
     showTitle: config.showTitle !== false,
     showAdd: config.showAdd !== false,
     showEdit: config.showEdit !== false,

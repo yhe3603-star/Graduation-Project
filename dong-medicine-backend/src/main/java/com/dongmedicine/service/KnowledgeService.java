@@ -143,4 +143,6 @@ public interface KnowledgeService extends IService<Knowledge> {
      * @return 筛选选项Map，包含therapyCategory、diseaseCategory、herbCategory
      */
     Map<String, List<String>> getFilterOptions();
+
+    List<Map<String, Object>> topByViewCount(int limit);
 }

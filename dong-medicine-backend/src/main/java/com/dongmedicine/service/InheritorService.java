@@ -64,6 +64,8 @@ public interface InheritorService extends IService<Inheritor> {
      */
     Page<Inheritor> pageByLevel(String level, String sortBy, Integer page, Integer size);
 
+    Page<Inheritor> advancedSearchPaged(String keyword, String level, String sortBy, Integer page, Integer size);
+
     /**
      * 分页搜索传承人
      * 
@@ -114,4 +116,6 @@ public interface InheritorService extends IService<Inheritor> {
      * @return 筛选选项Map，包含level
      */
     Map<String, List<String>> getFilterOptions();
+
+    List<Map<String, Object>> topByViewCount(int limit);
 }

@@ -122,4 +122,6 @@ public interface PlantService extends IService<Plant> {
      * @return 筛选选项Map，包含category、usageWay
      */
     Map<String, List<String>> getFilterOptions();
+
+    List<Map<String, Object>> topByViewCount(int limit);
 }

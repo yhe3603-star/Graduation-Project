@@ -197,17 +197,9 @@ const handleFilter = (filters) => {
 
 const isCurrentFavorited = computed(() => currentQa.value && isItemFavorited(currentQa.value.id));
 
-const showDetail = async (item) => {
+const showDetail = (item) => {
   currentQa.value = item;
   detailVisible.value = true;
-  try {
-    await request.post(`/qa/${item.id}/view`);
-    const qaIdx = allQa.value.findIndex(q => q.id === item.id);
-    if (qaIdx > -1) {
-      allQa.value[qaIdx].viewCount = (allQa.value[qaIdx].viewCount || 0) + 1;
-      statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
-    }
-  } catch {}
 };
 
 const toggleFavoriteDetail = () => { if (currentQa.value) doToggleFavorite(currentQa.value.id, isItemFavorited(currentQa.value.id)); };

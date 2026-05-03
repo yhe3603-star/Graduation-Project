@@ -72,11 +72,11 @@
         />
       </div>
 
-      <div class="charts-row full-width">
+      <div class="charts-row">
         <ChartCard
           title="药用植物地域分布"
           :option="regionChartOption"
-          :height="340"
+          :height="300"
           :loading="chartLoading"
         >
           <template #actions>
@@ -100,6 +100,12 @@
             </el-select>
           </template>
         </ChartCard>
+        <ChartCard
+          title="药用植物分布占比"
+          :option="plantPieChartOption"
+          :height="300"
+          :loading="chartLoading"
+        />
       </div>
 
       <div class="charts-row full-width">
@@ -233,6 +239,17 @@ const regionChartOption = computed(() => {
     xAxis: { ...baseXAxis, data: names, axisLabel: { color: '#666', fontSize: 11, interval: 0, rotate: names.length > 6 ? 30 : 0 } },
     yAxis: baseYAxis,
     series: [createBarSeries(data, GRADIENT_COLORS.teal, '40%')]
+  };
+});
+
+const plantPieChartOption = computed(() => {
+  const names = chartData.value.plantCategoryNames.length ? chartData.value.plantCategoryNames : ['暂无数据'];
+  const values = chartData.value.plantCategories.length ? chartData.value.plantCategories : [1];
+  const pieData = names.map((n, i) => ({ name: n, value: values[i] || 0 }));
+  return {
+    tooltip: { ...baseTooltip, trigger: "item", formatter: '{b}: {c} ({d}%)' },
+    legend: { bottom: 10, itemWidth: 12, itemHeight: 12, textStyle: { color: '#666' } },
+    series: [createPieSeries(pieData.length ? pieData : [{ value: 1, name: '暂无数据', itemStyle: { color: '#e0e0e0' } }])]
   };
 });
 

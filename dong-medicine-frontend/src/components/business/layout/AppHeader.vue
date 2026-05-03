@@ -83,6 +83,64 @@
           </template>
         </el-input>
       </div>
+      <el-popover
+        v-if="isLoggedIn"
+        placement="bottom"
+        :width="320"
+        trigger="click"
+        @show="loadNotifications"
+      >
+        <template #reference>
+          <el-badge
+            :value="unreadCount"
+            :hidden="unreadCount === 0"
+            :max="99"
+            class="notification-badge"
+          >
+            <el-button
+              class="action-btn"
+              circle
+            >
+              <el-icon><Bell /></el-icon>
+            </el-button>
+          </el-badge>
+        </template>
+        <div class="notification-panel">
+          <div class="notification-header">
+            <span>消息通知</span>
+            <el-button
+              v-if="unreadCount > 0"
+              type="primary"
+              link
+              size="small"
+              @click="markAllRead"
+            >全部已读</el-button>
+          </div>
+          <div class="notification-list">
+            <div
+              v-if="notifications.length === 0"
+              class="notification-empty"
+            >
+              暂无通知
+            </div>
+            <div
+              v-for="(item, i) in notifications"
+              :key="i"
+              class="notification-item"
+            >
+              <div class="notification-title">
+                {{ item.title }}
+              </div>
+              <div class="notification-content">
+                {{ item.content }}
+              </div>
+              <div class="notification-time">
+                {{ item.createTime }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-popover>
       <el-tooltip
         content="返回上一页"
         placement="bottom"
@@ -183,14 +241,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { HomeFilled, Document, User, Picture, ChatDotRound, More, ArrowDown, Search, ArrowLeft, Setting, SwitchButton, Aim, Folder, DataLine, InfoFilled, Menu, Calendar } from "@element-plus/icons-vue";
+import { HomeFilled, Document, User, Picture, ChatDotRound, More, ArrowDown, Search, ArrowLeft, Setting, SwitchButton, Aim, Folder, DataLine, InfoFilled, Menu, Calendar, Bell } from "@element-plus/icons-vue";
+import request from "@/utils/request";
 
 const route = useRoute();
 const router = useRouter();
 
-defineProps({ isLoggedIn: Boolean, userName: String, isAdmin: Boolean });
+const props = defineProps({ isLoggedIn: Boolean, userName: String, isAdmin: Boolean });
 defineEmits(["logout", "showLogin", "showRegister"]);
 
 const activeIndex = computed(() => route.path);
@@ -214,6 +273,34 @@ const moreItems = [
 
 const morePages = computed(() => moreItems.map(item => item.path));
 const allNavItems = [...navItems, ...moreItems];
+
+// Notifications
+const notifications = ref([]);
+const unreadCount = ref(0);
+
+const loadNotifications = async () => {
+  try {
+    const [listRes, countRes] = await Promise.all([
+      request.get('/notifications'),
+      request.get('/notifications/unread-count')
+    ]);
+    notifications.value = (listRes.data || listRes || []).map(s => {
+      try { return JSON.parse(s); } catch { return { title: '通知', content: s, createTime: '' }; }
+    });
+    unreadCount.value = (countRes.data || countRes || {}).count || 0;
+  } catch {}
+};
+
+const markAllRead = async () => {
+  try {
+    await request.post('/notifications/read');
+    unreadCount.value = 0;
+  } catch {}
+};
+
+onMounted(() => {
+  if (props.isLoggedIn) loadNotifications();
+});
 
 const doSearch = () => {
   if (searchKeyword.value.trim()) router.push({ path: "/search", query: { q: searchKeyword.value.trim() } });
@@ -389,4 +476,15 @@ const goToSearch = () => {
   .action-btn { width: 32px; height: 32px; }
   .user-avatar-wrap { padding: 4px 10px; }
 }
+
+.notification-badge :deep(.el-badge__content) { font-size: 10px; }
+.notification-panel { max-height: 400px; }
+.notification-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #eee; margin-bottom: 8px; font-weight: 600; }
+.notification-list { max-height: 320px; overflow-y: auto; }
+.notification-empty { text-align: center; color: #999; padding: 24px 0; font-size: 13px; }
+.notification-item { padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+.notification-item:last-child { border-bottom: none; }
+.notification-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.notification-content { font-size: 12px; color: #666; white-space: pre-line; }
+.notification-time { font-size: 11px; color: #999; margin-top: 4px; }
 </style>
