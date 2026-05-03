@@ -1,15 +1,38 @@
 <template>
   <div>
+    <div class="tab-header">
+      <el-radio-group v-model="typeFilter" size="small">
+        <el-radio-button value="all">
+全部
+</el-radio-button>
+        <el-radio-button value="plant">
+药材
+</el-radio-button>
+        <el-radio-button value="knowledge">
+知识
+</el-radio-button>
+        <el-radio-button value="inheritor">
+传承人
+</el-radio-button>
+        <el-radio-button value="resource">
+学习资源
+</el-radio-button>
+        <el-radio-button value="qa">
+问答
+</el-radio-button>
+      </el-radio-group>
+    </div>
     <div v-loading="historyLoading" class="history-list">
       <div v-for="item in paginatedHistory" :key="item.id" class="history-item" @click="goToHistoryItem(item)">
         <div class="history-icon">
           <el-icon><component :is="getHistoryIcon(item.targetType)" /></el-icon>
         </div>
         <div class="history-content">
-          <h4>{{ item.title || item.targetTitle || item.targetName || item.targetType }}</h4>
+          <h4>{{ item.title || item.targetTitle || item.targetName || getTypeName(item.targetType) }}</h4>
+          <p class="history-desc">{{ (item.description || '').substring(0, 40) }}{{ (item.description || '').length > 40 ? '...' : '' }}</p>
           <p class="history-time">
             <el-icon><Clock /></el-icon>
-            {{ formatTime(item.createTime || item.viewTime) }}
+            {{ formatTime(item.browseTime) }}
           </p>
         </div>
         <el-tag size="small" :type="getTypeTag(item.targetType)">
@@ -20,19 +43,33 @@
 </el-icon>
       </div>
     </div>
-    <el-empty v-if="!historyLoading && !browseHistory.length" description="暂无浏览记录" />
-    <Pagination v-if="browseHistory.length > historyPageSize" :page="historyPage" :size="historyPageSize" :total="browseHistory.length" @update:page="historyPage = $event" @update:size="historyPageSize = $event" />
+    <el-empty v-if="!historyLoading && !filteredHistory.length" description="暂无浏览记录" />
+    <Pagination v-else-if="filteredHistory.length > pageSize" :page="page" :size="pageSize" :total="filteredHistory.length" @update:page="page = $event" @update:size="pageSize = $event" />
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Clock, ArrowRight } from '@element-plus/icons-vue'
 import Pagination from '@/components/business/display/Pagination.vue'
 import { useBrowseHistory } from '@/composables/useBrowseHistory'
 import { typeTagMap, typeNameMap } from '@/composables/usePersonalCenter'
 
-const { browseHistory, historyLoading, historyPage, historyPageSize, paginatedHistory, getHistoryIcon, goToHistoryItem, loadBrowseHistory } = useBrowseHistory()
+const { browseHistory, historyLoading, getHistoryIcon, goToHistoryItem, loadBrowseHistory } = useBrowseHistory()
+
+const typeFilter = ref('all')
+const page = ref(1)
+const pageSize = ref(6)
+
+const filteredHistory = computed(() => {
+  if (typeFilter.value === 'all') return browseHistory.value
+  return browseHistory.value.filter(h => h.targetType === typeFilter.value)
+})
+
+const paginatedHistory = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return filteredHistory.value.slice(start, start + pageSize.value)
+})
 
 function getTypeTag(type) { return typeTagMap[type] || 'info' }
 function getTypeName(type) { return typeNameMap[type] || '其他' }
@@ -46,13 +83,17 @@ onMounted(loadBrowseHistory)
 </script>
 
 <style scoped>
+.tab-header { margin-bottom: var(--space-xl); }
+.tab-header :deep(.el-radio-group) { flex-wrap: wrap; gap: 4px; }
+.tab-header :deep(.el-radio-button__inner) { white-space: nowrap; }
 .history-list { display: flex; flex-direction: column; gap: var(--space-md); }
 .history-item { display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md); background: var(--bg-rice); border-radius: var(--radius-md); cursor: pointer; transition: background var(--transition-fast); }
 .history-item:hover { background: var(--bg-rice-dark); }
 .history-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--text-inverse); flex-shrink: 0; }
 .history-content { flex: 1; }
 .history-content h4 { margin: 0 0 var(--space-xs) 0; font-size: var(--font-size-sm); color: var(--text-primary); }
-.history-time { margin: 0; font-size: var(--font-size-xs); color: var(--text-muted); display: flex; align-items: center; gap: var(--space-xs); }
+.history-desc { margin: 0 0 var(--space-xs) 0; font-size: var(--font-size-xs); color: var(--text-muted); }
+.history-time { margin: 0; font-size: var(--font-size-xs); color: var(--text-light); display: flex; align-items: center; gap: var(--space-xs); }
 .history-arrow { color: var(--text-light); font-size: var(--font-size-base); }
 
 @media (max-width: 768px) {
