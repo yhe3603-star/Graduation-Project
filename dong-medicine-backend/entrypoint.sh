@@ -64,14 +64,19 @@ wait_for_service() {
 }
 
 init_database() {
+    local db_name="${DB_NAME:-dong_medicine}"
+    
+    log_info "创建数据库 (如果不存在)..."
+    mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --skip-ssl -e "CREATE DATABASE IF NOT EXISTS \`${db_name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>&1 && log_info "数据库已就绪" || log_warn "创建数据库失败"
+    
     local table_count
-    table_count=$(mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --skip-ssl "${DB_NAME:-dong_medicine}" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME:-dong_medicine}'" -s -N 2>/dev/null || echo "0")
+    table_count=$(mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --skip-ssl "${db_name}" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${db_name}'" -s -N 2>/dev/null || echo "0")
     
     if [ "$table_count" = "0" ] && [ -f /app/init.sql ]; then
-        log_info "初始化数据库..."
-        mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --skip-ssl "${DB_NAME:-dong_medicine}" < /app/init.sql 2>&1 && log_info "初始化完成" || log_warn "初始化失败"
+        log_info "初始化数据库表..."
+        mysql --host="${DB_HOST}" --port="${DB_PORT:-3306}" --user="${DB_USERNAME:-root}" --password="${DB_PASSWORD}" --skip-ssl "${db_name}" < /app/init.sql 2>&1 && log_info "初始化完成" || log_warn "初始化失败"
     else
-        log_info "数据库已存在 ($table_count 表)"
+        log_info "数据库表已存在 ($table_count 表)"
     fi
 }
 
