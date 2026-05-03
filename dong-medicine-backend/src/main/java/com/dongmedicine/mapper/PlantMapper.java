@@ -22,7 +22,7 @@ public interface PlantMapper extends BaseMapper<Plant> {
     @Update("UPDATE plants SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
     void incrementPopularity(Integer id);
 
-    @Update("UPDATE plants SET view_count = IFNULL(view_count, 0) + 3, popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
+    @Update("UPDATE plants SET view_count = IFNULL(view_count, 0) + 1, popularity = IFNULL(popularity, 0) + 3 WHERE id = #{id}")
     void incrementViewCount3AndPopularity(Integer id);
 
     @Select("SELECT * FROM plants WHERE id >= (SELECT FLOOR(RAND() * (SELECT MAX(id) FROM plants)) + 1) LIMIT #{limit}")

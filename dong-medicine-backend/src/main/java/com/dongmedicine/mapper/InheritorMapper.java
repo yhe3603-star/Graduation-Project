@@ -22,7 +22,7 @@ public interface InheritorMapper extends BaseMapper<Inheritor> {
     @Update("UPDATE inheritors SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
     void incrementPopularity(Integer id);
 
-    @Update("UPDATE inheritors SET view_count = IFNULL(view_count, 0) + 3, popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
+    @Update("UPDATE inheritors SET view_count = IFNULL(view_count, 0) + 1, popularity = IFNULL(popularity, 0) + 3 WHERE id = #{id}")
     void incrementViewCount3AndPopularity(Integer id);
 
     // ===== 统计查询方法 =====

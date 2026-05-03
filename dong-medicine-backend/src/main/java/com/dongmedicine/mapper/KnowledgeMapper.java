@@ -22,7 +22,7 @@ public interface KnowledgeMapper extends BaseMapper<Knowledge> {
     @Update("UPDATE knowledge SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
     void incrementPopularity(@Param("id") Integer id);
 
-    @Update("UPDATE knowledge SET view_count = IFNULL(view_count, 0) + 3, popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
+    @Update("UPDATE knowledge SET view_count = IFNULL(view_count, 0) + 1, popularity = IFNULL(popularity, 0) + 3 WHERE id = #{id}")
     void incrementViewCount3AndPopularity(@Param("id") Integer id);
 
     // ===== 统计查询方法 =====
