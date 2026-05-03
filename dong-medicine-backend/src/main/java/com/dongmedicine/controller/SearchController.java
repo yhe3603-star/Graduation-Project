@@ -92,4 +92,9 @@ public class SearchController {
         // Limit to 15 total
         return R.ok(results.size() > 15 ? results.subList(0, 15) : results);
     }
+
+    @GetMapping("/hot")
+    public R<List<Map<String, Object>>> hotKeywords(@RequestParam(defaultValue = "20") Integer limit) {
+        return R.ok(searchHistoryMapper.topKeywords(Math.min(limit, 50)));
+    }
 }

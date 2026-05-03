@@ -342,7 +342,28 @@ const buildLatestItems = (plants, knowledge, inheritors, qas) => {
     .slice(0, 6)
 }
 
-const buildCloudItems = (plants, knowledge) => {
+const loadHotSearches = async () => {
+  try {
+    const res = await request.get('/search/hot', { params: { limit: 20 }, skipAuthRefresh: true })
+    const data = (res.data || res || []).filter(item => item.name)
+    if (data.length === 0) return buildCloudItemsFromLists([], [])
+    const maxVal = data[0]?.value || 1
+    const minVal = data[data.length - 1]?.value || 1
+    return data.map((item, index) => {
+      const ratio = maxVal === minVal ? 0.5 : (item.value - minVal) / (maxVal - minVal)
+      return {
+        name: item.name,
+        size: Math.round(12 + ratio * 18),
+        opacity: Math.round((0.5 + ratio * 0.5) * 10) / 10,
+        color: CLOUD_COLORS[index % CLOUD_COLORS.length]
+      }
+    }).sort(() => Math.random() - 0.5)
+  } catch {
+    return []
+  }
+}
+
+const buildCloudItemsFromLists = (plants, knowledge) => {
   const cloudMap = new Map()
 
   const addToCloud = (name, viewCount = 0) => {
@@ -404,10 +425,7 @@ onMounted(async () => {
       qaData.records.slice(0, 10)
     )
 
-    hotCloudItems.value = buildCloudItems(
-      plantsData.records.slice(0, 20),
-      knowledgeData.records.slice(0, 10)
-    )
+    hotCloudItems.value = await loadHotSearches()
 
     const allForFeatured = [
       ...plantsData.records.map(p => ({ ...p, type: 'plant', image: getFirstImage(p.images), tagType: 'success', typeLabel: '植物' })),
