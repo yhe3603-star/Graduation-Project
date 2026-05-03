@@ -315,8 +315,13 @@ const handleFilter = (filters) => {
 };
 
 // ========== Resource Actions ==========
-const openResource = (item) => {
-  currentResource.value = item;
+const openResource = async (item) => {
+  try {
+    const res = await request.get(`/resources/${item.id}`);
+    currentResource.value = res.data || res || item;
+  } catch {
+    currentResource.value = item;
+  }
   previewVisible.value = true;
 };
 

@@ -183,8 +183,13 @@ const handleFilter = (filters) => {
 
 const isFavorited = computed(() => currentPlant.value && isItemFavorited(currentPlant.value.id));
 
-const showDetail = (plant) => {
-  currentPlant.value = plant;
+const showDetail = async (plant) => {
+  try {
+    const res = await request.get(`/plants/${plant.id}`);
+    currentPlant.value = res.data || res || plant;
+  } catch {
+    currentPlant.value = plant;
+  }
   detailVisible.value = true;
 };
 

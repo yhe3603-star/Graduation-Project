@@ -197,8 +197,13 @@ const handleFilter = (filters) => {
 
 const isCurrentFavorited = computed(() => currentQa.value && isItemFavorited(currentQa.value.id));
 
-const showDetail = (item) => {
-  currentQa.value = item;
+const showDetail = async (item) => {
+  try {
+    const res = await request.get(`/qa/${item.id}`);
+    currentQa.value = res.data || res || item;
+  } catch {
+    currentQa.value = item;
+  }
   detailVisible.value = true;
 };
 

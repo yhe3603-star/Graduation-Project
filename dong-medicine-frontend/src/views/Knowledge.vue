@@ -211,8 +211,13 @@ const handleFilter = (filters) => {
 
 const isFavorited = computed(() => currentItem.value && isItemFavorited(currentItem.value.id));
 
-const showDetail = (item) => {
-  currentItem.value = item;
+const showDetail = async (item) => {
+  try {
+    const res = await request.get(`/knowledge/${item.id}`);
+    currentItem.value = res.data || res || item;
+  } catch {
+    currentItem.value = item;
+  }
   detailVisible.value = true;
 };
 

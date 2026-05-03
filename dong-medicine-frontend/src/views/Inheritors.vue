@@ -206,8 +206,13 @@ const handleFilter = (filters) => {
 
 const isFavorited = computed(() => currentInheritor.value && isItemFavorited(currentInheritor.value.id));
 
-const showDetail = (item) => {
-  currentInheritor.value = item;
+const showDetail = async (item) => {
+  try {
+    const res = await request.get(`/inheritors/${item.id}`);
+    currentInheritor.value = res.data || res || item;
+  } catch {
+    currentInheritor.value = item;
+  }
   detailVisible.value = true;
 };
 
