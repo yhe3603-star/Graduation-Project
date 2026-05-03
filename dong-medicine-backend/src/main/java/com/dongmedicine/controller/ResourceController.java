@@ -7,6 +7,7 @@ import com.dongmedicine.common.util.FileTypeUtils;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Resource;
+import com.dongmedicine.service.PopularityAsyncService;
 import com.dongmedicine.service.ResourceService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,6 +44,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class ResourceController {
 
     private final ResourceService service;
+    private final PopularityAsyncService popularityAsyncService;
     private final ObjectMapper objectMapper;
 
     @Value("${file.upload.base-path:./public}")
@@ -79,6 +81,7 @@ public class ResourceController {
     public R<Resource> getById(@PathVariable Integer id) {
         Resource resource = service.getDetail(id);
         if (resource == null) throw BusinessException.notFound("资源不存在");
+        try { popularityAsyncService.incrementResourceViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         return R.ok(resource);
     }
 

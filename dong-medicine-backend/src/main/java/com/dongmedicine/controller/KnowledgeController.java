@@ -10,6 +10,7 @@ import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.service.BrowseHistoryService;
 import com.dongmedicine.service.KnowledgeService;
+import com.dongmedicine.service.PopularityAsyncService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +32,7 @@ public class KnowledgeController {
 
     private final KnowledgeService service;
     private final BrowseHistoryService browseHistoryService;
+    private final PopularityAsyncService popularityAsyncService;
 
     @GetMapping("/list")
     public R<Map<String, Object>> list(
@@ -64,6 +66,7 @@ public class KnowledgeController {
         if (knowledge == null) {
             throw BusinessException.notFound("知识条目不存在");
         }
+        try { popularityAsyncService.incrementKnowledgeViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         if (userId != null) {
             try {

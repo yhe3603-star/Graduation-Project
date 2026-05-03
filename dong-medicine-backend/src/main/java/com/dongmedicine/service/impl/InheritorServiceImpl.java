@@ -113,13 +113,8 @@ public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor
     }
 
     @Override
-    @Cacheable(value = "inheritors", key = "'detail:' + #id")
     public Inheritor getDetailWithExtras(Integer id) {
-        Inheritor inheritor = getById(id);
-        if (inheritor != null) {
-            popularityAsyncService.incrementInheritorViewAndPopularity(id);
-        }
-        return inheritor;
+        return getById(id);
     }
 
     @Override

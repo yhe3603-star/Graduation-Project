@@ -51,11 +51,7 @@ public class ResourceServiceImpl extends ServiceImpl<ResourceMapper, Resource> i
     }
 
     public Resource getDetail(Integer id) {
-        Resource resource = getById(id);
-        if (resource != null) {
-            popularityAsyncService.incrementResourceViewAndPopularity(id);
-        }
-        return resource;
+        return getById(id);
     }
 
     @Override

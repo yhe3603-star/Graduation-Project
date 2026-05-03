@@ -24,16 +24,4 @@ public class AsyncConfig {
         return executor;
     }
 
-    @Bean(name = "popularityExecutor")
-    public Executor popularityExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(1);
-        executor.setMaxPoolSize(3);
-        executor.setQueueCapacity(50);
-        executor.setThreadNamePrefix("popularity-");
-        executor.setRejectedExecutionHandler((r, e) -> {
-        });
-        executor.initialize();
-        return executor;
-    }
 }

@@ -140,13 +140,8 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     }
 
     @Override
-    @Cacheable(value = "knowledges", key = "'detail:' + #id")
     public Knowledge getDetailWithRelated(Integer id) {
-        Knowledge knowledge = getById(id);
-        if (knowledge != null) {
-            popularityAsyncService.incrementKnowledgeViewAndPopularity(id);
-        }
-        return knowledge;
+        return getById(id);
     }
 
     @Override

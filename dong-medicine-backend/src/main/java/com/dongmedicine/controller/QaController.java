@@ -6,6 +6,7 @@ import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Qa;
+import com.dongmedicine.service.PopularityAsyncService;
 import com.dongmedicine.service.QaService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
@@ -25,6 +26,7 @@ import java.util.Map;
 public class QaController {
 
     private final QaService service;
+    private final PopularityAsyncService popularityAsyncService;
 
     @GetMapping("/list")
     public R<Map<String, Object>> list(
@@ -49,6 +51,7 @@ public class QaController {
     public R<Qa> detail(@PathVariable Integer id) {
         Qa qa = service.getDetail(id);
         if (qa == null) throw BusinessException.notFound("问答不存在");
+        try { popularityAsyncService.incrementQaViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         return R.ok(qa);
     }
 

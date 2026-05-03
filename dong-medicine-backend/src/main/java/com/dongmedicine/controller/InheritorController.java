@@ -9,6 +9,7 @@ import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.service.BrowseHistoryService;
 import com.dongmedicine.service.InheritorService;
+import com.dongmedicine.service.PopularityAsyncService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class InheritorController {
 
     private final InheritorService service;
     private final BrowseHistoryService browseHistoryService;
+    private final PopularityAsyncService popularityAsyncService;
 
     @GetMapping("/list")
     public R<Map<String, Object>> list(
@@ -54,6 +56,7 @@ public class InheritorController {
     public R<Inheritor> detail(@PathVariable Integer id) {
         Inheritor in = service.getDetailWithExtras(id);
         if (in == null) throw BusinessException.notFound("传承人不存在");
+        try { popularityAsyncService.incrementInheritorViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         if (userId != null) {
             try {

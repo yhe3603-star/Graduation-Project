@@ -9,6 +9,7 @@ import com.dongmedicine.config.RateLimit;
 import com.dongmedicine.entity.Plant;
 import com.dongmedicine.service.BrowseHistoryService;
 import com.dongmedicine.service.PlantService;
+import com.dongmedicine.service.PopularityAsyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,6 +33,7 @@ public class PlantController {
 
     private final PlantService service;
     private final BrowseHistoryService browseHistoryService;
+    private final PopularityAsyncService popularityAsyncService;
 
     @GetMapping("/list")
     public R<Map<String, Object>> list(
@@ -57,6 +59,7 @@ public class PlantController {
     public R<Plant> detail(@PathVariable @NotNull Integer id) {
         Plant plant = service.getDetailWithStory(id);
         if (plant == null) throw BusinessException.notFound("植物不存在");
+        try { popularityAsyncService.incrementPlantViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         if (userId != null) {
             try {

@@ -89,11 +89,7 @@ public class QaServiceImpl extends ServiceImpl<QaMapper, Qa> implements QaServic
     }
 
     public Qa getDetail(Integer id) {
-        Qa qa = getById(id);
-        if (qa != null) {
-            popularityAsyncService.incrementQaViewAndPopularity(id);
-        }
-        return qa;
+        return getById(id);
     }
 
     @Override

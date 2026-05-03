@@ -146,11 +146,7 @@ public class PlantServiceImpl extends ServiceImpl<PlantMapper, Plant> implements
 
     @Override
     public Plant getDetailWithStory(Integer id) {
-        Plant plant = getById(id);
-        if (plant != null) {
-            popularityAsyncService.incrementPlantViewAndPopularity(id);
-        }
-        return plant;
+        return getById(id);
     }
 
     @Override
