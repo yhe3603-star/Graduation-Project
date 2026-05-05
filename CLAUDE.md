@@ -85,11 +85,13 @@ Tracking: `operation_log`, `browse_history`, `chat_history`
 - Frontend API calls go through `src/utils/request.js` which adds `/api` prefix
 - The `common/R.java` response wrapper is used by all controllers — never return raw objects
 - Lombok is used extensively in entity/DTO classes (`@Data`, `@Builder`, etc.)
-- Entity classes use MyBatis-Plus annotations (`@TableName`, `@TableField`)
-- The `@SaCheckLogin` / `@SaCheckRole` annotations handle auth on controller methods
-- RabbitMQ producers in `mq/producer/` send messages; corresponding consumers in `mq/consumer/` process them
-- Large views split into sub-components: `views/personal-center/` (6), `components/business/display/ai-chat/` (5), `views/home/` (7), `views/global-search/` (1)
-- E2E tests split into 9 spec files under `e2e/` by feature area (incl. ai-chat)
-- Backend regression tests split by bug category under `regression/` (5 files)
+- Entity classes use MyBatis-Plus annotations (`@TableName`, `@TableField`); all extend `BaseEntity` which provides `id` (auto-increment), `createdAt`, `updatedAt` with auto-fill
+- **Auth**: `SaTokenConfig` interceptor enforces that ALL POST/PUT/DELETE/PATCH requests require login; GET endpoints are public unless explicitly secured. Use `@SaCheckLogin` / `@SaCheckRole("admin")` annotations for additional checks
+- Paginated responses use `PageUtils.toMap(pageResult)` to convert MyBatis-Plus `Page` to `Map<String, Object>` for the `R.data` field
+- DTOs follow `*CreateDTO` / `*UpdateDTO` naming for admin CRUD operations
+- RabbitMQ has 5 message types: OperationLog, Statistics, Feedback, FileProcess, Notification — producers in `mq/producer/`, consumers in `mq/consumer/`
+- Backend tests: `common/` + `service/impl/` + `controller/` (unit), `integration/` (integration with H2), `regression/` (bug regression), `websocket/` (unit)
+- Frontend E2E tests split into 9 spec files under `e2e/` by feature area (incl. ai-chat)
 - Component unit tests: `__tests__/personal-center.test.js` covers ProfileSection, StatsDashboard, BrowseHistoryPanel
 - Static file uploads go to the backend's configured upload directory; paths are stored as relative URLs in the DB
+- Cache names in `CacheConfig` have per-entity TTLs: `plants`/`knowledges`/`inheritors` (6h), `resources` (4h), `users` (30m), `quizQuestions` (12h), `searchResults` (5m), `hotData` (1h)

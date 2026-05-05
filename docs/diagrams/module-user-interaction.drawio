@@ -1,0 +1,100 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="用户交互模块" id="mod-interaction">
+    <mxGraphModel dx="1022" dy="564" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="750" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="用户交互模块 — 功能详细" vertex="1">
+          <mxGeometry height="30" width="400" x="200" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="c_box" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;rounded=1;" value="评论系统 — CommentController" vertex="1">
+          <mxGeometry height="280" width="250" x="20" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" parent="c_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="发表评论&lt;br&gt;&lt;small&gt;POST /api/comments&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" parent="c_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="评论列表&lt;br&gt;&lt;small&gt;GET /api/comments/list/{type}/{id}&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" parent="c_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="全部评论&lt;br&gt;&lt;small&gt;GET /api/comments/list/all&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" parent="c_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="我的评论&lt;br&gt;&lt;small&gt;GET /api/comments/my&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" parent="c_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="多态目标&lt;br&gt;&lt;small&gt;plant/knowledge/inheritor/resource&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="40" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" parent="c_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="XSS过滤&lt;br&gt;&lt;small&gt;XssFilter内容安全&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="40" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" parent="c_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="MQ异步统计&lt;br&gt;&lt;small&gt;发送Statistics消息&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="40" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="f_box" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;rounded=1;" value="收藏系统 — FavoriteController" vertex="1">
+          <mxGeometry height="220" width="250" x="290" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f1" parent="f_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="收藏&lt;br&gt;&lt;small&gt;POST /api/favorites/{type}/{id}&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" parent="f_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="取消收藏&lt;br&gt;&lt;small&gt;DELETE /api/favorites/{type}/{id}&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" parent="f_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="我的收藏&lt;br&gt;&lt;small&gt;GET /api/favorites/my&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" parent="f_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="收藏状态检查&lt;br&gt;&lt;small&gt;前端列表批量查询&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" parent="f_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="多态目标&lt;br&gt;&lt;small&gt;plant/knowledge/inheritor/resource&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="40" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="fb_box" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;rounded=1;" value="反馈系统 — FeedbackController" vertex="1">
+          <mxGeometry height="220" width="250" x="560" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fb1" parent="fb_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="提交反馈&lt;br&gt;&lt;small&gt;POST /api/feedback&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fb2" parent="fb_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="我的反馈&lt;br&gt;&lt;small&gt;GET /api/feedback/my&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fb3" parent="fb_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="反馈统计&lt;br&gt;&lt;small&gt;GET /api/feedback/stats&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="fb4" parent="fb_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="MQ通知管理员&lt;br&gt;&lt;small&gt;Feedback消息&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="fb5" parent="fb_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="处理状态&lt;br&gt;&lt;small&gt;pending/replied/closed&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="40" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="h_box" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;rounded=1;" value="浏览历史 — BrowseHistoryController" vertex="1">
+          <mxGeometry height="170" width="250" x="160" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="h1" parent="h_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="记录浏览&lt;br&gt;&lt;small&gt;POST /api/browse-history/record&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="h2" parent="h_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="我的历史&lt;br&gt;&lt;small&gt;GET /api/browse-history/my&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="h3" parent="h_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="每日去重&lt;br&gt;&lt;small&gt;同一目标每天只记录一次&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="40" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="n_box" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;rounded=1;" value="消息通知 — NotificationController" vertex="1">
+          <mxGeometry height="170" width="250" x="425" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="n1" parent="n_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="通知列表&lt;br&gt;&lt;small&gt;GET /api/notifications&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n2" parent="n_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="未读数量&lt;br&gt;&lt;small&gt;GET /api/notifications/unread-count&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="n3" parent="n_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="标记已读&lt;br&gt;&lt;small&gt;POST /api/notifications/read&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="n4" parent="n_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="MQ异步推送&lt;br&gt;&lt;small&gt;Notification消息&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="110" x="130" y="75" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

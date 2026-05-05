@@ -1,9 +1,8 @@
 {
-  "enabledPlugins": {
-    "andrej-karpathy-skills@karpathy-skills": true
+  "permissions": {
+    "allow": [
+      "Bash(npx vite *)"
+    ]
   },
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"/d/Graduation Project/.claude/statusline.sh\""
-  }
+  "enabledMcpjsonServers": ["drawio"]
 }

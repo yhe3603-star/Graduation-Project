@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram name="系统部署图" id="deploy">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="侗乡医药数字化展示平台 — 系统部署图" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="500" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Host Machine -->
+        <mxCell id="host" value="宿主机 (Docker Host)" style="swimlane;startSize=35;fillColor=#f5f5f5;strokeColor=#333;fontStyle=1;fontSize=15;rounded=1;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="1320" height="880" as="geometry"/>
+        </mxCell>
+
+        <!-- Docker Network -->
+        <mxCell id="network" value="dong-medicine-network (bridge)" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;rounded=1;arcSize=5;dashed=1;" vertex="1" parent="host">
+          <mxGeometry x="20" y="50" width="1280" height="800" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== FRONTEND SERVICE ===== -->
+        <mxCell id="frontend" value="&lt;b&gt;frontend&lt;/b&gt;&lt;br&gt;&lt;hr&gt;Nginx + Vue 3 SPA&lt;br&gt;端口: 80 (暴露到宿主机)&lt;br&gt;&lt;hr&gt;&lt;small&gt;ghcr.io/.../dong-medicine-frontend&lt;/small&gt;&lt;br&gt;&lt;small&gt;资源限制: 0.3 CPU / 128MB&lt;/small&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;verticalAlign=middle;align=center;arcSize=8;" vertex="1" parent="network">
+          <mxGeometry x="30" y="50" width="200" height="150" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== BACKEND SERVICE ===== -->
+        <mxCell id="backend" value="&lt;b&gt;backend&lt;/b&gt;&lt;br&gt;&lt;hr&gt;Spring Boot 3.1&lt;br&gt;端口: 8080&lt;br&gt;&lt;hr&gt;&lt;small&gt;ghcr.io/.../dong-medicine-backend&lt;/small&gt;&lt;br&gt;&lt;small&gt;资源限制: 1 CPU / 512MB&lt;/small&gt;&lt;br&gt;&lt;small&gt;JAVA_OPTS: -Xms256m -Xmx384m&lt;/small&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;verticalAlign=middle;align=center;arcSize=8;" vertex="1" parent="network">
+          <mxGeometry x="300" y="50" width="220" height="160" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== MYSQL SERVICE ===== -->
+        <mxCell id="mysql" value="&lt;b&gt;mysql&lt;/b&gt;&lt;br&gt;&lt;hr&gt;MySQL 8.0&lt;br&gt;端口: 3307:3306 (暴露)&lt;br&gt;&lt;hr&gt;&lt;small&gt;资源限制: 0.8 CPU / 384MB&lt;/small&gt;&lt;br&gt;&lt;small&gt;max_connections=50&lt;/small&gt;&lt;br&gt;&lt;small&gt;innodb_buffer_pool=128M&lt;/small&gt;&lt;br&gt;&lt;small&gt;utf8mb4_unicode_ci&lt;/small&gt;" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;verticalAlign=middle;align=center;size=15;" vertex="1" parent="network">
+          <mxGeometry x="600" y="50" width="220" height="160" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== REDIS SERVICE ===== -->
+        <mxCell id="redis" value="&lt;b&gt;redis&lt;/b&gt;&lt;br&gt;&lt;hr&gt;Redis 7 Alpine&lt;br&gt;端口: 6379 (内部)&lt;br&gt;&lt;hr&gt;&lt;small&gt;资源限制: 0.3 CPU / 128MB&lt;/small&gt;&lt;br&gt;&lt;small&gt;maxmemory=64mb&lt;/small&gt;&lt;br&gt;&lt;small&gt;allkeys-lru&lt;/small&gt;" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=middle;align=center;size=15;" vertex="1" parent="network">
+          <mxGeometry x="900" y="50" width="200" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== RABBITMQ SERVICE ===== -->
+        <mxCell id="rabbitmq" value="&lt;b&gt;rabbitmq&lt;/b&gt;&lt;br&gt;&lt;hr&gt;RabbitMQ 3.12&lt;br&gt;端口: 5672 / 15672(管理)&lt;br&gt;&lt;hr&gt;&lt;small&gt;资源限制: 0.5 CPU / 512MB&lt;/small&gt;&lt;br&gt;&lt;small&gt;3.12-management-alpine&lt;/small&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=middle;align=center;arcSize=8;" vertex="1" parent="network">
+          <mxGeometry x="600" y="250" width="220" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== KKFILEVIEW SERVICE ===== -->
+        <mxCell id="kkfileview" value="&lt;b&gt;kkfileview&lt;/b&gt;&lt;br&gt;&lt;hr&gt;KKFileView 4.1&lt;br&gt;端口: 8012 (内部)&lt;br&gt;&lt;hr&gt;&lt;small&gt;资源限制: 0.5 CPU / 384MB&lt;/small&gt;&lt;br&gt;&lt;small&gt;JAVA_OPTS: -Xms128m -Xmx256m&lt;/small&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;verticalAlign=middle;align=center;arcSize=8;" vertex="1" parent="network">
+          <mxGeometry x="900" y="250" width="200" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== CONNECTIONS ===== -->
+        <!-- Frontend → Backend (HTTP/WS) -->
+        <mxCell id="c_fb" value="/api → :8080&lt;br&gt;/ws → WebSocket" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;labelBackgroundColor=#dae8fc;" edge="1" source="frontend" target="backend" parent="network">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Backend → MySQL -->
+        <mxCell id="c_bm" value="JDBC :3306" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;labelBackgroundColor=#fff2cc;" edge="1" source="backend" target="mysql" parent="network">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Backend → Redis -->
+        <mxCell id="c_br" value="Redis协议 :6379" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;labelBackgroundColor=#fff2cc;" edge="1" source="backend" target="redis" parent="network">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Backend → RabbitMQ -->
+        <mxCell id="c_bmq" value="AMQP :5672" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;labelBackgroundColor=#fff2cc;" edge="1" source="backend" target="rabbitmq" parent="network">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Backend → KKFileView -->
+        <mxCell id="c_bk" value="HTTP :8012" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;labelBackgroundColor=#fff2cc;" edge="1" source="backend" target="kkfileview" parent="network">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Backend → DeepSeek API (external) -->
+        <mxCell id="c_ds" value="HTTPS (外部)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#999;fontSize=10;dashed=1;exitX=1;exitY=0.8;exitDx=0;exitDy=0;" edge="1" source="backend" target="network" parent="network">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1280" y="180" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="c_ds_label" value="DeepSeek AI API" style="text;fontSize=10;fontColor=#999;" vertex="1" parent="network">
+          <mxGeometry x="1140" y="160" width="120" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== VOLUMES (Data Nodes) ===== -->
+        <mxCell id="vol_box" value="持久化数据卷 (Volumes)" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#999;fontStyle=1;fontSize=12;rounded=1;arcSize=5;dashed=1;" vertex="1" parent="network">
+          <mxGeometry x="30" y="450" width="1100" height="120" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="v_mysql" value="mysql_data&lt;br&gt;:/var/lib/mysql" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;size=10;" vertex="1" parent="vol_box">
+          <mxGeometry x="30" y="40" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="v_redis" value="redis_data&lt;br&gt;:/data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;size=10;" vertex="1" parent="vol_box">
+          <mxGeometry x="200" y="40" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="v_rabbitmq" value="rabbitmq_data&lt;br&gt;:/var/lib/rabbitmq" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;size=10;" vertex="1" parent="vol_box">
+          <mxGeometry x="370" y="40" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="v_kkfileview" value="kkfileview_data&lt;br&gt;:/opt/kkFileView-4.1.0/file" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;size=10;" vertex="1" parent="vol_box">
+          <mxGeometry x="550" y="40" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="v_backend_logs" value="backend_logs&lt;br&gt;:/app/logs" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;size=10;" vertex="1" parent="vol_box">
+          <mxGeometry x="730" y="40" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="v_public" value="./public&lt;br&gt;:/app/public" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;size=10;" vertex="1" parent="vol_box">
+          <mxGeometry x="900" y="40" width="140" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Volume connections -->
+        <mxCell id="vc1" style="strokeWidth=1;strokeColor=#b85450;dashed=1;" edge="1" source="mysql" target="v_mysql" parent="network"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="vc2" style="strokeWidth=1;strokeColor=#82b366;dashed=1;" edge="1" source="redis" target="v_redis" parent="network"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="vc3" style="strokeWidth=1;strokeColor=#9673a6;dashed=1;" edge="1" source="rabbitmq" target="v_rabbitmq" parent="network"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="vc4" style="strokeWidth=1;strokeColor=#d79b00;dashed=1;" edge="1" source="kkfileview" target="v_kkfileview" parent="network"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="vc5" style="strokeWidth=1;strokeColor=#d6b656;dashed=1;" edge="1" source="backend" target="v_backend_logs" parent="network"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="vc6" style="strokeWidth=1;strokeColor=#6c8ebf;dashed=1;" edge="1" source="backend" target="v_public" parent="network"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ===== HEALTH CHECKS ===== -->
+        <mxCell id="health_box" value="健康检查 (Health Checks)" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#999;fontStyle=1;fontSize=12;rounded=1;arcSize=5;dashed=1;" vertex="1" parent="network">
+          <mxGeometry x="30" y="600" width="1100" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="hc1" value="MySQL: mysqladmin ping&lt;br&gt;interval=5s retries=10 start=30s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="health_box">
+          <mxGeometry x="20" y="35" width="220" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="hc2" value="Redis: redis-cli ping&lt;br&gt;interval=5s retries=5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="health_box">
+          <mxGeometry x="260" y="35" width="180" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="hc3" value="RabbitMQ: check_port&lt;br&gt;interval=10s retries=20 start=90s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="health_box">
+          <mxGeometry x="460" y="35" width="220" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="hc4" value="Backend: /actuator/health&lt;br&gt;interval=15s retries=10 start=120s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="health_box">
+          <mxGeometry x="700" y="35" width="230" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- ===== DEPENDENCY ORDER ===== -->
+        <mxCell id="dep_box" value="启动依赖顺序 (depends_on)" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#999;fontStyle=1;fontSize=12;rounded=1;arcSize=5;dashed=1;" vertex="1" parent="network">
+          <mxGeometry x="30" y="730" width="1100" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="dep1" value="1. MySQL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="dep_box">
+          <mxGeometry x="30" y="35" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="dep2" value="2. Redis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="dep_box">
+          <mxGeometry x="180" y="35" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="dep3" value="3. RabbitMQ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="dep_box">
+          <mxGeometry x="330" y="35" width="120" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="dep4" value="4. Backend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="dep_box">
+          <mxGeometry x="500" y="35" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="dep5" value="5. Frontend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="dep_box">
+          <mxGeometry x="650" y="35" width="110" height="35" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="da1" style="strokeWidth=2;" edge="1" source="dep1" target="dep2" parent="dep_box"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="da2" style="strokeWidth=2;" edge="1" source="dep2" target="dep3" parent="dep_box"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="da3" style="strokeWidth=2;" edge="1" source="dep3" target="dep4" parent="dep_box"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="da4" style="strokeWidth=2;" edge="1" source="dep4" target="dep5" parent="dep_box"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- External Users -->
+        <mxCell id="browser" value="用户浏览器" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333;fontSize=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="960" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ext_conn" value="HTTP :80" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;" edge="1" source="browser" target="frontend" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

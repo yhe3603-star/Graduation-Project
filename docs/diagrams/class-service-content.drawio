@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="内容服务层类图" id="class-service-content">
+    <mxGraphModel dx="1202" dy="664" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="侗乡医药数字化展示平台 — 内容服务层类图（1/3）" vertex="1">
+          <mxGeometry height="35" width="500" x="400" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_header" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="Service 层 — 内容管理服务" vertex="1">
+          <mxGeometry height="300" width="1360" x="20" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="PlantService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;PlantServiceImpl&lt;/b&gt;&lt;br&gt;&lt;i&gt;implements PlantService&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— plantMapper : PlantMapper&lt;br&gt;— popularityAsyncService : PopularityAsyncService&lt;hr size=&#39;1&#39;&gt;+ advancedSearchPaged(keyword, category, usageWay, page, size) : Page&lt;br&gt;+ searchPaged(keyword, page, size) : Page&lt;br&gt;+ getDetailWithStory(id) : Plant&lt;br&gt;+ getSimilarPlants(id) : List&lt;br&gt;+ getRandomPlants(limit) : List&lt;br&gt;+ incrementViewCount(id) : void&lt;br&gt;+ clearCache() : void" vertex="1">
+          <mxGeometry height="190" width="260" x="10" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="KnowledgeService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;KnowledgeServiceImpl&lt;/b&gt;&lt;br&gt;&lt;i&gt;implements KnowledgeService&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— knowledgeMapper : KnowledgeMapper&lt;br&gt;— popularityAsyncService : PopularityAsyncService&lt;hr size=&#39;1&#39;&gt;+ advancedSearchPaged(keyword, therapy, disease, herb, sortBy, page, size) : Page&lt;br&gt;+ getDetailWithRelated(id) : Knowledge&lt;br&gt;+ getAllTherapies() : List&lt;br&gt;+ getAllDiseases() : List&lt;br&gt;+ pageAll(page, size, sortBy) : Page&lt;br&gt;+ incrementViewCount(id) : void" vertex="1">
+          <mxGeometry height="190" width="260" x="290" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="InheritorService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;InheritorServiceImpl&lt;/b&gt;&lt;br&gt;&lt;i&gt;implements InheritorService&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— inheritorMapper : InheritorMapper&lt;br&gt;— popularityAsyncService : PopularityAsyncService&lt;hr size=&#39;1&#39;&gt;+ advancedSearchPaged(keyword, level, sortBy, page, size) : Page&lt;br&gt;+ getDetailWithExtras(id) : Inheritor&lt;br&gt;+ listByLevel(level, sortBy) : List&lt;br&gt;+ pageByLevel(level, sortBy, page, size) : Page&lt;br&gt;+ incrementViewCount(id) : void" vertex="1">
+          <mxGeometry height="190" width="260" x="570" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ResourceService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;ResourceServiceImpl&lt;/b&gt;&lt;br&gt;&lt;i&gt;implements ResourceService&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— resourceMapper : ResourceMapper&lt;hr size=&#39;1&#39;&gt;+ pageByCategoryAndKeywordAndType(category, keyword, fileType, page, size) : Page&lt;br&gt;+ getDetail(id) : Resource&lt;br&gt;+ incrementDownload(id) : void&lt;br&gt;+ incrementViewCount(id) : void&lt;br&gt;+ getHotResources() : List&lt;br&gt;+ deleteWithFiles(id) : void&lt;br&gt;+ clearCache() : void" vertex="1">
+          <mxGeometry height="190" width="250" x="850" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="QaService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;QaServiceImpl&lt;/b&gt;&lt;br&gt;&lt;i&gt;implements QaService&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— qaMapper : QaMapper&lt;hr size=&#39;1&#39;&gt;+ advancedSearchPaged(keyword, category, page, size) : Page&lt;br&gt;+ getDetail(id) : Qa&lt;br&gt;+ pageByCategory(category, page, size) : Page&lt;br&gt;+ getStats() : Map&lt;br&gt;+ getFilterOptions() : Map&lt;br&gt;+ incrementViewCount(id) : void" vertex="1">
+          <mxGeometry height="170" width="240" x="1110" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="mapper_header" parent="1" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;" value="Mapper 层 — 内容数据访问" vertex="1">
+          <mxGeometry height="230" width="1360" x="20" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="PlantMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;PlantMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&amp;lt;Plant&amp;gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectRandom(limit) : List&lt;br&gt;+ selectByFullText(keyword, limit) : List&lt;br&gt;+ selectSimilar(id, category, limit) : List&lt;br&gt;+ selectCategoryOptions() : List&lt;br&gt;+ selectUsageWayOptions() : List&lt;br&gt;+ selectViewCountSum() : Long&lt;br&gt;+ selectFavoriteCountSum() : Long&lt;br&gt;&lt;small&gt;@Select 自定义SQL&lt;/small&gt;" vertex="1">
+          <mxGeometry height="170" width="260" x="10" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="KnowledgeMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;KnowledgeMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&amp;lt;Knowledge&amp;gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectTherapyCategoryOptions() : List&lt;br&gt;+ selectDiseaseCategoryOptions() : List&lt;br&gt;+ selectHerbCategoryOptions() : List&lt;br&gt;+ selectTypeOptions() : List&lt;br&gt;+ selectViewCountSum() : Long&lt;br&gt;+ selectFavoriteCountSum() : Long&lt;br&gt;&lt;small&gt;@Select 自定义SQL&lt;/small&gt;" vertex="1">
+          <mxGeometry height="170" width="260" x="290" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="InheritorMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;InheritorMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&amp;lt;Inheritor&amp;gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectCountByLevel(level) : Integer&lt;br&gt;+ selectViewCountSum() : Long&lt;br&gt;+ selectFavoriteCountSum() : Long&lt;br&gt;+ selectLevelOptions() : List&lt;br&gt;+ selectTopViewed(limit) : List&lt;br&gt;&lt;small&gt;@Select 自定义SQL&lt;/small&gt;" vertex="1">
+          <mxGeometry height="160" width="260" x="570" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="ResourceMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;ResourceMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&amp;lt;Resource&amp;gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectViewCountSum() : Long&lt;br&gt;+ selectFavoriteCountSum() : Long&lt;br&gt;+ selectDownloadCountSum() : Long&lt;br&gt;+ selectCategoryOptions() : List&lt;br&gt;+ selectAllFiles() : List&lt;br&gt;+ selectTotalFileSize() : Long&lt;br&gt;&lt;small&gt;@Select 自定义SQL&lt;/small&gt;" vertex="1">
+          <mxGeometry height="170" width="250" x="850" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="QaMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;QaMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&amp;lt;Qa&amp;gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectCategoryOptions() : List&lt;br&gt;+ selectViewCountSum() : Long&lt;br&gt;+ selectFavoriteCountSum() : Long&lt;br&gt;+ selectTopPopular(limit) : List&lt;br&gt;&lt;small&gt;@Select 自定义SQL&lt;/small&gt;" vertex="1">
+          <mxGeometry height="140" width="240" x="1110" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm1" edge="1" parent="1" source="PlantService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="PlantMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm2" edge="1" parent="1" source="KnowledgeService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="KnowledgeMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm3" edge="1" parent="1" source="InheritorService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="InheritorMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm4" edge="1" parent="1" source="ResourceService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="ResourceMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm5" edge="1" parent="1" source="QaService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="QaMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" parent="1" style="text;html=1;fontSize=10;align=left;" value="&lt;span style=&#39;color:#d6b656&#39;&gt;■&lt;/span&gt; Service 层（业务逻辑）&amp;nbsp;&amp;nbsp;&lt;span style=&#39;color:#9673a6&#39;&gt;■&lt;/span&gt; Mapper 层（数据访问）&amp;nbsp;&amp;nbsp;&lt;i&gt;- - -&lt;/i&gt; 依赖关系" vertex="1">
+          <mxGeometry height="20" width="500" x="20" y="650" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

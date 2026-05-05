@@ -1,0 +1,221 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="E-R图" id="er-diagram">
+    <mxGraphModel dx="1278" dy="705" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=22;fontStyle=1;align=center;" value="侗乡医药数字化展示平台 — E-R图" vertex="1">
+          <mxGeometry height="40" width="500" x="700" y="15" as="geometry" />
+        </mxCell>
+        <mxCell id="domain_user" parent="1" style="swimlane;startSize=28;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;rounded=1;arcSize=10;" value="用户域" vertex="1">
+          <mxGeometry height="480" width="320" x="30" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="users" parent="domain_user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;users (用户表)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;username VARCHAR(20) UNIQUE&lt;br&gt;password_hash VARCHAR(100)&lt;br&gt;role VARCHAR(20) DEFAULT &#39;user&#39;&lt;br&gt;status VARCHAR(20) DEFAULT &#39;active&#39;&lt;br&gt;created_at DATETIME&lt;br&gt;updated_at DATETIME" vertex="1">
+          <mxGeometry height="180" width="280" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="chat_history" parent="domain_user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;chat_history (聊天记录)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id BIGINT AUTO_INCREMENT&lt;br&gt;FK user_id INT → users&lt;br&gt;session_id VARCHAR(64)&lt;br&gt;role VARCHAR(20)&lt;br&gt;content TEXT&lt;br&gt;created_at DATETIME" vertex="1">
+          <mxGeometry height="140" width="280" x="20" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="search_history" parent="domain_user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;search_history (搜索记录)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id BIGINT AUTO_INCREMENT&lt;br&gt;FK user_id INT (可空)&lt;br&gt;keyword VARCHAR(200)&lt;br&gt;created_at DATETIME" vertex="1">
+          <mxGeometry height="100" width="280" x="20" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="domain_content" parent="1" style="swimlane;startSize=28;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=14;rounded=1;arcSize=10;" value="内容域" vertex="1">
+          <mxGeometry height="480" width="820" x="380" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="plants" parent="domain_content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;plants (药用植物)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;name_cn VARCHAR(100)&lt;br&gt;name_dong VARCHAR(100)&lt;br&gt;scientific_name VARCHAR(200)&lt;br&gt;category VARCHAR(20)&lt;br&gt;usage_way VARCHAR(20)&lt;br&gt;habitat VARCHAR(200)&lt;br&gt;efficacy VARCHAR(500)&lt;br&gt;story VARCHAR(2000)&lt;br&gt;images/videos/documents TEXT&lt;br&gt;distribution TEXT&lt;br&gt;difficulty VARCHAR(20)&lt;br&gt;update_log TEXT&lt;br&gt;view_count INT&lt;br&gt;favorite_count INT&lt;br&gt;popularity INT&lt;br&gt;created_at/updated_at DATETIME" vertex="1">
+          <mxGeometry height="320" width="250" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="knowledge" parent="domain_content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;knowledge (知识体系)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;title VARCHAR(200)&lt;br&gt;type VARCHAR(20)&lt;br&gt;therapy_category VARCHAR(50)&lt;br&gt;disease_category VARCHAR(50)&lt;br&gt;herb_category VARCHAR(50)&lt;br&gt;content TEXT&lt;br&gt;formula TEXT&lt;br&gt;usage_method TEXT&lt;br&gt;steps TEXT&lt;br&gt;images/videos/documents TEXT&lt;br&gt;related_plants TEXT&lt;br&gt;update_log TEXT&lt;br&gt;view_count INT&lt;br&gt;favorite_count INT&lt;br&gt;popularity INT" vertex="1">
+          <mxGeometry height="320" width="250" x="290" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="inheritors" parent="domain_content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;inheritors (传承人)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;name VARCHAR(50)&lt;br&gt;level VARCHAR(20)&lt;br&gt;bio VARCHAR(1000)&lt;br&gt;specialties VARCHAR(500)&lt;br&gt;experience_years INT&lt;br&gt;videos/images/documents TEXT&lt;br&gt;representative_cases TEXT&lt;br&gt;honors VARCHAR(1000)&lt;br&gt;update_log TEXT&lt;br&gt;view_count INT&lt;br&gt;favorite_count INT&lt;br&gt;popularity INT" vertex="1">
+          <mxGeometry height="280" width="240" x="560" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="resources" parent="domain_content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;resources (学习资源)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;title VARCHAR(200)&lt;br&gt;category VARCHAR(20)&lt;br&gt;files TEXT&lt;br&gt;description VARCHAR(1000)&lt;br&gt;update_log TEXT&lt;br&gt;download_count INT&lt;br&gt;view_count INT&lt;br&gt;favorite_count INT&lt;br&gt;popularity INT" vertex="1">
+          <mxGeometry height="180" width="240" x="20" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="qa" parent="domain_content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;qa (智能问答)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;category VARCHAR(50)&lt;br&gt;question TEXT&lt;br&gt;answer TEXT&lt;br&gt;view_count INT&lt;br&gt;favorite_count INT&lt;br&gt;popularity INT" vertex="1">
+          <mxGeometry height="150" width="240" x="290" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_kp" edge="1" parent="domain_content" source="knowledge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#82b366;dashed=1;fontSize=9;" target="plants" value="related_plants">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r_ufe" edge="1" parent="domain_content" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=1;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=-0.004;entryY=0.569;entryDx=0;entryDy=0;entryPerimeter=0;" target="feedback" value="1 : N">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-10" y="180" />
+              <mxPoint x="-10" y="365" />
+              <mxPoint x="820" y="365" />
+              <mxPoint x="820" y="469" />
+            </Array>
+            <mxPoint x="-50" y="179.9999999999999" as="sourcePoint" />
+            <mxPoint x="870" y="413.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="domain_inter" parent="1" style="swimlane;startSize=28;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=14;rounded=1;arcSize=10;" value="交互域" vertex="1">
+          <mxGeometry height="480" width="590" x="1230" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="comments" parent="domain_inter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;comments (评论表)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;FK user_id INT → users&lt;br&gt;username VARCHAR(50)&lt;br&gt;target_type VARCHAR(50)&lt;br&gt;target_id INT&lt;br&gt;content VARCHAR(1000)&lt;br&gt;FK reply_to_id INT → comments&lt;br&gt;reply_to_user_id INT&lt;br&gt;reply_to_username VARCHAR(50)&lt;br&gt;likes INT DEFAULT 0&lt;br&gt;reply_count INT DEFAULT 0&lt;br&gt;status VARCHAR(20) DEFAULT &#39;approved&#39;&lt;br&gt;created_at/updated_at DATETIME&lt;hr size=&#39;1&#39;&gt;&lt;small&gt;INDEX idx_target(target_type, target_id)&lt;/small&gt;" vertex="1">
+          <mxGeometry height="250" width="260" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="favorites" parent="domain_inter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;favorites (收藏表)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;FK user_id INT → users&lt;br&gt;target_type VARCHAR(50)&lt;br&gt;target_id INT&lt;br&gt;created_at DATETIME&lt;br&gt;updated_at DATETIME&lt;hr size=&#39;1&#39;&gt;&lt;small&gt;UNIQUE (user_id, target_type, target_id)&lt;/small&gt;&lt;br&gt;&lt;small&gt;INDEX idx_target(target_type, target_id)&lt;/small&gt;" vertex="1">
+          <mxGeometry height="200" width="140" x="300" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="feedback" parent="domain_inter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;feedback (反馈表)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;FK user_id INT (可空)&lt;br&gt;user_name VARCHAR(50)&lt;br&gt;type VARCHAR(20)&lt;br&gt;title VARCHAR(200)&lt;br&gt;content TEXT&lt;br&gt;contact VARCHAR(100)&lt;br&gt;status VARCHAR(20)&lt;br&gt;reply TEXT&lt;br&gt;created_at DATETIME&lt;br&gt;updated_at DATETIME" vertex="1">
+          <mxGeometry height="170" width="260" x="20" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="comment_self" edge="1" parent="domain_inter" source="comments" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#d6b656;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" target="comments">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="comment_self_label" connectable="0" parent="comment_self" style="edgeLabel;fontSize=8;fontColor=#d6b656;" value="自引用(reply)" vertex="1">
+          <mxGeometry relative="1" x="-0.3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="poly_note" parent="domain_inter" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=20;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="&lt;b&gt;多态关联关系&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;comments, favorites, browse_history&lt;br&gt;使用 target_type + target_id 字段&lt;br&gt;关联到以下实体:&lt;br&gt;• plant (药用植物)&lt;br&gt;• knowledge (知识体系)&lt;br&gt;• inheritor (传承人)&lt;br&gt;• resource (学习资源)&lt;br&gt;• qa (智能问答)&lt;br&gt;• quiz (测验)" vertex="1">
+          <mxGeometry height="200" width="250" x="300" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="kXd8iuNT_8PJNE84L2iN-7" edge="1" parent="domain_inter" source="comments" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;entryX=0.005;entryY=0.159;entryDx=0;entryDy=0;entryPerimeter=0;" target="poly_note" value="target_type">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1155" y="311" as="sourcePoint" />
+            <mxPoint x="270" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kXd8iuNT_8PJNE84L2iN-8" edge="1" parent="domain_inter" source="favorites" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;exitX=0.997;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.604;entryY=-0.011;entryDx=0;entryDy=0;entryPerimeter=0;" target="poly_note" value="target_type">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="290" y="260" as="sourcePoint" />
+            <mxPoint x="311" y="397" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="domain_track" parent="1" style="swimlane;startSize=28;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;rounded=1;arcSize=10;" value="追踪域" vertex="1">
+          <mxGeometry height="280" width="720" x="30" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="browse_history" parent="domain_track" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;browse_history (浏览记录)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id BIGINT AUTO_INCREMENT&lt;br&gt;FK user_id INT → users&lt;br&gt;target_type VARCHAR(50)&lt;br&gt;target_id INT&lt;br&gt;created_at DATETIME" vertex="1">
+          <mxGeometry height="130" width="220" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="operation_log" parent="domain_track" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;operation_log (操作日志)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;user_id INT&lt;br&gt;username VARCHAR(50)&lt;br&gt;module VARCHAR(50)&lt;br&gt;operation VARCHAR(100)&lt;br&gt;type VARCHAR(20)&lt;br&gt;method VARCHAR(200)&lt;br&gt;params TEXT&lt;br&gt;ip VARCHAR(50)&lt;br&gt;duration INT&lt;br&gt;success BOOLEAN&lt;br&gt;error_msg TEXT&lt;br&gt;created_at/updated_at DATETIME" vertex="1">
+          <mxGeometry height="200" width="240" x="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="domain_quiz" parent="1" style="swimlane;startSize=28;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=14;rounded=1;arcSize=10;" value="测验域" vertex="1">
+          <mxGeometry height="280" width="740" x="770" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="quiz_questions" parent="domain_quiz" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;quiz_questions (题库)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;question TEXT&lt;br&gt;options TEXT (JSON数组)&lt;br&gt;answer VARCHAR(500)&lt;br&gt;category VARCHAR(50)&lt;br&gt;difficulty VARCHAR(20)&lt;br&gt;correct_answer VARCHAR(10)&lt;br&gt;explanation TEXT&lt;br&gt;updated_at DATETIME" vertex="1">
+          <mxGeometry height="180" width="220" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="quiz_record" parent="domain_quiz" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;quiz_record (答题记录)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;FK user_id INT → users&lt;br&gt;score INT&lt;br&gt;total_questions INT&lt;br&gt;correct_answers INT&lt;br&gt;created_at DATETIME&lt;br&gt;updated_at DATETIME" vertex="1">
+          <mxGeometry height="140" width="220" x="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="plant_game_record" parent="domain_quiz" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;plant_game_record (游戏记录)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;FK user_id INT → users&lt;br&gt;difficulty VARCHAR(20)&lt;br&gt;score INT&lt;br&gt;correct_count INT&lt;br&gt;total_count INT&lt;br&gt;created_at DATETIME&lt;br&gt;updated_at DATETIME" vertex="1">
+          <mxGeometry height="160" width="220" x="500" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="domain_view" parent="1" style="swimlane;startSize=28;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=14;rounded=1;arcSize=10;" value="视图" vertex="1">
+          <mxGeometry height="400" width="340" x="1550" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="v_hot_plants" parent="domain_view" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;v_hot_plants&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;&lt;small&gt;SELECT p.*, COUNT(f.id) AS favorite_count&lt;br&gt;FROM plants p LEFT JOIN favorites f&lt;br&gt;ON f.target_type=&#39;plant&#39; AND f.target_id=p.id&lt;br&gt;GROUP BY p.id&lt;br&gt;ORDER BY favorite_count DESC LIMIT 20&lt;/small&gt;" vertex="1">
+          <mxGeometry height="110" width="300" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="v_hot_knowledge" parent="domain_view" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;v_hot_knowledge&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;&lt;small&gt;SELECT k.*, COUNT(f.id) AS favorite_count&lt;br&gt;FROM knowledge k LEFT JOIN favorites f&lt;br&gt;ON f.target_type=&#39;knowledge&#39; AND f.target_id=k.id&lt;br&gt;GROUP BY k.id&lt;br&gt;ORDER BY popularity DESC LIMIT 20&lt;/small&gt;" vertex="1">
+          <mxGeometry height="110" width="300" x="20" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="v_user_stats" parent="domain_view" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;v_user_stats&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;&lt;small&gt;SELECT u.id, u.username,&lt;br&gt;COUNT(DISTINCT qr.id) AS quiz_count,&lt;br&gt;AVG(qr.score) AS avg_quiz_score,&lt;br&gt;COUNT(DISTINCT pgr.id) AS game_count,&lt;br&gt;AVG(pgr.score) AS avg_game_score,&lt;br&gt;COUNT(DISTINCT f.id) AS favorite_count&lt;br&gt;FROM users u&lt;br&gt;LEFT JOIN quiz_record qr ON qr.user_id=u.id&lt;br&gt;LEFT JOIN plant_game_record pgr ON pgr.user_id=u.id&lt;br&gt;LEFT JOIN favorites f ON f.user_id=u.id&lt;br&gt;GROUP BY u.id, u.username&lt;/small&gt;" vertex="1">
+          <mxGeometry height="100" width="300" x="20" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="r_uc" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=1;" value="1 : N">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="142" />
+              <mxPoint x="1250" y="142" />
+            </Array>
+            <mxPoint x="330" y="142" as="sourcePoint" />
+            <mxPoint x="1250" y="142" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r_uf" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=1;" value="1 : N">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="170" />
+            </Array>
+            <mxPoint x="330" y="170" as="sourcePoint" />
+            <mxPoint x="1530" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r_uch" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="chat_history" value="1 : N">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r_ush" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="search_history" value="1 : N">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="460" />
+              <mxPoint x="190" y="460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r_ubh" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="browse_history" value="1 : N">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="288" />
+            </Array>
+            <mxPoint x="160" y="290" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r_uqr" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="quiz_record" value="1 : N">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="290" />
+              <mxPoint x="230" y="560" />
+              <mxPoint x="1140" y="560" />
+            </Array>
+            <mxPoint x="230" y="290" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r_upgr" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333;fontSize=10;fontStyle=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="plant_game_record" value="1 : N">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="120" y="570" />
+              <mxPoint x="1380" y="570" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="poly_arr1" edge="1" parent="1" source="poly_note" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;exitX=-0.004;exitY=0.403;exitDx=0;exitDy=0;exitPerimeter=0;" target="inheritors" value="target_type">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="kXd8iuNT_8PJNE84L2iN-3" edge="1" parent="1" source="poly_note" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;" target="knowledge" value="target_type">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="2340" y="310" as="sourcePoint" />
+            <mxPoint x="1790" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kXd8iuNT_8PJNE84L2iN-4" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;" target="qa" value="target_type">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1530" y="460" as="sourcePoint" />
+            <mxPoint x="1610" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kXd8iuNT_8PJNE84L2iN-5" edge="1" parent="1" source="poly_note" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;entryX=0.996;entryY=0.288;entryDx=0;entryDy=0;entryPerimeter=0;exitX=-0.005;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;" target="resources" value="target_type">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1540" y="500" as="sourcePoint" />
+            <mxPoint x="640" y="549.9999999999998" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kXd8iuNT_8PJNE84L2iN-6" edge="1" parent="1" source="poly_note" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;exitX=0.008;exitY=0.233;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.986;entryY=0.861;entryDx=0;entryDy=0;entryPerimeter=0;" target="plants" value="target_type">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="2390" y="500" as="sourcePoint" />
+            <mxPoint x="1500" y="502" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kXd8iuNT_8PJNE84L2iN-11" edge="1" parent="1" source="browse_history" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" target="poly_note" value="target_type">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1680" y="310" as="sourcePoint" />
+            <mxPoint x="1691" y="378" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kXd8iuNT_8PJNE84L2iN-13" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#000000;dashed=1;fontSize=9;exitX=0.997;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.604;entryY=-0.011;entryDx=0;entryDy=0;entryPerimeter=0;" value="target_type">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="360" y="670" as="sourcePoint" />
+            <mxPoint x="371" y="738" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

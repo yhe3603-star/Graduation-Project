@@ -1,0 +1,91 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="AI智能问诊模块" id="mod-ai-chat">
+    <mxGraphModel dx="1022" dy="564" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="750" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="AI智能问诊模块 — 功能详细" vertex="1">
+          <mxGeometry height="30" width="400" x="150" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="ws_box" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;rounded=1;" value="WebSocket通信 — ChatWebSocketHandler" vertex="1">
+          <mxGeometry height="300" width="340" x="20" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="w1" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="WebSocket连接&lt;br&gt;&lt;small&gt;ws://host/ws/chat?token=xxx&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="w2" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="发送消息&lt;br&gt;&lt;small&gt;{sessionId, content}&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="175" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="w3" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="流式响应&lt;br&gt;&lt;small&gt;逐token推送&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="w4" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="发送[DONE]结束&lt;br&gt;&lt;small&gt;流结束标记&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="175" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="w5" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="登录校验&lt;br&gt;&lt;small&gt;握手时验证Token&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="10" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="w6" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="历史上下文加载&lt;br&gt;&lt;small&gt;加载session历史消息&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="175" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="w7" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="System Prompt&lt;br&gt;&lt;small&gt;中医药专家角色设定&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="85" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="w8" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="消息持久化&lt;br&gt;&lt;small&gt;INSERT chat_history&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="85" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="w9" parent="ws_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="XSS防护&lt;br&gt;&lt;small&gt;DOMPurify过滤输出&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="170" x="85" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="api_box" parent="1" style="swimlane;startSize=25;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;rounded=1;" value="DeepSeek API调用 — WebClient" vertex="1">
+          <mxGeometry height="200" width="300" x="380" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" parent="api_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="POST /v1/chat/completions&lt;br&gt;&lt;small&gt;stream=true&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" parent="api_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="SSE流式读取&lt;br&gt;&lt;small&gt;data: {choices[0].delta}&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="155" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" parent="api_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="WebClient&lt;br&gt;&lt;small&gt;Spring WebFlux异步&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="10" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" parent="api_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="API Key配置&lt;br&gt;&lt;small&gt;application.yml&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="155" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" parent="api_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="超时/重试处理&lt;br&gt;&lt;small&gt;异常捕获&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="80" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="hist_box" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;rounded=1;" value="会话管理 — ChatHistoryController" vertex="1">
+          <mxGeometry height="170" width="340" x="20" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="h1" parent="hist_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="会话列表&lt;br&gt;&lt;small&gt;GET /api/chat-history/sessions&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="h2" parent="hist_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="会话详情&lt;br&gt;&lt;small&gt;GET /api/chat-history/sessions/{id}&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="175" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="h3" parent="hist_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="删除会话&lt;br&gt;&lt;small&gt;DELETE /api/chat-history/sessions/{id}&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="h4" parent="hist_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="聊天统计&lt;br&gt;&lt;small&gt;GET /api/chat/stats&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="155" x="175" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="fe_box" parent="1" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;rounded=1;" value="前端展示 — Vue组件" vertex="1">
+          <mxGeometry height="170" width="300" x="380" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="fe1" parent="fe_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="Marked渲染Markdown&lt;br&gt;&lt;small&gt;代码块/表格/列表&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fe2" parent="fe_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="DOMPurify过滤&lt;br&gt;&lt;small&gt;XSS防护&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="155" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fe3" parent="fe_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="打字动画效果&lt;br&gt;&lt;small&gt;光标闪烁&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="fe4" parent="fe_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="断线自动重连&lt;br&gt;&lt;small&gt;WebSocket重连机制&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="155" y="75" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

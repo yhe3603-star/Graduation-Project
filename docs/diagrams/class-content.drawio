@@ -1,0 +1,40 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="内容Controller" id="class-ctrl-content">
+    <mxGraphModel dx="1202" dy="664" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="Controller层类图 — &lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;内容展示（1/4）&lt;/span&gt;" vertex="1">
+          <mxGeometry height="35" width="400" x="240" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="PlantController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;PlantController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/plants&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— service : PlantService&lt;br&gt;— browseHistoryService : BrowseHistoryService&lt;br&gt;— popularityAsyncService : PopularityAsyncService&lt;hr size=&#39;1&#39;&gt;+ list(page, size, category, usageWay, keyword) : R&lt;Map&gt;&lt;br&gt;+ search(keyword, page, size) : R&lt;Map&gt;&lt;br&gt;+ detail(id) : R&lt;Plant&gt;&lt;br&gt;+ similar(id) : R&lt;List&gt;&lt;br&gt;+ random(limit) : R&lt;List&gt;&lt;br&gt;+ batch(ids) : R&lt;List&gt;&lt;br&gt;+ incrementView(id) : R&lt;String&gt;  @RateLimit(10)" vertex="1">
+          <mxGeometry height="190" width="280" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KnowledgeController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;KnowledgeController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/knowledge&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— service : KnowledgeService&lt;hr size=&#39;1&#39;&gt;+ list(page, size, sortBy, keyword, therapy, disease, herb) : R&lt;Map&gt;&lt;br&gt;+ search(keyword, therapy, disease, herb, sortBy, page, size) : R&lt;Map&gt;&lt;br&gt;+ detail(id) : R&lt;Knowledge&gt;&lt;br&gt;+ incrementView(id) : R&lt;String&gt;  @RateLimit(10)&lt;br&gt;+ favorite(id) : R&lt;String&gt;  @SaCheckLogin&lt;br&gt;+ feedback(knowledgeId, content) : R&lt;String&gt;  @SaCheckLogin" vertex="1">
+          <mxGeometry height="180" width="280" x="330" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="InheritorController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;InheritorController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/inheritors&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— service : InheritorService&lt;hr size=&#39;1&#39;&gt;+ list(page, size, level, keyword, sortBy) : R&lt;Map&gt;&lt;br&gt;+ search(keyword, page, size) : R&lt;Map&gt;&lt;br&gt;+ detail(id) : R&lt;Inheritor&gt;&lt;br&gt;+ incrementView(id) : R&lt;String&gt;  @RateLimit(10)" vertex="1">
+          <mxGeometry height="150" width="230" x="330" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="ResourceController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;ResourceController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/resources&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— service : ResourceService&lt;hr size=&#39;1&#39;&gt;+ list(page, size, category, keyword, fileType) : R&lt;Map&gt;&lt;br&gt;+ hot() : R&lt;List&gt;&lt;br&gt;+ search(keyword, page, size) : R&lt;Map&gt;&lt;br&gt;+ getById(id) : R&lt;Resource&gt;&lt;br&gt;+ incrementView(id) : R&lt;String&gt;  @RateLimit(10)&lt;br&gt;+ download(id, response) : void&lt;br&gt;+ batchDownload(body, response) : void&lt;br&gt;+ incrementDownload(id) : R&lt;String&gt;&lt;br&gt;+ getFileTypes() : R&lt;List&gt;&lt;br&gt;+ getCategories() : R&lt;List&gt;" vertex="1">
+          <mxGeometry height="200" width="270" x="30" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="QaController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;QaController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/qa&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— service : QaService&lt;hr size=&#39;1&#39;&gt;+ list(page, size, category, keyword) : R&lt;Map&gt;&lt;br&gt;+ search(keyword, page, size) : R&lt;Map&gt;&lt;br&gt;+ detail(id) : R&lt;Qa&gt;&lt;br&gt;+ incrementView(id) : R&lt;String&gt;  @RateLimit(10)" vertex="1">
+          <mxGeometry height="140" width="220" x="600" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="StatisticsController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;StatisticsController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/stats&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— service : StatsService&lt;hr size=&#39;1&#39;&gt;+ getOverview() : R&lt;Map&gt;&lt;br&gt;+ getChartData() : R&lt;Map&gt;&lt;br&gt;+ getVisitTrend() : R&lt;Map&gt;&lt;br&gt;+ plantStats() : R&lt;Map&gt;&lt;br&gt;+ knowledgeStats() : R&lt;Map&gt;&lt;br&gt;+ qaStats() : R&lt;Map&gt;&lt;br&gt;+ inheritorStats() : R&lt;Map&gt;&lt;br&gt;+ resourceStats() : R&lt;Map&gt;" vertex="1">
+          <mxGeometry height="190" width="180" x="640" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="MetadataController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;MetadataController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/metadata&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— service : MetadataService&lt;hr size=&#39;1&#39;&gt;+ getAllFilters() : R&lt;Map&gt;  @Cacheable&lt;br&gt;+ getFeatured() : R&lt;Map&gt;  @Cacheable" vertex="1">
+          <mxGeometry height="140" width="220" x="330" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="SearchController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;SearchController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/search&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— searchService : SearchService&lt;hr size=&#39;1&#39;&gt;+ suggest(keyword) : R&lt;List&gt;&lt;br&gt;+ hotKeywords(limit) : R&lt;List&gt;" vertex="1">
+          <mxGeometry height="130" width="200" x="610" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="CaptchaController" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;CaptchaController&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestController /api/captcha&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— captchaService : CaptchaService&lt;hr size=&#39;1&#39;&gt;+ getCaptcha() : R&lt;CaptchaDTO&gt;  @RateLimit(30)" vertex="1">
+          <mxGeometry height="90" width="200" x="40" y="470" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

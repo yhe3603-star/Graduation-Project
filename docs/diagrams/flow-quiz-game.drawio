@@ -1,0 +1,348 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="答题与游戏流程" id="flow-quiz-game">
+    <mxGraphModel dx="705" dy="389" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="知识答题与识药小游戏流程" vertex="1">
+          <mxGeometry height="35" width="400" x="190" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="quiz_title" parent="1" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;" value="知识答题流程" vertex="1">
+          <mxGeometry height="30" width="130" x="105" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="q_start" parent="1" style="ellipse;fillColor=#b85450;fontColor=#fff;fontSize=11;" value="开始" vertex="1">
+          <mxGeometry height="35" width="70" x="135" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f1" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="进入答题页面(Q.vue)" vertex="1">
+          <mxGeometry height="35" width="140" x="100" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="q_d0" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="选择难度?" vertex="1">
+          <mxGeometry height="55" width="110" x="115" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="q_easy" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="初级(10题×10分)" vertex="1">
+          <mxGeometry height="28" width="100" x="10" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="q_medium" parent="1" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="中级(20题×15分)" vertex="1">
+          <mxGeometry height="28" width="100" x="120" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="q_hard" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="高级(30题×20分)" vertex="1">
+          <mxGeometry height="28" width="100" x="230" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f2" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="GET /api/quiz/questions&#xa;?count=N&amp;scorePerQuestion=M" vertex="1">
+          <mxGeometry height="35" width="150" x="95" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f3" parent="1" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="随机抽取题目&#xa;(ORDER BY RAND() LIMIT N)" vertex="1">
+          <mxGeometry height="35" width="160" x="90" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f4" parent="1" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="启动5分钟倒计时(useCountdown)" vertex="1">
+          <mxGeometry height="35" width="150" x="95" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f5" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="逐题展示,用户选择答案" vertex="1">
+          <mxGeometry height="35" width="140" x="100" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="q_d2" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="时间到?" vertex="1">
+          <mxGeometry height="55" width="110" x="115" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="q_auto" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="自动提交已答题目&#xa;(autoSubmit)" vertex="1">
+          <mxGeometry height="35" width="140" x="247.5" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f6" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="POST /api/quiz/submit&#xa;{answers, scorePerQuestion}" vertex="1">
+          <mxGeometry height="35" width="160" x="90" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f7" parent="1" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="后端判题计分&#xa;case-insensitive比对答案" vertex="1">
+          <mxGeometry height="35" width="160" x="90" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="q_d1" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="已登录?" vertex="1">
+          <mxGeometry height="50" width="100" x="115" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f8" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="INSERT INTO quiz_record&#xa;保存成绩" vertex="1">
+          <mxGeometry height="35" width="140" x="95" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f9" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="返回成绩+解析&#xa;{score, correctCount, total}" vertex="1">
+          <mxGeometry height="35" width="170" x="85" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="q_f10" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="展示结果等级&#xa;(≥90优秀/≥70良好/≥60及格/&lt;60需努力)" vertex="1">
+          <mxGeometry height="40" width="180" x="80" y="1020" as="geometry" />
+        </mxCell>
+        <mxCell id="q_end" parent="1" style="ellipse;fillColor=#b85450;fontColor=#fff;fontSize=11;" value="完成" vertex="1">
+          <mxGeometry height="35" width="70" x="135" y="1090" as="geometry" />
+        </mxCell>
+        <mxCell id="qc0" edge="1" parent="1" source="q_start" style="strokeWidth=1.5;" target="q_f1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc0b" edge="1" parent="1" source="q_f1" style="strokeWidth=1.5;" target="q_d0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc0c" edge="1" parent="1" source="q_d0" style="strokeWidth=1.5;fontSize=9;" target="q_easy" value="初级">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc0d" edge="1" parent="1" source="q_d0" style="strokeWidth=1.5;fontSize=9;" target="q_medium" value="中级">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc0e" edge="1" parent="1" source="q_d0" style="strokeWidth=1.5;fontSize=9;" target="q_hard" value="高级">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc0f" edge="1" parent="1" source="q_easy" style="strokeWidth=1.5;" target="q_f2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="60" y="388" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qc0g" edge="1" parent="1" source="q_medium" style="strokeWidth=1.5;" target="q_f2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc0h" edge="1" parent="1" source="q_hard" style="strokeWidth=1.5;" target="q_f2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="280" y="388" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qc1" edge="1" parent="1" source="q_f2" style="strokeWidth=1.5;" target="q_f3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc2" edge="1" parent="1" source="q_f3" style="strokeWidth=1.5;" target="q_f4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc3" edge="1" parent="1" source="q_f4" style="strokeWidth=1.5;" target="q_f5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc3b" edge="1" parent="1" source="q_f5" style="strokeWidth=1.5;" target="q_d2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc3c" edge="1" parent="1" source="q_d2" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" target="q_f5" value="否">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="80" y="638" />
+              <mxPoint x="80" y="568" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qc3d" edge="1" parent="1" source="q_d2" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;" target="q_auto" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc3e" edge="1" parent="1" source="q_auto" style="strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="q_f6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="718" />
+            </Array>
+            <mxPoint x="320" y="660" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qc4" edge="1" parent="1" source="q_d2" style="strokeWidth=1.5;" target="q_f6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc5" edge="1" parent="1" source="q_f6" style="strokeWidth=1.5;" target="q_f7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc6" edge="1" parent="1" source="q_f7" style="strokeWidth=1.5;" target="q_d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc7" edge="1" parent="1" source="q_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;" target="q_f8" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc8" edge="1" parent="1" source="q_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="q_f9" value="否">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="845" />
+              <mxPoint x="290" y="978" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qc9" edge="1" parent="1" source="q_f8" style="strokeWidth=1.5;" target="q_f9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc10" edge="1" parent="1" source="q_f9" style="strokeWidth=1.5;" target="q_f10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qc11" edge="1" parent="1" source="q_f10" style="strokeWidth=1.5;" target="q_end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="game_title" parent="1" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" value="识药小游戏流程" vertex="1">
+          <mxGeometry height="30" width="140" x="517.5" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="g_start" parent="1" style="ellipse;fillColor=#82b366;fontColor=#fff;fontSize=11;" value="开始" vertex="1">
+          <mxGeometry height="35" width="70" x="557.5" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f1" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="进入识药小游戏页面" vertex="1">
+          <mxGeometry height="35" width="140" x="522.5" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="g_d1" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="选择难度?" vertex="1">
+          <mxGeometry height="55" width="110" x="537.5" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="g_easy" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="初级(3选项)" vertex="1">
+          <mxGeometry height="28" width="80" x="450" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="g_medium" parent="1" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="中级(4选项)" vertex="1">
+          <mxGeometry height="28" width="80" x="557.5" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="g_hard" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="高级(5选项)" vertex="1">
+          <mxGeometry height="28" width="80" x="657.5" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f1b" parent="1" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="启动3分钟倒计时&#xa;(useCountdown)" vertex="1">
+          <mxGeometry height="35" width="147.5" x="522.5" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f2" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="GET /api/plants/random?count=N&#xa; 随机获取植物" vertex="1">
+          <mxGeometry height="35" width="220" x="487.5" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f3" parent="1" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="展示植物图片+N个名称选项(含正确答案)" vertex="1">
+          <mxGeometry height="35" width="192.5" x="500" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f4" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="用户选择正确名称" vertex="1">
+          <mxGeometry height="30" width="140" x="527.5" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="g_d4" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="正确?" vertex="1">
+          <mxGeometry height="45" width="90" x="555" y="606.5" as="geometry" />
+        </mxCell>
+        <mxCell id="g_streak" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="连击+1, 得分=&#xa;base+min(streak-1,5)×2" vertex="1">
+          <mxGeometry height="35" width="140" x="387.5" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="g_reset" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="连击归零" vertex="1">
+          <mxGeometry height="28" width="80" x="677.5" y="615" as="geometry" />
+        </mxCell>
+        <mxCell id="g_d2" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="时间到?" vertex="1">
+          <mxGeometry height="50" width="100" x="546.25" y="677.5" as="geometry" />
+        </mxCell>
+        <mxCell id="g_auto" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="自动结束游戏&#xa;(autoEndGame)" vertex="1">
+          <mxGeometry height="35" width="110" x="702.5" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f6" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="POST /api/plant-game/submit&#xa;{score, correctCount, totalCount, difficulty}" vertex="1">
+          <mxGeometry height="35" width="190" x="502.5" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f6b" parent="1" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="后端计算正确率&#xa;score=correct/total×100" vertex="1">
+          <mxGeometry height="35" width="160" x="517.5" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="g_d3" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="已登录?" vertex="1">
+          <mxGeometry height="50" width="100" x="550" y="885" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f7" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="INSERT INTOplant_game_record" vertex="1">
+          <mxGeometry height="35" width="145" x="527.5" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="g_f8" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="展示游戏结果" vertex="1">
+          <mxGeometry height="35" width="140" x="530" y="1020" as="geometry" />
+        </mxCell>
+        <mxCell id="g_end" parent="1" style="ellipse;fillColor=#82b366;fontColor=#fff;fontSize=11;" value="完成" vertex="1">
+          <mxGeometry height="35" width="70" x="565" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="gc0" edge="1" parent="1" source="g_start" style="strokeWidth=1.5;" target="g_f1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc1" edge="1" parent="1" source="g_f1" style="strokeWidth=1.5;" target="g_d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc2" edge="1" parent="1" source="g_d1" style="strokeWidth=1.5;fontSize=9;" target="g_easy" value="初级">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc3" edge="1" parent="1" source="g_d1" style="strokeWidth=1.5;fontSize=9;" target="g_medium" value="中级">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc4" edge="1" parent="1" source="g_d1" style="strokeWidth=1.5;fontSize=9;" target="g_hard" value="高级">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc5" edge="1" parent="1" source="g_easy" style="strokeWidth=1.5;" target="g_f1b">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="490" y="388" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gc6" edge="1" parent="1" source="g_medium" style="strokeWidth=1.5;" target="g_f1b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc7" edge="1" parent="1" source="g_hard" style="strokeWidth=1.5;entryX=1.002;entryY=0.638;entryDx=0;entryDy=0;entryPerimeter=0;" target="g_f1b">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="392" />
+              <mxPoint x="690" y="392" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gc7b" edge="1" parent="1" source="g_f1b" style="strokeWidth=1.5;" target="g_f2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc8" edge="1" parent="1" source="g_f2" style="strokeWidth=1.5;" target="g_f3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc9" edge="1" parent="1" source="g_f3" style="strokeWidth=1.5;" target="g_f4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc10" edge="1" parent="1" source="g_f4" style="strokeWidth=1.5;" target="g_d4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc10b" edge="1" parent="1" source="g_d4" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;" target="g_streak" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc10c" edge="1" parent="1" source="g_d4" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;" target="g_reset" value="否">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc10d" edge="1" parent="1" source="g_streak" style="strokeWidth=1.5;" target="g_d2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="457.5" y="705" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gc10e" edge="1" parent="1" source="g_reset" style="strokeWidth=1.5;entryX=0.83;entryY=0.312;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="g_d2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="670" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gc11" edge="1" parent="1" source="g_d2" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;" target="g_f3" value="否">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="510" />
+              <mxPoint x="497.5" y="508" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gc12" edge="1" parent="1" source="g_d2" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;" target="g_auto" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc12b" edge="1" parent="1" source="g_auto" style="strokeWidth=1.5;" target="g_f6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="758" y="778" />
+              <mxPoint x="722.5" y="778" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gc12c" edge="1" parent="1" source="g_d2" style="strokeWidth=1.5;" target="g_f6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc13" edge="1" parent="1" source="g_f6" style="strokeWidth=1.5;" target="g_f6b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc14" edge="1" parent="1" source="g_f6b" style="strokeWidth=1.5;" target="g_d3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc15" edge="1" parent="1" source="g_d3" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;" target="g_f7" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc16" edge="1" parent="1" source="g_d3" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="g_f8" value="否">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="910" />
+              <mxPoint x="720" y="1038" />
+            </Array>
+            <mxPoint x="690" y="1040" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gc17" edge="1" parent="1" source="g_f7" style="strokeWidth=1.5;" target="g_f8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gc18" edge="1" parent="1" source="g_f8" style="strokeWidth=1.5;" target="g_end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="info_quiz" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=18;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;" value="&lt;b&gt;答题得分规则&lt;/b&gt;&lt;br&gt;初级: 10题×10分=100分&lt;br&gt;中级: 20题×15分=300分&lt;br&gt;高级: 30题×20分=600分&lt;br&gt;全部难度: 5分钟倒计时" vertex="1">
+          <mxGeometry height="100" width="75" x="312.5" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="info_game" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=18;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;" value="&lt;b&gt;识药得分规则&lt;/b&gt;&lt;br&gt;初级: 3选项, base=10&lt;br&gt;中级: 4选项, base=15&lt;br&gt;高级: 5选项, base=20&lt;br&gt;连击奖励: +2/次(上限+10)&lt;br&gt;3分钟限时, 无固定题数" vertex="1">
+          <mxGeometry height="125" width="85" x="727.5" y="397.5" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

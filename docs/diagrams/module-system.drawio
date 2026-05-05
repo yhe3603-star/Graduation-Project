@@ -1,0 +1,163 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="系统支撑模块" id="mod-system">
+    <mxGraphModel dx="1460" dy="806" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="系统支撑模块 — 功能详细" vertex="1">
+          <mxGeometry height="30" width="400" x="210" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="cache_box" parent="1" style="swimlane;startSize=25;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;rounded=1;" value="缓存系统 — CacheConfig" vertex="1">
+          <mxGeometry height="280" width="380" x="20" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ca1" parent="cache_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="L1 Caffeine 内存缓存&lt;br&gt;&lt;small&gt;maxSize=1000, write=10m, access=30m&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ca2" parent="cache_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="L2 Redis 分布式缓存&lt;br&gt;&lt;small&gt;Jackson2Json序列化&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ca3" parent="cache_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="TwoLevelCacheManager&lt;br&gt;&lt;small&gt;L1→L2读取, 双写策略&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="100" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ca4" parent="cache_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="plants/knowledges/inheritors&lt;br&gt;&lt;small&gt;TTL = 6小时&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="ca5" parent="cache_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="resources&lt;br&gt;&lt;small&gt;TTL = 4小时&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="ca6" parent="cache_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="users&lt;br&gt;&lt;small&gt;TTL = 30分钟&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="ca7" parent="cache_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="quizQuestions&lt;br&gt;&lt;small&gt;TTL = 12小时&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="ca8" parent="cache_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="searchResults (5m) / hotData (1h)&lt;br&gt;&lt;small&gt;Redis不可用时降级为仅Caffeine&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="260" x="60" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="mq_box" parent="1" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;rounded=1;" value="消息队列 — RabbitMQ" vertex="1">
+          <mxGeometry height="320" width="400" x="420" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="mq1" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="DirectExchange&lt;br&gt;&lt;small&gt;dong.medicine.direct&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="mq2" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="TopicExchange&lt;br&gt;&lt;small&gt;dong.medicine.topic&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="205" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="mq3" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="operation.log.queue&lt;br&gt;&lt;small&gt;OperationLog → DB&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="10" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="mq4" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="feedback.queue&lt;br&gt;&lt;small&gt;Feedback → DB (max=1000)&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="205" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="mq5" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="file.process.queue&lt;br&gt;&lt;small&gt;FileProcessTask (max=500)&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="10" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="mq6" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="statistics.queue&lt;br&gt;&lt;small&gt;StatisticsTask → Redis计数&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="205" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="mq7" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="notification.queue&lt;br&gt;&lt;small&gt;NotificationMessage → Redis&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="10" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="mq8" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="死信交换机 DLX&lt;br&gt;&lt;small&gt;dong.medicine.dlx → dlq.*&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="205" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="mq9" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="重试策略&lt;br&gt;&lt;small&gt;指数退避 1s×2, 最多3次&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="10" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="mq10" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="Confirm/Return回调&lt;br&gt;&lt;small&gt;mandatory=true&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="205" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="mq11" parent="mq_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="所有队列lazy模式&lt;br&gt;&lt;small&gt;消息持久化到磁盘&lt;/small&gt;" vertex="1">
+          <mxGeometry height="30" width="200" x="100" y="265" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_box" parent="1" style="swimlane;startSize=25;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;rounded=1;" value="安全防护" vertex="1">
+          <mxGeometry height="240" width="380" x="20" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="sec1" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="XssFilter&lt;br&gt;&lt;small&gt;JSON body递归过滤, 30+规则&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sec2" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="RateLimitAspect&lt;br&gt;&lt;small&gt;Redis滑窗 + 本地令牌桶降级&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sec3" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="RequestIdFilter&lt;br&gt;&lt;small&gt;traceId: 16位UUID, MDC注入&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="sec4" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="RequestSizeFilter&lt;br&gt;&lt;small&gt;POST/PUT/PATCH限10MB&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="sec5" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="SQL注入检测&lt;br&gt;&lt;small&gt;XssUtils.containsSqlInjection()&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="sec6" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="CORS配置&lt;br&gt;&lt;small&gt;allowCredentials=true, maxAge=3600&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="sec7" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="JWT Secret校验&lt;br&gt;&lt;small&gt;≥32字符, @PostConstruct验证&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="100" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="aop_box" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;rounded=1;" value="AOP切面" vertex="1">
+          <mxGeometry height="200" width="400" x="420" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="aop1" parent="aop_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="OperationLogAspect&lt;br&gt;&lt;small&gt;拦截Controller写操作, MQ异步持久化&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="aop2" parent="aop_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="LoggingAspect&lt;br&gt;&lt;small&gt;请求入/出日志, 慢查询告警&gt;1s&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="205" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="aop3" parent="aop_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="敏感数据脱敏&lt;br&gt;&lt;small&gt;password/token/secret自动mask&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="aop4" parent="aop_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="参数截断&lt;br&gt;&lt;small&gt;args/result限1000字符&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="205" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="aop5" parent="aop_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="MultipartFile元数据&lt;br&gt;&lt;small&gt;替换为name+size&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="185" x="100" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="file_box" parent="1" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;rounded=1;" value="文件服务" vertex="1">
+          <mxGeometry height="170" width="380" x="20" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="fi1" parent="file_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="图片上传 10MB&lt;br&gt;&lt;small&gt;jpg/jpeg/png/gif/webp/bmp&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fi2" parent="file_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="视频上传 100MB&lt;br&gt;&lt;small&gt;mp4/avi/mov/wmv/flv/mkv&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="fi3" parent="file_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="文档上传 50MB&lt;br&gt;&lt;small&gt;pdf/docx/doc/xlsx/xls/pptx/ppt/txt&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="fi4" parent="file_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="Magic Byte校验&lt;br&gt;&lt;small&gt;路径穿越防护, UUID文件名&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="fi5" parent="file_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="KKFileView预览&lt;br&gt;&lt;small&gt;Docker容器 :8012, 文档在线预览&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="100" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="deploy_box" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;rounded=1;" value="部署架构 — Docker Compose" vertex="1">
+          <mxGeometry height="170" width="400" x="420" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="MySQL 8.0&lt;br&gt;&lt;small&gt;:3307, utf8mb4&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="90" x="10" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="Redis 7&lt;br&gt;&lt;small&gt;AOF, 64MB LRU&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="90" x="110" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="RabbitMQ&lt;br&gt;&lt;small&gt;3.12-mgmt&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="90" x="210" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="KKFileView&lt;br&gt;&lt;small&gt;4.1.0&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="80" x="310" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="d5" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="Spring Boot&lt;br&gt;&lt;small&gt;:8080, JVM 256-384M&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="135" x="10" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="d6" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="Vue + Nginx&lt;br&gt;&lt;small&gt;:80, SPA静态文件&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="115" x="155" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="d7" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="GitHub Actions&lt;br&gt;&lt;small&gt;CI/CD → GHCR → SSH部署&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="115" x="280" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="d8" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="dong-medicine-network (bridge)&lt;br&gt;&lt;small&gt;6容器, 健康检查, 自动回滚&lt;/small&gt;" vertex="1">
+          <mxGeometry height="30" width="280" x="60" y="120" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

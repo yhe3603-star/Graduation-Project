@@ -1,0 +1,234 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="评论与收藏流程" id="flow-comment-fav">
+    <mxGraphModel dx="1363" dy="752" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="评论与收藏流程" vertex="1">
+          <mxGeometry height="35" width="300" x="450" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="comment_title" parent="1" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" value="评论流程" vertex="1">
+          <mxGeometry height="30" width="120" x="100" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c_start" parent="1" style="ellipse;fillColor=#82b366;fontColor=#fff;fontSize=11;" value="开始" vertex="1">
+          <mxGeometry height="35" width="70" x="120" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="c_d1" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="已登录?" vertex="1">
+          <mxGeometry height="55" width="110" x="100" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c_login" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="跳转登录" vertex="1">
+          <mxGeometry height="30" width="70" x="260" y="182.5" as="geometry" />
+        </mxCell>
+        <mxCell id="c_f1" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="查看内容详情" vertex="1">
+          <mxGeometry height="35" width="120" x="95" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="c_f2" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="输入评论内容" vertex="1">
+          <mxGeometry height="35" width="120" x="95" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="c_f3" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="POST /api/comments" vertex="1">
+          <mxGeometry height="35" width="140" x="85" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="c_f4" parent="1" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="XSS过滤 + 内容校验" vertex="1">
+          <mxGeometry height="35" width="140" x="85" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="c_d2" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="是回复?" vertex="1">
+          <mxGeometry height="55" width="120" x="95" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="c_f5" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="设置 replyToId&#xa;更新父评论 replyCount" vertex="1">
+          <mxGeometry height="35" width="150" x="260" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="c_f6" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="INSERT INTO comments&#xa;status=&#39;pending&#39;" vertex="1">
+          <mxGeometry height="35" width="140" x="85" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="c_f7" parent="1" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="MQ异步更新目标评论数" vertex="1">
+          <mxGeometry height="30" width="150" x="80" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="c_end" parent="1" style="ellipse;fillColor=#82b366;fontColor=#fff;fontSize=11;" value="完成" vertex="1">
+          <mxGeometry height="35" width="70" x="120" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="cc0" edge="1" parent="1" source="c_start" style="strokeWidth=1.5;" target="c_d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc1" edge="1" parent="1" source="c_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;" target="c_login" value="否">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc2" edge="1" parent="1" source="c_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;" target="c_f1" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc3" edge="1" parent="1" source="c_f1" style="strokeWidth=1.5;" target="c_f2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc4" edge="1" parent="1" source="c_f2" style="strokeWidth=1.5;" target="c_f3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc5" edge="1" parent="1" source="c_f3" style="strokeWidth=1.5;" target="c_f4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc6" edge="1" parent="1" source="c_f4" style="strokeWidth=1.5;" target="c_d2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc7" edge="1" parent="1" source="c_d2" style="strokeWidth=1.5;fontSize=9;" target="c_f5" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc8" edge="1" parent="1" source="c_d2" style="strokeWidth=1.5;fontSize=9;" target="c_f6" value="否">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc9" edge="1" parent="1" source="c_f5" style="strokeWidth=1.5;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="c_f6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="335" y="588" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cc10" edge="1" parent="1" source="c_f6" style="strokeWidth=1.5;" target="c_f7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cc11" edge="1" parent="1" source="c_f7" style="strokeWidth=1.5;" target="c_end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fav_title" parent="1" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;" value="收藏流程" vertex="1">
+          <mxGeometry height="30" width="120" x="450" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f_start" parent="1" style="ellipse;fillColor=#6c8ebf;fontColor=#fff;fontSize=11;" value="开始" vertex="1">
+          <mxGeometry height="35" width="70" x="470" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="f_d1" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="已登录?" vertex="1">
+          <mxGeometry height="55" width="110" x="450" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="f_login" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="跳转登录" vertex="1">
+          <mxGeometry height="30" width="70" x="590" y="182.5" as="geometry" />
+        </mxCell>
+        <mxCell id="f_f1" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="点击收藏按钮" vertex="1">
+          <mxGeometry height="35" width="120" x="445" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="f_f2" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="POST /api/favorites&#xa;/toggle?type=xxx&amp;id=xxx" vertex="1">
+          <mxGeometry height="35" width="140" x="435" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="f_d2" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="已收藏?" vertex="1">
+          <mxGeometry height="55" width="110" x="450" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="f_f3" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="DELETE 取消收藏&#xa;更新 favoriteCount -1" vertex="1">
+          <mxGeometry height="35" width="150" x="260" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="f_f4" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="INSERT 新增收藏&#xa;更新 favoriteCount +1" vertex="1">
+          <mxGeometry height="35" width="150" x="590" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="f_f5" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="返回收藏状态(true/false)" vertex="1">
+          <mxGeometry height="35" width="150" x="430" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="f_f6" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="前端更新收藏图标状态" vertex="1">
+          <mxGeometry height="35" width="150" x="430" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="f_end" parent="1" style="ellipse;fillColor=#6c8ebf;fontColor=#fff;fontSize=11;" value="完成" vertex="1">
+          <mxGeometry height="35" width="70" x="470" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="fc0" edge="1" parent="1" source="f_start" style="strokeWidth=1.5;" target="f_d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fc1" edge="1" parent="1" source="f_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;" target="f_login" value="否">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fc2" edge="1" parent="1" source="f_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;" target="f_f1" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fc3" edge="1" parent="1" source="f_f1" style="strokeWidth=1.5;" target="f_f2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fc4" edge="1" parent="1" source="f_f2" style="strokeWidth=1.5;" target="f_d2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fc5" edge="1" parent="1" source="f_d2" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;" target="f_f3" value="是">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fc6" edge="1" parent="1" source="f_d2" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;" target="f_f4" value="否">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fc7" edge="1" parent="1" source="f_f3" style="strokeWidth=1.5;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="f_f5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="335" y="493" />
+            </Array>
+            <mxPoint x="450" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fc8" edge="1" parent="1" source="f_f4" style="strokeWidth=1.5;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="f_f5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="665" y="493" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fc9" edge="1" parent="1" source="f_f5" style="strokeWidth=1.5;" target="f_f6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fc10" edge="1" parent="1" source="f_f6" style="strokeWidth=1.5;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="505" y="605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="review_title" parent="1" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;" value="评论审核流程（管理员）" vertex="1">
+          <mxGeometry height="30" width="180" x="770" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="r_start" parent="1" style="ellipse;fillColor=#b85450;fontColor=#fff;fontSize=11;" value="开始" vertex="1">
+          <mxGeometry height="35" width="70" x="825" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="r_f1" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="查看待审核评论列表&#xa;GET /api/admin/comments" vertex="1">
+          <mxGeometry height="35" width="150" x="785" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="r_d1" parent="1" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="审核决定?" vertex="1">
+          <mxGeometry height="55" width="120" x="800" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="r_f2" parent="1" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="通过: status=&#39;approved&#39;" vertex="1">
+          <mxGeometry height="30" width="140" x="620" y="242.5" as="geometry" />
+        </mxCell>
+        <mxCell id="r_f3" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="拒绝: status=&#39;rejected&#39;" vertex="1">
+          <mxGeometry height="30" width="140" x="960" y="242.5" as="geometry" />
+        </mxCell>
+        <mxCell id="r_f4" parent="1" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="删除评论" vertex="1">
+          <mxGeometry height="30" width="100" x="810" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="r_f5" parent="1" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="PUT /api/admin/comments/{id}&#xa;更新评论状态" vertex="1">
+          <mxGeometry height="35" width="150" x="785" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="r_end" parent="1" style="ellipse;fillColor=#b85450;fontColor=#fff;fontSize=11;" value="完成" vertex="1">
+          <mxGeometry height="35" width="70" x="825" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="rc0" edge="1" parent="1" source="r_start" style="strokeWidth=1.5;" target="r_f1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rc1" edge="1" parent="1" source="r_f1" style="strokeWidth=1.5;" target="r_d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rc2" edge="1" parent="1" source="r_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#82b366;" target="r_f2" value="通过">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rc3" edge="1" parent="1" source="r_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;" target="r_f3" value="拒绝">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rc4" edge="1" parent="1" source="r_d1" style="strokeWidth=1.5;fontSize=9;fontColor=#b85450;" target="r_f4" value="删除">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rc5" edge="1" parent="1" source="r_f2" style="strokeWidth=1.5;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="r_f5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="388" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rc6" edge="1" parent="1" source="r_f3" style="strokeWidth=1.5;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="r_f5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1030" y="388" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rc7" edge="1" parent="1" source="r_f5" style="strokeWidth=1.5;" target="r_end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rc8" edge="1" parent="1" source="r_f4" style="strokeWidth=1.5;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="r_f5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

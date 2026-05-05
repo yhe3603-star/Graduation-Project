@@ -44,7 +44,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw BusinessException.badRequest("评论内容不能为空");
         }
 
-        comment.setStatus("approved");
+        comment.setStatus("pending");
         comment.setLikes(0);
         comment.setReplyCount(0);
         save(comment);

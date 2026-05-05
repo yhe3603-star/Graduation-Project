@@ -1,0 +1,162 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Service与Mapper层类图" id="class-service">
+    <mxGraphModel dx="1202" dy="664" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="侗乡医药数字化展示平台 — Service 与 Mapper 层类图" vertex="1">
+          <mxGeometry height="35" width="500" x="400" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_header" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="Service 层" vertex="1">
+          <mxGeometry height="320" width="1540" x="20" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="PlantService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;PlantService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— plantMapper : PlantMapper&lt;hr size=&#39;1&#39;&gt;+ advancedSearchPaged(params) : Page&lt;br&gt;+ searchPaged(keyword, page) : Page&lt;br&gt;+ getDetailWithStory(id) : Plant&lt;br&gt;+ getSimilarPlants(id, limit) : List&lt;br&gt;+ getRandomPlants(limit) : List&lt;br&gt;+ incrementViewCount(id) : void&lt;br&gt;+ listByIds(ids) : List" vertex="1">
+          <mxGeometry height="180" width="210" x="10" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="KnowledgeService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;KnowledgeService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ advancedSearchPaged(params) : Page&lt;br&gt;+ getDetail(id) : Knowledge&lt;br&gt;+ getSimilar(id, limit) : List&lt;br&gt;+ incrementViewCount(id) : void" vertex="1">
+          <mxGeometry height="120" width="190" x="235" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="InheritorService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;InheritorService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ advancedSearchPaged(params) : Page&lt;br&gt;+ getDetail(id) : Inheritor&lt;br&gt;+ getSimilar(id, limit) : List&lt;br&gt;+ incrementViewCount(id) : void" vertex="1">
+          <mxGeometry height="120" width="190" x="445" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="ResourceService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;ResourceService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ listPaged(params) : Page&lt;br&gt;+ getDetail(id) : Resource&lt;br&gt;+ incrementViewCount(id) : void" vertex="1">
+          <mxGeometry height="110" width="180" x="660" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="QaService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;QaService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ listPaged(params) : Page&lt;br&gt;+ getDetail(id) : Qa&lt;br&gt;+ incrementViewCount(id) : void" vertex="1">
+          <mxGeometry height="110" width="170" x="865" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="CommentService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;CommentService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ addComment(dto) : Comment&lt;br&gt;+ reply(dto) : Comment&lt;br&gt;+ listByTarget(type, id) : List&lt;br&gt;+ likeComment(id) : void&lt;br&gt;+ reviewComment(id, status) : void" vertex="1">
+          <mxGeometry height="130" width="200" x="1280" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="FeedbackService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;FeedbackService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ submit(dto, userId) : void&lt;br&gt;+ listByUser(userId) : List&lt;br&gt;+ replyFeedback(id, reply) : void" vertex="1">
+          <mxGeometry height="110" width="190" x="1280" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="BrowseHistoryService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;BrowseHistoryService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ record(userId, type, id) : void&lt;br&gt;+ listByUser(userId) : List&lt;br&gt;+ clearHistory(userId) : void" vertex="1">
+          <mxGeometry height="110" width="200" x="440" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="UserService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;UserService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ login(username, pwd) : Map&lt;br&gt;+ register(dto) : void&lt;br&gt;+ getProfile(userId) : User&lt;br&gt;+ updateProfile(dto) : void&lt;br&gt;+ changeAvatar(file) : String&lt;br&gt;+ banUser(id) : void&lt;br&gt;+ unbanUser(id) : void" vertex="1">
+          <mxGeometry height="160" width="190" x="1060" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="QuizService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;QuizService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ getRandomQuestions(count) : List&lt;br&gt;+ submitAnswer(userId, dto) : Map&lt;br&gt;+ getRecords(userId) : List" vertex="1">
+          <mxGeometry height="110" width="180" x="240" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="SearchService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;SearchService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ globalSearch(keyword, type) : Map&lt;br&gt;+ getHotSearches(limit) : List&lt;br&gt;&lt;small&gt;跨5表全文搜索&lt;/small&gt;" vertex="1">
+          <mxGeometry height="100" width="180" x="1065" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="FavoriteService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;FavoriteService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ toggle(userId, type, id) : boolean&lt;br&gt;+ listByUser(userId) : List&lt;br&gt;+ isFavorited(userId, type, id) : boolean" vertex="1">
+          <mxGeometry height="110" width="200" x="660" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="PopularityAsyncService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;PopularityAsyncService&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Async @Service&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ incrementPlantViewAndPopularity(id)&lt;br&gt;+ incrementKnowledgeViewAndPopularity(id)&lt;br&gt;+ incrementInheritorViewAndPopularity(id)" vertex="1">
+          <mxGeometry height="110" width="190" x="870" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="mapper_header" parent="1" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;" value="Mapper 层 (MyBatis-Plus BaseMapper)" vertex="1">
+          <mxGeometry height="200" width="1540" x="20" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="PlantMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;PlantMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;Plant&gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectByFullText(keyword, page) : Page&lt;br&gt;+ selectRandom(limit) : List&lt;br&gt;+ selectSimilar(id, limit) : List&lt;br&gt;&lt;small&gt;@Select XML自定义SQL&lt;/small&gt;" vertex="1">
+          <mxGeometry height="110" width="210" x="10" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="KnowledgeMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;KnowledgeMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;Knowledge&gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectByFullText(keyword, page) : Page&lt;br&gt;&lt;small&gt;MATCH AGAINST全文索引&lt;/small&gt;" vertex="1">
+          <mxGeometry height="90" width="200" x="230" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="InheritorMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;InheritorMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;Inheritor&gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectByFullText(keyword, page) : Page" vertex="1">
+          <mxGeometry height="80" width="200" x="440" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="ResourceMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;ResourceMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;Resource&gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectByFullText(keyword, page) : Page" vertex="1">
+          <mxGeometry height="80" width="200" x="650" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="QaMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;QaMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;Qa&gt;&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ selectByFullText(keyword, page) : Page" vertex="1">
+          <mxGeometry height="80" width="180" x="860" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="CommentMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;CommentMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;Comment&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="170" x="1300" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="UserMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;UserMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;User&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="160" x="1075" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="FavoriteMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;FavoriteMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;Favorite&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="170" x="660" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="_4XpA953ESdAWrBoNllm-6" edge="1" parent="mapper_header" source="BrowseHistoryMapper" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="InheritorMapper" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="BrowseHistoryMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;BrowseHistoryMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;BrowseHistory&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="450" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="QuizQuestionMapper" parent="mapper_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;QuizQuestionMapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends BaseMapper&lt;QuizQuestion&gt;&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="240" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm1" edge="1" parent="1" source="PlantService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="PlantMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm2" edge="1" parent="1" source="KnowledgeService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="KnowledgeMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm3" edge="1" parent="1" source="InheritorService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="InheritorMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm4" edge="1" parent="1" source="ResourceService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="ResourceMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_sm5" edge="1" parent="1" source="QaService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;" target="QaMapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="common_header" parent="1" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" value="通用类" vertex="1">
+          <mxGeometry height="180" width="1540" x="20" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="R" parent="common_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;R&lt;T&gt;&lt;/b&gt;&lt;br&gt;&lt;i&gt;统一响应包装&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ code : Integer&lt;br&gt;+ msg : String&lt;br&gt;+ data : T&lt;br&gt;+ requestId : String&lt;hr size=&#39;1&#39;&gt;+ ok(data) : R&lt;T&gt;&lt;br&gt;+ error(msg) : R&lt;T&gt;&lt;br&gt;+ error(code, msg) : R&lt;T&gt;" vertex="1">
+          <mxGeometry height="135" width="190" x="10" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="PageUtils" parent="common_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;PageUtils&lt;/b&gt;&lt;br&gt;&lt;i&gt;分页工具类&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ toMap(page) : Map&lt;String, Object&gt;&lt;br&gt;&lt;small&gt;records, total, size, current&lt;/small&gt;" vertex="1">
+          <mxGeometry height="80" width="200" x="210" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="BusinessException" parent="common_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;BusinessException&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends RuntimeException&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ code : Integer&lt;br&gt;+ msg : String&lt;hr size=&#39;1&#39;&gt;+ notFound(msg) : BusinessException&lt;br&gt;+ forbidden(msg) : BusinessException&lt;br&gt;+ unauthorized(msg) : BusinessException" vertex="1">
+          <mxGeometry height="120" width="220" x="420" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="GlobalExceptionHandler" parent="common_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;GlobalExceptionHandler&lt;/b&gt;&lt;br&gt;&lt;i&gt;@RestControllerAdvice&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ handleBusiness(e) : R&lt;br&gt;+ handleValidation(e) : R&lt;br&gt;+ handleUnknown(e) : R&lt;br&gt;&lt;small&gt;统一异常处理&lt;/small&gt;" vertex="1">
+          <mxGeometry height="120" width="220" x="650" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="DeepSeekClient" parent="common_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;DeepSeekClient&lt;/b&gt;&lt;br&gt;&lt;i&gt;AI接口客户端&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— WebClient : WebClient&lt;hr size=&#39;1&#39;&gt;+ chat(messages) : Flux&lt;String&gt;&lt;br&gt;&lt;small&gt;WebFlux流式调用DeepSeek API&lt;/small&gt;" vertex="1">
+          <mxGeometry height="110" width="210" x="880" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="MqProducer" parent="common_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;MqProducer&lt;/b&gt;&lt;br&gt;&lt;i&gt;RabbitMQ消息生产者&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ sendOperationLog(log)&lt;br&gt;+ sendStatisticsUpdate(type, id)&lt;br&gt;+ sendFeedbackProcess(feedback)&lt;br&gt;+ sendFileProcess(file)&lt;br&gt;+ sendNotification(notification)" vertex="1">
+          <mxGeometry height="130" width="210" x="1100" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="_4XpA953ESdAWrBoNllm-2" edge="1" parent="1" source="UserService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="UserMapper">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1180" y="380" as="sourcePoint" />
+            <mxPoint x="1170" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_4XpA953ESdAWrBoNllm-3" edge="1" parent="1" source="CommentService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.457;entryY=0.052;entryDx=0;entryDy=0;entryPerimeter=0;" target="CommentMapper">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1370" y="350" as="sourcePoint" />
+            <mxPoint x="1370" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_4XpA953ESdAWrBoNllm-5" edge="1" parent="1" source="BrowseHistoryService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" target="BrowseHistoryMapper">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="160" />
+              <mxPoint x="450" y="240" />
+              <mxPoint x="470" y="240" />
+            </Array>
+            <mxPoint x="500" y="190" as="sourcePoint" />
+            <mxPoint x="480" y="585" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_4XpA953ESdAWrBoNllm-4" edge="1" parent="1" source="QuizService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="QuizQuestionMapper">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="160" as="sourcePoint" />
+            <mxPoint x="240" y="564.9999999999998" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_4XpA953ESdAWrBoNllm-7" edge="1" parent="1" source="FavoriteService" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=9;exitX=0.016;exitY=0.629;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" target="FavoriteMapper">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="750" y="170" as="sourcePoint" />
+            <mxPoint x="750" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

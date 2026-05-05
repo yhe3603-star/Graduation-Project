@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram name="AI聊天时序图" id="seq-ai-chat">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="AI智能问诊时序图" style="text;html=1;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="300" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p1" value="&lt;b&gt;浏览器&lt;/b&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#dae8fc;strokeColor=#6c8ebf;size=40;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="100" height="600" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="&lt;b&gt;WebSocket&lt;br&gt;Handler&lt;/b&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#fff2cc;strokeColor=#d6b656;size=40;" vertex="1" parent="1">
+          <mxGeometry x="200" y="50" width="100" height="600" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3" value="&lt;b&gt;Chat&lt;br&gt;History&lt;br&gt;Service&lt;/b&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#e1d5e7;strokeColor=#9673a6;size=40;" vertex="1" parent="1">
+          <mxGeometry x="350" y="50" width="100" height="600" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4" value="&lt;b&gt;WebClient&lt;/b&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#d5e8d4;strokeColor=#82b366;size=40;" vertex="1" parent="1">
+          <mxGeometry x="500" y="50" width="100" height="600" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5" value="&lt;b&gt;DeepSeek&lt;br&gt;API&lt;/b&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#f8cecc;strokeColor=#b85450;size=40;" vertex="1" parent="1">
+          <mxGeometry x="650" y="50" width="100" height="600" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6" value="&lt;b&gt;MySQL&lt;/b&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#ffe6cc;strokeColor=#d79b00;size=40;" vertex="1" parent="1">
+          <mxGeometry x="800" y="50" width="100" height="600" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="m1" value="WebSocket 连接建立" style="html=1;fontSize=10;" edge="1" source="p1" target="p2" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="120" as="sourcePoint"/><mxPoint y="120" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="发送消息 {sessionId, content}" style="html=1;fontSize=10;" edge="1" source="p1" target="p2" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="150" as="sourcePoint"/><mxPoint y="150" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="保存用户消息: INSERT INTO chat_history" style="html=1;fontSize=10;" edge="1" source="p2" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="180" as="sourcePoint"/><mxPoint y="180" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="INSERT" style="html=1;fontSize=10;" edge="1" source="p3" target="p6" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="200" as="sourcePoint"/><mxPoint y="200" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="加载历史消息" style="html=1;fontSize=10;" edge="1" source="p2" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="230" as="sourcePoint"/><mxPoint y="230" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="SELECT ... FROM chat_history WHERE session_id=?" style="html=1;fontSize=10;" edge="1" source="p3" target="p6" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="250" as="sourcePoint"/><mxPoint y="250" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="返回历史消息" style="html=1;fontSize=10;dashed=1;" edge="1" source="p6" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="270" as="sourcePoint"/><mxPoint y="270" as="targetPoint"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="ref1" value="loop [流式响应]" style="swimlane;startSize=20;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="285" width="520" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="m8" value="POST /v1/chat/completions (stream=true)" style="html=1;fontSize=10;" edge="1" source="p2" target="p4" parent="ref1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="40" as="sourcePoint"/><mxPoint y="40" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="POST /v1/chat/completions (SSE)" style="html=1;fontSize=10;" edge="1" source="p4" target="p5" parent="ref1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="60" as="sourcePoint"/><mxPoint y="60" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="data: {choices[0].delta.content}" style="html=1;fontSize=10;dashed=1;" edge="1" source="p5" target="p4" parent="ref1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="90" as="sourcePoint"/><mxPoint y="90" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="逐 token 转发" style="html=1;fontSize=10;dashed=1;" edge="1" source="p4" target="p2" parent="ref1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="110" as="sourcePoint"/><mxPoint y="110" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="WebSocket 推送 token" style="html=1;fontSize=10;dashed=1;" edge="1" source="p2" target="p1" parent="ref1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="130" as="sourcePoint"/><mxPoint y="130" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="前端拼接渲染(Marked+DOMPurify)" style="html=1;fontSize=10;" edge="1" source="p1" target="p1" parent="ref1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="160" as="sourcePoint"/><mxPoint y="160" as="targetPoint"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="m14" value="流结束: 发送 [DONE]" style="html=1;fontSize=10;dashed=1;" edge="1" source="p5" target="p2" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="510" as="sourcePoint"/><mxPoint y="510" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="保存AI回复: INSERT INTO chat_history" style="html=1;fontSize=10;" edge="1" source="p2" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="540" as="sourcePoint"/><mxPoint y="540" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m16" value="INSERT" style="html=1;fontSize=10;" edge="1" source="p3" target="p6" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="560" as="sourcePoint"/><mxPoint y="560" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m17" value="关闭 WebSocket 连接" style="html=1;fontSize=10;" edge="1" source="p2" target="p1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="590" as="sourcePoint"/><mxPoint y="590" as="targetPoint"/></mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

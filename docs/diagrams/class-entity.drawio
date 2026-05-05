@@ -1,0 +1,153 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="实体类图" id="class-entity">
+    <mxGraphModel dx="889" dy="490" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="侗乡医药数字化展示平台 — 实体类图" vertex="1">
+          <mxGeometry height="35" width="500" x="500" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="BaseEntity" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;BaseEntity&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Data&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ createdAt : LocalDateTime&lt;br&gt;+ updatedAt : LocalDateTime" vertex="1">
+          <mxGeometry height="90" width="220" x="650" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="User" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;User&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;users&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ username : String&lt;br&gt;+ passwordHash : String&lt;br&gt;+ role : String = &quot;user&quot;&lt;br&gt;+ status : String = &quot;active&quot;" vertex="1">
+          <mxGeometry height="110" width="220" x="80" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="User_ext" edge="1" parent="1" source="User" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" target="BaseEntity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Plant" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;Plant&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;plants&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ nameCn : String&lt;br&gt;+ nameDong : String&lt;br&gt;+ scientificName : String&lt;br&gt;+ category : String&lt;br&gt;+ usageWay : String&lt;br&gt;+ habitat : String&lt;br&gt;+ efficacy : String&lt;br&gt;+ story : String&lt;br&gt;+ images : JSON&lt;br&gt;+ videos : JSON&lt;br&gt;+ documents : JSON&lt;br&gt;+ distribution : String&lt;br&gt;+ viewCount : Integer&lt;br&gt;+ favoriteCount : Integer&lt;br&gt;+ popularity : Integer" vertex="1">
+          <mxGeometry height="310" width="200" x="320" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="Plant_ext" edge="1" parent="1" source="Plant" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" target="BaseEntity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Knowledge" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;Knowledge&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;knowledge&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ title : String&lt;br&gt;+ type : String&lt;br&gt;+ therapyCategory : String&lt;br&gt;+ diseaseCategory : String&lt;br&gt;+ herbCategory : String&lt;br&gt;+ content : String&lt;br&gt;+ formula : String&lt;br&gt;+ usageMethod : String&lt;br&gt;+ steps : String&lt;br&gt;+ images/videos/documents : JSON&lt;br&gt;+ relatedPlants : String&lt;br&gt;+ viewCount : Integer&lt;br&gt;+ favoriteCount : Integer&lt;br&gt;+ popularity : Integer" vertex="1">
+          <mxGeometry height="310" width="210" x="550" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="Knowledge_ext" edge="1" parent="1" source="Knowledge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=0.373;entryY=0.972;entryDx=0;entryDy=0;entryPerimeter=0;" target="BaseEntity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Inheritor" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;Inheritor&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;inheritors&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ name : String&lt;br&gt;+ level : String&lt;br&gt;+ bio : String&lt;br&gt;+ specialties : String&lt;br&gt;+ experienceYears : Integer&lt;br&gt;+ videos/images/documents : JSON&lt;br&gt;+ representativeCases : String&lt;br&gt;+ honors : String&lt;br&gt;+ viewCount : Integer&lt;br&gt;+ favoriteCount : Integer&lt;br&gt;+ popularity : Integer" vertex="1">
+          <mxGeometry height="260" width="200" x="800" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="Inheritor_ext" edge="1" parent="1" source="Inheritor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=0.605;entryY=0.972;entryDx=0;entryDy=0;entryPerimeter=0;" target="BaseEntity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Resource" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;Resource&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;resources&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ title : String&lt;br&gt;+ category : String&lt;br&gt;+ files : JSON&lt;br&gt;+ description : String&lt;br&gt;+ viewCount : Integer&lt;br&gt;+ downloadCount : Integer&lt;br&gt;+ favoriteCount : Integer&lt;br&gt;+ popularity : Integer" vertex="1">
+          <mxGeometry height="190" width="190" x="1020" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="Resource_ext" edge="1" parent="1" source="Resource" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" target="BaseEntity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Qa" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;Qa&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;qa&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ category : String&lt;br&gt;+ question : String&lt;br&gt;+ answer : String&lt;br&gt;+ viewCount : Integer&lt;br&gt;+ favoriteCount : Integer&lt;br&gt;+ popularity : Integer" vertex="1">
+          <mxGeometry height="150" width="190" x="1220" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="Qa_ext" edge="1" parent="1" source="Qa" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" target="BaseEntity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Comment" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;Comment&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;comments&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ userId : Long&lt;br&gt;+ username : String&lt;br&gt;+ targetType : String&lt;br&gt;+ targetId : Long&lt;br&gt;+ content : String&lt;br&gt;+ replyToId : Long&lt;br&gt;+ replyToUserId : Long&lt;br&gt;+ replyToUsername : String&lt;br&gt;+ likes : Integer&lt;br&gt;+ replyCount : Integer&lt;br&gt;+ status : String" vertex="1">
+          <mxGeometry height="250" width="200" x="580" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="Comment_ext" edge="1" parent="1" source="Comment" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;" target="BaseEntity">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="450" />
+              <mxPoint x="760" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Comment_self" edge="1" parent="1" source="Comment" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#d6b656;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" target="Comment" value="reply">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Favorite" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;Favorite&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;favorites&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ userId : Long&lt;br&gt;+ targetType : String&lt;br&gt;+ targetId : Long&lt;br&gt;+ createdAt : LocalDateTime" vertex="1">
+          <mxGeometry height="130" width="200" x="320" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="Feedback" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;Feedback&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;feedback&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ userId : Long&lt;br&gt;+ userName : String&lt;br&gt;+ type : String&lt;br&gt;+ title : String&lt;br&gt;+ content : String&lt;br&gt;+ contact : String&lt;br&gt;+ status : String&lt;br&gt;+ reply : String&lt;br&gt;+ createdAt : LocalDateTime" vertex="1">
+          <mxGeometry height="230" width="200" x="80" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="OperationLog" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;OperationLog&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;operation_log&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ userId : Long&lt;br&gt;+ username : String&lt;br&gt;+ module : String&lt;br&gt;+ operation : String&lt;br&gt;+ type : String&lt;br&gt;+ method : String&lt;br&gt;+ params : String&lt;br&gt;+ ip : String&lt;br&gt;+ duration : Long&lt;br&gt;+ success : Boolean&lt;br&gt;+ errorMsg : String" vertex="1">
+          <mxGeometry height="250" width="200" x="810" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="OperationLog_ext" edge="1" parent="1" source="OperationLog" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;" target="BaseEntity">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="910" y="260" />
+              <mxPoint x="829" y="260" />
+            </Array>
+            <mxPoint x="829" y="130" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="QuizQuestion" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;QuizQuestion&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;quiz_questions&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ question : String&lt;br&gt;+ options : JSON&lt;br&gt;+ answer : String&lt;br&gt;+ category : String&lt;br&gt;+ difficulty : String&lt;br&gt;+ explanation : String" vertex="1">
+          <mxGeometry height="170" width="200" x="1020" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="QuizRecord" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;QuizRecord&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;quiz_record&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ userId : Long&lt;br&gt;+ score : Integer&lt;br&gt;+ totalQuestions : Integer&lt;br&gt;+ correctAnswers : Integer&lt;br&gt;+ createdAt : LocalDateTime" vertex="1">
+          <mxGeometry height="140" width="200" x="1240" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="BrowseHistory" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;BrowseHistory&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;browse_history&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ userId : Long&lt;br&gt;+ targetType : String&lt;br&gt;+ targetId : Long&lt;br&gt;+ createdAt : LocalDateTime" vertex="1">
+          <mxGeometry height="130" width="200" x="90" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="ChatHistory" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;ChatHistory&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;chat_history&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ userId : Long&lt;br&gt;+ sessionId : String&lt;br&gt;+ role : String&lt;br&gt;+ content : String&lt;br&gt;+ createdAt : LocalDateTime" vertex="1">
+          <mxGeometry height="140" width="200" x="320" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="SearchHistory" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;SearchHistory&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;search_history&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ userId : Long&lt;br&gt;+ keyword : String&lt;br&gt;+ createdAt : LocalDateTime" vertex="1">
+          <mxGeometry height="110" width="200" x="1250" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="PlantGameRecord" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;PlantGameRecord&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;plant_game_record&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ userId : Long&lt;br&gt;+ difficulty : String&lt;br&gt;+ score : Integer&lt;br&gt;+ correctCount : Integer&lt;br&gt;+ totalCount : Integer&lt;br&gt;+ createdAt : LocalDateTime" vertex="1">
+          <mxGeometry height="160" width="200" x="1030" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="poly_note" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=18;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;" value="&lt;b&gt;多态关联 (targetType + targetId)&lt;/b&gt;&lt;br&gt;Comment, Favorite, BrowseHistory&lt;br&gt;可关联: Plant, Knowledge, Inheritor,&lt;br&gt;Resource, Qa" vertex="1">
+          <mxGeometry height="80" width="250" x="635" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="HMlg5hELbFlxGQaHtkSC-1" edge="1" parent="1" source="Knowledge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=0.078;entryY=0.021;entryDx=0;entryDy=0;entryPerimeter=0;" target="poly_note">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1115" y="1020" as="sourcePoint" />
+            <mxPoint x="910" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HMlg5hELbFlxGQaHtkSC-2" edge="1" parent="1" source="Plant" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=0.425;entryY=0.032;entryDx=0;entryDy=0;entryPerimeter=0;" target="poly_note">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="790" y="530" as="sourcePoint" />
+            <mxPoint x="890" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HMlg5hELbFlxGQaHtkSC-4" edge="1" parent="1" source="Inheritor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=0.883;entryY=0.041;entryDx=0;entryDy=0;entryPerimeter=0;" target="poly_note">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="856" y="452" as="sourcePoint" />
+            <mxPoint x="890" y="592" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HMlg5hELbFlxGQaHtkSC-5" edge="1" parent="1" source="Resource" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.593;entryY=0.051;entryDx=0;entryDy=0;entryPerimeter=0;" target="poly_note">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="880" y="460" as="sourcePoint" />
+            <mxPoint x="880" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HMlg5hELbFlxGQaHtkSC-6" edge="1" parent="1" source="Qa" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=0;entryY=0;entryDx=250.00000000000003;entryDy=49;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="poly_note">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="880" y="510" as="sourcePoint" />
+            <mxPoint x="880" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HMlg5hELbFlxGQaHtkSC-7" edge="1" parent="1" source="poly_note" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;exitX=0.375;exitY=0.957;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="Comment">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="730" y="670" as="sourcePoint" />
+            <mxPoint x="650" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HMlg5hELbFlxGQaHtkSC-8" edge="1" parent="1" source="poly_note" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" target="Favorite">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680" y="570" as="sourcePoint" />
+            <mxPoint x="680" y="612" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HMlg5hELbFlxGQaHtkSC-9" edge="1" parent="1" source="poly_note" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;endArrow=open;endFill=0;startArrow=block;startFill=0;exitX=0.001;exitY=0.325;exitDx=0;exitDy=0;exitPerimeter=0;" target="BrowseHistory">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="685" y="580" as="sourcePoint" />
+            <mxPoint x="450" y="690" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
