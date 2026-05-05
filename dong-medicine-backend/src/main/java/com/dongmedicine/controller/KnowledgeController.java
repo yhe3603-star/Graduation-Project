@@ -62,11 +62,11 @@ public class KnowledgeController {
 
     @GetMapping("/{id}")
     public R<Knowledge> detail(@PathVariable @NotNull(message = "ID不能为空") Integer id) {
+        try { popularityAsyncService.incrementKnowledgeViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Knowledge knowledge = service.getDetailWithRelated(id);
         if (knowledge == null) {
             throw BusinessException.notFound("知识条目不存在");
         }
-        try { popularityAsyncService.incrementKnowledgeViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         if (userId != null) {
             try {

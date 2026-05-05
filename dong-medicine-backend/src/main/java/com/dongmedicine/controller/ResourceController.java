@@ -79,9 +79,9 @@ public class ResourceController {
 
     @GetMapping("/{id}")
     public R<Resource> getById(@PathVariable Integer id) {
+        try { popularityAsyncService.incrementResourceViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Resource resource = service.getDetail(id);
         if (resource == null) throw BusinessException.notFound("资源不存在");
-        try { popularityAsyncService.incrementResourceViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         return R.ok(resource);
     }
 

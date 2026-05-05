@@ -49,9 +49,9 @@ public class QaController {
 
     @GetMapping("/{id}")
     public R<Qa> detail(@PathVariable Integer id) {
+        try { popularityAsyncService.incrementQaViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Qa qa = service.getDetail(id);
         if (qa == null) throw BusinessException.notFound("问答不存在");
-        try { popularityAsyncService.incrementQaViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         return R.ok(qa);
     }
 

@@ -16,7 +16,7 @@ public interface QaMapper extends BaseMapper<Qa> {
     @Update("UPDATE qa SET view_count = IFNULL(view_count, 0) + 1 WHERE id = #{id}")
     void incrementViewCount(Integer id);
 
-    @Update("UPDATE qa SET favorite_count = IFNULL(favorite_count, 0) + #{delta} WHERE id = #{id}")
+    @Update("UPDATE qa SET favorite_count = IFNULL(favorite_count, 0) + #{delta}, popularity = IFNULL(popularity, 0) + #{delta} * 10 WHERE id = #{id}")
     void incrementFavoriteCount(Integer id, int delta);
 
     @Update("UPDATE qa SET view_count = IFNULL(view_count, 0) + 1, popularity = IFNULL(popularity, 0) + 3 WHERE id = #{id}")

@@ -93,9 +93,9 @@ services:
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
       interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      timeout: 15s
+      retries: 20
+      start_period: 90s
     logging:
       driver: "json-file"
       options:
@@ -105,10 +105,10 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 256M
+          memory: 512M
         reservations:
           cpus: '0.1'
-          memory: 64M
+          memory: 256M
     networks:
       - dong-medicine-network
 

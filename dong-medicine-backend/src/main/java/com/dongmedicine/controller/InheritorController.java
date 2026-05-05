@@ -54,9 +54,9 @@ public class InheritorController {
 
     @GetMapping("/{id}")
     public R<Inheritor> detail(@PathVariable Integer id) {
+        try { popularityAsyncService.incrementInheritorViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Inheritor in = service.getDetailWithExtras(id);
         if (in == null) throw BusinessException.notFound("传承人不存在");
-        try { popularityAsyncService.incrementInheritorViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         if (userId != null) {
             try {

@@ -16,11 +16,8 @@ public interface InheritorMapper extends BaseMapper<Inheritor> {
     @Update("UPDATE inheritors SET view_count = IFNULL(view_count, 0) + 1 WHERE id = #{id}")
     void incrementViewCount(Integer id);
 
-    @Update("UPDATE inheritors SET favorite_count = IFNULL(favorite_count, 0) + #{delta} WHERE id = #{id}")
+    @Update("UPDATE inheritors SET favorite_count = IFNULL(favorite_count, 0) + #{delta}, popularity = IFNULL(popularity, 0) + #{delta} * 10 WHERE id = #{id}")
     void incrementFavoriteCount(Integer id, int delta);
-
-    @Update("UPDATE inheritors SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
-    void incrementPopularity(Integer id);
 
     @Update("UPDATE inheritors SET view_count = IFNULL(view_count, 0) + 1, popularity = IFNULL(popularity, 0) + 3 WHERE id = #{id}")
     void incrementViewCount3AndPopularity(Integer id);

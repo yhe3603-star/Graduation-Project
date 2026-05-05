@@ -57,9 +57,9 @@ public class PlantController {
 
     @GetMapping("/{id}")
     public R<Plant> detail(@PathVariable @NotNull Integer id) {
+        try { popularityAsyncService.incrementPlantViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Plant plant = service.getDetailWithStory(id);
         if (plant == null) throw BusinessException.notFound("植物不存在");
-        try { popularityAsyncService.incrementPlantViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         if (userId != null) {
             try {

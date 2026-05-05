@@ -16,11 +16,8 @@ public interface KnowledgeMapper extends BaseMapper<Knowledge> {
     @Update("UPDATE knowledge SET view_count = IFNULL(view_count, 0) + 1 WHERE id = #{id}")
     void incrementViewCount(@Param("id") Integer id);
 
-    @Update("UPDATE knowledge SET favorite_count = IFNULL(favorite_count, 0) + #{delta} WHERE id = #{id}")
+    @Update("UPDATE knowledge SET favorite_count = IFNULL(favorite_count, 0) + #{delta}, popularity = IFNULL(popularity, 0) + #{delta} * 10 WHERE id = #{id}")
     void incrementFavoriteCount(@Param("id") Integer id, @Param("delta") int delta);
-
-    @Update("UPDATE knowledge SET popularity = IFNULL(popularity, 0) + 1 WHERE id = #{id}")
-    void incrementPopularity(@Param("id") Integer id);
 
     @Update("UPDATE knowledge SET view_count = IFNULL(view_count, 0) + 1, popularity = IFNULL(popularity, 0) + 3 WHERE id = #{id}")
     void incrementViewCount3AndPopularity(@Param("id") Integer id);
