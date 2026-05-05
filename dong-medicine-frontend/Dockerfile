@@ -4,7 +4,11 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --registry=https://registry.npmmirror.com --prefer-offline --no-audit
+RUN npm config set fetch-timeout 600000 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm ci --registry=https://registry.npmmirror.com --no-audit || \
+    npm install --registry=https://registry.npmmirror.com --no-audit
 
 FROM node:20-alpine AS builder
 
