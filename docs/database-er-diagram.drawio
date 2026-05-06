@@ -1,0 +1,246 @@
+<mxfile host="app.diagrams.net" agent="Claude">
+  <diagram id="er-diagram" name="数据库 E-R 图">
+    <mxGraphModel dx="730" dy="403" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=20;fontColor=#1a1a2e;" value="&lt;b&gt;侗医药数字展示平台 — 数据库 E-R 图&lt;/b&gt;" vertex="1">
+          <mxGeometry height="40" width="400" x="700" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=#666;" value="16 张表 · 无外键约束 · 应用层维护关系 · 多态关联(target_type+target_id)" vertex="1">
+          <mxGeometry height="25" width="640" x="580" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="users" parent="1" style="shape=table;startSize=180;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#dbeafe;strokeColor=#1e40af;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;users&lt;/b&gt;（用户表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;username (UQ)&lt;br&gt;password_hash&lt;br&gt;role&lt;br&gt;status" vertex="1">
+          <mxGeometry height="180" width="200" x="40" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="plants" parent="1" style="shape=table;startSize=240;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#d1fae5;strokeColor=#047857;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;plants&lt;/b&gt;（植物药材表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;name_cn&lt;br&gt;name_dong&lt;br&gt;category&lt;br&gt;usage_way&lt;br&gt;efficacy&lt;br&gt;view_count / favorite_count&lt;br&gt;popularity" vertex="1">
+          <mxGeometry height="240" width="230" x="340" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="knowledge" parent="1" style="shape=table;startSize=240;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#d1fae5;strokeColor=#047857;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;knowledge&lt;/b&gt;（知识库表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;title&lt;br&gt;type (药方/疗法)&lt;br&gt;therapy_category&lt;br&gt;formula / usage_method&lt;br&gt;related_plants [JSON]&lt;br&gt;view_count / favorite_count&lt;br&gt;popularity" vertex="1">
+          <mxGeometry height="240" width="230" x="620" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="inheritors" parent="1" style="shape=table;startSize=240;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#d1fae5;strokeColor=#047857;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;inheritors&lt;/b&gt;（传承人表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;name&lt;br&gt;level (国家级/省级/市级)&lt;br&gt;specialties&lt;br&gt;experience_years&lt;br&gt;honors&lt;br&gt;view_count / favorite_count&lt;br&gt;popularity" vertex="1">
+          <mxGeometry height="240" width="230" x="900" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="resources" parent="1" style="shape=table;startSize=220;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#d1fae5;strokeColor=#047857;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;resources&lt;/b&gt;（学习资源表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;title&lt;br&gt;category (入门/进阶/专业)&lt;br&gt;files [JSON]&lt;br&gt;download_count&lt;br&gt;view_count / favorite_count&lt;br&gt;popularity" vertex="1">
+          <mxGeometry height="220" width="230" x="1180" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="qa" parent="1" style="shape=table;startSize=200;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#d1fae5;strokeColor=#047857;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;qa&lt;/b&gt;（问答表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;category&lt;br&gt;question&lt;br&gt;answer&lt;br&gt;view_count / favorite_count&lt;br&gt;popularity" vertex="1">
+          <mxGeometry height="200" width="210" x="1460" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="comments" parent="1" style="shape=table;startSize=240;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#fef3c7;strokeColor=#b45309;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;comments&lt;/b&gt;（评论表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users&lt;br&gt;target_type / target_id (多态)&lt;br&gt;content&lt;br&gt;reply_to_id (自引用)&lt;br&gt;likes / reply_count&lt;br&gt;status" vertex="1">
+          <mxGeometry height="240" width="250" x="340" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="favorites" parent="1" style="shape=table;startSize=180;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#fef3c7;strokeColor=#b45309;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;favorites&lt;/b&gt;（收藏表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users&lt;br&gt;target_type / target_id (多态)&lt;br&gt;UQ: (user_id, target_type, target_id)" vertex="1">
+          <mxGeometry height="180" width="260" x="650" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="browse_history" parent="1" style="shape=table;startSize=160;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#fef3c7;strokeColor=#b45309;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;browse_history&lt;/b&gt;（浏览历史）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users&lt;br&gt;target_type / target_id (多态)" vertex="1">
+          <mxGeometry height="160" width="240" x="970" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="quiz_questions" parent="1" style="shape=table;startSize=200;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#ede9fe;strokeColor=#6d28d9;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;quiz_questions&lt;/b&gt;（测验题目表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;question&lt;br&gt;options [JSON]&lt;br&gt;answer&lt;br&gt;correct_answer (A/B/C/D)&lt;br&gt;difficulty" vertex="1">
+          <mxGeometry height="200" width="230" x="1270" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="quiz_record" parent="1" style="shape=table;startSize=160;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#ede9fe;strokeColor=#6d28d9;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;quiz_record&lt;/b&gt;（测验记录表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users&lt;br&gt;score / total_questions&lt;br&gt;correct_answers" vertex="1">
+          <mxGeometry height="160" width="230" x="975" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="plant_game_record" parent="1" style="shape=table;startSize=180;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#ede9fe;strokeColor=#6d28d9;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;plant_game_record&lt;/b&gt;（植物游戏记录）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users&lt;br&gt;difficulty / score&lt;br&gt;correct_count / total_count" vertex="1">
+          <mxGeometry height="180" width="240" x="1550" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="chat_history" parent="1" style="shape=table;startSize=200;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#fce7f3;strokeColor=#be185d;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;chat_history&lt;/b&gt;（AI聊天记录）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users&lt;br&gt;session_id (UUID)&lt;br&gt;role (user/assistant)&lt;br&gt;content" vertex="1">
+          <mxGeometry height="200" width="240" x="40" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="feedback" parent="1" style="shape=table;startSize=180;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#fce7f3;strokeColor=#be185d;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;feedback&lt;/b&gt;（反馈表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users&lt;br&gt;type / title / content&lt;br&gt;status&lt;br&gt;reply" vertex="1">
+          <mxGeometry height="180" width="240" x="40" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="operation_log" parent="1" style="shape=table;startSize=200;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#fce7f3;strokeColor=#be185d;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;operation_log&lt;/b&gt;（操作日志表）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users&lt;br&gt;module / operation / type&lt;br&gt;method / params&lt;br&gt;ip / duration / success" vertex="1">
+          <mxGeometry height="200" width="250" x="340" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="search_history" parent="1" style="shape=table;startSize=140;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=12;fillColor=#fce7f3;strokeColor=#be185d;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=1;align=center;resizeLast=1;html=1;" value="&lt;b&gt;search_history&lt;/b&gt;（搜索历史）&lt;br&gt;─────────────────&lt;br&gt;&lt;font color=&quot;#c0392b&quot;&gt;🔑&lt;/font&gt; id (PK)&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;🔗&lt;/font&gt; user_id → users (可为空)&lt;br&gt;keyword" vertex="1">
+          <mxGeometry height="140" width="240" x="650" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="e_u_ch" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;exitX=0.799;exitY=0.994;exitDx=0;exitDy=0;exitPerimeter=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="240" y="183" as="sourcePoint" />
+            <mxPoint x="200" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_u_fb" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;entryX=0.875;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="feedback">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="250" y="270" />
+            </Array>
+            <mxPoint x="240" y="270" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_u_co" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="comments">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="80" y="300" />
+              <mxPoint x="80" y="620" />
+            </Array>
+            <mxPoint x="80" y="300" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_u_fav" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;exitX=0.398;exitY=1.002;exitDx=0;exitDy=0;exitPerimeter=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="120" y="600" />
+            </Array>
+            <mxPoint x="650" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_u_bh" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="browse_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_u_ol" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="operation_log">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="280" y="250" />
+              <mxPoint x="280" y="900" />
+            </Array>
+            <mxPoint x="240" y="250" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_u_sh" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.987;exitY=0.61;exitDx=0;exitDy=0;exitPerimeter=0;" target="search_history">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="230" />
+              <mxPoint x="300" y="830" />
+            </Array>
+            <mxPoint x="239" y="230" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_u_qr" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="210" />
+              <mxPoint x="320" y="790" />
+            </Array>
+            <mxPoint x="240" y="210" as="sourcePoint" />
+            <mxPoint x="980" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_u_pgr" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#334155;exitX=0.607;exitY=0.999;exitDx=0;exitDy=0;exitPerimeter=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="300" />
+              <mxPoint x="160" y="530" />
+              <mxPoint x="1550" y="530" />
+            </Array>
+            <mxPoint x="167" y="310" as="sourcePoint" />
+            <mxPoint x="1550" y="530" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_fav_pl" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;entryX=0.2;entryY=0;entryDx=0;entryDy=0;" target="favorites" value="plant">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="331" />
+              <mxPoint x="440" y="415" />
+              <mxPoint x="702" y="415" />
+            </Array>
+            <mxPoint x="440" y="330" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_fav_kn" edge="1" parent="1" source="knowledge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;exitX=0.611;exitY=1.001;exitDx=0;exitDy=0;exitPerimeter=0;" target="favorites" value="knowledge">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="415" />
+              <mxPoint x="760" y="415" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_fav_in" edge="1" parent="1" source="inheritors" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;exitX=0.434;exitY=0.996;exitDx=0;exitDy=0;entryX=0.8;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" target="favorites" value="inheritor">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1000" y="415" />
+              <mxPoint x="858" y="415" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_fav_qa" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;" value="qa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1520" y="290" />
+              <mxPoint x="1520" y="620" />
+            </Array>
+            <mxPoint x="1520" y="290" as="sourcePoint" />
+            <mxPoint x="910" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_fav_re" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;" value="resource">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1240" y="590" />
+              <mxPoint x="910" y="590" />
+            </Array>
+            <mxPoint x="1240" y="310" as="sourcePoint" />
+            <mxPoint x="910" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_co_pl" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;" target="comments" value="plant">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="330" />
+            </Array>
+            <mxPoint x="400" y="330" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_co_kn" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;entryX=0.7;entryY=0;entryDx=0;entryDy=0;" target="comments" value="knowledge">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="329" />
+              <mxPoint x="720" y="440" />
+              <mxPoint x="515" y="440" />
+            </Array>
+            <mxPoint x="720" y="330" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_co_in" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;" value="inheritor">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1040" y="550" />
+              <mxPoint x="590" y="550" />
+            </Array>
+            <mxPoint x="1040" y="330" as="sourcePoint" />
+            <mxPoint x="590" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_bh_pl" edge="1" parent="1" source="plants" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;exitX=0.599;exitY=1.001;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" target="browse_history" value="plant">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="478" y="390" />
+              <mxPoint x="1018" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_bh_kn" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" value="knowledge">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="440" />
+              <mxPoint x="1084" y="440" />
+            </Array>
+            <mxPoint x="800" y="331" as="sourcePoint" />
+            <mxPoint x="1084.3899999999999" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_bh_in" edge="1" parent="1" source="inheritors" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#b45309;entryX=0.8;entryY=0;entryDx=0;entryDy=0;exitX=0.777;exitY=1.001;exitDx=0;exitDy=0;exitPerimeter=0;" target="browse_history" value="inheritor">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="330" />
+              <mxPoint x="1080" y="416" />
+              <mxPoint x="1162" y="416" />
+            </Array>
+            <mxPoint x="1000" y="330" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_kn_pl" edge="1" parent="1" source="knowledge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;strokeWidth=1.5;strokeColor=#047857;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="plants" value="related_plants [JSON]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" parent="1" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontSize=11;fillColor=#f8fafc;strokeColor=#94a3b8;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;fontStyle=0;align=left;resizeLast=1;html=1;spacingLeft=8;" value="&lt;b&gt;图例&lt;/b&gt;&lt;br&gt;─────────────&lt;br&gt;🔑 主键 (PK)&lt;br&gt;🔗 外键引用 (应用层)&lt;br&gt;━━ 实线: 用户关联&lt;br&gt;╌╌ 虚线: 多态关联 / 逻辑关联&lt;br&gt;&lt;br&gt;&lt;b&gt;实体分组&lt;/b&gt;&lt;br&gt;─────────────&lt;br&gt;&lt;font color=&quot;#1e40af&quot;&gt;■&lt;/font&gt; 蓝色 — 用户表&lt;br&gt;&lt;font color=&quot;#047857&quot;&gt;■&lt;/font&gt; 绿色 — 内容实体&lt;br&gt;&lt;font color=&quot;#b45309&quot;&gt;■&lt;/font&gt; 黄色 — 交互实体&lt;br&gt;&lt;font color=&quot;#6d28d9&quot;&gt;■&lt;/font&gt; 紫色 — 学习/游戏&lt;br&gt;&lt;font color=&quot;#be185d&quot;&gt;■&lt;/font&gt; 粉色 — 系统/日志" vertex="1">
+          <mxGeometry height="110" width="140" x="1310" y="810" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

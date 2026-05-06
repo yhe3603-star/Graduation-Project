@@ -3,6 +3,5 @@
     "allow": [
       "Bash(npx vite *)"
     ]
-  },
-  "enabledMcpjsonServers": ["drawio"]
+  }
 }

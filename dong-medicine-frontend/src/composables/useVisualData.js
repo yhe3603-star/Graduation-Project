@@ -15,9 +15,7 @@ export function useVisualData(request) {
     plantDistribution: [],
     knowledgePopularity: [],
     formulaFreq: [],
-    formulaNames: [],
-    userTrend: [],
-    userTrendDates: []
+    formulaNames: []
   });
   const regionList = ref([]);
 
@@ -82,24 +80,6 @@ export function useVisualData(request) {
         chartData.value.formulaFreq = data.formulaFreq;
       }
 
-      try {
-        const trendRes = await request.get('/stats/trend');
-        if (trendRes.data?.dates && trendRes.data?.counts) {
-          chartData.value.userTrendDates = trendRes.data.dates;
-          chartData.value.userTrend = trendRes.data.counts;
-        }
-      } catch {
-        const dates = [];
-        const trendData = [];
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          dates.push(`${d.getMonth() + 1}/${d.getDate()}`);
-          trendData.push(0);
-        }
-        chartData.value.userTrendDates = dates;
-        chartData.value.userTrend = trendData;
-      }
     } catch (e) {
       logFetchError('可视化数据', e);
     } finally {

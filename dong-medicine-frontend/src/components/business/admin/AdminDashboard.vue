@@ -30,6 +30,15 @@
       </template>
       <el-tabs v-model="activeChartTab">
         <el-tab-pane
+          label="平台访问趋势"
+          name="visitTrend"
+        >
+          <div
+            ref="visitTrendChartRef"
+            style="height: 320px;"
+          />
+        </el-tab-pane>
+        <el-tab-pane
           label="用户增长"
           name="userGrowth"
         >
@@ -194,7 +203,8 @@ const currentPage = ref(1);
 const pageSize = ref(5);
 const logCount = ref(0);
 
-const activeChartTab = ref('userGrowth');
+const activeChartTab = ref('visitTrend');
+const visitTrendChartRef = ref(null);
 const userGrowthChartRef = ref(null);
 const contentViewsChartRef = ref(null);
 const searchKeywordsChartRef = ref(null);
@@ -217,6 +227,38 @@ const initChart = (el) => {
   const chart = echarts.init(el);
   chartInstances.push(chart);
   return chart;
+};
+
+const loadVisitTrendChart = async () => {
+  if (!visitTrendChartRef.value) return;
+  try {
+    const res = await request.get('/stats/trend');
+    const data = res.data || res || {};
+    const dates = data.dates || [];
+    const counts = data.counts || [];
+    const chart = initChart(visitTrendChartRef.value);
+    chart.setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, right: 20, bottom: 30, left: 50 },
+      xAxis: { type: 'category', data: dates, boundaryGap: false },
+      yAxis: { type: 'value', minInterval: 1 },
+      series: [{
+        data: counts,
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        itemStyle: { color: '#2ecc71' },
+        areaStyle: {
+          color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: 'rgba(46,204,113,0.3)' }, { offset: 1, color: 'rgba(46,204,113,0.02)' }]
+          }
+        }
+      }]
+    });
+  } catch (e) {
+    console.error('平台访问趋势图表加载失败:', e);
+  }
 };
 
 const loadUserGrowthChart = async () => {
@@ -305,7 +347,7 @@ const loadSearchKeywordsChart = async () => {
   }
 };
 
-const chartLoaders = { userGrowth: loadUserGrowthChart, contentViews: loadContentViewsChart, searchKeywords: loadSearchKeywordsChart };
+const chartLoaders = { visitTrend: loadVisitTrendChart, userGrowth: loadUserGrowthChart, contentViews: loadContentViewsChart, searchKeywords: loadSearchKeywordsChart };
 const loadedTabs = new Set();
 
 const loadActiveChart = () => {

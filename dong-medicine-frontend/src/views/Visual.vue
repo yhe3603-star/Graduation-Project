@@ -108,26 +108,17 @@
         />
       </div>
 
-      <div class="charts-row full-width">
+      <div class="charts-row">
         <ChartCard
           title="药方/疗法热度排行"
           :option="popularityChartOption"
           :height="340"
           :loading="chartLoading"
         />
-      </div>
-
-      <div class="charts-row">
         <ChartCard
           title="问答分类热度"
           :option="qaChartOption"
-          :height="300"
-          :loading="chartLoading"
-        />
-        <ChartCard
-          title="平台访问趋势"
-          :option="trendChartOption"
-          :height="300"
+          :height="340"
           :loading="chartLoading"
         />
       </div>
@@ -145,7 +136,7 @@ import StatCard from "@/components/business/display/StatCard.vue";
 import { useVisualData } from "@/composables/useVisualData";
 import {
   GRADIENT_COLORS, baseTooltip, baseGrid, baseXAxis, baseYAxis,
-  createBarSeries, createMultiColorBarSeries, createLineSeries, createPieSeries, createRadarSeries
+  createBarSeries, createMultiColorBarSeries, createPieSeries, createRadarSeries
 } from "@/utils/chartConfig";
 import "@/styles/Visual.css";
 
@@ -280,18 +271,6 @@ const qaChartOption = computed(() => {
       splitLine: { lineStyle: { color: '#e0e0e0' } }
     },
     series: [createRadarSeries(values, GRADIENT_COLORS.blue)]
-  };
-});
-
-const trendChartOption = computed(() => {
-  const dates = chartData.value.userTrendDates.length ? chartData.value.userTrendDates : ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-  const data = chartData.value.userTrend.length ? chartData.value.userTrend : [0, 0, 0, 0, 0, 0, 0];
-  return {
-    tooltip: { ...baseTooltip, trigger: "axis" },
-    grid: baseGrid,
-    xAxis: { ...baseXAxis, data: dates, boundaryGap: false },
-    yAxis: baseYAxis,
-    series: [createLineSeries(data, GRADIENT_COLORS.green)]
   };
 });
 
