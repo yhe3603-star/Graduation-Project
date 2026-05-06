@@ -3,6 +3,7 @@ package com.dongmedicine.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.constant.TargetType;
 import com.dongmedicine.entity.*;
 import com.dongmedicine.mapper.*;
 import com.dongmedicine.service.BrowseHistoryService;
@@ -124,35 +125,35 @@ public class BrowseHistoryServiceImpl extends ServiceImpl<BrowseHistoryMapper, B
         
         try {
             switch (targetType) {
-                case "plant":
+                case TargetType.Constants.PLANT:
                     Plant plant = plantMapper.selectById(targetId);
                     if (plant != null) {
                         result.put("title", plant.getNameCn());
                         result.put("description", plant.getEfficacy());
                     }
                     break;
-                case "knowledge":
+                case TargetType.Constants.KNOWLEDGE:
                     Knowledge knowledge = knowledgeMapper.selectById(targetId);
                     if (knowledge != null) {
                         result.put("title", knowledge.getTitle());
                         result.put("description", knowledge.getContent());
                     }
                     break;
-                case "inheritor":
+                case TargetType.Constants.INHERITOR:
                     Inheritor inheritor = inheritorMapper.selectById(targetId);
                     if (inheritor != null) {
                         result.put("title", inheritor.getName());
                         result.put("description", inheritor.getBio());
                     }
                     break;
-                case "resource":
+                case TargetType.Constants.RESOURCE:
                     Resource resource = resourceMapper.selectById(targetId);
                     if (resource != null) {
                         result.put("title", resource.getTitle());
                         result.put("description", resource.getDescription());
                     }
                     break;
-                case "qa":
+                case TargetType.Constants.QA:
                     Qa qa = qaMapper.selectById(targetId);
                     if (qa != null) {
                         result.put("title", qa.getQuestion());

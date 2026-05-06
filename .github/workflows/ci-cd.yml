@@ -62,7 +62,7 @@ jobs:
         working-directory: dong-medicine-frontend
         run: |
           npm ci --prefer-offline
-          npm run test -- --passWithNoTests || true
+          npm run test -- --passWithNoTests
 
   build-and-push:
     name: Build & Push

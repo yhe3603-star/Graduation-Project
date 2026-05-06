@@ -3,6 +3,7 @@ package com.dongmedicine.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
+import com.dongmedicine.common.constant.TargetType;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
@@ -63,7 +64,7 @@ public class PlantController {
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         if (userId != null) {
             try {
-                browseHistoryService.record(userId, "plant", id);
+                browseHistoryService.record(userId, TargetType.PLANT.getValue(), id);
             } catch (Exception e) {
                 log.debug("记录浏览历史失败", e);
             }

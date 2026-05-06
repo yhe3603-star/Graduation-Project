@@ -3,6 +3,7 @@ package com.dongmedicine.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.dongmedicine.common.constant.TargetType;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.entity.*;
@@ -75,11 +76,11 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
 
     private void incrementFavoriteCount(String targetType, Integer targetId, int delta) {
         switch (targetType) {
-            case "plant" -> plantMapper.incrementFavoriteCount(targetId, delta);
-            case "knowledge" -> knowledgeMapper.incrementFavoriteCount(targetId, delta);
-            case "inheritor" -> inheritorMapper.incrementFavoriteCount(targetId, delta);
-            case "resource" -> resourceMapper.incrementFavoriteCount(targetId, delta);
-            case "qa" -> qaMapper.incrementFavoriteCount(targetId, delta);
+            case TargetType.Constants.PLANT -> plantMapper.incrementFavoriteCount(targetId, delta);
+            case TargetType.Constants.KNOWLEDGE -> knowledgeMapper.incrementFavoriteCount(targetId, delta);
+            case TargetType.Constants.INHERITOR -> inheritorMapper.incrementFavoriteCount(targetId, delta);
+            case TargetType.Constants.RESOURCE -> resourceMapper.incrementFavoriteCount(targetId, delta);
+            case TargetType.Constants.QA -> qaMapper.incrementFavoriteCount(targetId, delta);
             default -> throw BusinessException.badRequest("不支持的收藏类型: " + targetType);
         }
     }
@@ -163,23 +164,23 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
         }
 
         switch (type) {
-            case "plant":
+            case TargetType.Constants.PLANT:
                 List<Plant> plants = plantMapper.selectBatchIds(ids);
                 plants.forEach(p -> result.put(p.getId(), p));
                 break;
-            case "knowledge":
+            case TargetType.Constants.KNOWLEDGE:
                 List<Knowledge> knowledgeList = knowledgeMapper.selectBatchIds(ids);
                 knowledgeList.forEach(k -> result.put(k.getId(), k));
                 break;
-            case "inheritor":
+            case TargetType.Constants.INHERITOR:
                 List<Inheritor> inheritors = inheritorMapper.selectBatchIds(ids);
                 inheritors.forEach(i -> result.put(i.getId(), i));
                 break;
-            case "resource":
+            case TargetType.Constants.RESOURCE:
                 List<Resource> resources = resourceMapper.selectBatchIds(ids);
                 resources.forEach(r -> result.put(r.getId(), r));
                 break;
-            case "qa":
+            case TargetType.Constants.QA:
                 List<Qa> qaList = qaMapper.selectBatchIds(ids);
                 qaList.forEach(q -> result.put(q.getId(), q));
                 break;
@@ -189,30 +190,30 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
 
     private void fillItemFromCache(Map<String, Object> item, String targetType, Object data) {
         switch (targetType) {
-            case "plant":
+            case TargetType.Constants.PLANT:
                 Plant plant = (Plant) data;
                 item.put("nameCn", plant.getNameCn());
                 item.put("name", plant.getNameCn());
                 item.put("description", plant.getEfficacy());
                 break;
-            case "knowledge":
+            case TargetType.Constants.KNOWLEDGE:
                 Knowledge knowledge = (Knowledge) data;
                 item.put("title", knowledge.getTitle());
                 item.put("name", knowledge.getTitle());
                 item.put("description", knowledge.getContent());
                 break;
-            case "inheritor":
+            case TargetType.Constants.INHERITOR:
                 Inheritor inheritor = (Inheritor) data;
                 item.put("name", inheritor.getName());
                 item.put("description", inheritor.getBio());
                 break;
-            case "resource":
+            case TargetType.Constants.RESOURCE:
                 Resource resource = (Resource) data;
                 item.put("title", resource.getTitle());
                 item.put("name", resource.getTitle());
                 item.put("description", resource.getDescription());
                 break;
-            case "qa":
+            case TargetType.Constants.QA:
                 Qa qa = (Qa) data;
                 item.put("question", qa.getQuestion());
                 item.put("name", qa.getQuestion());

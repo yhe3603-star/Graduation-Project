@@ -15,7 +15,7 @@ spring:
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 5
+      maximum-pool-size: 15
       minimum-idle: 2
       idle-timeout: 600000
       connection-timeout: 30000
@@ -40,7 +40,7 @@ spring:
       lettuce:
         pool:
           max-active: 8
-          max-wait: -1ms
+          max-wait: 5000ms
           max-idle: 4
           min-idle: 2
   rabbitmq:
@@ -67,7 +67,7 @@ jwt:
 
 sa-token:
   token-name: Authorization
-  timeout: ${SA_TOKEN_TIMEOUT:2592000}
+  timeout: ${SA_TOKEN_TIMEOUT:604800}
   active-timeout: -1
   is-concurrent: true
   is-share: false

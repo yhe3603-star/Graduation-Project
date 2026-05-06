@@ -1,5 +1,22 @@
 import { ref, computed } from 'vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { LineChart } from 'echarts/charts'
+import {
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  GraphicComponent
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([
+  LineChart,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  GraphicComponent,
+  CanvasRenderer
+])
 
 export function useStudyStats() {
   const studyStatsRaw = ref({

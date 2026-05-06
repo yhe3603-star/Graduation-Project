@@ -1,6 +1,7 @@
 package com.dongmedicine.controller;
 
 import com.dongmedicine.common.R;
+import com.dongmedicine.common.constant.TargetType;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.entity.Plant;
@@ -88,7 +89,7 @@ public class MetadataController {
             plantItem.put("id", topPlant.getId());
             plantItem.put("title", topPlant.getNameCn());
             plantItem.put("description", topPlant.getEfficacy());
-            plantItem.put("type", "plant");
+            plantItem.put("type", TargetType.PLANT.getValue());
             plantItem.put("typeLabel", "植物");
             plantItem.put("tagType", "success");
             plantItem.put("viewCount", topPlant.getViewCount());
@@ -102,7 +103,7 @@ public class MetadataController {
             knowledgeItem.put("id", topK.getId());
             knowledgeItem.put("title", topK.getTitle());
             knowledgeItem.put("description", topK.getContent());
-            knowledgeItem.put("type", "knowledge");
+            knowledgeItem.put("type", TargetType.KNOWLEDGE.getValue());
             knowledgeItem.put("typeLabel", "知识");
             knowledgeItem.put("tagType", "primary");
             knowledgeItem.put("viewCount", topK.getViewCount());
@@ -116,7 +117,7 @@ public class MetadataController {
             inheritorItem.put("id", topI.getId());
             inheritorItem.put("title", topI.getName());
             inheritorItem.put("description", topI.getBio());
-            inheritorItem.put("type", "inheritor");
+            inheritorItem.put("type", TargetType.INHERITOR.getValue());
             inheritorItem.put("typeLabel", "传承人");
             inheritorItem.put("tagType", "warning");
             inheritorItem.put("viewCount", topI.getViewCount());

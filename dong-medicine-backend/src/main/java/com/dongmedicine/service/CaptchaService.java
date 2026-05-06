@@ -18,7 +18,7 @@ import com.dongmedicine.common.exception.BusinessException;
 
 /**
  * 验证码服务
- * 生成4位数字验证码图片，存储到Redis中，有效期5分钟
+ * 生成5位字母数字验证码图片，存储到Redis中，有效期5分钟
  */
 @Service
 public class CaptchaService {
@@ -31,7 +31,9 @@ public class CaptchaService {
     // 验证码图片高度
     private static final int HEIGHT = 40;
     // 验证码字符数
-    private static final int CODE_LENGTH = 4;
+    private static final int CODE_LENGTH = 5;
+    // 验证码字符集（排除易混淆字符 0/O/1/l/I）
+    private static final String CHAR_POOL = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     // 验证码有效期（分钟）
     private static final int EXPIRE_MINUTES = 5;
     // Redis key前缀
@@ -86,8 +88,8 @@ public class CaptchaService {
             redisTemplate.delete(redisKey);
         }
         
-        // 验证码不区分大小写（数字验证码无需区分）
-        return storedCode != null && storedCode.equals(captchaCode);
+        // 验证码不区分大小写
+        return storedCode != null && storedCode.equalsIgnoreCase(captchaCode);
     }
 
     /**
@@ -109,12 +111,12 @@ public class CaptchaService {
     }
 
     /**
-     * 生成4位数字验证码
+     * 生成5位字母数字验证码
      */
     private String generateCode() {
         StringBuilder code = new StringBuilder();
         for (int i = 0; i < CODE_LENGTH; i++) {
-            code.append(random.nextInt(10));
+            code.append(CHAR_POOL.charAt(random.nextInt(CHAR_POOL.length())));
         }
         return code.toString();
     }

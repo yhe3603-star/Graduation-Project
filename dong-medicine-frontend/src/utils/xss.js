@@ -57,6 +57,12 @@ export function sanitize(input) {
 export function sanitizeHtml(input) {
   if (!input || typeof input !== 'string') return input
 
+  // Strip javascript: protocol from raw text
+  const JAVASCRIPT_PROTOCOL = /^\s*javascript\s*:/gi
+  if (JAVASCRIPT_PROTOCOL.test(input)) {
+    return input.replace(JAVASCRIPT_PROTOCOL, '')
+  }
+
   try {
     const parser = new DOMParser()
     const doc = parser.parseFromString(input, 'text/html')

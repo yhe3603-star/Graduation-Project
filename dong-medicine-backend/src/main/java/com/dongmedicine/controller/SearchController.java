@@ -2,6 +2,7 @@ package com.dongmedicine.controller;
 
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
+import com.dongmedicine.common.constant.TargetType;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.entity.Plant;
@@ -50,7 +51,7 @@ public class SearchController {
         List<Plant> plants = plantService.searchPaged(keyword, 1, 5).getRecords();
         for (Plant p : plants) {
             Map<String, Object> item = new LinkedHashMap<>();
-            item.put("type", "plant");
+            item.put("type", TargetType.PLANT.getValue());
             item.put("id", p.getId());
             item.put("name", p.getNameCn());
             item.put("category", p.getCategory());
@@ -61,7 +62,7 @@ public class SearchController {
         List<Knowledge> knowledgeList = knowledgeService.advancedSearchPaged(keyword, null, null, null, "popularity", 1, 5).getRecords();
         for (Knowledge k : knowledgeList) {
             Map<String, Object> item = new LinkedHashMap<>();
-            item.put("type", "knowledge");
+            item.put("type", TargetType.KNOWLEDGE.getValue());
             item.put("id", k.getId());
             item.put("name", k.getTitle());
             item.put("category", k.getType());
@@ -72,7 +73,7 @@ public class SearchController {
         List<Inheritor> inheritors = inheritorService.searchPaged(keyword, 1, 5).getRecords();
         for (Inheritor i : inheritors) {
             Map<String, Object> item = new LinkedHashMap<>();
-            item.put("type", "inheritor");
+            item.put("type", TargetType.INHERITOR.getValue());
             item.put("id", i.getId());
             item.put("name", i.getName());
             item.put("category", i.getLevel());

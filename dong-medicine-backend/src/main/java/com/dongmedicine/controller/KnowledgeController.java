@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
+import com.dongmedicine.common.constant.TargetType;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
 import com.dongmedicine.config.RateLimit;
@@ -70,7 +71,7 @@ public class KnowledgeController {
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         if (userId != null) {
             try {
-                browseHistoryService.record(userId, "knowledge", id);
+                browseHistoryService.record(userId, TargetType.KNOWLEDGE.getValue(), id);
             } catch (Exception e) {
                 log.debug("记录浏览历史失败", e);
             }

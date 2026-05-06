@@ -12,8 +12,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @Configuration
 public class SaTokenConfig implements WebMvcConfigurer {
+
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private List<String> allowedOrigins;
 
     /**
      * 写操作HTTP方法列表，这些方法需要登录认证
@@ -115,7 +120,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-            .allowedOriginPatterns("*")
+            .allowedOrigins(allowedOrigins.toArray(new String[0]))
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
             .allowedHeaders("*")
             .allowCredentials(true)
