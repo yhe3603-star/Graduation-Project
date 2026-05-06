@@ -114,14 +114,15 @@ npm run build
 - **Source Map**：生产构建默认关闭 (`sourcemap: false`)，减小包体积
 - **chunkSizeWarningLimit**：设置为 1500KB，避免大 chunk 告警
 - **并行操作**：`maxParallelFileOps: 2`，防止 CI 环境内存溢出
+- **ECharts 按需引入**：已配置 `echarts/core` 模式，仅注册实际使用的图表类型和组件，减少约 60% 的包体积
 
 ### 运行测试
 
 ```bash
 npm test              # 运行 Vitest 单元测试（watch 模式）
-npm run test:run      # 单次运行所有测试
+npm run test:run      # 单次运行所有测试（608 个用例）
 npm run test:coverage # 生成覆盖率报告
-npm run test:e2e      # 运行 Playwright E2E 测试
+npm run test:e2e      # 运行 Playwright E2E 测试（Chrome + Firefox + Safari）
 npm run test:e2e:ui   # Playwright UI 模式运行测试
 npm run lint          # ESLint 修复代码
 ```
@@ -224,7 +225,7 @@ manualChunks(id) {
 - **JWT 认证**：token 存储在 localStorage，请求自动携带 `Authorization: Bearer <token>` 头
 - **Token 自动刷新**：401 响应时自动尝试 `/user/refresh-token` 接口刷新 token；刷新失败触发 `auth-expired` 自定义事件清空认证状态
 - **Token 本地解码**：客户端解码 JWT payload 检查 `exp` 过期时间，提前判断无需每次都请求服务端
-- **XSS 防护**：请求数据在发送前经过 `sanitizeRequestData` 处理，检测并清除 `<script>`、`onerror` 等 28 种攻击模式；`sanitizeHtml` 使用 DOMParser 解析后移除危险元素和属性，防止编码绕过
+- **XSS 防护**：请求数据在发送前经过 `sanitizeRequestData` 处理，检测并清除 `<script>`、`onerror` 等 28 种攻击模式；`sanitizeHtml` 使用 DOMParser 解析后移除危险元素和属性，增加 `javascript:` 协议前缀过滤，防止编码绕过
 - **SQL 注入防护**：请求参数检测 SQL 注入特征码（`union select`、`;` + SQL 语句、`OR 1=1`、SQL 注释符等），针对上下文匹配降低误报
 - **重复请求取消**：非 GET/HEAD/OPTIONS 的重复请求自动通过 AbortController 取消前一次请求，防止重复提交
 - **请求重试**：GET/HEAD/OPTIONS 请求在网络错误或 408/429/5xx 状态码时自动重试（最多 3 次，指数退避 1s/2s/4s）

@@ -284,6 +284,8 @@ mysql -u root -p
 source dong_medicine.sql
 # 这会创建 dong_medicine 数据库，建表，并插入种子数据
 
+# 注意：开发环境首次启动后端时，Flyway 会自动执行迁移脚本（无需手动执行此步骤）
+
 # 4. 验证
 USE dong_medicine;
 SHOW TABLES;
@@ -369,7 +371,11 @@ docker-compose up -d
 docker-compose ps
 ```
 
-Docker Compose 会自动启动以下6个服务：
+> 💡 部署脚本：
+> - `deploy/setup-ssl.sh <域名>` — 申请 Let's Encrypt HTTPS 证书
+> - `deploy/backup-db.sh` — 数据库每日备份（保留7天）
+
+Docker Compose 会自动启动以下8个服务：
 
 | 服务 | 容器名 | 端口 | 说明 |
 |------|--------|------|------|
@@ -379,9 +385,13 @@ Docker Compose 会自动启动以下6个服务：
 | Backend | dong-medicine-backend | -- | Spring Boot后端（仅内部网络访问） |
 | Frontend | dong-medicine-frontend | 3000→80 | Nginx前端+反向代理 |
 | KKFileView | dong-medicine-kkfileview | -- | 文档预览（通过Nginx代理访问） |
+| Prometheus | dong-medicine-prometheus | -- | 监控数据采集（仅内部网络访问） |
+| Grafana | dong-medicine-grafana | 3001→3000 | 监控看板（访问 http://localhost:3001） |
 
 > 💡 所有服务通过Docker内部网络通信，只有前端(3000)和MySQL(3307)暴露到宿主机。
 > 使用Navicat连接MySQL时：主机`localhost`，端口`3307`，用户名`root`，密码见`.env`文件。
+>
+> 💡 Prometheus 采集后端 Actuator 指标，Grafana 提供可视化看板。访问 http://localhost:3001 查看监控面板（默认账号 admin/admin）。
 
 ### 默认管理员账号
 
@@ -491,6 +501,11 @@ XSS过滤器检测到危险模式 → 清理或拒绝 → 安全！
 ```
 
 本项目在前后端都做了XSS过滤，后端XssFilter会检查所有请求参数。
+
+此外，安全防护还包括：
+- **CORS 白名单**：后端从配置文件读取允许的源，不使用通配符
+- **验证码增强**：5位字母数字混合验证码，忽略大小写验证
+- **CSP/HSTS 安全响应头**：Content-Security-Policy 防止内容注入，HSTS 强制 HTTPS 访问，Permissions-Policy 限制浏览器功能
 
 ### SQL注入防护 —— "防止偷改数据库指令"
 
