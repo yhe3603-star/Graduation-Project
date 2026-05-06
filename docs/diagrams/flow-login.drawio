@@ -19,7 +19,7 @@
         <mxCell id="f2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="输入用户名和密码" vertex="1">
           <mxGeometry height="40" width="160" x="200" y="320" as="geometry" />
         </mxCell>
-        <mxCell id="f2b" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="输入图形验证码" vertex="1">
+        <mxCell id="f2b" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="输入5位字母数字验证码" vertex="1">
           <mxGeometry height="35" width="160" x="200" y="380" as="geometry" />
         </mxCell>
         <mxCell id="f3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="POST /api/user/login&lt;br&gt;@RateLimit(5)" vertex="1">
@@ -37,7 +37,7 @@
         <mxCell id="f6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="返回账号已禁用" vertex="1">
           <mxGeometry height="40" width="130" x="390" y="625" as="geometry" />
         </mxCell>
-        <mxCell id="f7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Sa-Token 生成 Token (UUID/JWT)" vertex="1">
+        <mxCell id="f7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Sa-Token 生成 Token (7天有效期)" vertex="1">
           <mxGeometry height="40" width="180" x="190" y="710" as="geometry" />
         </mxCell>
         <mxCell id="f8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="返回 Token + 用户信息" vertex="1">
@@ -55,7 +55,7 @@
         <mxCell id="f_home" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="跳转首页" vertex="1">
           <mxGeometry height="35" width="100" x="230" y="1010" as="geometry" />
         </mxCell>
-        <mxCell id="r1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="输入注册信息&lt;br&gt;(用户名/密码/确认密码/验证码)" vertex="1">
+        <mxCell id="r1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="输入注册信息&lt;br&gt;(用户名/密码/确认密码/5位字母数字验证码)" vertex="1">
           <mxGeometry height="50" width="200" x="670" y="320" as="geometry" />
         </mxCell>
         <mxCell id="r2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="POST /api/user/register&lt;br&gt;@RateLimit(3)" vertex="1">

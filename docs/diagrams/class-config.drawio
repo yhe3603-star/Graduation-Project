@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="配置与AOP切面类图" id="class-config">
-    <mxGraphModel dx="1572" dy="868" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+    <mxGraphModel dx="1572" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -28,7 +28,7 @@
         <mxCell id="XssWrapper" parent="filter_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;XssHttpServletRequestWrapper&lt;/b&gt;&lt;br&gt;&lt;i&gt;extends HttpServletRequestWrapper&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ getParameter() : String&lt;br&gt;+ getParameterValues() : String[]&lt;br&gt;+ getInputStream() : ServletInputStream&lt;br&gt;&lt;small&gt;清理请求参数中的XSS代码&lt;/small&gt;" vertex="1">
           <mxGeometry height="130" width="220" x="220" y="35" as="geometry" />
         </mxCell>
-        <mxCell id="SaInterceptor" parent="filter_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;SaTokenConfig&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Configuration implements WebMvcConfigurer&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ addInterceptors(registry)&lt;br&gt;&lt;small&gt;注册 Sa-Token 拦截器&lt;br&gt;POST/PUT/DELETE/PATCH 需登录&lt;br&gt;GET 公开 (白名单排除)&lt;br&gt;/api/admin/** 需admin角色&lt;/small&gt;" vertex="1">
+        <mxCell id="SaInterceptor" parent="filter_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;SaTokenConfig&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Configuration implements WebMvcConfigurer&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ addInterceptors(registry)&lt;br&gt;&lt;small&gt;注册 Sa-Token 拦截器&lt;br&gt;POST/PUT/DELETE/PATCH 需登录&lt;br&gt;GET 公开 (白名单排除)&lt;br&gt;/api/admin/** 需admin角色&lt;br&gt;Token超时: 7天(604800秒)&lt;/small&gt;" vertex="1">
           <mxGeometry height="150" width="200" x="450" y="35" as="geometry" />
         </mxCell>
         <mxCell id="cache_header" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" value="缓存配置" vertex="1">
@@ -73,8 +73,14 @@
         <mxCell id="SwaggerConfig" parent="static_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#CCCCCC;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;SwaggerConfig&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Configuration&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ api() : OpenAPI&lt;br&gt;&lt;small&gt;SpringDoc/OpenAPI 配置&lt;br&gt;Swagger UI: /swagger-ui.html&lt;/small&gt;" vertex="1">
           <mxGeometry height="100" width="200" x="220" y="35" as="geometry" />
         </mxCell>
-        <mxCell id="CorsConfig" parent="static_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#CCCCCC;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;CorsConfig&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Configuration&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ corsFilter() : CorsFilter&lt;br&gt;&lt;small&gt;跨域配置&lt;br&gt;允许前端 localhost:5173&lt;/small&gt;" vertex="1">
+        <mxCell id="CorsConfig" parent="static_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#CCCCCC;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;CorsConfig&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Configuration&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ corsFilter() : CorsFilter&lt;br&gt;&lt;small&gt;跨域配置&lt;br&gt;CORS白名单: 从app.cors.allowed-origins配置读取&lt;/small&gt;" vertex="1">
           <mxGeometry height="100" width="200" x="430" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="db_header" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="数据库迁移配置" vertex="1">
+          <mxGeometry height="200" width="660" x="20" y="840" as="geometry" />
+        </mxCell>
+        <mxCell id="FlywayConfig" parent="db_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;FlywayConfig&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Configuration&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ flyway() : Flyway&lt;br&gt;&lt;small&gt;spring.flyway.enabled=true&lt;br&gt;迁移脚本: classpath:db/migration/&lt;br&gt;V1__init_schema.sql (DDL)&lt;br&gt;V2__seed_data.sql (种子数据)&lt;br&gt;生产环境: baseline-on-migrate=true&lt;/small&gt;" vertex="1">
+          <mxGeometry height="150" width="220" x="10" y="35" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

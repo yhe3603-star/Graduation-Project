@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net">
   <diagram name="系统架构图" id="arch">
-    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1600" dy="1300" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1250" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
@@ -31,21 +31,21 @@
           <mxGeometry x="680" y="40" width="200" height="140" as="geometry"/>
         </mxCell>
 
-        <mxCell id="nginx" value="Nginx 反向代理&lt;br&gt;&lt;hr&gt;静态文件服务&lt;br&gt;/api → Backend:8080&lt;br&gt;/ws → WebSocket&lt;br&gt;/kkfileview → KKFileView" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;align=center;" vertex="1" parent="pres_layer">
-          <mxGeometry x="900" y="40" width="200" height="140" as="geometry"/>
+        <mxCell id="nginx" value="Nginx 反向代理&lt;br&gt;&lt;hr&gt;静态文件服务&lt;br&gt;/api → Backend:8080&lt;br&gt;/ws → WebSocket&lt;br&gt;/kkfileview → KKFileView&lt;br&gt;HTTPS/SSL终止&lt;br&gt;CSP/HSTS响应头注入" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;align=center;" vertex="1" parent="pres_layer">
+          <mxGeometry x="900" y="40" width="200" height="170" as="geometry"/>
         </mxCell>
 
         <!-- ========== APPLICATION LAYER ========== -->
         <mxCell id="app_layer" value="应用层 (Application / Spring Boot)" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=14;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="40" y="280" width="1320" height="280" as="geometry"/>
+          <mxGeometry x="40" y="280" width="1320" height="390" as="geometry"/>
         </mxCell>
 
-        <mxCell id="controllers" value="Controller 层&lt;br&gt;&lt;hr&gt;PlantController&lt;br&gt;KnowledgeController&lt;br&gt;InheritorController&lt;br&gt;ResourceController&lt;br&gt;QaController&lt;br&gt;UserController&lt;br&gt;AdminController&lt;br&gt;CommentController&lt;br&gt;FavoriteController&lt;br&gt;FeedbackController&lt;br&gt;FileController&lt;br&gt;QuizController&lt;br&gt;StatsController" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
-          <mxGeometry x="20" y="40" width="170" height="220" as="geometry"/>
+        <mxCell id="controllers" value="Controller 层 (27个)&lt;br&gt;&lt;hr&gt;PlantController&lt;br&gt;KnowledgeController&lt;br&gt;InheritorController&lt;br&gt;ResourceController&lt;br&gt;QaController&lt;br&gt;UserController&lt;br&gt;AdminController&lt;br&gt;CommentController&lt;br&gt;FavoriteController&lt;br&gt;FeedbackController&lt;br&gt;FileController&lt;br&gt;QuizController&lt;br&gt;StatsController&lt;br&gt;&lt;i&gt;...等共27个Controller&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
+          <mxGeometry x="20" y="40" width="170" height="240" as="geometry"/>
         </mxCell>
 
-        <mxCell id="services" value="Service 层&lt;br&gt;&lt;hr&gt;PlantService&lt;br&gt;KnowledgeService&lt;br&gt;InheritorService&lt;br&gt;ResourceService&lt;br&gt;QaService&lt;br&gt;UserService&lt;br&gt;AdminService&lt;br&gt;CommentService&lt;br&gt;FavoriteService&lt;br&gt;FeedbackService&lt;br&gt;FileService&lt;br&gt;QuizService&lt;br&gt;StatsService&lt;br&gt;BrowseHistoryService&lt;br&gt;PopularityAsyncService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
-          <mxGeometry x="210" y="40" width="170" height="220" as="geometry"/>
+        <mxCell id="services" value="Service 层 (18个实现)&lt;br&gt;&lt;hr&gt;PlantService&lt;br&gt;KnowledgeService&lt;br&gt;InheritorService&lt;br&gt;ResourceService&lt;br&gt;QaService&lt;br&gt;UserService&lt;br&gt;AdminService&lt;br&gt;CommentService&lt;br&gt;FavoriteService&lt;br&gt;FeedbackService&lt;br&gt;FileService&lt;br&gt;QuizService&lt;br&gt;StatsService&lt;br&gt;BrowseHistoryService&lt;br&gt;PopularityAsyncService&lt;br&gt;&lt;i&gt;...等共18个Service实现&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
+          <mxGeometry x="210" y="40" width="170" height="240" as="geometry"/>
         </mxCell>
 
         <mxCell id="mappers" value="Mapper 层 (MyBatis-Plus)&lt;br&gt;&lt;hr&gt;PlantMapper&lt;br&gt;KnowledgeMapper&lt;br&gt;InheritorMapper&lt;br&gt;ResourceMapper&lt;br&gt;QaMapper&lt;br&gt;UserMapper&lt;br&gt;CommentMapper&lt;br&gt;FavoriteMapper&lt;br&gt;FeedbackMapper&lt;br&gt;QuizMapper&lt;br&gt;BrowseHistoryMapper&lt;br&gt;ChatHistoryMapper&lt;br&gt;SearchHistoryMapper&lt;br&gt;OperationLogMapper" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
@@ -56,8 +56,8 @@
           <mxGeometry x="600" y="40" width="170" height="140" as="geometry"/>
         </mxCell>
 
-        <mxCell id="security" value="安全认证&lt;br&gt;&lt;hr&gt;Sa-Token + JWT&lt;br&gt;SaTokenConfig&lt;br&gt;  (拦截器配置)&lt;br&gt;SecurityUtils&lt;br&gt;  (用户信息获取)&lt;br&gt;@SaCheckLogin&lt;br&gt;@SaCheckRole&lt;br&gt;RateLimit 注解&lt;br&gt;XssFilter&lt;br&gt;  (XSS过滤/Servlet Filter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
-          <mxGeometry x="790" y="40" width="160" height="210" as="geometry"/>
+        <mxCell id="security" value="安全认证&lt;br&gt;&lt;hr&gt;Sa-Token + JWT&lt;br&gt;SaTokenConfig&lt;br&gt;  (拦截器配置)&lt;br&gt;SecurityUtils&lt;br&gt;  (用户信息获取)&lt;br&gt;@SaCheckLogin&lt;br&gt;@SaCheckRole&lt;br&gt;RateLimit 注解&lt;br&gt;XssFilter&lt;br&gt;  (XSS过滤/Servlet Filter)&lt;br&gt;CORS白名单&lt;br&gt;CSP/HSTS安全响应头" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
+          <mxGeometry x="790" y="40" width="160" height="250" as="geometry"/>
         </mxCell>
 
         <mxCell id="websocket" value="WebSocket&lt;br&gt;&lt;hr&gt;ChatWebSocketHandler&lt;br&gt;  (AI聊天流式)&lt;br&gt;WebClient → DeepSeek API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
@@ -68,8 +68,8 @@
           <mxGeometry x="1160" y="40" width="140" height="130" as="geometry"/>
         </mxCell>
 
-        <mxCell id="common" value="公共组件&lt;br&gt;&lt;hr&gt;R.java (统一响应)&lt;br&gt;PageUtils (分页转换)&lt;br&gt;BaseEntity (基类)&lt;br&gt;BusinessException&lt;br&gt;CacheConfig (二级缓存)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
-          <mxGeometry x="790" y="220" width="170" height="130" as="geometry"/>
+        <mxCell id="common" value="公共组件&lt;br&gt;&lt;hr&gt;R.java (统一响应)&lt;br&gt;PageUtils (分页转换)&lt;br&gt;BaseEntity (基类)&lt;br&gt;BusinessException&lt;br&gt;CacheConfig (二级缓存)&lt;br&gt;TargetType枚举" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" vertex="1" parent="app_layer">
+          <mxGeometry x="790" y="220" width="170" height="150" as="geometry"/>
         </mxCell>
 
         <!-- Arrows between layers in app -->
@@ -80,7 +80,7 @@
 
         <!-- ========== MIDDLEWARE LAYER ========== -->
         <mxCell id="mid_layer" value="中间件层 (Middleware)" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="40" y="580" width="1320" height="150" as="geometry"/>
+          <mxGeometry x="40" y="690" width="1320" height="240" as="geometry"/>
         </mxCell>
 
         <mxCell id="mysql" value="MySQL 8.0&lt;br&gt;&lt;hr&gt;dong_medicine 数据库&lt;br&gt;16张表 + 2个视图&lt;br&gt;FULLTEXT 全文索引&lt;br&gt;utf8mb4 字符集" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;align=center;" vertex="1" parent="mid_layer">
@@ -106,6 +106,12 @@
         <mxCell id="deepseek" value="DeepSeek AI API&lt;br&gt;&lt;hr&gt;大语言模型&lt;br&gt;AI智能问诊&lt;br&gt;流式响应(SSE)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;align=center;" vertex="1" parent="mid_layer">
           <mxGeometry x="1030" y="40" width="170" height="90" as="geometry"/>
         </mxCell>
+        <mxCell id="prometheus" value="Prometheus&lt;br&gt;&lt;hr&gt;Prometheus指标采集&lt;br&gt;应用性能监控&lt;br&gt;自定义业务指标" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;align=center;" vertex="1" parent="mid_layer">
+          <mxGeometry x="20" y="140" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="grafana" value="Grafana&lt;br&gt;&lt;hr&gt;Grafana可视化看板&lt;br&gt;系统监控仪表盘&lt;br&gt;告警规则配置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;align=center;" vertex="1" parent="mid_layer">
+          <mxGeometry x="240" y="140" width="200" height="80" as="geometry"/>
+        </mxCell>
 
         <!-- Two-level cache arrow -->
         <mxCell id="cache_arrow" value="L1 → L2 二级缓存" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#9673a6;fontSize=10;" edge="1" source="caffeine" target="redis" parent="mid_layer">
@@ -114,7 +120,7 @@
 
         <!-- ========== DATA LAYER ========== -->
         <mxCell id="data_layer" value="数据层 (Storage)" style="swimlane;startSize=30;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=14;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="40" y="750" width="1320" height="120" as="geometry"/>
+          <mxGeometry x="40" y="950" width="1320" height="120" as="geometry"/>
         </mxCell>
 
         <mxCell id="mysql_vol" value="MySQL 数据卷&lt;br&gt;mysql_data:/var/lib/mysql" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="data_layer">
@@ -137,13 +143,13 @@
           <mxGeometry x="860" y="40" width="180" height="60" as="geometry"/>
         </mxCell>
 
-        <mxCell id="sql_init" value="初始化SQL&lt;br&gt;dong_medicine.sql" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="data_layer">
-          <mxGeometry x="1060" y="40" width="160" height="60" as="geometry"/>
+        <mxCell id="sql_init" value="初始化SQL&lt;br&gt;dong_medicine.sql&lt;br&gt;Flyway迁移脚本&lt;br&gt;V1 Schema + V2 Seed Data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="data_layer">
+          <mxGeometry x="1060" y="40" width="160" height="80" as="geometry"/>
         </mxCell>
 
         <!-- ========== CI/CD LAYER ========== -->
         <mxCell id="cicd" value="CI/CD (GitHub Actions)&lt;br&gt;&lt;hr&gt;test → build Docker images → push to GHCR → SSH deploy" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13;rounded=1;arcSize=8;" vertex="1" parent="1">
-          <mxGeometry x="40" y="890" width="1320" height="80" as="geometry"/>
+          <mxGeometry x="40" y="1090" width="1320" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="ci_step1" value="1. 运行测试" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=11;" vertex="1" parent="cicd">
           <mxGeometry x="30" y="40" width="140" height="30" as="geometry"/>

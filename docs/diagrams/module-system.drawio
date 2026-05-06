@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="系统支撑模块" id="mod-system">
-    <mxGraphModel dx="1460" dy="806" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+    <mxGraphModel dx="1460" dy="806" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="950" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -71,7 +71,7 @@
           <mxGeometry height="30" width="200" x="100" y="265" as="geometry" />
         </mxCell>
         <mxCell id="sec_box" parent="1" style="swimlane;startSize=25;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;rounded=1;" value="安全防护" vertex="1">
-          <mxGeometry height="240" width="380" x="20" y="360" as="geometry" />
+          <mxGeometry height="290" width="380" x="20" y="360" as="geometry" />
         </mxCell>
         <mxCell id="sec1" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="XssFilter&lt;br&gt;&lt;small&gt;JSON body递归过滤, 30+规则&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="175" x="10" y="30" as="geometry" />
@@ -88,14 +88,26 @@
         <mxCell id="sec5" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="SQL注入检测&lt;br&gt;&lt;small&gt;XssUtils.containsSqlInjection()&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="175" x="10" y="120" as="geometry" />
         </mxCell>
-        <mxCell id="sec6" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="CORS配置&lt;br&gt;&lt;small&gt;allowCredentials=true, maxAge=3600&lt;/small&gt;" vertex="1">
+        <mxCell id="sec6" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="CORS白名单配置&lt;br&gt;&lt;small&gt;从app.cors.allowed-origins读取&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="175" x="195" y="120" as="geometry" />
         </mxCell>
         <mxCell id="sec7" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="JWT Secret校验&lt;br&gt;&lt;small&gt;≥32字符, @PostConstruct验证&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="175" x="100" y="165" as="geometry" />
         </mxCell>
+        <mxCell id="sec8" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="CSP响应头&lt;br&gt;&lt;small&gt;Content-Security-Policy&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="sec9" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" value="HSTS响应头&lt;br&gt;&lt;small&gt;Strict-Transport-Security&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="sec10" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="Sa-Token 7天超时&lt;br&gt;&lt;small&gt;tokenTimeout=604800&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="10" y="255" as="geometry" />
+        </mxCell>
+        <mxCell id="sec11" parent="sec_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="验证码5位字母数字混合&lt;br&gt;&lt;small&gt;captcha.length=5&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="175" x="195" y="255" as="geometry" />
+        </mxCell>
         <mxCell id="aop_box" parent="1" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;rounded=1;" value="AOP切面" vertex="1">
-          <mxGeometry height="200" width="400" x="420" y="400" as="geometry" />
+          <mxGeometry height="200" width="400" x="420" y="450" as="geometry" />
         </mxCell>
         <mxCell id="aop1" parent="aop_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="OperationLogAspect&lt;br&gt;&lt;small&gt;拦截Controller写操作, MQ异步持久化&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="185" x="10" y="30" as="geometry" />
@@ -113,7 +125,7 @@
           <mxGeometry height="36" width="185" x="100" y="120" as="geometry" />
         </mxCell>
         <mxCell id="file_box" parent="1" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;rounded=1;" value="文件服务" vertex="1">
-          <mxGeometry height="170" width="380" x="20" y="620" as="geometry" />
+          <mxGeometry height="170" width="380" x="20" y="670" as="geometry" />
         </mxCell>
         <mxCell id="fi1" parent="file_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="图片上传 10MB&lt;br&gt;&lt;small&gt;jpg/jpeg/png/gif/webp/bmp&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="175" x="10" y="30" as="geometry" />
@@ -131,12 +143,12 @@
           <mxGeometry height="36" width="175" x="100" y="120" as="geometry" />
         </mxCell>
         <mxCell id="deploy_box" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;rounded=1;" value="部署架构 — Docker Compose" vertex="1">
-          <mxGeometry height="170" width="400" x="420" y="620" as="geometry" />
+          <mxGeometry height="210" width="400" x="420" y="670" as="geometry" />
         </mxCell>
         <mxCell id="d1" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="MySQL 8.0&lt;br&gt;&lt;small&gt;:3307, utf8mb4&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="90" x="10" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="d2" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="Redis 7&lt;br&gt;&lt;small&gt;AOF, 64MB LRU&lt;/small&gt;" vertex="1">
+        <mxCell id="d2" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="Redis 7&lt;br&gt;&lt;small&gt;AOF, 128MB LRU&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="90" x="110" y="30" as="geometry" />
         </mxCell>
         <mxCell id="d3" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" value="RabbitMQ&lt;br&gt;&lt;small&gt;3.12-mgmt&lt;/small&gt;" vertex="1">
@@ -148,14 +160,23 @@
         <mxCell id="d5" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="Spring Boot&lt;br&gt;&lt;small&gt;:8080, JVM 256-384M&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="135" x="10" y="75" as="geometry" />
         </mxCell>
-        <mxCell id="d6" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="Vue + Nginx&lt;br&gt;&lt;small&gt;:80, SPA静态文件&lt;/small&gt;" vertex="1">
+        <mxCell id="d6" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="Vue + Nginx&lt;br&gt;&lt;small&gt;:80/:443, HTTPS/SSL, SPA静态文件&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="115" x="155" y="75" as="geometry" />
         </mxCell>
         <mxCell id="d7" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="GitHub Actions&lt;br&gt;&lt;small&gt;CI/CD → GHCR → SSH部署&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="115" x="280" y="75" as="geometry" />
         </mxCell>
-        <mxCell id="d8" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="dong-medicine-network (bridge)&lt;br&gt;&lt;small&gt;6容器, 健康检查, 自动回滚&lt;/small&gt;" vertex="1">
+        <mxCell id="d8" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" value="dong-medicine-network (bridge)&lt;br&gt;&lt;small&gt;8容器, 健康检查, 自动回滚&lt;/small&gt;" vertex="1">
           <mxGeometry height="30" width="280" x="60" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="d9" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;fontSize=9;" value="Prometheus&lt;br&gt;&lt;small&gt;:9090, 指标抓取&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="90" x="10" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="d10" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#666666;fontSize=9;" value="Grafana&lt;br&gt;&lt;small&gt;:3001, 监控看板&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="90" x="110" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="d11" parent="deploy_box" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" value="Flyway数据库迁移&lt;br&gt;&lt;small&gt;自动执行SQL迁移脚本&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="115" x="210" y="160" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
