@@ -64,6 +64,26 @@ jobs:
           npm ci --prefer-offline
           npm run test -- --passWithNoTests
 
+      - name: Security audit
+        working-directory: dong-medicine-frontend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  security-scan:
+    name: Security Scan
+    needs: [test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'
+
   build-and-push:
     name: Build & Push
     needs: [test-backend, test-frontend]

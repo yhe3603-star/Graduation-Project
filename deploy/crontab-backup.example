@@ -1,0 +1,8 @@
+# Dong Medicine Database Backup - Crontab Example
+# Install with: crontab -e  (then paste the line below)
+#
+# Runs the backup script daily at 3:00 AM
+# Make sure backup-db.sh is executable: chmod +x /path/to/deploy/backup-db.sh
+
+# Daily backup at 03:00
+0 3 * * * /path/to/deploy/backup-db.sh >> /var/log/dong-medicine-backup.log 2>&1

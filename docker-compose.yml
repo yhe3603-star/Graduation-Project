@@ -172,6 +172,7 @@ services:
       FILE_UPLOAD_PATH: /app/public
       KKFILEVIEW_URL: ${KKFILEVIEW_URL:-http://kkfileview:8012}
       JAVA_OPTS: ${JAVA_OPTS:--Xms256m -Xmx384m -XX:+UseSerialGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -Djava.security.egd=file:/dev/./urandom}
+      MANAGEMENT_PROMETHEUS_EXPORT_ENABLED: "true"
     volumes:
       - ./dong-medicine-backend/public:/app/public
       - backend_logs:/app/logs
@@ -237,6 +238,64 @@ services:
     networks:
       - dong-medicine-network
 
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: dong-medicine-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=15d'
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      - dong-medicine-network
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: dong-medicine-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./deploy/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    networks:
+      - dong-medicine-network
+
 volumes:
   mysql_data:
     driver: local
@@ -247,6 +306,10 @@ volumes:
   kkfileview_data:
     driver: local
   backend_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
     driver: local
 
 networks:
