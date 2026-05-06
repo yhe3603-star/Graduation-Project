@@ -8,9 +8,7 @@ server:
 
 spring:
   flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
+    enabled: false
   autoconfigure:
     exclude: ${SPRING_AUTOCONFIGURE_EXCLUDE:}
   datasource:
