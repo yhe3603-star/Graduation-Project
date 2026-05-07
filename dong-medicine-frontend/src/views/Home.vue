@@ -422,20 +422,30 @@ const buildCloudItemsFromLists = (plants, knowledge) => {
 onMounted(async () => {
   pageLoading.value = true
   try {
-    const [pRes, iRes, kRes, qRes] = await Promise.all([
+    const [overviewRes, pRes, iRes, kRes, qRes] = await Promise.all([
+      request.get('/stats/overview').catch(() => ({})),
       request.get('/plants/list', { params: { page: 1, size: 20 } }).catch(() => ({})),
       request.get('/inheritors/list', { params: { page: 1, size: 5 } }).catch(() => ({})),
       request.get('/knowledge/list', { params: { page: 1, size: 10 } }).catch(() => ({})),
       request.get('/qa/list', { params: { page: 1, size: 10 } }).catch(() => ({}))
     ])
 
+    if (overviewRes.data) {
+      stats.value.plants = overviewRes.data.plants || stats.value.plants
+      stats.value.formulas = overviewRes.data.formulas || stats.value.formulas
+      stats.value.inheritors = overviewRes.data.inheritors || stats.value.inheritors
+      stats.value.therapies = overviewRes.data.therapies || stats.value.therapies
+    }
+
     const plantsData = extractPageData(pRes)
     const inheritorsData = extractPageData(iRes)
     const knowledgeData = extractPageData(kRes)
     const qaData = extractPageData(qRes)
 
-    stats.value.plants = plantsData.total || stats.value.plants
-    stats.value.inheritors = inheritorsData.total || stats.value.inheritors
+    if (!overviewRes.data) {
+      stats.value.plants = plantsData.total || stats.value.plants
+      stats.value.inheritors = inheritorsData.total || stats.value.inheritors
+    }
 
     latestItems.value = buildLatestItems(
       plantsData.records.slice(0, 20),
