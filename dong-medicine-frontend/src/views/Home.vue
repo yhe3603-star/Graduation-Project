@@ -363,7 +363,7 @@ const buildLatestItems = (plants, knowledge, inheritors, qas) => {
 
 const loadHotSearches = async () => {
   try {
-    const res = await request.get('/search/hot', { params: { limit: 20 }, skipAuthRefresh: true })
+    const res = await request.get('/search/hot', { params: { limit: 20 } })
     const data = (res.data || res || []).filter(item => item.name)
     if (data.length === 0) return buildCloudItemsFromLists([], [])
     const maxVal = data[0]?.value || 1
@@ -423,10 +423,10 @@ onMounted(async () => {
   pageLoading.value = true
   try {
     const [pRes, iRes, kRes, qRes] = await Promise.all([
-      request.get('/plants/list', { params: { page: 1, size: 20 }, skipAuthRefresh: true }).catch(() => ({})),
-      request.get('/inheritors/list', { params: { page: 1, size: 5 }, skipAuthRefresh: true }).catch(() => ({})),
-      request.get('/knowledge/list', { params: { page: 1, size: 10 }, skipAuthRefresh: true }).catch(() => ({})),
-      request.get('/qa/list', { params: { page: 1, size: 10 }, skipAuthRefresh: true }).catch(() => ({}))
+      request.get('/plants/list', { params: { page: 1, size: 20 } }).catch(() => ({})),
+      request.get('/inheritors/list', { params: { page: 1, size: 5 } }).catch(() => ({})),
+      request.get('/knowledge/list', { params: { page: 1, size: 10 } }).catch(() => ({})),
+      request.get('/qa/list', { params: { page: 1, size: 10 } }).catch(() => ({}))
     ])
 
     const plantsData = extractPageData(pRes)
