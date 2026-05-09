@@ -209,7 +209,11 @@ const isFavorited = computed(() => currentInheritor.value && isItemFavorited(cur
 const showDetail = async (item) => {
   try {
     const res = await request.get(`/inheritors/${item.id}`);
-    currentInheritor.value = res.data || res || item;
+    const detail = res.data || res || item;
+    currentInheritor.value = detail;
+    const idx = allInheritors.value.findIndex(i => i.id === item.id);
+    if (idx > -1) allInheritors.value[idx].viewCount = detail.viewCount;
+    statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
   } catch {
     currentInheritor.value = item;
   }

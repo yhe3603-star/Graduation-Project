@@ -318,7 +318,11 @@ const handleFilter = (filters) => {
 const openResource = async (item) => {
   try {
     const res = await request.get(`/resources/${item.id}`);
-    currentResource.value = res.data || res || item;
+    const detail = res.data || res || item;
+    currentResource.value = detail;
+    const idx = allResources.value.findIndex(r => r.id === item.id);
+    if (idx > -1) allResources.value[idx].viewCount = detail.viewCount;
+    statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
   } catch {
     currentResource.value = item;
   }

@@ -186,7 +186,11 @@ const isFavorited = computed(() => currentPlant.value && isItemFavorited(current
 const showDetail = async (plant) => {
   try {
     const res = await request.get(`/plants/${plant.id}`);
-    currentPlant.value = res.data || res || plant;
+    const detail = res.data || res || plant;
+    currentPlant.value = detail;
+    const idx = allPlants.value.findIndex(p => p.id === plant.id);
+    if (idx > -1) allPlants.value[idx].viewCount = detail.viewCount;
+    statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
   } catch {
     currentPlant.value = plant;
   }

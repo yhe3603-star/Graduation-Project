@@ -120,8 +120,8 @@ services:
       - KK_OFFICE_PREVIEW_TYPE=image
       - KK_CONTEXT_PATH=/kkfileview
       - KK_FILE_UPLOAD_MAX_SIZE=104857600
-      - base.url=${KKFILEVIEW_BASE_URL:-http://localhost:3000/kkfileview}
-      - KK_DOMAIN=${KKFILEVIEW_DOMAIN:-http://localhost:3000}
+      - base.url=${KKFILEVIEW_BASE_URL:-https://dong-medicine.cyou/kkfileview}
+      - KK_DOMAIN=${KKFILEVIEW_DOMAIN:-https://dong-medicine.cyou}
       - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseSerialGC
     volumes:
       - kkfileview_data:/opt/kkFileView-4.1.0/file
@@ -167,7 +167,8 @@ services:
       SPRING_AUTOCONFIGURE_EXCLUDE: ${SPRING_AUTOCONFIGURE_EXCLUDE:-}
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
-      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:3000}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-https://dong-medicine.cyou}
+      WS_ALLOWED_ORIGINS: ${WS_ALLOWED_ORIGINS:-https://dong-medicine.cyou,http://localhost:3000,http://localhost:5173}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       FILE_UPLOAD_PATH: /app/public
       KKFILEVIEW_URL: ${KKFILEVIEW_URL:-http://kkfileview:8012}

@@ -200,7 +200,11 @@ const isCurrentFavorited = computed(() => currentQa.value && isItemFavorited(cur
 const showDetail = async (item) => {
   try {
     const res = await request.get(`/qa/${item.id}`);
-    currentQa.value = res.data || res || item;
+    const detail = res.data || res || item;
+    currentQa.value = detail;
+    const idx = allQa.value.findIndex(q => q.id === item.id);
+    if (idx > -1) allQa.value[idx].viewCount = detail.viewCount;
+    statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
   } catch {
     currentQa.value = item;
   }

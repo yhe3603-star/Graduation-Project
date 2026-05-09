@@ -214,7 +214,11 @@ const isFavorited = computed(() => currentItem.value && isItemFavorited(currentI
 const showDetail = async (item) => {
   try {
     const res = await request.get(`/knowledge/${item.id}`);
-    currentItem.value = res.data || res || item;
+    const detail = res.data || res || item;
+    currentItem.value = detail;
+    const idx = allKnowledge.value.findIndex(k => k.id === item.id);
+    if (idx > -1) allKnowledge.value[idx].viewCount = detail.viewCount;
+    statsData.value.totalViews = (statsData.value.totalViews || 0) + 1;
   } catch {
     currentItem.value = item;
   }
