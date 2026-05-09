@@ -40,19 +40,29 @@
 
 ```
 dong-medicine-frontend/
-├── .env.development          # 开发环境变量
-├── .env.production           # 生产环境变量
-├── .env.ci                   # CI 环境变量
-├── default.conf              # Nginx 部署配置
-├── index.html                # HTML 入口（含自定义加载动画）
-├── package.json              # 项目依赖与脚本
-├── vite.config.js            # Vite 构建配置
-├── Dockerfile                # Docker 构建文件
-├── nginx.conf                # Nginx 核心配置
-├── public/                   # 静态资源（不经编译处理）
-│   └── vite.svg              # 网站 Favicon
-├── e2e/                      # Playwright E2E 测试
-│   └── tests/                # 测试用例
+├── .env.example             # 环境变量模板
+├── .env                     # 开发环境变量
+├── default.conf             # Nginx 部署配置
+├── index.html               # HTML 入口（含自定义加载动画）
+├── package.json             # 项目依赖与脚本
+├── vite.config.js           # Vite 构建配置
+├── vitest.config.js         # Vitest 测试配置
+├── playwright.config.js     # Playwright E2E 测试配置
+├── eslint.config.js         # ESLint 配置
+├── Dockerfile               # Docker 构建文件
+├── nginx.conf               # Nginx 核心配置
+├── public/                  # 静态资源（不经编译处理）
+│   └── vite.svg             # 网站 Favicon
+├── e2e/                     # Playwright E2E 测试
+│   ├── ai-chat.spec.js      # AI 聊天测试
+│   ├── api.spec.js          # API 回归测试
+│   ├── auth.spec.js         # 认证测试
+│   ├── navigation.spec.js   # 导航测试
+│   ├── page-load.spec.js    # 页面加载测试
+│   ├── regression.spec.js   # 回归测试
+│   ├── responsive.spec.js   # 响应式测试
+│   ├── search.spec.js       # 搜索测试
+│   └── websocket.spec.js    # WebSocket 测试
 └── src/
     ├── main.js               # 应用入口，注册插件与全局配置
     ├── App.vue               # 根组件（登录/注册对话框、路由视图）
@@ -61,22 +71,21 @@ dong-medicine-frontend/
     ├── composables/          # 组合式函数（Composition API）
     ├── utils/                # 工具函数与常量
     ├── components/           # 组件库（base/common/business 三层）
-    ├── views/                # 页面组件（16 个页面）
+    ├── views/                # 页面组件（14 个页面）
     ├── styles/               # 全局样式系统（CSS变量 + 主题覆盖 + SCSS）
-    ├── config/               # 页面配置（首页数据等）
     ├── directives/           # 自定义指令（懒加载、防抖、节流等）
-    └── __test__/             # 单元测试
+    └── __tests__/            # 单元测试
 ```
 
 ## 安装与运行
 
 ### 环境配置
 
-项目通过 `.env` 文件管理多环境变量，核心变量为 `VITE_API_BASE_URL`：
+项目通过 `.env` 文件管理环境变量，核心变量为 `VITE_API_BASE_URL`：
 
-- **开发环境** (`.env.development`)：API 基础路径 `/api`，通过 Vite proxy 转发到 `localhost:8080`
-- **生产环境** (`.env.production`)：API 基础路径 `/api`，通过 Nginx 反向代理
-- **CI 环境** (`.env.ci`)：用于持续集成测试
+- **开发环境** (`.env`)：API 基础路径 `/api`，通过 Vite proxy 转发到 `localhost:8080`
+- **生产环境**：构建时通过 Docker build args 注入，API 基础路径 `/api`，通过 Nginx 反向代理
+- **环境变量模板** (`.env.example`)：包含 `VITE_API_BASE_URL` 和 `VITE_KKFILEVIEW_URL`
 
 ### 安装依赖
 
@@ -120,7 +129,7 @@ npm run build
 
 ```bash
 npm test              # 运行 Vitest 单元测试（watch 模式）
-npm run test:run      # 单次运行所有测试（608 个用例）
+npm run test:run      # 单次运行所有测试
 npm run test:coverage # 生成覆盖率报告
 npm run test:e2e      # 运行 Playwright E2E 测试（Chrome + Firefox + Safari）
 npm run test:e2e:ui   # Playwright UI 模式运行测试

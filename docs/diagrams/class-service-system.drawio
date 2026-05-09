@@ -4,10 +4,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="侗乡医药数字化展示平台 — 系统服务层类图（3/3）" vertex="1">
-          <mxGeometry height="35" width="500" x="400" y="10" as="geometry" />
-        </mxCell>
-        <mxCell id="svc_header" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="Service 层 — 用户与系统服务" vertex="1">
+<mxCell id="svc_header" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="Service 层 — 用户与系统服务" vertex="1">
           <mxGeometry height="320" width="1360" x="20" y="60" as="geometry" />
         </mxCell>
         <mxCell id="UserService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;UserServiceImpl&lt;/b&gt;&lt;br&gt;&lt;i&gt;implements UserService&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— userMapper : UserMapper&lt;hr size=&#39;1&#39;&gt;+ login(username, password) : Map&lt;br&gt;+ register(username, password) : void&lt;br&gt;+ getUserInfo(userId) : User&lt;br&gt;+ getUserByUsername(username) : User&lt;br&gt;+ changePassword(userId, current, new) : void&lt;br&gt;+ updateUserRole(userId, role) : void&lt;br&gt;+ banUser(userId, reason) : void&lt;br&gt;+ unbanUser(userId) : void&lt;br&gt;+ deleteUser(userId) : void&lt;br&gt;+ getAllUsers() : List&amp;lt;User&amp;gt;&lt;br&gt;&lt;small&gt;BCrypt加密，盐轮数10&lt;/small&gt;" vertex="1">

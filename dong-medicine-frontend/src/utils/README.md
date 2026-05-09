@@ -201,11 +201,15 @@ const cachedFetchPlants = createCachedFetcher(fetchPlants, 'plants')
 - `parseMediaList(data)` -- 解析 JSON 字符串或逗号分隔列表为标准化文件对象数组
 - `stringifyMediaList(files)` -- 序列化文件列表为 JSON 字符串
 - `separateMediaByType(files)` -- 将混合文件列表按类型分为 images/videos/documents 三组
+- `parseImageList(data)` / `parseVideoList(data)` / `parseDocumentList(data)` -- 按类型解析列表
+- `stringifyImageList(files)` / `stringifyVideoList(files)` / `stringifyDocumentList(files)` -- 按类型序列化列表
+- `getAllFiles(data)` -- 从数据中获取所有文件列表
 
 **资源文件处理：**
 - `getResourceUrl(path)` -- 规范化资源 URL 路径
 - `parseResourceFiles(data)` -- 解析资源文件数据
 - `stringifyResourceFiles(files)` -- 序列化资源文件
+- `normalizeUrl(url)` -- URL 规范化处理
 
 **下载功能：**
 - `downloadMedia(url, filename)` -- 触发媒体文件下载
@@ -237,6 +241,16 @@ FILE_TYPE_NAMES = { pdf: 'PDF', doc: 'Word', xls: 'Excel', ppt: 'PPT', txt: 'TXT
 
 ```js
 COLOR_PALETTE = ['#1A5276', '#28B463', '#D4AC0D', '#8E44AD', '#E74C3C', '#16A085', '#2980B9', '#CA6F1E']
+
+GRADIENT_COLORS = {
+  blue: { start: '#1A5276', end: '#5DADE2' },
+  green: { start: '#1E8449', end: '#58D68D' },
+  gold: { start: '#B7950B', end: '#F4D03F' },
+  purple: { start: '#6C3483', end: '#BB8FCE' },
+  red: { start: '#922B21', end: '#EC7063' },
+  teal: { start: '#0E6655', end: '#48C9B0' },
+  orange: { start: '#CA6F1E', end: '#F5B041' }
+}
 ```
 
 **工厂函数：**
@@ -307,7 +321,11 @@ DEFAULT_DOCUMENT = "/static/defaults/default-document.svg"
 
 ### media.js 再导出
 
-`index.js` 通过 `export {} from './media'` 重新导出 `media.js` 的全部函数，统一入口。
+`index.js` 通过 `export {} from './media'` 重新导出 `media.js` 的全部函数和常量，统一入口。包括：`normalizeUrl`、`getFileName`、`getFileType`、`getFileTypeDisplay`、`getMediaType`、`getMediaTypeByExt`、`getExtensionsByType`、`parseMediaList`、`stringifyMediaList`、`downloadMedia`、`downloadDocument`、`getFileInfo`、`getAllFiles`、`separateMediaByType`、`getFileIcon`、`getFileColor`、`getFileTypeName`、`getFileExt`、`parseImageList`、`parseVideoList`、`parseDocumentList`、`stringifyImageList`、`stringifyVideoList`、`stringifyDocumentList`、`getResourceUrl`、`parseResourceFiles`、`stringifyResourceFiles`、`FILE_ICONS`、`FILE_COLORS`、`FILE_TYPE_NAMES`
+
+### logger.js 再导出
+
+`index.js` 通过 `export {} from './logger'` 重新导出 8 个专用日志函数：`logUploadError`、`logDeleteWarn`、`logAuthWarn`、`logSecurityWarn`、`logFetchError`、`logOperationWarn`、`logAutoPlayWarn`、`logPermissionWarn`
 
 ---
 
@@ -350,9 +368,9 @@ const logger = {
 
 **状态映射：**
 
-- `STATUS_MAPS.feedback`：`pending -> { tag: 'warning', text: '待处理' }` 等
-- `STATUS_MAPS.difficulty`：`easy -> { tag: 'success', text: '入门' }` 等
-- `STATUS_MAPS.fileType`：`video -> { tag: 'primary', text: '视频' }` 等
+- `STATUS_MAPS.feedback`：`pending -> { tag: 'warning', text: '待处理' }`、`processing -> { tag: 'primary', text: '处理中' }`、`resolved -> { tag: 'success', text: '已解决' }`
+- `STATUS_MAPS.difficulty`：`easy/beginner -> { tag: 'success', text: '入门' }`、`medium/intermediate -> { tag: 'warning', text: '进阶' }`、`advanced -> { tag: 'warning', text: '进阶' }`、`hard/professional -> { tag: 'danger', text: '专业' }`
+- `STATUS_MAPS.fileType`：`video -> { tag: 'primary', text: '视频' }`、`document -> { tag: 'success', text: '文档' }`、`image -> { tag: 'warning', text: '图片' }`、`audio -> { tag: 'info', text: '音频' }`
 
 **等级标签映射：**
 
@@ -362,9 +380,24 @@ LEVEL_TAG_MAP = { "省级": "warning", "自治区级": "success", "州级": "pri
 
 **工具函数：**
 
-- `createTagGetter(mapName, field)` -- 创建标签获取函数工厂
+- `createTagGetter(mapOrName, fieldOrDefault)` -- 创建标签获取函数工厂（支持字符串映射名或自定义映射对象）
 - `getStatusTag(status, statusMap)` -- 获取状态对应的 Element Plus tag type
 - `getLevelTag(level)` -- 获取传承人等级对应的 tag type
+- `getFeedbackStatusTag(val)` / `getFeedbackStatusText(val)` -- 反馈状态标签
+- `getDifficultyTagType(val)` / `getDifficultyText(val)` -- 难度标签
+- `getFileTypeTagType(val)` / `getFileTypeText(val)` -- 文件类型标签
+- `getLevelTagType(val)` -- 等级标签类型
+- `getCorrectAnswerContent(row)` -- 从题目行数据中提取正确答案文本
+
+**配置常量：**
+
+- `menuTitles` -- 管理后台菜单标题映射（dashboard/users/knowledge/inheritors/plants/qa/resources/quiz/comments/feedback/logs）
+- `TABLE_CONFIGS` -- 各模块表格列配置（users/knowledge/inheritors/plants/qa/resources/quiz/comments/feedback），包含 columns、showTitle、titleName、showAdd、showEdit、actionWidth
+- `CRUD_ENDPOINTS` -- 各模块 CRUD API 端点映射（knowledge/inheritor/plant/qa/resource/quiz）
+- `LOG_MODULE_TAG_MAP` -- 日志模块标签颜色映射（USER/PLANT/KNOWLEDGE/INHERITOR/RESOURCE/QA/FEEDBACK/COMMENT/FAVORITE/SYSTEM）
+- `LOG_TYPE_TAG_MAP` -- 日志类型标签颜色映射（CREATE/UPDATE/DELETE/QUERY）
+- `getLogModuleTagType(module)` / `getLogTypeTagType(type)` -- 日志标签获取
+- `formatLogTime(time)` -- 日志时间格式化
 
 ---
 

@@ -55,7 +55,7 @@ GlobalExceptionHandler 捕获异常
 public enum ErrorCode {
 
     // ==================== 成功 ====================
-    SUCCESS(0, "操作成功"),
+    SUCCESS(200, "操作成功"),
 
     // ==================== 用户相关 1xxx ====================
     USER_NOT_FOUND(1001, "用户不存在"),
@@ -117,7 +117,7 @@ public enum ErrorCode {
 
 | 范围 | 模块 | 设计思路 |
 |------|------|----------|
-| 0 | 成功 | 0 表示没有错误 |
+| 200 | 成功 | 200 表示操作成功（与HTTP 200一致） |
 | 1xxx | 用户 | 用户是最核心的实体，排第一 |
 | 2xxx | 资源 | 植物、知识、传承人等业务资源 |
 | 3xxx | 参数 | 请求参数相关错误 |
@@ -212,7 +212,7 @@ throw BusinessException.systemError();           // 系统错误
 
 ### 异常处理优先级
 
-Spring 会匹配**最具体**的异常类型。比如抛出了 `ExpiredJwtException`，它会优先匹配 `ExpiredJwtException` 的处理器，而不是 `JwtException` 或 `Exception` 的处理器。
+Spring 会匹配**最具体**的异常类型。比如抛出了 `NotLoginException`，它会优先匹配 `NotLoginException` 的处理器，而不是 `Exception` 的处理器。
 
 ```
 异常抛出
@@ -221,9 +221,9 @@ Spring 会匹配**最具体**的异常类型。比如抛出了 `ExpiredJwtExcept
 Spring 寻找匹配的 @ExceptionHandler
   |
   |-- BusinessException              --> handleBusinessException()
+  |-- NotLoginException (Sa-Token)  --> handleNotLoginException()
+  |-- NotRoleException (Sa-Token)   --> handleNotRoleException()
   |-- MethodArgumentNotValidException --> handleValidationException()
-  |-- ExpiredJwtException            --> handleExpiredJwtException()
-  |-- AccessDeniedException          --> handleAccessDeniedException()
   |-- DataAccessException            --> handleDatabaseException()
   |-- NullPointerException           --> handleNullPointerException()
   |-- RuntimeException               --> handleRuntimeException()
@@ -258,17 +258,17 @@ public class GlobalExceptionHandler {
         return R.error(ErrorCode.PARAM_FORMAT_ERROR, message);
     }
 
-    // 3. JWT过期异常
-    @ExceptionHandler(ExpiredJwtException.class)
+    // 3. Sa-Token 未登录异常
+    @ExceptionHandler(NotLoginException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public R<?> handleExpiredJwtException(ExpiredJwtException e) {
-        return R.error(ErrorCode.TOKEN_EXPIRED);
+    public R<?> handleNotLoginException(NotLoginException e) {
+        return R.error(ErrorCode.LOGIN_REQUIRED);
     }
 
-    // 4. 权限不足异常
-    @ExceptionHandler(AccessDeniedException.class)
+    // 4. Sa-Token 角色不足异常
+    @ExceptionHandler(NotRoleException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public R<?> handleAccessDeniedException(AccessDeniedException e) {
+    public R<?> handleNotRoleException(NotRoleException e) {
         return R.error(ErrorCode.PERMISSION_DENIED);
     }
 

@@ -9,16 +9,16 @@
 ```
 com.dongmedicine/
 ├── DongMedicineBackendApplication.java  # Spring Boot启动类（加载.env + @EnableCaching）
-├── controller/          # 控制器层（24个Controller，接收HTTP请求）
-├── service/             # 服务层（18个Service接口 + 实现类in impl/）
-├── mapper/              # 数据访问层（15个Mapper接口，MyBatis-Plus）
-├── entity/              # 实体类（15个Entity + BaseEntity基类）
-├── dto/                 # 数据传输对象（23个DTO，请求/响应用）
+├── controller/          # 控制器层（27个Controller，接收HTTP请求）
+├── service/             # 服务层（18个Service接口 + 1个直接实现 + 实现类in impl/）
+├── mapper/              # 数据访问层（16个Mapper接口，MyBatis-Plus）
+├── entity/              # 实体类（16个Entity + BaseEntity基类）
+├── dto/                 # 数据传输对象（32个DTO，请求/响应用）
 ├── config/              # 配置类（20+个，含health/和logging/子包）
 ├── mq/                  # RabbitMQ（producer/生产者 + consumer/消费者）
 ├── websocket/           # WebSocket（ChatWebSocketHandler）
 └── common/              # 通用模块
-    ├── constant/        #   常量（ApiPaths, RabbitMQConstants, RoleConstants）
+    ├── constant/        #   常量（ApiPaths, RabbitMQConstants, RoleConstants, TargetType）
     ├── exception/       #   异常体系（BusinessException, ErrorCode, GlobalExceptionHandler）
     └── util/            #   工具类（XssUtils, PageUtils, PasswordValidator等）
 ```
@@ -140,11 +140,14 @@ POST /api/user/login                前端发送JSON: {"username":"admin","passw
 
 ## 五、所有模块清单
 
-### Controller（24个）
+### Controller（27个）
 
 | Controller | 路径前缀 | 权限 |
 |-----------|---------|------|
-| AdminController | /api/admin | @SaCheckRole("admin") |
+| AdminContentController | /api/admin | @SaCheckRole("admin") |
+| AdminInteractionController | /api/admin | @SaCheckRole("admin") |
+| AdminStatsController | /api/admin | @SaCheckRole("admin") |
+| AdminUserController | /api/admin | @SaCheckRole("admin") |
 | BrowseHistoryController | /api/browse-history | @SaCheckLogin（部分） |
 | CaptchaController | /api/captcha | 公开 |
 | ChatController | /api/chat | 公开 |
@@ -158,6 +161,7 @@ POST /api/user/login                前端发送JSON: {"username":"admin","passw
 | KnowledgeController | /api/knowledge | 公开 + @SaCheckLogin |
 | LeaderboardController | /api/leaderboard | 公开 |
 | MetadataController | /api/metadata | 公开 |
+| NotificationController | /api/notification | 公开 |
 | OperationLogController | /api/admin/logs | @SaCheckRole("admin") |
 | PlantController | /api/plants | 公开 |
 | PlantGameController | /api/plant-game | 公开 |
@@ -166,16 +170,15 @@ POST /api/user/login                前端发送JSON: {"username":"admin","passw
 | ResourceController | /api/resources | 公开 |
 | SearchController | /api/search | 公开 |
 | StatisticsController | /api/stats | 公开 |
-| StatsController | /api/stats | 公开 |
 | UserController | /api/user | 公开 + @SaCheckLogin |
 
-### Service（18个接口 + 18个实现类）
+### Service（18个接口 + 1个直接实现 + 19个实现类）
 
 | Service接口 | 实现类 | 继承IService |
 |------------|--------|-------------|
 | AiChatService | AiChatServiceImpl | 否 |
 | BrowseHistoryService | BrowseHistoryServiceImpl | IService\<BrowseHistory\> |
-| CaptchaService | --（直接实现，无接口） | 否 |
+| -- | CaptchaService（直接实现，无接口） | 否 |
 | ChatHistoryService | ChatHistoryServiceImpl | 否 |
 | CommentService | CommentServiceImpl | IService\<Comment\> |
 | FavoriteService | FavoriteServiceImpl | IService\<Favorite\> |
@@ -193,7 +196,7 @@ POST /api/user/login                前端发送JSON: {"username":"admin","passw
 | ResourceService | ResourceServiceImpl | IService\<Resource\> |
 | UserService | UserServiceImpl | IService\<User\> |
 
-### Entity（15个实体类 + BaseEntity基类）
+### Entity（16个实体类 + BaseEntity基类）
 
 | Entity | 表名 | 继承 | 核心字段 |
 |--------|------|------|---------|
@@ -213,6 +216,7 @@ POST /api/user/login                前端发送JSON: {"username":"admin","passw
 | OperationLog | operation_log | BaseEntity | userId, username, module, type, operation, method |
 | BrowseHistory | browse_history | BaseEntity | userId, targetType, targetId |
 | ChatHistory | chat_history | BaseEntity | userId, sessionId, role, content |
+| SearchHistory | search_history | BaseEntity | userId, keyword |
 
 ---
 
@@ -300,11 +304,11 @@ cacheConfigurations.put("recipes", defaultConfig.entryTtl(Duration.ofHours(4)));
 
 | 模块 | 文档 | 内容 |
 |------|------|------|
-| 控制器 | [controller/README.md](controller/README.md) | 24个Controller完整API端点文档 |
-| 服务层 | [service/README.md](service/README.md) | 18个Service + 缓存策略 + 事务管理 |
-| 数据层 | [mapper/README.md](mapper/README.md) | 15个Mapper + MyBatis-Plus BaseMapper |
-| 实体类 | [entity/README.md](entity/README.md) | 15个Entity + BaseEntity + 注解说明 |
-| DTO | [dto/README.md](dto/README.md) | 23个DTO + 参数校验 |
+| 控制器 | [controller/README.md](controller/README.md) | 27个Controller完整API端点文档 |
+| 服务层 | [service/README.md](service/README.md) | 18个Service + 1个直接实现 + 缓存策略 + 事务管理 |
+| 数据层 | [mapper/README.md](mapper/README.md) | 16个Mapper + MyBatis-Plus BaseMapper |
+| 实体类 | [entity/README.md](entity/README.md) | 16个Entity + BaseEntity + 注解说明 |
+| DTO | [dto/README.md](dto/README.md) | 32个DTO + 参数校验 |
 | 配置 | [config/README.md](config/README.md) | 20+配置类完整说明 |
 | 消息队列 | [mq/README.md](mq/README.md) | 5个Producer + 5个Consumer |
 | WebSocket | [websocket/README.md](websocket/README.md) | AI聊天流式通信 |

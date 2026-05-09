@@ -11,7 +11,8 @@ common/
 ├── constant/
 │   ├── ApiPaths.java              # API路径常量（按模块组织）
 │   ├── RabbitMQConstants.java     # RabbitMQ队列/交换机/路由键常量
-│   └── RoleConstants.java         # 角色常量（ROLE_USER="user", ROLE_ADMIN="admin"）
+│   ├── RoleConstants.java         # 角色常量（ROLE_USER="user", ROLE_ADMIN="admin"）
+│   └── TargetType.java            # 目标类型常量（评论/收藏/浏览历史的关联目标类型）
 ├── exception/
 │   ├── BusinessException.java     # 业务异常类（30+种静态工厂方法）
 │   ├── ErrorCode.java             # 错误码枚举（按模块分类：1xxx-9xxx）
@@ -253,6 +254,25 @@ public class RabbitMQConstants {
 ### 5.3 ApiPaths -- API路径常量
 
 按模块组织（User/Knowledge/Inheritor/Plant/Qa/Quiz/PlantGame/Resource/Comment/Favorite/Feedback/Visual/Admin/File/Chat），但当前Controller中未统一使用该常量类。
+
+### 5.4 TargetType -- 目标类型常量
+
+```java
+public final class TargetType {
+    public static final String PLANT = "plant";           // 药用植物
+    public static final String KNOWLEDGE = "knowledge";   // 知识库
+    public static final String INHERITOR = "inheritor";   // 传承人
+    public static final String RESOURCE = "resource";     // 学习资源
+
+    // 验证目标类型是否合法
+    public static boolean isValid(String type) {
+        return PLANT.equals(type) || KNOWLEDGE.equals(type)
+            || INHERITOR.equals(type) || RESOURCE.equals(type);
+    }
+}
+```
+
+**用途**：评论、收藏、浏览历史等模块通过 `targetType + targetId` 关联不同类型的实体，TargetType 定义了所有合法的目标类型值。
 
 ---
 

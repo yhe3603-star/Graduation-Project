@@ -1,0 +1,35 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ER-User-Domain" id="er-user-domain">
+    <mxGraphModel dx="1022" dy="564" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="users" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;users&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;username&lt;/b&gt; (UQ) VARCHAR(50)&lt;br&gt;&lt;b&gt;password_hash&lt;/b&gt; VARCHAR(255)&lt;br&gt;&lt;b&gt;role&lt;/b&gt; VARCHAR(20) DEFAULT &#39;user&#39;&lt;br&gt;&lt;b&gt;status&lt;/b&gt; TINYINT DEFAULT 1&lt;br&gt;&lt;b&gt;created_at&lt;/b&gt; DATETIME&lt;br&gt;&lt;b&gt;updated_at&lt;/b&gt; DATETIME" vertex="1">
+          <mxGeometry height="140" width="200" x="400" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="chat_history" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;chat_history&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;session_id&lt;/b&gt; VARCHAR(64)&lt;br&gt;&lt;b&gt;role&lt;/b&gt; VARCHAR(20)&lt;br&gt;&lt;b&gt;content&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;created_at&lt;/b&gt; DATETIME" vertex="1">
+          <mxGeometry height="110" width="200" x="280" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="search_history" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;search_history&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;keyword&lt;/b&gt; VARCHAR(255)&lt;br&gt;&lt;b&gt;created_at&lt;/b&gt; DATETIME" vertex="1">
+          <mxGeometry height="120" width="190" x="520" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;fontSize=10;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="chat_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_label" connectable="0" parent="r1" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" value="1 : N" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r2" edge="1" parent="1" source="users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;fontSize=10;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="search_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_label" connectable="0" parent="r2" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" value="1 : N" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -184,7 +184,7 @@ utf8mb4 ：最多4字节，支持所有字符，包括 Emoji
 
 ---
 
-## 四、本项目全部 13 张表结构详解
+## 四、本项目全部 16 张表结构详解
 
 ### 4.1 users -- 用户表
 
@@ -421,6 +421,48 @@ utf8mb4 ：最多4字节，支持所有字符，包括 Emoji
 
 索引：`idx_user_id`, `idx_module`, `idx_created_at`
 
+### 4.14 chat_history -- AI聊天历史记录表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | 可为空（匿名用户） |
+| session_id | VARCHAR(64) | 会话ID(UUID) | 非空 |
+| role | VARCHAR(20) | 角色: user/assistant | 非空 |
+| content | TEXT | 消息内容 | 非空 |
+| created_at | DATETIME | 创建时间 | 默认当前时间 |
+
+索引：`idx_user_session(user_id, session_id)`, `idx_session_id`, `idx_created_at`
+
+**设计说明**：WebSocket聊天过程中，消息先暂存Redis（key: `chat:session:{sessionId}`，30分钟过期），连接断开时通过 `ChatHistoryService.flushSessionToMysql()` 批量刷入此表。
+
+### 4.15 browse_history -- 用户浏览历史记录表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | 非空 |
+| target_type | VARCHAR(50) | 目标类型: plant/knowledge/inheritor | 非空 |
+| target_id | INT | 目标ID | 非空 |
+| created_at | DATETIME | 浏览时间 | 默认当前时间 |
+
+索引：`idx_user_id`, `idx_target(target_type, target_id)`, `idx_created_at`
+
+**设计说明**：通过 `target_type + target_id` 多态关联，记录用户浏览过的药用植物、知识条目、传承人等。同一用户对同一目标的重复浏览会分别记录（保留完整浏览时间线）。
+
+### 4.16 search_history -- 搜索历史记录表
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| id | BIGINT | 主键ID | 自增, 非空 |
+| user_id | INT | 用户ID | 可为空（游客搜索） |
+| keyword | VARCHAR(200) | 搜索关键词 | 非空 |
+| created_at | DATETIME | 搜索时间 | 默认当前时间 |
+
+索引：`idx_keyword`, `idx_created_at`, `idx_user_id`
+
+**设计说明**：`user_id` 可为空，支持记录未登录游客的搜索行为。`idx_keyword` 索引用于统计热门搜索词。
+
 ---
 
 ## 五、表关系总览图
@@ -433,17 +475,17 @@ utf8mb4 ：最多4字节，支持所有字符，包括 Emoji
                     | username  |
                     +-----------+
                          |
-          +--------------+--------------+--------------+-----------+
-          |              |              |              |           |
-          v              v              v              v           v
-   +-----------+  +-----------+  +-----------+  +-----------+ +-----------+
-   | comments  |  | favorites |  | feedback  |  |quiz_record| |plant_game |
-   +-----------+  +-----------+  +-----------+  +-----------+ +_record    |
-   | user_id   |  | user_id   |  | user_id   |  | user_id   | +-----------+
-   | target_   |  | target_   |  +-----------+  +-----------+ | user_id   |
-   | type+id   |  | type+id   |                                +-----------+
-   +-----------+  +-----------+
-        |              |
+          +--------------+--------------+--------------+-----------+-----------+
+          |              |              |              |           |           |
+          v              v              v              v           v           v
+   +-----------+  +-----------+  +-----------+  +-----------+ +-----------+ +-----------+
+   | comments  |  | favorites |  | feedback  |  |quiz_record| |plant_game | |chat_      |
+   +-----------+  +-----------+  +-----------+  +-----------+ +_record    | |history    |
+   | user_id   |  | user_id   |  | user_id   |  | user_id   | +-----------+ +-----------+
+   | target_   |  | target_   |  +-----------+  +-----------+ | user_id   | | user_id   |
+   | type+id   |  | type+id   |                                +-----------+ +-----------+
+   +-----------+  +-----------+                                               | session_id|
+        |              |                                                       +-----------+
         v              v
    +-----------+  +-----------+  +-----------+  +-----------+ +-----------+
    |  plants   |  | knowledge |  |inheritors |  |    qa     | | resources |
@@ -453,13 +495,13 @@ utf8mb4 ：最多4字节，支持所有字符，包括 Emoji
    | efficacy  |  | content   |  | level     |  | answer    | | category  |
    +-----------+  +-----------+  +-----------+  +-----------+ +-----------+
 
-   +-----------------+          +-----------+
-   | quiz_questions  |          |operation  |
-   +-----------------+          |_log       |
-   | id (PK)         |          +-----------+
-   | question        |          | user_id   |
-   | options (JSON)  |          | module    |
-   | correct_answer  |          | operation |
+   +-----------------+          +-----------+          +---------------+  +---------------+
+   | quiz_questions  |          |operation  |          |browse_history |  |search_history |
+   +-----------------+          |_log       |          +---------------+  +---------------+
+   | id (PK)         |          +-----------+          | user_id       |  | user_id       |
+   | question        |          | user_id   |          | target_type   |  | keyword       |
+   | options (JSON)  |          | module    |          | target_id     |  +---------------+
+   | correct_answer  |          | operation |          +---------------+
    +-----------------+          +-----------+
 ```
 
@@ -521,7 +563,10 @@ UNION ALL SELECT 'feedback', COUNT(*) FROM feedback
 UNION ALL SELECT 'quiz_questions', COUNT(*) FROM quiz_questions
 UNION ALL SELECT 'quiz_record', COUNT(*) FROM quiz_record
 UNION ALL SELECT 'plant_game_record', COUNT(*) FROM plant_game_record
-UNION ALL SELECT 'operation_log', COUNT(*) FROM operation_log;
+UNION ALL SELECT 'operation_log', COUNT(*) FROM operation_log
+UNION ALL SELECT 'chat_history', COUNT(*) FROM chat_history
+UNION ALL SELECT 'browse_history', COUNT(*) FROM browse_history
+UNION ALL SELECT 'search_history', COUNT(*) FROM search_history;
 ```
 
 ---
@@ -727,8 +772,9 @@ JSON 字段存复杂数据，前端解析最方便
 
 ## 十四、代码审查与改进建议
 
-- [数据完整性] comments、favorites、feedback、plant_game_record、quiz_record、operation_log等表的user_id缺少外键约束，可插入不存在的用户ID
+- [数据完整性] comments、favorites、feedback、plant_game_record、quiz_record、operation_log、browse_history等表的user_id缺少外键约束，可插入不存在的用户ID
 - [数据完整性] comments表的likes和reply_count缺少CHECK约束(>=0)，plant_game_record的score/correct_count/total_count缺少合理性约束
+- [数据完整性] search_history表的user_id可为空但无定期清理机制，游客搜索数据会无限增长
 - [结构] JSON数据存储在TEXT字段中而非MySQL 8.0原生的JSON类型，无法在数据库层面验证JSON格式有效性，也无法使用JSON函数高效查询
 - [结构] 冗余数据：comments表冗余存储username和reply_to_username，feedback表冗余存储user_name，用户名修改时数据不一致
 - [结构] 重复索引：knowledge表的idx_popularity和idx_knowledge_popularity重复，plants表的idx_category和idx_plants_category重复

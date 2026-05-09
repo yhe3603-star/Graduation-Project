@@ -1,0 +1,88 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="管理员内容管理流程" id="flow-admin-management">
+    <mxGraphModel dx="1363" dy="752" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="start" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#6c8ebf;fontColor=#fff;fontSize=12;" value="开始" vertex="1">
+          <mxGeometry height="40" width="80" x="30" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="f1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="管理员登录" vertex="1">
+          <mxGeometry height="40" width="100" x="140" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="进入管理后台" vertex="1">
+          <mxGeometry height="40" width="110" x="270" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="选择&lt;br&gt;管理模块" vertex="1">
+          <mxGeometry height="40" width="90" x="410" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="操作类型?" vertex="1">
+          <mxGeometry height="80" width="130" x="535" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="填写表单&lt;br&gt;上传文件" vertex="1">
+          <mxGeometry height="40" width="100" x="710" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="修改表单&lt;br&gt;更新文件" vertex="1">
+          <mxGeometry height="40" width="100" x="710" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="f6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="确认删除&lt;br&gt;清理文件" vertex="1">
+          <mxGeometry height="40" width="100" x="710" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="f7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="评论审核&lt;br&gt;反馈回复" vertex="1">
+          <mxGeometry height="40" width="100" x="710" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="f8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="数据持久化&lt;br&gt;(MySQL+Redis)" vertex="1">
+          <mxGeometry height="50" width="130" x="870" y="275" as="geometry" />
+        </mxCell>
+        <mxCell id="f9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="记录操作日志&lt;br&gt;(RabbitMQ异步)" vertex="1">
+          <mxGeometry height="50" width="120" x="1060" y="275" as="geometry" />
+        </mxCell>
+        <mxCell id="end" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#6c8ebf;fontColor=#fff;fontSize=12;" value="完成" vertex="1">
+          <mxGeometry height="40" width="80" x="1240" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="start" style="strokeWidth=2;" target="f1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="f1" style="strokeWidth=2;" target="f2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="f2" style="strokeWidth=2;" target="f3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="f3" style="strokeWidth=2;" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="d1" style="strokeWidth=2;fontSize=10;fontColor=#333;" target="f4" value="新增">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="d1" style="strokeWidth=2;fontSize=10;fontColor=#333;" target="f5" value="编辑">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="d1" style="strokeWidth=2;fontSize=10;fontColor=#b85450;" target="f6" value="删除">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="d1" style="strokeWidth=2;fontSize=10;fontColor=#333;" target="f7" value="审核">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="f4" style="strokeWidth=2;" target="f8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="f5" style="strokeWidth=2;" target="f8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="f6" style="strokeWidth=2;" target="f8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="f7" style="strokeWidth=2;" target="f8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="f8" style="strokeWidth=2;" target="f9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="f9" style="strokeWidth=2;" target="end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

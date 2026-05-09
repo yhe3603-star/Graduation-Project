@@ -8,6 +8,7 @@
 util/
 ├── FileCleanupHelper.java   # 文件清理助手
 ├── FileTypeUtils.java       # 文件类型检测
+├── IpUtils.java             # 客户端IP获取（处理代理/反向代理）
 ├── PageUtils.java           # 分页工具
 ├── PasswordValidator.java   # 密码验证器
 ├── SensitiveDataUtils.java  # 敏感数据脱敏
@@ -253,7 +254,7 @@ Map<String, Object> data = PageUtils.toMap(pageResult);
 
 | 规则 | 要求 | 原因 |
 |------|------|------|
-| 最短长度 | 8位 | 太短容易被暴力破解 |
+| 最短长度 | 6位 | 太短容易被暴力破解 |
 | 最长长度 | 50位 | 防止超长输入攻击 |
 | 必须包含字母 | a-z 或 A-Z | 纯数字太简单 |
 | 必须包含数字 | 0-9 | 纯字母太简单 |
@@ -437,12 +438,59 @@ public class PlantServiceImpl implements PlantService {
 
 ---
 
+## 7. IpUtils -- 客户端IP获取
+
+> 类比：IpUtils 就像药铺的**来客登记** -- 不管客人是从正门进来还是走后门（代理/反向代理），都要记录他的真实身份。
+
+### 核心方法
+
+```java
+// 从HTTP请求中获取真实客户端IP
+// 按优先级检查代理头：X-Forwarded-For -> X-Real-IP -> Proxy-Client-IP -> WL-Proxy-Client-IP -> RemoteAddr
+public static String getClientIp(HttpServletRequest request) {
+    String ip = request.getHeader("X-Forwarded-For");
+    if (isValidIp(ip)) {
+        // X-Forwarded-For可能包含多个IP（经过多层代理），取第一个
+        int index = ip.indexOf(',');
+        return (index != -1) ? ip.substring(0, index).trim() : ip.trim();
+    }
+    ip = request.getHeader("X-Real-IP");
+    if (isValidIp(ip)) return ip.trim();
+    ip = request.getHeader("Proxy-Client-IP");
+    if (isValidIp(ip)) return ip.trim();
+    ip = request.getHeader("WL-Proxy-Client-IP");
+    if (isValidIp(ip)) return ip.trim();
+    return request.getRemoteAddr();
+}
+```
+
+### 为什么需要多层代理头检查？
+
+在部署架构中，请求可能经过多层代理：
+
+```
+客户端(192.168.1.100) -> Nginx(10.0.0.1) -> 应用服务器
+```
+
+- `request.getRemoteAddr()` 返回的是 Nginx 的 IP（10.0.0.1），不是客户端真实IP
+- Nginx 会在 `X-Forwarded-For` 头中添加客户端真实IP
+- `X-Real-IP` 是 Nginx 的另一个常用头
+
+### 使用场景
+
+- 限流（RateLimitAspect）：按IP限制未登录用户的请求频率
+- 操作日志（OperationLogAspect）：记录操作来源IP
+- 请求日志（LoggingAspect）：记录访问来源
+
+---
+
 ## 工具类速查表
 
 | 工具类 | 解决什么问题 | 最常用方法 |
 |--------|-------------|-----------|
 | XssUtils | 防XSS攻击 | `containsXss()`, `sanitize()` |
 | FileTypeUtils | 文件类型判断 | `getFileType()`, `validateFileContent()`, `isDangerousExtension()` |
+| IpUtils | 获取客户端真实IP | `getClientIp()` |
 | PageUtils | 分页处理 | `getPage()`, `escapeLike()`, `toMap()` |
 | PasswordValidator | 密码强度验证 | `validate()`, `isValid()` |
 | SensitiveDataUtils | 敏感数据脱敏 | `autoMask()`, `mask()`, `maskJson()` |

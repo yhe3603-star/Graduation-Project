@@ -1,0 +1,57 @@
+- [ ] 后端测试根目录 src/test/java/com/dongmedicine/README.md 已创建，内容涵盖测试架构总览
+- [ ] 后端测试子目录 common/、common/exception/、common/util/、common/constant/ README已创建
+- [ ] 后端测试子目录 controller/、controller/admin/ README已创建
+- [ ] 后端测试子目录 integration/、regression/、service/impl/、websocket/ README已创建
+- [ ] 后端 controller/admin/README.md 已创建，内容涵盖管理后台控制器功能
+- [ ] 后端 mq/producer/README.md 已创建，内容涵盖消息生产者功能
+- [ ] 后端 mq/consumer/README.md 已创建，内容涵盖消息消费者功能
+- [ ] 后端 src/main/resources/README.md 已创建，内容涵盖配置文件功能
+- [ ] 前端 e2e/README.md 已创建，内容涵盖E2E测试框架和场景
+- [ ] 前端 ai-chat/README.md 已创建，内容涵盖AI对话组件功能和交互流程
+- [ ] 前端 personal-center/README.md 已创建，内容涵盖个人中心页面功能
+- [ ] 后端 controller/README.md 已基于代码审查更新
+- [ ] 后端 service/README.md 已基于代码审查更新
+- [ ] 后端 service/impl/README.md 已基于代码审查更新
+- [ ] 后端 mapper/README.md 已基于代码审查更新
+- [ ] 后端 entity/README.md 已基于代码审查更新
+- [ ] 后端 dto/README.md 已基于代码审查更新
+- [ ] 后端 config/README.md 已基于代码审查更新
+- [ ] 后端 config/health/README.md 已基于代码审查更新
+- [ ] 后端 config/logging/README.md 已基于代码审查更新
+- [ ] 后端 common/README.md 已基于代码审查更新
+- [ ] 后端 common/constant/README.md 已基于代码审查更新
+- [ ] 后端 common/exception/README.md 已基于代码审查更新
+- [ ] 后端 common/util/README.md 已基于代码审查更新
+- [ ] 后端 websocket/README.md 已基于代码审查更新
+- [ ] 后端 mq/README.md 已基于代码审查更新
+- [ ] 后端 sql/README.md 已基于代码审查更新
+- [ ] 前端 components/README.md 已基于代码审查更新
+- [ ] 前端 base/README.md 已基于代码审查更新
+- [ ] 前端 common/README.md 已基于代码审查更新
+- [ ] 前端 business/README.md 已基于代码审查更新
+- [ ] 前端 business/display/README.md 已基于代码审查更新
+- [ ] 前端 business/interact/README.md 已基于代码审查更新
+- [ ] 前端 business/media/README.md 已基于代码审查更新
+- [ ] 前端 business/upload/README.md 已基于代码审查更新
+- [ ] 前端 business/layout/README.md 已基于代码审查更新
+- [ ] 前端 business/dialogs/README.md 已基于代码审查更新
+- [ ] 前端 business/admin/README.md 已基于代码审查更新
+- [ ] 前端 business/admin/forms/README.md 已基于代码审查更新
+- [ ] 前端 business/admin/dialogs/README.md 已基于代码审查更新
+- [ ] 前端 views/README.md 已基于代码审查更新
+- [ ] 前端 composables/README.md 已基于代码审查更新
+- [ ] 前端 utils/README.md 已基于代码审查更新
+- [ ] 前端 stores/README.md 已基于代码审查更新
+- [ ] 前端 router/README.md 已基于代码审查更新
+- [ ] 前端 styles/README.md 已基于代码审查更新
+- [ ] 前端 directives/README.md 已基于代码审查更新
+- [ ] 前端 __tests__/README.md 已基于代码审查更新
+- [ ] 项目根目录 README.md 已基于代码审查更新
+- [ ] 后端 README.md 已基于代码审查更新
+- [ ] 后端 Java包 README.md 已基于代码审查更新
+- [ ] 前端 README.md 已基于代码审查更新
+- [ ] 前端 src/README.md 已基于代码审查更新
+- [ ] deploy/README.md 已基于代码审查更新
+- [ ] 所有README文档内容与实际代码一致，无虚构内容
+- [ ] 所有README文档遵循工程化文档编写规范，结构清晰、逻辑严谨
+- [ ] 未修改任何源代码文件

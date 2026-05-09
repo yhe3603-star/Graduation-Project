@@ -43,10 +43,10 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 RUN mkdir -p /var/cache/nginx /var/log/nginx && \
     chown -R nginx:nginx /var/cache/nginx /var/log/nginx /usr/share/nginx/html
 
-EXPOSE 80
+EXPOSE 80 443
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=3s --retries=3 \
-  CMD curl -f http://localhost/ || exit 1
+  CMD curl -fk https://localhost/ || exit 1
 
 LABEL org.opencontainers.image.title="Dong Medicine Frontend" \
       org.opencontainers.image.description="侗乡医药数字展示平台前端服务"

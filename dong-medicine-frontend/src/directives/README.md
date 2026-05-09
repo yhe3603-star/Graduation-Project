@@ -350,8 +350,8 @@ export const vFocus = {
 export const vPermission = {
   mounted(el, binding) {
     const { value } = binding
-    // 从 sessionStorage 获取当前用户角色
-    const role = sessionStorage.getItem('role') || 'user'
+    // 从 localStorage 获取当前用户角色
+    const role = localStorage.getItem('role') || 'user'
     // 支持单个角色或角色数组
     const requiredRoles = Array.isArray(value) ? value : [value]
 
@@ -366,7 +366,7 @@ export const vPermission = {
 **注意事项**：
 - `v-permission` 只是**前端隐藏**，不是真正的安全措施。后端接口必须做权限校验。
 - ADMIN 角色自动通过所有权限检查（`role.toUpperCase() !== 'ADMIN'`）。
-- 依赖 `sessionStorage` 中的 `role` 字段，确保登录时正确存储。
+- 依赖 `localStorage` 中的 `role` 字段，确保登录时正确存储。
 
 ---
 
@@ -443,7 +443,7 @@ export const vLoading = {
 | `v-throttle` | 事件节流 | lodash-es throttle | 水龙头限流，定时放水 |
 | `v-click-outside` | 点击外部检测 | document.addEventListener | 走出店门自动关门 |
 | `v-focus` | 自动聚焦 | el.focus() | 自动把麦克风递给你 |
-| `v-permission` | 权限控制 | sessionStorage + DOM 移除 | VIP 专属通道 |
+| `v-permission` | 权限控制 | localStorage + DOM 移除 | VIP 专属通道 |
 | `v-loading` | 加载遮罩 | 动态创建 DOM 元素 | 遮住内容，显示转圈 |
 
 ---
@@ -609,4 +609,4 @@ mounted(el, binding, vnode) {
 
 ### Q3：v-permission 安全吗？
 
-不安全。这只是前端层面的隐藏，用户可以通过浏览器开发者工具修改 sessionStorage 来绕过。**真正的权限控制必须在后端实现**，前端只是提升用户体验。
+不安全。这只是前端层面的隐藏，用户可以通过浏览器开发者工具修改 localStorage 来绕过。**真正的权限控制必须在后端实现**，前端只是提升用户体验。

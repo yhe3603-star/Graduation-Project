@@ -1,0 +1,41 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ER-Interaction-Domain" id="er-interaction-domain">
+    <mxGraphModel dx="2478" dy="705" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="comments" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;comments&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;username&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;target_type&lt;/b&gt; VARCHAR(20)&lt;br&gt;&lt;b&gt;target_id&lt;/b&gt; BIGINT&lt;br&gt;&lt;b&gt;content&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;reply_to_id&lt;/b&gt; (FK→comments) BIGINT NULL&lt;br&gt;&lt;b&gt;likes&lt;/b&gt; INT DEFAULT 0&lt;br&gt;&lt;b&gt;reply_count&lt;/b&gt; INT DEFAULT 0&lt;br&gt;&lt;b&gt;status&lt;/b&gt; TINYINT DEFAULT 1" vertex="1">
+          <mxGeometry height="220" width="250" x="170" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="favorites" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;favorites&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;target_type&lt;/b&gt; VARCHAR(20)&lt;br&gt;&lt;b&gt;target_id&lt;/b&gt; BIGINT&lt;br&gt;&lt;br&gt;UNIQUE (user_id, target_type, target_id)" vertex="1">
+          <mxGeometry height="150" width="220" x="450" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="feedback" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;feedback&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;user_name&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;type&lt;/b&gt; VARCHAR(20)&lt;br&gt;&lt;b&gt;title&lt;/b&gt; VARCHAR(200)&lt;br&gt;&lt;b&gt;content&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;status&lt;/b&gt; VARCHAR(20) DEFAULT &#39;pending&#39;&lt;br&gt;&lt;b&gt;reply&lt;/b&gt; TEXT NULL" vertex="1">
+          <mxGeometry height="180" width="220" x="60" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="comments" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;fontSize=10;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;curved=1;" target="comments">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="20" y="245" />
+              <mxPoint x="20" y="135" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r1_label" connectable="0" parent="r1" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;" value="1 : N (self-ref: reply_to_id)" vertex="1">
+          <mxGeometry relative="1" x="0.3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="poly_note" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#FFF9E6;strokeColor=#d6b656;strokeWidth=1;dashed=1;" value="&lt;b&gt;Polymorphic Relationship Note&lt;/b&gt;&lt;hr&gt;&lt;br&gt;&lt;b&gt;target_type&lt;/b&gt; + &lt;b&gt;target_id&lt;/b&gt; is a polymorphic reference.&lt;br&gt;It can point to any of the following entities:&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#82b366&quot;&gt;&lt;b&gt;--- Content Domain ---&lt;/b&gt;&lt;/font&gt;&lt;br&gt;• target_type = &#39;plant&#39; → plants.id&lt;br&gt;• target_type = &#39;knowledge&#39; → knowledge.id&lt;br&gt;• target_type = &#39;inheritor&#39; → inheritors.id&lt;br&gt;• target_type = &#39;resource&#39; → resources.id&lt;br&gt;• target_type = &#39;qa&#39; → qa.id&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#d6b656&quot;&gt;&lt;b&gt;Applies to:&lt;/b&gt; comments, favorites&lt;/font&gt;" vertex="1">
+          <mxGeometry height="230" width="260" x="320" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" edge="1" parent="1" source="comments" style="dashed=1;strokeWidth=1;strokeColor=#808080;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;" target="poly_note">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" edge="1" parent="1" source="favorites" style="dashed=1;strokeWidth=1;strokeColor=#808080;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.8;entryY=0;entryDx=0;entryDy=0;" target="poly_note">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

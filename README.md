@@ -138,9 +138,11 @@
 | **MyBatis-Plus** | 3.5.9 | ORM框架 | 用Java代码操作数据库，不用写SQL | 翻译官 |
 | **MySQL** | 8.0+ | 关系型数据库 | 存储所有永久数据 | 仓库 |
 | **Redis** | 7.0+ | 内存数据库 | 缓存热点数据，加速访问 | 展示柜（比仓库快） |
-| **RabbitMQ** | 3.x | 消息队列 | 异步处理操作日志、热度计算 | 快递中转站 |
+| **RabbitMQ** | 3.12 | 消息队列 | 异步处理操作日志、热度计算 | 快递中转站 |
 | **Sa-Token JWT** | 1.37.0 | JWT模式 | Sa-Token整合JWT，无状态Token认证 | 电子门禁卡 |
 | **SpringDoc** | 2.2.0 | API文档 | 自动生成接口文档 | 说明书 |
+| **Caffeine** | 3.x | 本地缓存 | Redis不可用时自动降级 | 备用展示柜 |
+| **Flyway** | -- | 数据库迁移 | 版本化管理数据库表结构变更 | 数据库升级助手 |
 
 ### DevOps技术栈
 
@@ -149,7 +151,9 @@
 | **Docker** | 容器化工具 | 把应用打包成容器，在哪都能运行 |
 | **Docker Compose** | 编排工具 | 一条命令启动所有服务 |
 | **Nginx** | Web服务器 | 反向代理、静态资源服务、负载均衡、kkfileview代理 |
-| **GitHub Actions** | CI/CD工具 | 推送代码自动构建部署 |
+| **GitHub Actions** | CI/CD工具 | 推送代码自动测试、构建、部署 |
+| **Prometheus** | 监控采集 | 采集后端Actuator指标数据 |
+| **Grafana** | 监控看板 | 可视化监控面板 |
 
 ---
 
@@ -161,13 +165,16 @@ dong-medicine-platform/           ← 项目根目录
 ├── 📂 dong-medicine-frontend/    ← 【前端项目】Vue 3 应用
 │   ├── 📂 src/                   ← 源代码（你主要写代码的地方）
 │   │   ├── 📂 views/             ← 页面组件（每个页面一个.vue文件）
-│   │   ├── 📂 components/        ← 可复用组件（按钮、卡片等）
+│   │   ├── 📂 components/        ← 可复用组件（base/common/business三层）
 │   │   ├── 📂 composables/       ← 组合式函数（可复用的逻辑）
 │   │   ├── 📂 router/            ← 路由配置（哪个URL显示哪个页面）
 │   │   ├── 📂 stores/            ← 状态管理（全局数据）
-│   │   ├── 📂 utils/             ← 工具函数（请求封装、缓存等）
-│   │   ├── 📂 styles/            ← 样式文件
+│   │   ├── 📂 utils/             ← 工具函数（请求封装、缓存、XSS防护等）
+│   │   ├── 📂 styles/            ← 样式文件（CSS变量 + 主题覆盖 + SCSS）
+│   │   ├── 📂 directives/        ← 自定义指令（懒加载、防抖、节流等）
+│   │   ├── 📂 __tests__/         ← 单元测试
 │   │   └── 📄 App.vue            ← 根组件（整个应用的容器）
+│   ├── 📂 e2e/                   ← Playwright E2E测试
 │   ├── 📄 package.json           ← 依赖配置（类似后端的pom.xml）
 │   └── 📄 vite.config.js         ← Vite构建配置
 │
@@ -175,19 +182,41 @@ dong-medicine-platform/           ← 项目根目录
 │   ├── 📂 src/main/java/         ← Java源代码
 │   │   └── 📂 com/dongmedicine/  ← 主包
 │   │       ├── 📂 controller/    ← 控制器（接收请求）
+│   │       │   └── 📂 admin/     ←   管理后台接口（需admin角色）
 │   │       ├── 📂 service/       ← 服务层（业务逻辑）
+│   │       │   └── 📂 impl/      ←   Service实现类
 │   │       ├── 📂 mapper/        ← 数据访问层（操作数据库）
 │   │       ├── 📂 entity/        ← 实体类（对应数据库表）
 │   │       ├── 📂 dto/           ← 数据传输对象
-│   │       ├── 📂 config/        ← 配置类
-│   │       └── 📂 common/        ← 通用工具
+│   │       ├── 📂 config/        ← 配置类（Sa-Token、缓存、安全等）
+│   │       │   ├── 📂 health/    ←   健康检查配置
+│   │       │   └── 📂 logging/   ←   日志配置
+│   │       ├── 📂 mq/            ← RabbitMQ消息队列
+│   │       │   ├── 📂 producer/  ←   消息生产者
+│   │       │   └── 📂 consumer/  ←   消息消费者
+│   │       ├── 📂 websocket/     ← WebSocket处理器（AI聊天）
+│   │       └── 📂 common/        ← 通用模块
+│   │           ├── 📂 constant/  ←   常量定义
+│   │           ├── 📂 exception/ ←   异常体系 + 全局异常处理
+│   │           └── 📂 util/      ←   工具类（XSS、分页、密码校验等）
 │   ├── 📂 src/main/resources/    ← 配置文件
 │   │   ├── 📄 application.yml    ← 主配置
-│   │   └── 📄 application-dev.yml← 开发环境配置
-│   ├── 📂 sql/                   ← 数据库脚本
+│   │   ├── 📄 application-dev.yml← 开发环境配置
+│   │   ├── 📄 application-prod.yml← 生产环境配置
+│   │   ├── 📄 logback-spring.xml ← 日志配置
+│   │   └── 📂 db/migration/      ← Flyway数据库迁移脚本
+│   ├── 📂 src/test/              ← 测试代码
+│   ├── 📂 sql/                   ← 数据库脚本（建表+种子数据）
 │   └── 📄 pom.xml                ← Maven依赖配置
 │
-├── 📂 deploy/                    ← 部署脚本
+├── 📂 deploy/                    ← 部署脚本与监控配置
+│   ├── 📄 docker-deploy.sh       ← Docker部署脚本
+│   ├── 📄 init-server.sh         ← 服务器初始化脚本
+│   ├── 📄 cleanup.sh             ← Docker资源清理脚本
+│   ├── 📄 setup-ssl.sh           ← HTTPS证书申请脚本
+│   ├── 📄 backup-db.sh           ← 数据库备份脚本
+│   └── 📂 monitoring/            ← Prometheus + Grafana配置
+├── 📂 .github/workflows/         ← GitHub Actions CI/CD配置
 ├── 📄 docker-compose.yml         ← Docker编排配置
 └── 📄 .env.example               ← 环境变量模板
 ```
@@ -289,7 +318,7 @@ source dong_medicine.sql
 # 4. 验证
 USE dong_medicine;
 SHOW TABLES;
-# 应该看到13张表
+# 应该看到17张表（含浏览历史、聊天历史、搜索历史等）
 ```
 
 > 💡 **什么是种子数据？** 种子数据是预先准备好的初始数据，比如50多种侗族药用植物的信息，
@@ -319,7 +348,7 @@ mvn spring-boot:run
 ```
 
 > 💡 **验证后端是否启动成功**：
-> 浏览器打开 http://localhost:8080/swagger-ui.html
+> 浏览器打开 http://localhost:8080/swagger-ui/index.html
 > 能看到API文档页面就说明后端运行正常。
 
 ### 第四步：启动前端
@@ -350,7 +379,7 @@ npm run dev
 | 地址 | 说明 |
 |------|------|
 | http://localhost:5173 | 前端页面（开发模式） |
-| http://localhost:8080/swagger-ui.html | 后端API文档 |
+| http://localhost:8080/swagger-ui/index.html | 后端API文档 |
 | http://localhost:8080/api/plants/list?page=1&size=10 | 直接测试API |
 
 ### Docker Compose 一键部署（推荐）
@@ -381,14 +410,14 @@ Docker Compose 会自动启动以下8个服务：
 |------|--------|------|------|
 | MySQL | dong-medicine-mysql | 3307→3306 | 数据库（宿主机3307，避免与本机MySQL冲突） |
 | Redis | dong-medicine-redis | -- | 缓存（仅内部网络访问） |
-| RabbitMQ | dong-medicine-rabbitmq | -- | 消息队列（仅内部网络访问） |
-| Backend | dong-medicine-backend | -- | Spring Boot后端（仅内部网络访问） |
-| Frontend | dong-medicine-frontend | 3000→80 | Nginx前端+反向代理 |
+| RabbitMQ | dong-medicine-rabbitmq | 5672/15672 | 消息队列（15672为管理界面） |
+| Backend | dong-medicine-backend | 8080→8080 | Spring Boot后端 |
+| Frontend | dong-medicine-frontend | 80→80 | Nginx前端+反向代理 |
 | KKFileView | dong-medicine-kkfileview | -- | 文档预览（通过Nginx代理访问） |
 | Prometheus | dong-medicine-prometheus | -- | 监控数据采集（仅内部网络访问） |
 | Grafana | dong-medicine-grafana | 3001→3000 | 监控看板（访问 http://localhost:3001） |
 
-> 💡 所有服务通过Docker内部网络通信，只有前端(3000)和MySQL(3307)暴露到宿主机。
+> 💡 所有服务通过Docker内部网络通信，前端(80)、MySQL(3307)、后端(8080)、RabbitMQ(5672/15672)、Grafana(3001)暴露到宿主机。
 > 使用Navicat连接MySQL时：主机`localhost`，端口`3307`，用户名`root`，密码见`.env`文件。
 >
 > 💡 Prometheus 采集后端 Actuator 指标，Grafana 提供可视化看板。访问 http://localhost:3001 查看监控面板（默认账号 admin/admin）。
@@ -398,7 +427,7 @@ Docker Compose 会自动启动以下8个服务：
 | 字段 | 值 |
 |------|-----|
 | 用户名 | admin |
-| 密码 | admin123 |
+| 密码 | 由环境变量 `ADMIN_INIT_PASSWORD` 决定（首次启动时由 `AdminDataInitializer` 自动创建） |
 
 ---
 

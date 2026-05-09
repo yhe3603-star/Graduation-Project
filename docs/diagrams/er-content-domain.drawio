@@ -1,0 +1,33 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ER-Content-Domain" id="er-content-domain">
+    <mxGraphModel dx="1278" dy="705" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="plants" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;plants&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;name_cn&lt;/b&gt; VARCHAR(100)&lt;br&gt;&lt;b&gt;name_dong&lt;/b&gt; VARCHAR(100)&lt;br&gt;&lt;b&gt;scientific_name&lt;/b&gt; VARCHAR(200)&lt;br&gt;&lt;b&gt;category&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;usage_way&lt;/b&gt; VARCHAR(255)&lt;br&gt;&lt;b&gt;habitat&lt;/b&gt; VARCHAR(255)&lt;br&gt;&lt;b&gt;efficacy&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;story&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;images&lt;/b&gt; JSON&lt;br&gt;&lt;b&gt;videos&lt;/b&gt; JSON&lt;br&gt;&lt;b&gt;view_count&lt;/b&gt; INT DEFAULT 0&lt;br&gt;&lt;b&gt;favorite_count&lt;/b&gt; INT DEFAULT 0&lt;br&gt;&lt;b&gt;popularity&lt;/b&gt; DOUBLE DEFAULT 0" vertex="1">
+          <mxGeometry height="230" width="210" x="240" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="knowledge" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;knowledge&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;title&lt;/b&gt; VARCHAR(200)&lt;br&gt;&lt;b&gt;type&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;therapy_category&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;content&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;formula&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;usage_method&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;related_plants&lt;/b&gt; JSON&lt;br&gt;&lt;b&gt;view_count&lt;/b&gt; INT DEFAULT 0&lt;br&gt;&lt;b&gt;favorite_count&lt;/b&gt; INT DEFAULT 0" vertex="1">
+          <mxGeometry height="180" width="200" x="660" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="inheritors" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;inheritors&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;name&lt;/b&gt; VARCHAR(100)&lt;br&gt;&lt;b&gt;level&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;bio&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;specialties&lt;/b&gt; VARCHAR(500)&lt;br&gt;&lt;b&gt;experience_years&lt;/b&gt; INT&lt;br&gt;&lt;b&gt;honors&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;view_count&lt;/b&gt; INT DEFAULT 0&lt;br&gt;&lt;b&gt;favorite_count&lt;/b&gt; INT DEFAULT 0" vertex="1">
+          <mxGeometry height="190" width="190" x="670" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="resources" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;resources&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;title&lt;/b&gt; VARCHAR(200)&lt;br&gt;&lt;b&gt;category&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;files&lt;/b&gt; JSON&lt;br&gt;&lt;b&gt;description&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;download_count&lt;/b&gt; INT DEFAULT 0&lt;br&gt;&lt;b&gt;view_count&lt;/b&gt; INT DEFAULT 0" vertex="1">
+          <mxGeometry height="150" width="190" x="230" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="qa" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;qa&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;category&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;question&lt;/b&gt; VARCHAR(500)&lt;br&gt;&lt;b&gt;answer&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;view_count&lt;/b&gt; INT DEFAULT 0&lt;br&gt;&lt;b&gt;favorite_count&lt;/b&gt; INT DEFAULT 0" vertex="1">
+          <mxGeometry height="140" width="200" x="440" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="knowledge" style="dashed=1;strokeWidth=2;strokeColor=#82b366;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="plants">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_label" connectable="0" parent="r1" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#82b366;" value="related_plants (JSON)" vertex="1">
+          <mxGeometry relative="1" x="-0.1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

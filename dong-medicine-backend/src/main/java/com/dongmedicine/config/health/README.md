@@ -103,6 +103,7 @@ public class RedisHealthIndicator implements HealthIndicator {
             // ping成功 --> 状态为 UP
             return Health.up()
                     .withDetail("status", "Redis connection successful")
+                    .withDetail("host", redisConnectionFactory.getConnection().getNativeConnection().toString())
                     .build();
         } catch (Exception e) {
             // ping失败 --> 状态为 WARNING（不是DOWN！）

@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ER-Quiz-Domain" id="er-quiz-domain">
+    <mxGraphModel dx="1136" dy="627" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="quiz_questions" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;quiz_questions&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;question&lt;/b&gt; VARCHAR(500)&lt;br&gt;&lt;b&gt;options&lt;/b&gt; JSON&lt;br&gt;&lt;b&gt;answer&lt;/b&gt; VARCHAR(255)&lt;br&gt;&lt;b&gt;category&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;difficulty&lt;/b&gt; VARCHAR(20)&lt;br&gt;&lt;b&gt;correct_answer&lt;/b&gt; VARCHAR(10)&lt;br&gt;&lt;b&gt;explanation&lt;/b&gt; TEXT" vertex="1">
+          <mxGeometry height="180" width="200" x="310" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="quiz_record" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;quiz_record&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;score&lt;/b&gt; INT&lt;br&gt;&lt;b&gt;total_questions&lt;/b&gt; INT&lt;br&gt;&lt;b&gt;correct_answers&lt;/b&gt; INT" vertex="1">
+          <mxGeometry height="130" width="190" x="520" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="plant_game_record" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;plant_game_record&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;difficulty&lt;/b&gt; VARCHAR(20)&lt;br&gt;&lt;b&gt;score&lt;/b&gt; INT&lt;br&gt;&lt;b&gt;correct_count&lt;/b&gt; INT&lt;br&gt;&lt;b&gt;total_count&lt;/b&gt; INT" vertex="1">
+          <mxGeometry height="150" width="190" x="720" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="users_ref" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;dashed=1;" value="&lt;b&gt;users&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#6c8ebf&quot;&gt;(FK target)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="160" x="530" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="quiz_record" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="users_ref">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_label" connectable="0" parent="r1" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" value="N : 1" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r2" edge="1" parent="1" source="plant_game_record" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="users_ref">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_label" connectable="0" parent="r2" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" value="N : 1" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r3" edge="1" parent="1" source="quiz_questions" style="dashed=1;strokeWidth=1;strokeColor=#b85450;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="quiz_record">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_label" connectable="0" parent="r3" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#b85450;" value="uses (quiz_id in answers JSON)" vertex="1">
+          <mxGeometry relative="1" x="-0.1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

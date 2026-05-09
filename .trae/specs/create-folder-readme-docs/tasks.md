@@ -1,0 +1,122 @@
+# Tasks
+
+- [ ] Task 1: 为后端测试目录创建README文档体系
+  - [ ] SubTask 1.1: 阅读 src/test/ 下所有测试代码文件，理解测试架构和覆盖范围
+  - [ ] SubTask 1.2: 创建 src/test/java/com/dongmedicine/README.md（测试总览）
+  - [ ] SubTask 1.3: 创建 src/test/java/com/dongmedicine/common/README.md（含exception、util、constant子目录说明）
+  - [ ] SubTask 1.4: 创建 src/test/java/com/dongmedicine/common/exception/README.md
+  - [ ] SubTask 1.5: 创建 src/test/java/com/dongmedicine/common/util/README.md
+  - [ ] SubTask 1.6: 创建 src/test/java/com/dongmedicine/common/constant/README.md
+  - [ ] SubTask 1.7: 创建 src/test/java/com/dongmedicine/controller/README.md
+  - [ ] SubTask 1.8: 创建 src/test/java/com/dongmedicine/controller/admin/README.md
+  - [ ] SubTask 1.9: 创建 src/test/java/com/dongmedicine/integration/README.md
+  - [ ] SubTask 1.10: 创建 src/test/java/com/dongmedicine/regression/README.md
+  - [ ] SubTask 1.11: 创建 src/test/java/com/dongmedicine/service/impl/README.md
+  - [ ] SubTask 1.12: 创建 src/test/java/com/dongmedicine/websocket/README.md
+
+- [ ] Task 2: 为后端缺失README的其他目录创建文档
+  - [ ] SubTask 2.1: 阅读 controller/admin/ 下所有代码文件
+  - [ ] SubTask 2.2: 创建 controller/admin/README.md
+  - [ ] SubTask 2.3: 阅读 mq/producer/ 和 mq/consumer/ 下所有代码文件
+  - [ ] SubTask 2.4: 创建 mq/producer/README.md
+  - [ ] SubTask 2.5: 创建 mq/consumer/README.md
+  - [ ] SubTask 2.6: 阅读 src/main/resources/ 下所有配置文件
+  - [ ] SubTask 2.7: 创建 src/main/resources/README.md
+
+- [ ] Task 3: 为前端缺失README的目录创建文档
+  - [ ] SubTask 3.1: 阅读 e2e/ 下所有测试代码文件
+  - [ ] SubTask 3.2: 创建 e2e/README.md
+  - [ ] SubTask 3.3: 阅读 ai-chat/ 下所有Vue组件代码
+  - [ ] SubTask 3.4: 创建 ai-chat/README.md
+  - [ ] SubTask 3.5: 阅读 personal-center/ 下所有Vue组件代码
+  - [ ] SubTask 3.6: 创建 personal-center/README.md
+
+- [ ] Task 4: 基于代码审查更新后端核心层README（controller、service、service/impl、mapper、entity、dto）
+  - [ ] SubTask 4.1: 阅读 controller/ 下所有代码文件，对比现有README
+  - [ ] SubTask 4.2: 更新 controller/README.md
+  - [ ] SubTask 4.3: 阅读 service/ 和 service/impl/ 下所有代码文件，对比现有README
+  - [ ] SubTask 4.4: 更新 service/README.md
+  - [ ] SubTask 4.5: 更新 service/impl/README.md
+  - [ ] SubTask 4.6: 阅读 mapper/ 下所有代码文件，对比现有README
+  - [ ] SubTask 4.7: 更新 mapper/README.md
+  - [ ] SubTask 4.8: 阅读 entity/ 和 dto/ 下所有代码文件，对比现有README
+  - [ ] SubTask 4.9: 更新 entity/README.md
+  - [ ] SubTask 4.10: 更新 dto/README.md
+
+- [ ] Task 5: 基于代码审查更新后端基础设施层README（config、common、websocket、mq、sql）
+  - [ ] SubTask 5.1: 阅读 config/ 下所有代码文件，对比现有README
+  - [ ] SubTask 5.2: 更新 config/README.md
+  - [ ] SubTask 5.3: 阅读 config/health/ 和 config/logging/ 下所有代码文件，对比现有README
+  - [ ] SubTask 5.4: 更新 config/health/README.md
+  - [ ] SubTask 5.5: 更新 config/logging/README.md
+  - [ ] SubTask 5.6: 阅读 common/ 及其子目录下所有代码文件，对比现有README
+  - [ ] SubTask 5.7: 更新 common/README.md
+  - [ ] SubTask 5.8: 更新 common/constant/README.md
+  - [ ] SubTask 5.9: 更新 common/exception/README.md
+  - [ ] SubTask 5.10: 更新 common/util/README.md
+  - [ ] SubTask 5.11: 阅读 websocket/ 下所有代码文件，对比现有README
+  - [ ] SubTask 5.12: 更新 websocket/README.md
+  - [ ] SubTask 5.13: 阅读 mq/ 下所有代码文件，对比现有README
+  - [ ] SubTask 5.14: 更新 mq/README.md
+  - [ ] SubTask 5.15: 阅读 sql/ 下所有SQL文件，对比现有README
+  - [ ] SubTask 5.16: 更新 sql/README.md
+
+- [ ] Task 6: 基于代码审查更新前端组件层README（components及其子目录）
+  - [ ] SubTask 6.1: 阅读 components/ 下所有代码文件，对比现有README
+  - [ ] SubTask 6.2: 更新 components/README.md
+  - [ ] SubTask 6.3: 阅读 base/ 下所有代码文件，对比现有README
+  - [ ] SubTask 6.4: 更新 base/README.md
+  - [ ] SubTask 6.5: 阅读 common/ 下所有代码文件，对比现有README
+  - [ ] SubTask 6.6: 更新 common/README.md
+  - [ ] SubTask 6.7: 阅读 business/ 及其子目录下所有代码文件，对比现有README
+  - [ ] SubTask 6.8: 更新 business/README.md
+  - [ ] SubTask 6.9: 更新 business/display/README.md
+  - [ ] SubTask 6.10: 更新 business/interact/README.md
+  - [ ] SubTask 6.11: 更新 business/media/README.md
+  - [ ] SubTask 6.12: 更新 business/upload/README.md
+  - [ ] SubTask 6.13: 更新 business/layout/README.md
+  - [ ] SubTask 6.14: 更新 business/dialogs/README.md
+  - [ ] SubTask 6.15: 更新 business/admin/README.md
+  - [ ] SubTask 6.16: 更新 business/admin/forms/README.md
+  - [ ] SubTask 6.17: 更新 business/admin/dialogs/README.md
+
+- [ ] Task 7: 基于代码审查更新前端功能层README（views、composables、utils、stores、router、styles、directives、__tests__）
+  - [ ] SubTask 7.1: 阅读 views/ 下所有代码文件，对比现有README
+  - [ ] SubTask 7.2: 更新 views/README.md
+  - [ ] SubTask 7.3: 阅读 composables/ 下所有代码文件，对比现有README
+  - [ ] SubTask 7.4: 更新 composables/README.md
+  - [ ] SubTask 7.5: 阅读 utils/ 下所有代码文件，对比现有README
+  - [ ] SubTask 7.6: 更新 utils/README.md
+  - [ ] SubTask 7.7: 阅读 stores/ 下所有代码文件，对比现有README
+  - [ ] SubTask 7.8: 更新 stores/README.md
+  - [ ] SubTask 7.9: 阅读 router/ 下所有代码文件，对比现有README
+  - [ ] SubTask 7.10: 更新 router/README.md
+  - [ ] SubTask 7.11: 阅读 styles/ 下所有代码文件，对比现有README
+  - [ ] SubTask 7.12: 更新 styles/README.md
+  - [ ] SubTask 7.13: 阅读 directives/ 下所有代码文件，对比现有README
+  - [ ] SubTask 7.14: 更新 directives/README.md
+  - [ ] SubTask 7.15: 阅读 __tests__/ 下所有代码文件，对比现有README
+  - [ ] SubTask 7.16: 更新 __tests__/README.md
+
+- [ ] Task 8: 基于代码审查更新项目级README（根目录、后端总览、前端总览、部署文档）
+  - [ ] SubTask 8.1: 阅读项目根目录结构，对比现有README
+  - [ ] SubTask 8.2: 更新 README.md（项目根目录）
+  - [ ] SubTask 8.3: 阅读后端项目结构，对比现有README
+  - [ ] SubTask 8.4: 更新 dong-medicine-backend/README.md
+  - [ ] SubTask 8.5: 更新 dong-medicine-backend/src/main/java/com/dongmedicine/README.md
+  - [ ] SubTask 8.6: 阅读前端项目结构，对比现有README
+  - [ ] SubTask 8.7: 更新 dong-medicine-frontend/README.md
+  - [ ] SubTask 8.8: 更新 dong-medicine-frontend/src/README.md
+  - [ ] SubTask 8.9: 阅读部署配置，对比现有README
+  - [ ] SubTask 8.10: 更新 deploy/README.md
+
+# Task Dependencies
+- [Task 1] 无依赖，可独立执行
+- [Task 2] 无依赖，可独立执行
+- [Task 3] 无依赖，可独立执行
+- [Task 4] 无依赖，可独立执行
+- [Task 5] 无依赖，可独立执行
+- [Task 6] 无依赖，可独立执行
+- [Task 7] 无依赖，可独立执行
+- [Task 8] 无依赖，可独立执行
+- Task 1-8 之间无依赖关系，可并行执行

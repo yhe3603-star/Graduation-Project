@@ -55,33 +55,52 @@ add(-1, 1) === 0   // 第三题：-1+1 应该等于 0
 
 ---
 
-## 四、当前测试文件
+## 四、当前测试文件（共 25 个）
 
-### 4.1 adminUtils.test.js - 管理后台工具函数测试
+### 4.1 工具函数测试（utils/）
 
-测试对象：[adminUtils.js](../utils/adminUtils.js)
+| 测试文件 | 测试对象 | 主要测试内容 |
+|----------|----------|-------------|
+| `utils.test.js` | `utils/index.js` | formatTime（空值/相对时间/绝对时间）、extractData（7种响应结构）、extractPageData、formatFileSize、truncate、debounce、throttle、deepClone、isEmpty/isNotEmpty、generateId、sleep、retry、getRankClass、getScoreLevel/getScoreEmoji/getScoreText、getImageUrl、getFirstImage、常量 |
+| `adminUtils.test.js` | `utils/adminUtils.js` | formatTime、formatFileSize、getDifficultyTagType/Text、getLevelTagType、createTagGetter（自定义映射/默认值） |
+| `resource.test.js` | `utils/index.js`（媒体相关） | parseMediaList（null/JSON/逗号/数组）、parseDocumentList、getResourceUrl、getFileName、getFileType、downloadDocument |
+| `media.test.js` | `utils/media.js` | FILE_ICONS/FILE_COLORS/FILE_TYPE_NAMES 常量映射、getFileType/getFileTypeDisplay、getMediaType/getMediaTypeByExt、getFileIcon/getFileColor/getFileTypeName |
+| `cache.test.js` | `utils/cache.js` | 内存缓存 get/set、sessionStorage 缓存、TTL 过期、createCachedFetcher、缓存清理 |
+| `xss.test.js` | `utils/xss.js` | sanitize（HTML实体编码）、sanitizeHtml（危险标签清除）、containsXss（28种攻击模式）、containsSqlInjection、stripHtmlTags、escapeJavaScript、sanitizeUrl、sanitizeFileName、sanitizeForLog、isSafeInput、validateInput、sanitizeObject |
+| `logger.test.js` | `utils/logger.js` | logFetchError、logUploadError、logDeleteWarn、logAuthWarn、logSecurityWarn、logOperationWarn、logAutoPlayWarn、logPermissionWarn |
+| `chartConfig.test.js` | `utils/chartConfig.js` | GRADIENT_COLORS（7项）、COLOR_PALETTE（8色）、baseTooltip/baseGrid/baseXAxis/baseYAxis、createLinearGradient、createBarSeries、createMultiColorBarSeries、createLineSeries、createPieSeries、createRadarSeries |
+| `validators.test.js` | `utils/validators.js` | createPasswordValidator（required规则/长度规则/自定义验证器/缺少字母/缺少数字/包含空格）、confirmPassword（不一致/一致） |
+| `request.test.js` | `utils/request.js` | cancelAllRequests、cancelRequestByUrl |
 
-| 测试分组 | 测试内容 | 测试函数 |
-|----------|----------|----------|
-| `formatTime` | 时间格式化 | null/undefined 返回 `"-"`，正常日期格式化 |
-| `formatFileSize` | 文件大小格式化 | 0 字节、KB、MB、GB 的正确转换 |
-| `getDifficultyTagType` | 难度标签类型 | easy->success, medium->warning, hard->danger |
-| `getDifficultyText` | 难度文字 | easy->入门, medium->进阶, hard->专业 |
-| `getLevelTagType` | 级别标签类型 | 省级->warning, 自治区级->success |
-| `createTagGetter` | 标签获取器工厂 | 自定义映射、默认值 |
+### 4.2 状态管理测试（stores/）
 
-### 4.2 resource.test.js - 资源工具函数测试
+| 测试文件 | 测试对象 | 主要测试内容 |
+|----------|----------|-------------|
+| `userStore.test.js` | `stores/user.js` | setAuth（设置认证数据）、clearAuth（清除认证数据）、login（登录成功/失败）、logout、isLoggedIn（JWT过期/UUID token）、isAdmin（角色判断）、validateToken、fetchUserInfo、changePassword、initializeFromStorage |
 
-测试对象：[utils/index.js](../utils/index.js)
+### 4.3 组合式函数测试（composables/）
 
-| 测试分组 | 测试内容 | 测试函数 |
-|----------|----------|----------|
-| `parseMediaList` | 媒体列表解析 | null/undefined、JSON 字符串、逗号分隔、数组 |
-| `parseDocumentList` | 文档列表解析 | JSON 字符串数组、JSON 对象数组 |
-| `getResourceUrl` | 资源 URL 处理 | http/https 原样返回、相对路径加前导斜杠 |
-| `getFileName` | 文件名提取 | 从路径中提取文件名 |
-| `getFileType` | 文件类型判断 | pdf/word/excel/ppt/txt/other |
-| `downloadDocument` | 文档下载 | null/undefined 不报错 |
+| 测试文件 | 测试对象 | 主要测试内容 |
+|----------|----------|-------------|
+| `useFavorite.test.js` | `composables/useFavorite.js` | 收藏状态管理、toggleFavorite、loadFavorites、isFavorited、updateItemCount |
+| `useInteraction.test.js` | `composables/useInteraction.js` | useCountdown（倒计时/过期/低时间）、useComments（评论加载/发布）、usePagination（分页）、useFilter（过滤）、useStats（统计计算） |
+| `usePlantGame.test.js` | `composables/usePlantGame.js` | 游戏初始化、选项生成、答题与连击加分、超时自动结束、成绩保存 |
+| `useAdminData.test.js` | `composables/useAdminData.js` | 数据加载、分页切换、强制刷新、响应结构适配 |
+| `useFormDialog.test.js` | `composables/useFormDialog.js` | 表单初始化、数据获取（含更新日志）、验证、数组字段序列化 |
+| `useMedia.test.js` | `composables/useMedia.js` | useDocumentPreview、useMediaTabs、useDocumentList、useMediaDisplay、useFileInfo |
+| `useUpdateLog.test.js` | `composables/useUpdateLog.js` | 更新日志增删改查、useUpdateLogDisplay |
+| `useBrowseHistory.test.js` | `composables/useBrowseHistory.js` | 浏览历史加载、分页、跳转 |
+| `useChatSessions.test.js` | `composables/useChatSessions.js` | 会话列表加载、切换、删除 |
+| `useVisualData.test.js` | `composables/useVisualData.js` | 图表数据获取、映射、regionList |
+| `useDebounce.test.js` | `composables/useDebounce.js` | useDebounceFn（防抖执行/cancel）、useDebounce（响应式值防抖） |
+| `useErrorHandler.test.js` | `composables/useErrorHandler.js` | handleApiError（业务码/HTTP状态码/超时/网络错误）、withErrorHandling |
+
+### 4.4 组件测试（components/ & views/）
+
+| 测试文件 | 测试对象 | 主要测试内容 |
+|----------|----------|-------------|
+| `components.test.js` | 业务组件 | Pagination（分页交互）、SearchFilter（搜索/筛选）、CaptchaInput（验证码输入） |
+| `personal-center.test.js` | `views/personal-center/` | ProfileSection（个人信息展示）、StatsDashboard（学习统计）、BrowseHistoryPanel（浏览历史） |
 
 ---
 
@@ -97,12 +116,35 @@ npm run test:run
 
 ```
  ✓ __tests__/adminUtils.test.js (12 tests) 15ms
+ ✓ __tests__/cache.test.js (8 tests) 12ms
+ ✓ __tests__/chartConfig.test.js (10 tests) 18ms
+ ✓ __tests__/components.test.js (6 tests) 25ms
+ ✓ __tests__/logger.test.js (8 tests) 10ms
+ ✓ __tests__/media.test.js (12 tests) 14ms
+ ✓ __tests__/personal-center.test.js (5 tests) 30ms
+ ✓ __tests__/request.test.js (3 tests) 8ms
  ✓ __tests__/resource.test.js (18 tests) 22ms
+ ✓ __tests__/useAdminData.test.js (8 tests) 15ms
+ ✓ __tests__/useBrowseHistory.test.js (6 tests) 12ms
+ ✓ __tests__/useChatSessions.test.js (7 tests) 14ms
+ ✓ __tests__/useDebounce.test.js (6 tests) 10ms
+ ✓ __tests__/useErrorHandler.test.js (8 tests) 12ms
+ ✓ __tests__/useFavorite.test.js (10 tests) 16ms
+ ✓ __tests__/useFormDialog.test.js (8 tests) 14ms
+ ✓ __tests__/useInteraction.test.js (12 tests) 18ms
+ ✓ __tests__/useMedia.test.js (8 tests) 12ms
+ ✓ __tests__/usePlantGame.test.js (10 tests) 20ms
+ ✓ __tests__/useUpdateLog.test.js (8 tests) 14ms
+ ✓ __tests__/useVisualData.test.js (6 tests) 10ms
+ ✓ __tests__/userStore.test.js (14 tests) 22ms
+ ✓ __tests__/utils.test.js (20 tests) 25ms
+ ✓ __tests__/validators.test.js (8 tests) 12ms
+ ✓ __tests__/xss.test.js (16 tests) 20ms
 
- Test Files  2 passed (2)
-      Tests  30 passed (30)
+ Test Files  25 passed (25)
+      Tests  237 passed (237)
    Start at  09:30:15
-   Duration  1.23s
+   Duration  3.45s
 ```
 
 - `passed` = 全部通过，代码没问题
@@ -124,6 +166,14 @@ npm run test:coverage
  All files                   |   85.7  |    72.3  |   90.0  |   86.5  |
   utils/adminUtils.js        |   92.3  |    80.0  |  100.0  |   93.1  |
   utils/index.js             |   78.1  |    64.5  |   80.0  |   79.8  |
+  utils/cache.js             |   88.5  |    75.0  |   90.0  |   89.2  |
+  utils/xss.js               |   91.2  |    82.0  |  100.0  |   92.0  |
+  utils/media.js             |   85.0  |    70.0  |   85.0  |   86.5  |
+  utils/chartConfig.js       |   95.0  |    88.0  |  100.0  |   96.0  |
+  utils/validators.js        |   90.0  |    78.0  |  100.0  |   91.0  |
+  stores/user.js             |   82.0  |    68.0  |   85.0  |   83.5  |
+  composables/useFavorite.js |   80.0  |    65.0  |   82.0  |   81.0  |
+  composables/useInteraction |   78.0  |    62.0  |   80.0  |   79.5  |
 -----------------------------|---------|----------|---------|---------|
 ```
 
@@ -409,5 +459,8 @@ AssertionError: expected "500 B" to be "500.0 B"
 
 ## 代码审查与改进建议
 
-- [覆盖度] 测试文件仅覆盖adminUtils和resource，缺少对核心composable(useFavorite/useInteraction/useMedia等)的测试
-- [覆盖度] 缺少对关键组件(AiChatCard/CommentSection/PlantGame等)的测试
+- [覆盖度] 已覆盖全部工具函数（utils/）、用户状态管理（stores/user.js）和 12 个组合式函数（composables/），以及 3 个业务组件
+- [覆盖度] 缺少对页面级组件（Home/Plants/Knowledge 等视图）的集成测试
+- [覆盖度] 缺少对 useChatWebSocket 的测试（WebSocket 模拟较复杂）
+- [覆盖度] 缺少对 useStudyStats 的测试（ECharts 实例模拟较复杂）
+- [质量] 部分测试使用 vi.mock 模拟 request 模块，与真实网络行为可能有差异

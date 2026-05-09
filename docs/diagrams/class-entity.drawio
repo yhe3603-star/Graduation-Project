@@ -4,10 +4,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="侗乡医药数字化展示平台 — 实体类图" vertex="1">
-          <mxGeometry height="35" width="500" x="500" y="10" as="geometry" />
-        </mxCell>
-        <mxCell id="BaseEntity" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;BaseEntity&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Data&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ createdAt : LocalDateTime&lt;br&gt;+ updatedAt : LocalDateTime" vertex="1">
+<mxCell id="BaseEntity" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;BaseEntity&lt;/b&gt;&lt;br&gt;&lt;i&gt;@Data&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ id : Long&lt;br&gt;+ createdAt : LocalDateTime&lt;br&gt;+ updatedAt : LocalDateTime" vertex="1">
           <mxGeometry height="90" width="220" x="650" y="50" as="geometry" />
         </mxCell>
         <mxCell id="User" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:12px&#39;&gt;User&lt;/b&gt;&lt;br&gt;&lt;i&gt;@TableName(&quot;users&quot;)&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;+ username : String&lt;br&gt;+ passwordHash : String&lt;br&gt;+ role : String = &quot;user&quot;&lt;br&gt;+ status : String = &quot;active&quot;" vertex="1">

@@ -4,10 +4,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" parent="1" style="text;html=1;fontSize=18;fontStyle=1;align=center;" value="侗乡医药数字化展示平台 — 内容服务层类图（1/3）" vertex="1">
-          <mxGeometry height="35" width="500" x="400" y="10" as="geometry" />
-        </mxCell>
-        <mxCell id="svc_header" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="Service 层 — 内容管理服务" vertex="1">
+<mxCell id="svc_header" parent="1" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="Service 层 — 内容管理服务" vertex="1">
           <mxGeometry height="300" width="1360" x="20" y="60" as="geometry" />
         </mxCell>
         <mxCell id="PlantService" parent="svc_header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b style=&#39;font-size:11px&#39;&gt;PlantServiceImpl&lt;/b&gt;&lt;br&gt;&lt;i&gt;implements PlantService&lt;/i&gt;&lt;hr size=&#39;1&#39;&gt;— plantMapper : PlantMapper&lt;br&gt;— popularityAsyncService : PopularityAsyncService&lt;hr size=&#39;1&#39;&gt;+ advancedSearchPaged(keyword, category, usageWay, page, size) : Page&lt;br&gt;+ searchPaged(keyword, page, size) : Page&lt;br&gt;+ getDetailWithStory(id) : Plant&lt;br&gt;+ getSimilarPlants(id) : List&lt;br&gt;+ getRandomPlants(limit) : List&lt;br&gt;+ incrementViewCount(id) : void&lt;br&gt;+ clearCache() : void" vertex="1">

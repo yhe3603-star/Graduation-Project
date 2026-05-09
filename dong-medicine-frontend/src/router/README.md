@@ -6,7 +6,7 @@
 
 **文件：** `index.js`
 
-### 全部 16 条路由
+### 全部 14 条路由
 
 | 路径 | 路由名称 | 页面组件 | 特殊配置 | 说明 |
 |------|---------|---------|---------|------|
@@ -23,8 +23,6 @@
 | `/about` | `About` | `views/About.vue` | -- | 关于平台 |
 | `/feedback` | `Feedback` | `views/Feedback.vue` | -- | 意见反馈 |
 | `/search` | `Search` | `views/GlobalSearch.vue` | -- | 全局搜索 |
-| `/compare` | `Compare` | `views/PlantCompare.vue` | `keepAlive: true` | 药材对比（缓存） |
-| `/solar-terms` | `SolarTerms` | `views/SolarTerms.vue` | `keepAlive: true` | 节气采药（缓存） |
 | `/:pathMatch(.*)*` | `NotFound` | `views/NotFound.vue` | -- | 404 页面（通配符） |
 
 ### 路由配置特点
@@ -35,7 +33,7 @@
    { path: "/plants", name: "Plants", component: () => import("@/views/Plants.vue") }
    ```
 
-2. **keepAlive 缓存：** 3 个页面启用了 `keepAlive`（问答、对比、节气），在 `App.vue` 中通过 `<keep-alive>` 包裹避免切换时销毁组件状态
+2. **keepAlive 缓存：** 1 个页面启用了 `keepAlive`（问答社区），在 `App.vue` 中通过 `<keep-alive>` 包裹避免切换时销毁组件状态
 
 3. **认证控制：** 2 个页面需要登录（个人中心、管理后台），通过路由元信息 `meta.requiresAuth` 控制
 
@@ -178,7 +176,5 @@ const isNotFoundPage = computed(() => route.name === "NotFound")
 /about ─────────────> About.vue
 /feedback ──────────> Feedback.vue
 /search ────────────> GlobalSearch.vue
-/compare ───────────> PlantCompare.vue (keepAlive)
-/solar-terms ──────> SolarTerms.vue (keepAlive)
 /* ─────────────────> NotFound.vue
 ```

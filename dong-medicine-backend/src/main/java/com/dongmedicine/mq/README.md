@@ -92,11 +92,11 @@ mq/
 
 | DLQ名称 | 用途 |
 |---------|------|
-| `dlq.operation.log` | 操作日志失败消息 |
-| `dlq.feedback` | 反馈失败消息 |
-| `dlq.file.process` | 文件处理失败消息 |
-| `dlq.statistics` | 统计失败消息 |
-| `dlq.notification` | 通知失败消息 |
+| `operation.log.dlq` | 操作日志失败消息 |
+| `feedback.dlq` | 反馈失败消息 |
+| `file.process.dlq` | 文件处理失败消息 |
+| `statistics.dlq` | 统计失败消息 |
+| `notification.dlq` | 通知失败消息 |
 
 ### 3.4 RabbitTemplate 配置
 
@@ -303,6 +303,7 @@ public class RabbitMQConstants {
     // 交换机
     public static final String EXCHANGE_DIRECT = "dong.medicine.direct";
     public static final String EXCHANGE_TOPIC  = "dong.medicine.topic";
+    public static final String EXCHANGE_DLX    = "dong.medicine.dlx";
 
     // 操作日志
     public static final String QUEUE_OPERATION_LOG       = "operation.log.queue";
@@ -325,12 +326,11 @@ public class RabbitMQConstants {
     public static final String ROUTING_KEY_NOTIFICATION = "notification";
 
     // 死信
-    public static final String DLX_EXCHANGE = "dong.medicine.dlx";
-    public static final String DLQ_OPERATION_LOG = "dlq.operation.log";
-    public static final String DLQ_FEEDBACK      = "dlq.feedback";
-    public static final String DLQ_FILE_PROCESS  = "dlq.file.process";
-    public static final String DLQ_STATISTICS    = "dlq.statistics";
-    public static final String DLQ_NOTIFICATION  = "dlq.notification";
+    public static final String DLQ_OPERATION_LOG = "operation.log.dlq";
+    public static final String DLQ_FEEDBACK      = "feedback.dlq";
+    public static final String DLQ_FILE_PROCESS  = "file.process.dlq";
+    public static final String DLQ_STATISTICS    = "statistics.dlq";
+    public static final String DLQ_NOTIFICATION  = "notification.dlq";
 }
 ```
 

@@ -54,7 +54,7 @@ src/
 │       ├── dialogs/       # 前台详情弹窗
 │       └── admin/         # 管理后台组件
 ├── views/                 # 页面组件（14 个页面，与路由一一对应）
-│   ├── Home.vue           # 首页（子组件在 home/）
+│   ├── Home.vue           # 首页
 │   ├── Plants.vue         # 药用资源图鉴
 │   ├── Knowledge.vue      # 非遗医药知识库
 │   ├── Inheritors.vue     # 传承人风采
@@ -65,7 +65,7 @@ src/
 │   ├── Feedback.vue       # 意见反馈
 │   ├── Admin.vue          # 管理后台
 │   ├── PersonalCenter.vue # 个人中心（子组件在 personal-center/）
-│   ├── GlobalSearch.vue   # 全局搜索（子组件在 global-search/）
+│   ├── GlobalSearch.vue   # 全局搜索
 │   ├── Visual.vue         # 数据可视化
 │   └── NotFound.vue       # 404 页面
 ├── styles/                # 全局样式系统
@@ -84,16 +84,35 @@ src/
 │   └── scss/              # SCSS 变量和 mixins（全局注入）
 │       ├── _variables.scss
 │       └── _mixins.scss
-├── config/                # 页面级静态配置
-│   └── homeConfig.js      # 首页的统计数据、快捷入口等配置
+├── config/                # 页面级静态配置（已移除，配置内联到各组件）
 ├── directives/            # 全局自定义指令
 │   └── index.js           # 8 个指令（lazy、debounce、throttle、permission 等）
-├── __test__/              # 单元测试（14 个测试文件）
+├── __tests__/              # 单元测试（25 个测试文件）
 │   ├── utils.test.js       # 工具函数测试
 │   ├── components.test.js  # 通用组件测试
 │   ├── personal-center.test.js # 个人中心子组件测试（7 个测试）
 │   ├── request.test.js     # HTTP 请求封装测试
 │   ├── xss.test.js         # XSS 防护测试
+│   ├── cache.test.js       # 缓存测试
+│   ├── validators.test.js  # 表单验证测试
+│   ├── userStore.test.js   # 用户状态管理测试
+│   ├── useBrowseHistory.test.js # 浏览历史测试
+│   ├── useChatSessions.test.js  # 聊天会话测试
+│   ├── useDebounce.test.js      # 防抖测试
+│   ├── useErrorHandler.test.js  # 错误处理测试
+│   ├── useFavorite.test.js      # 收藏功能测试
+│   ├── useFormDialog.test.js    # 表单对话框测试
+│   ├── useInteraction.test.js   # 交互功能测试
+│   ├── useMedia.test.js         # 媒体显示测试
+│   ├── usePlantGame.test.js     # 植物游戏测试
+│   ├── useUpdateLog.test.js     # 更新日志测试
+│   ├── useAdminData.test.js     # 管理后台数据测试
+│   ├── useVisualData.test.js    # 数据可视化测试
+│   ├── adminUtils.test.js       # 管理工具测试
+│   ├── chartConfig.test.js      # 图表配置测试
+│   ├── logger.test.js           # 日志工具测试
+│   ├── media.test.js            # 媒体工具测试
+│   ├── resource.test.js         # 资源工具测试
 │   └── ...
 └── e2e/                  # Playwright E2E 测试（9 个 spec 文件）
     ├── page-load.spec.js   # 页面加载测试
@@ -109,7 +128,7 @@ src/
 |------|------|----------------|
 | Vue 3.4 | SFC 组件（`<script setup>`） | 所有 .vue 文件 |
 | Pinia 2.3 | 全局状态管理 | `stores/user.js`（用户认证） |
-| Vue Router 4.2 | 客户端路由 + 导航守卫 | `router/index.js`（15 条路由） |
+| Vue Router 4.2 | 客户端路由 + 导航守卫 | `router/index.js`（14 条路由） |
 | Axios 1.6 | HTTP 请求 | `utils/request.js`（自动 token、重试、XSS防护） |
 | Element Plus 2.4 | UI 组件（表单、表格、弹窗、标签等） | 全局注册 |
 | ECharts 5.4 | 数据可视化（柱状图、饼图、折线图、雷达图） | `utils/chartConfig.js` |

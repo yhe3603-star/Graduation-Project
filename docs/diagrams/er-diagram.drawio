@@ -4,10 +4,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" parent="1" style="text;html=1;fontSize=22;fontStyle=1;align=center;" value="侗乡医药数字化展示平台 — E-R图" vertex="1">
-          <mxGeometry height="40" width="500" x="500" y="15" as="geometry" />
-        </mxCell>
-        <mxCell id="domain_user" parent="1" style="swimlane;startSize=28;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;rounded=1;arcSize=10;" value="用户域" vertex="1">
+<mxCell id="domain_user" parent="1" style="swimlane;startSize=28;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;rounded=1;arcSize=10;" value="用户域" vertex="1">
           <mxGeometry height="480" width="320" x="30" y="70" as="geometry" />
         </mxCell>
         <mxCell id="users" parent="domain_user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;" value="&lt;b&gt;users (用户表)&lt;/b&gt;&lt;hr size=&#39;1&#39;&gt;PK id INT AUTO_INCREMENT&lt;br&gt;username VARCHAR(20) UNIQUE&lt;br&gt;password_hash VARCHAR(100)&lt;br&gt;role VARCHAR(20) DEFAULT &#39;user&#39;&lt;br&gt;status VARCHAR(20) DEFAULT &#39;active&#39;&lt;br&gt;created_at DATETIME&lt;br&gt;updated_at DATETIME" vertex="1">

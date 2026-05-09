@@ -1,0 +1,41 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ER-Tracking-Domain" id="er-tracking-domain">
+    <mxGraphModel dx="1022" dy="564" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="browse_history" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;browse_history&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;target_type&lt;/b&gt; VARCHAR(20)&lt;br&gt;&lt;b&gt;target_id&lt;/b&gt; BIGINT" vertex="1">
+          <mxGeometry height="110" width="160" x="100" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="operation_log" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" value="&lt;b&gt;&lt;u&gt;operation_log&lt;/u&gt;&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;id&lt;/b&gt; (PK) BIGINT AUTO_INCREMENT&lt;br&gt;&lt;b&gt;user_id&lt;/b&gt; (FK→users) BIGINT&lt;br&gt;&lt;b&gt;username&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;module&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;operation&lt;/b&gt; VARCHAR(200)&lt;br&gt;&lt;b&gt;type&lt;/b&gt; VARCHAR(20)&lt;br&gt;&lt;b&gt;method&lt;/b&gt; VARCHAR(200)&lt;br&gt;&lt;b&gt;params&lt;/b&gt; TEXT&lt;br&gt;&lt;b&gt;ip&lt;/b&gt; VARCHAR(50)&lt;br&gt;&lt;b&gt;duration&lt;/b&gt; BIGINT&lt;br&gt;&lt;b&gt;success&lt;/b&gt; TINYINT" vertex="1">
+          <mxGeometry height="190" width="190" x="410" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="users_ref" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;dashed=1;" value="&lt;b&gt;users&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#6c8ebf&quot;&gt;(FK target)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="160" x="300" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="poly_note" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=5;fillColor=#F5F0FA;strokeColor=#9673a6;strokeWidth=1;dashed=1;" value="&lt;b&gt;Polymorphic Relationship Note&lt;/b&gt;&lt;hr&gt;&lt;br&gt;&lt;b&gt;target_type&lt;/b&gt; + &lt;b&gt;target_id&lt;/b&gt; is a polymorphic reference.&lt;br&gt;It can point to any of the following entities:&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#82b366&quot;&gt;&lt;b&gt;--- Content Domain ---&lt;/b&gt;&lt;/font&gt;&lt;br&gt;• target_type = &#39;plant&#39; → plants.id&lt;br&gt;• target_type = &#39;knowledge&#39; → knowledge.id&lt;br&gt;• target_type = &#39;inheritor&#39; → inheritors.id&lt;br&gt;• target_type = &#39;resource&#39; → resources.id&lt;br&gt;• target_type = &#39;qa&#39; → qa.id&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#9673a6&quot;&gt;&lt;b&gt;Applies to:&lt;/b&gt; browse_history&lt;/font&gt;" vertex="1">
+          <mxGeometry height="200" width="250" x="130" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="browse_history" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="users_ref">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_label" connectable="0" parent="r1" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" value="N : 1" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r2" edge="1" parent="1" source="operation_log" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="users_ref">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_label" connectable="0" parent="r2" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" value="N : 1" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1" edge="1" parent="1" source="browse_history" style="dashed=1;strokeWidth=1;strokeColor=#808080;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="poly_note">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
