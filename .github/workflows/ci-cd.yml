@@ -164,10 +164,17 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Upload docker-compose.yml
+      - name: Upload config files to server
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /opt/dong-medicine"
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/dong-medicine/docker-compose.yml
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          REMOTE="${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}"
+
+          ssh $SSH_OPTS $REMOTE "mkdir -p /opt/dong-medicine/deploy/monitoring/grafana/provisioning /opt/dong-medicine/dong-medicine-backend/sql /opt/dong-medicine/dong-medicine-backend/public"
+
+          scp $SSH_OPTS docker-compose.yml $REMOTE:/opt/dong-medicine/docker-compose.yml
+          scp $SSH_OPTS deploy/monitoring/prometheus.yml $REMOTE:/opt/dong-medicine/deploy/monitoring/prometheus.yml
+          scp $SSH_OPTS dong-medicine-backend/sql/dong_medicine.sql $REMOTE:/opt/dong-medicine/dong-medicine-backend/sql/dong_medicine.sql
+          rsync -avz -e "ssh $SSH_OPTS" deploy/monitoring/grafana/provisioning/ $REMOTE:/opt/dong-medicine/deploy/monitoring/grafana/provisioning/
 
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1.0.3
