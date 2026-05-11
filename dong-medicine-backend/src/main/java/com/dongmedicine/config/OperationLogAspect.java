@@ -2,6 +2,7 @@ package com.dongmedicine.config;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.dongmedicine.common.util.IpUtils;
+import com.dongmedicine.common.util.SensitiveDataUtils;
 import com.dongmedicine.entity.OperationLog;
 import com.dongmedicine.service.OperationLogService;
 import com.dongmedicine.service.RabbitMQOperationLogService;
@@ -93,7 +94,8 @@ public class OperationLogAspect {
                             params.put("arg" + i, args[i]);
                         }
                     }
-                    operationLog.setParams(objectMapper.writeValueAsString(params));
+                    String rawJson = objectMapper.writeValueAsString(params);
+                    operationLog.setParams(SensitiveDataUtils.maskJson(rawJson));
                 } catch (Exception ignored) {}
             }
 

@@ -1,6 +1,7 @@
 package com.dongmedicine.config;
 
 import com.dongmedicine.common.util.IpUtils;
+import com.dongmedicine.common.util.SensitiveDataUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -135,7 +136,12 @@ public class LoggingAspect {
                 } else if (arg instanceof String) {
                     safeArgs.add(maskSensitiveData(arg.toString()));
                 } else {
-                    safeArgs.add(arg);
+                    try {
+                        String json = objectMapper.writeValueAsString(arg);
+                        safeArgs.add(SensitiveDataUtils.maskJson(json));
+                    } catch (Exception e) {
+                        safeArgs.add(arg.getClass().getSimpleName());
+                    }
                 }
             }
             String json = objectMapper.writeValueAsString(safeArgs);
@@ -152,7 +158,7 @@ public class LoggingAspect {
         
         try {
             String json = objectMapper.writeValueAsString(result);
-            return truncate(json, MAX_RESPONSE_LENGTH);
+            return truncate(SensitiveDataUtils.maskJson(json), MAX_RESPONSE_LENGTH);
         } catch (Exception e) {
             return result.getClass().getSimpleName();
         }

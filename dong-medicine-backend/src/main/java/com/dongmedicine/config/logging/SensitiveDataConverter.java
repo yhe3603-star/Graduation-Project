@@ -12,6 +12,6 @@ public class SensitiveDataConverter extends MessageConverter {
         if (message == null) {
             return null;
         }
-        return SensitiveDataUtils.autoMask(message);
+        return SensitiveDataUtils.maskJson(SensitiveDataUtils.autoMask(message));
     }
 }

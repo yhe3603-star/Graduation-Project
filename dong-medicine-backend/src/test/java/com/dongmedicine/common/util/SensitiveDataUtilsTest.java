@@ -197,4 +197,47 @@ class SensitiveDataUtilsTest {
             assertEquals("", SensitiveDataUtils.maskJson(""));
         }
     }
+
+    @Nested
+    @DisplayName("autoMask + maskJson 链式调用")
+    class MaskJsonChain {
+        @Test
+        @DisplayName("JSON中password字段应被maskJson遮盖")
+        void jsonPasswordFieldMasked() {
+            String json = "{\"username\":\"admin\",\"password\":\"secret123\"}";
+            String result = SensitiveDataUtils.maskJson(SensitiveDataUtils.autoMask(json));
+            assertFalse(result.contains("secret123"), "password值应被遮盖");
+        }
+
+        @Test
+        @DisplayName("JSON中手机号应被autoMask遮盖")
+        void jsonPhoneAutoMasked() {
+            String json = "{\"name\":\"张三\",\"phone\":\"13812345678\"}";
+            String result = SensitiveDataUtils.maskJson(SensitiveDataUtils.autoMask(json));
+            assertFalse(result.contains("13812345678"), "手机号应被遮盖");
+        }
+
+        @Test
+        @DisplayName("非JSON纯文本中的手机号应被autoMask遮盖")
+        void plainTextPhoneMasked() {
+            String text = "联系手机：13812345678";
+            String result = SensitiveDataUtils.maskJson(SensitiveDataUtils.autoMask(text));
+            assertFalse(result.contains("13812345678"), "手机号应被遮盖");
+            assertTrue(result.contains("****"), "应包含遮盖符号");
+        }
+
+        @Test
+        @DisplayName("正常JSON不应被误改")
+        void normalJsonUnchanged() {
+            String json = "{\"title\":\"侗医药浴\",\"content\":\"祛风除湿\"}";
+            String result = SensitiveDataUtils.maskJson(SensitiveDataUtils.autoMask(json));
+            assertTrue(result.contains("侗医药浴"), "正常内容不应被修改");
+        }
+
+        @Test
+        @DisplayName("null输入应安全返回null")
+        void nullSafe() {
+            assertNull(SensitiveDataUtils.maskJson(SensitiveDataUtils.autoMask(null)));
+        }
+    }
 }

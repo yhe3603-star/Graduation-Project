@@ -2,6 +2,7 @@ package com.dongmedicine.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,6 +15,7 @@ public class User extends BaseEntity {
 
     private String username;
     @TableField("password_hash")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String passwordHash;
     private String role;
     private String status;
