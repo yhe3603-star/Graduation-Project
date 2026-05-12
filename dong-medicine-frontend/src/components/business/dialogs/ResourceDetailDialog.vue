@@ -1,9 +1,8 @@
 <template>
-  <el-dialog 
-    :model-value="visible" 
-    :title="resource?.title" 
+  <el-dialog
+    :model-value="visible"
+    :title="resource?.title"
     width="min(900px, 95vw)"
-    destroy-on-close
     class="resource-detail-dialog"
     @update:model-value="handleDialogClose"
   >

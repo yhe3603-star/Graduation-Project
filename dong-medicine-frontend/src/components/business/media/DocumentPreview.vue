@@ -28,7 +28,7 @@
 
       <div class="preview-body">
         <div
-          v-if="previewLoading && canPreviewWithKkFileView"
+          v-if="showSpinner && canPreviewWithKkFileView"
           class="preview-loading"
         >
           <el-icon
@@ -113,7 +113,7 @@
   >
     <div class="preview-body">
       <div
-        v-if="previewLoading && canPreviewWithKkFileView"
+        v-if="showSpinner && canPreviewWithKkFileView"
         class="preview-loading"
       >
         <el-icon
@@ -163,7 +163,7 @@
 </template>
 
 <script setup>
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, onUnmounted, ref, watch } from 'vue'
 import { Document, Download, Loading } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatFileSize } from '@/utils/adminUtils'
@@ -220,11 +220,23 @@ const kkFileViewUrl = computed(() => {
 })
 
 const previewLoading = ref(true)
+const showSpinner = ref(false)
 const txtContent = ref('')
 const txtLoading = ref(false)
+const loadedUrl = ref('')
+let spinnerTimer = null
 
 const onPreviewLoad = () => {
   previewLoading.value = false
+  showSpinner.value = false
+  loadedUrl.value = kkFileViewUrl.value
+  if (spinnerTimer) { clearTimeout(spinnerTimer); spinnerTimer = null }
+}
+
+const startDelayedSpinner = () => {
+  if (spinnerTimer) clearTimeout(spinnerTimer)
+  showSpinner.value = false
+  spinnerTimer = setTimeout(() => { showSpinner.value = true }, 300)
 }
 
 const loadTxtContent = async () => {
@@ -243,14 +255,36 @@ const loadTxtContent = async () => {
   }
 }
 
-watch([visible, () => props.inline, () => props.document], ([vis, inline]) => {
-  if (inline || vis) {
+// 文档变化 → 必须重新加载
+watch(() => props.document, () => {
+  const url = kkFileViewUrl.value
+  if (url && url === loadedUrl.value) {
+    previewLoading.value = false
+    showSpinner.value = false
+  } else {
     previewLoading.value = true
-    if (isTxt.value) {
-      loadTxtContent()
-    }
+    startDelayedSpinner()
   }
 }, { immediate: true })
+
+// 弹窗/inline 可见性变化 → 已加载的文档跳过 loading
+watch([visible, () => props.inline], ([vis, inline]) => {
+  if (inline || vis) {
+    const url = kkFileViewUrl.value
+    if (url && url === loadedUrl.value) {
+      previewLoading.value = false
+      showSpinner.value = false
+    } else {
+      previewLoading.value = true
+      startDelayedSpinner()
+    }
+    if (isTxt.value) loadTxtContent()
+  }
+})
+
+onUnmounted(() => {
+  if (spinnerTimer) clearTimeout(spinnerTimer)
+})
 
 const FILE_TYPE_TAGS = { pdf: 'danger', doc: 'primary', docx: 'primary', xls: 'success', xlsx: 'success', ppt: 'warning', pptx: 'warning', txt: 'info' }
 
