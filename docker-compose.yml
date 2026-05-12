@@ -168,7 +168,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-https://dong-medicine.cyou}
-      WS_ALLOWED_ORIGINS: ${WS_ALLOWED_ORIGINS:-https://dong-medicine.cyou,http://localhost:3000,http://localhost:5173}
+      WS_ALLOWED_ORIGINS: ${WS_ALLOWED_ORIGINS:-https://dong-medicine.cyou,http://localhost,http://localhost:5173}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       FILE_UPLOAD_PATH: /app/public
       KKFILEVIEW_URL: ${KKFILEVIEW_URL:-http://kkfileview:8012}

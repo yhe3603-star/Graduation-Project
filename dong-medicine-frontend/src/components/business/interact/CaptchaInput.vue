@@ -75,10 +75,10 @@ const refreshCaptcha = () => {
 
 // 处理输入
 const handleInput = (value) => {
-  // 只允许输入数字
-  const numValue = value.replace(/\D/g, '')
-  inputCode.value = numValue
-  emit('update:modelValue', numValue)
+  // 只允许输入数字和字母
+  const cleaned = value.replace(/[^a-zA-Z0-9]/g, '')
+  inputCode.value = cleaned
+  emit('update:modelValue', cleaned)
 }
 
 // 监听外部值变化

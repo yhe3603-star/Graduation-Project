@@ -54,7 +54,7 @@ app:
     jwt-secret: test-only-secret-key-for-integration-tests-32chars
     jwt-expiration: 7200000
     cors-allowed-origins:
-      - http://localhost:3000
+      - http://localhost
   cache:
     enabled: false
     default-expire-time: 60000

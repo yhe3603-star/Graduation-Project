@@ -85,7 +85,7 @@ app:
   cors:
     allowed-origins:
       - ${CORS_ALLOWED_ORIGIN:https://dong-medicine.cyou}
-      - http://localhost:3000
+      - http://localhost
       - http://localhost:5173
   rabbitmq:
     enabled: ${APP_RABBITMQ_ENABLED:true}
@@ -101,7 +101,7 @@ app:
   search:
     use-fulltext: true
   websocket:
-    allowed-origins: ${WS_ALLOWED_ORIGINS:https://dong-medicine.cyou,http://localhost:3000,http://localhost:5173}
+    allowed-origins: ${WS_ALLOWED_ORIGINS:https://dong-medicine.cyou,http://localhost,http://localhost:5173}
   request:
     max-body-size: ${MAX_BODY_SIZE:10485760}
 
