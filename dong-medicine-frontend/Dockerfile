@@ -40,7 +40,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-RUN mkdir -p /var/cache/nginx /var/log/nginx && \
+RUN mkdir -p /var/cache/nginx/kkfileview /var/log/nginx && \
     chown -R nginx:nginx /var/cache/nginx /var/log/nginx /usr/share/nginx/html
 
 EXPOSE 80 443

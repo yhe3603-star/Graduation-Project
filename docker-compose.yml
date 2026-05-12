@@ -122,7 +122,9 @@ services:
       - KK_FILE_UPLOAD_MAX_SIZE=104857600
       - base.url=${KKFILEVIEW_BASE_URL:-https://dong-medicine.cyou/kkfileview}
       - KK_DOMAIN=${KKFILEVIEW_DOMAIN:-https://dong-medicine.cyou}
-      - JAVA_OPTS=-Xms256m -Xmx384m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+      - JAVA_OPTS=-Xms256m -Xmx384m -XX:+UseG1GC
+    mem_limit: 512m
+    cpus: 1
     volumes:
       - kkfileview_data:/opt/kkFileView-4.1.0/file
     extra_hosts:
