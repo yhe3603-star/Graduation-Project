@@ -53,7 +53,7 @@ public class CaptchaService {
         // 生成唯一key
         String captchaKey = UUID.randomUUID().toString().replace("-", "");
         
-        // 生成4位数字验证码
+        // 生成5位字母数字验证码
         String captchaCode = generateCode();
         
         // 生成验证码图片

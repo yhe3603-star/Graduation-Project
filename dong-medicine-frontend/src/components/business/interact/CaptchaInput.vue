@@ -3,7 +3,7 @@
     <el-input
       v-model="inputCode"
       placeholder="请输入验证码"
-      maxlength="4"
+      maxlength="5"
       clearable
       @input="handleInput"
     >
