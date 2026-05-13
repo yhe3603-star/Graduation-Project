@@ -1,5 +1,12 @@
 <template>
   <div>
+    <div class="filter-bar">
+      <el-radio-group v-model="typeFilter" size="small">
+        <el-radio-button value="all">全部</el-radio-button>
+        <el-radio-button value="quiz">趣味答题</el-radio-button>
+        <el-radio-button value="game">植物识别</el-radio-button>
+      </el-radio-group>
+    </div>
     <div class="record-list">
       <div v-for="record in paginated" :key="record.id + record.type" class="record-item">
         <div class="record-score" :class="getScoreClass(record.score)">
@@ -22,7 +29,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Pagination from '@/components/business/display/Pagination.vue'
 
 const props = defineProps({
@@ -32,11 +39,16 @@ const props = defineProps({
 
 const page = ref(1)
 const pageSize = ref(6)
+const typeFilter = ref('all')
+
+watch(typeFilter, () => { page.value = 1 })
 
 const allRecords = computed(() => {
   const quiz = props.quizRecords.map(r => ({ ...r, type: 'quiz' }))
   const game = props.gameRecords.map(r => ({ ...r, type: 'game' }))
-  return [...quiz, ...game].sort((a, b) => new Date(b.createdAt || b.createTime) - new Date(a.createdAt || a.createTime))
+  const merged = [...quiz, ...game].sort((a, b) => new Date(b.createdAt || b.createTime) - new Date(a.createdAt || a.createTime))
+  if (typeFilter.value === 'all') return merged
+  return merged.filter(r => r.type === typeFilter.value)
 })
 
 const paginated = computed(() => {
@@ -61,6 +73,7 @@ function getScoreClass(score) {
 </script>
 
 <style scoped>
+.filter-bar { display: flex; justify-content: flex-end; margin-bottom: var(--space-lg); }
 .record-list { display: flex; flex-direction: column; gap: var(--space-md); }
 .record-item { display: flex; align-items: center; gap: var(--space-xl); padding: var(--space-md); background: var(--bg-rice); border-radius: var(--radius-md); }
 .record-score { width: 60px; height: 60px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-weight: var(--font-weight-bold); color: #ffffff; font-size: 18px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
