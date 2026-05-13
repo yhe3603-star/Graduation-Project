@@ -60,42 +60,26 @@ export function useCountdown(durationMinutes = 3) {
 export function useComments(request, isLoggedIn) {
   const comments = ref([])
   const commentLoading = ref(false)
-  const hasMore = ref(true)
-  const currentPage = ref(1)
-  const pageSize = 20
+  const hasMore = ref(false)
 
-  const loadComments = async (reset = true) => {
-    if (reset) {
-      currentPage.value = 1
-      hasMore.value = true
-    }
+  const loadComments = async () => {
     commentLoading.value = true
     try {
       const res = await request.get('/comments/list/all', {
-        params: { page: currentPage.value, size: pageSize }
+        params: { page: 1, size: 1000 }
       })
       const data = res?.data || {}
       const raw = data.records || data || []
-      const list = Array.isArray(raw) ? raw : []
-      if (reset) {
-        comments.value = list
-      } else {
-        comments.value = [...comments.value, ...list]
-      }
-      hasMore.value = list.length >= pageSize
+      comments.value = Array.isArray(raw) ? raw : []
     } catch (err) {
       logFetchError('评论列表', err)
-      if (reset) comments.value = []
+      comments.value = []
     } finally {
       commentLoading.value = false
     }
   }
 
-  const loadMore = async () => {
-    if (commentLoading.value || !hasMore.value) return
-    currentPage.value++
-    await loadComments(false)
-  }
+  const loadMore = () => {}
 
   const handleCommentPost = async (content, replyData, onSuccess, onError) => {
     if (!isLoggedIn?.value) {

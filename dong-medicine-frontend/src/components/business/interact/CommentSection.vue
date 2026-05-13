@@ -95,13 +95,13 @@
               {{ comment.likes || '' }}
             </el-button>
             <el-button
-              v-if="comment.replyCount > 0"
+              v-if="getDescendantCount(comment.id) > 0"
               size="small"
               type="primary"
               class="toggle-replies-btn"
               @click="toggleReplies(comment.id)"
             >
-              {{ expandedComments.has(comment.id) ? '收起回复' : `查看 ${comment.replyCount} 条回复` }}
+              {{ expandedComments.has(comment.id) ? '收起回复' : `查看 ${getDescendantCount(comment.id)} 条回复` }}
               <el-icon>
                 <ArrowUp v-if="expandedComments.has(comment.id)" />
                 <ArrowDown v-else />
@@ -267,6 +267,20 @@ const sortedMainComments = computed(() => {
   }
   return sorted.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
 });
+
+// 递归计算某评论下所有后代回复数量
+const getDescendantCount = (commentId) => {
+  let count = 0
+  const collect = (parentId) => {
+    const children = props.comments.filter(r => r.replyToId != null && Number(r.replyToId) === Number(parentId))
+    count += children.length
+    for (const child of children) {
+      collect(child.id)
+    }
+  }
+  collect(commentId)
+  return count
+}
 
 // 递归收集某评论下的所有后代回复，平铺到一个列表
 const getAllReplies = (commentId) => {
