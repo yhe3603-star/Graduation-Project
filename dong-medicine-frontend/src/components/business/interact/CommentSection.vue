@@ -84,7 +84,7 @@
             </el-button>
             <el-button
               size="small"
-              :type="comment.isLiked ? 'primary' : 'default'"
+              :type="comment.isLiked ? 'warning' : 'default'"
               class="like-btn"
               @click="$emit('like', comment)"
             >
@@ -151,7 +151,7 @@
                   </el-button>
                   <el-button
                     size="small"
-                    :type="reply.isLiked ? 'primary' : 'default'"
+                    :type="reply.isLiked ? 'warning' : 'default'"
                     class="like-btn"
                     @click="$emit('like', reply)"
                   >
