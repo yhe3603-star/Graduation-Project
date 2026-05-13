@@ -223,7 +223,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from "vue";
+import { ref, reactive, computed, nextTick } from "vue";
 import { ElMessage } from "element-plus";
 import { ChatDotRound, ArrowDown, ArrowUp } from "@element-plus/icons-vue";
 
@@ -241,7 +241,7 @@ const emit = defineEmits(["post", "reply", "load-more", "like"]);
 const content = ref("");
 const posting = ref(false);
 const sortBy = ref("latest");
-const expandedComments = ref(new Set());
+const expandedComments = reactive(new Set());
 const commentListRef = ref(null);
 
 const onScroll = (e) => {
@@ -285,13 +285,11 @@ const getAllReplies = (commentId) => {
 };
 
 const toggleReplies = (commentId) => {
-  const s = new Set(expandedComments.value);
-  if (s.has(commentId)) {
-    s.delete(commentId);
+  if (expandedComments.has(commentId)) {
+    expandedComments.delete(commentId);
   } else {
-    s.add(commentId);
+    expandedComments.add(commentId);
   }
-  expandedComments.value = s;
 };
 
 const formatTime = (time) => {
