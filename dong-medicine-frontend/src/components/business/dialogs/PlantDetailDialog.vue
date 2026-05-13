@@ -117,7 +117,25 @@
         </el-descriptions>
       </div>
     </div>
-    
+
+    <!-- 评论区 -->
+    <div class="comment-section-wrapper">
+      <h3 class="section-title">评论交流</h3>
+      <CommentSection
+        :comments="plantComments"
+        :is-logged-in="userStore.isLoggedIn"
+        :user-name="userStore.userName"
+        :loading="plantCommentLoading"
+        :total="commentTotal"
+        :page="commentPage"
+        :size="commentSize"
+        @post="handlePlantCommentPost"
+        @reply="handlePlantCommentPost"
+        @page-change="handleCommentPageChange"
+        @size-change="handleCommentSizeChange"
+      />
+    </div>
+
     <template #footer>
       <div class="dialog-footer">
         <el-button
@@ -154,6 +172,8 @@ import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
 import HerbAudio from '@/components/business/media/HerbAudio.vue';
 import { useUserStore } from '@/stores/user';
 import request from '@/utils/request';
+import CommentSection from '@/components/business/interact/CommentSection.vue';
+import { useEntityComments } from '@/composables/useEntityComments';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -163,6 +183,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'toggle-favorite']);
 const userStore = useUserStore();
+
+const {
+  comments: plantComments, commentLoading: plantCommentLoading,
+  totalItems: commentTotal, currentPage: commentPage, pageSize: commentSize,
+  loadComments: loadPlantComments, handleCommentPost: handlePlantCommentPost,
+  handlePageChange: handleCommentPageChange, handleSizeChange: handleCommentSizeChange
+} = useEntityComments('plant', () => props.plant?.id);
 
 const activeTab = ref('image');
 const documentList = ref([]);
@@ -197,6 +224,7 @@ watch(() => props.visible, (newVal) => {
   if (newVal) {
     activeTab.value = videoList.value.length > 0 ? 'video' : 'image';
     loadDocuments();
+    loadPlantComments();
     if (videoPlayerRef.value) videoPlayerRef.value.switchToVideo(0);
     // Record browse history (only when logged in)
     if (props.plant?.id && userStore.isLoggedIn) {
@@ -303,9 +331,21 @@ const handleDocumentDownload = downloadDocument;
   .plant-header {
     gap: 8px;
   }
-  
+
   .info-section {
     padding: 10px;
   }
+}
+
+.comment-section-wrapper {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #ebeef5;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px;
 }
 </style>

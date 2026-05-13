@@ -45,7 +45,7 @@ public class CommentController {
         comment.setLikes(0);
         comment.setReplyCount(0);
         service.addComment(comment);
-        return R.ok("评论发表成功");
+        return R.ok(comment.getStatus());
     }
 
     @GetMapping("/list/{targetType}/{targetId}")

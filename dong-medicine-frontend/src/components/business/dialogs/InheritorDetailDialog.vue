@@ -131,6 +131,24 @@
       </div>
     </div>
 
+    <!-- 评论区 -->
+    <div class="comment-section-wrapper">
+      <h3 class="section-title">评论交流</h3>
+      <CommentSection
+        :comments="inheritorComments"
+        :is-logged-in="userStore.isLoggedIn"
+        :user-name="userStore.userName"
+        :loading="inheritorCommentLoading"
+        :total="commentTotal"
+        :page="commentPage"
+        :size="commentSize"
+        @post="handleInheritorCommentPost"
+        @reply="handleInheritorCommentPost"
+        @page-change="handleCommentPageChange"
+        @size-change="handleCommentSizeChange"
+      />
+    </div>
+
     <template #footer>
       <div class="dialog-footer">
         <el-button
@@ -166,6 +184,8 @@ import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
 import request from '@/utils/request';
 import { useUserStore } from '@/stores/user';
+import CommentSection from '@/components/business/interact/CommentSection.vue';
+import { useEntityComments } from '@/composables/useEntityComments';
 
 const LEVEL_TYPES = { '省级': 'warning', '自治区级': 'success', '州级': 'primary', '市级': 'primary', '县级': 'info' };
 
@@ -177,6 +197,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'toggle-favorite']);
 const userStore = useUserStore();
+
+const {
+  comments: inheritorComments, commentLoading: inheritorCommentLoading,
+  totalItems: commentTotal, currentPage: commentPage, pageSize: commentSize,
+  loadComments: loadInheritorComments, handleCommentPost: handleInheritorCommentPost,
+  handlePageChange: handleCommentPageChange, handleSizeChange: handleCommentSizeChange
+} = useEntityComments('inheritor', () => props.inheritor?.id);
 
 const activeMediaTab = ref('video');
 const documentList = ref([]);
@@ -336,6 +363,7 @@ watch(() => props.visible, (newVal) => {
   if (newVal) {
     activeMediaTab.value = videoList.value?.length > 0 ? 'video' : 'image';
     loadDocuments();
+    loadInheritorComments();
     // Record browse history (only when logged in)
     if (props.inheritor?.id && userStore.isLoggedIn) {
       request.post('/browse-history/record', null, {
@@ -528,5 +556,17 @@ const handleDocumentDownload = downloadDocument;
   .specialty {
     font-size: 12px;
   }
+}
+
+.comment-section-wrapper {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #ebeef5;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px;
 }
 </style>

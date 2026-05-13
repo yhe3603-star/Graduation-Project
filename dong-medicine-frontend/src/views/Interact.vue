@@ -91,6 +91,7 @@
               :page="currentPage"
               :size="pageSize"
               @post="handleCommentPost"
+              @reply="handleCommentPost"
               @page-change="handlePageChange"
               @size-change="handleSizeChange"
             />

@@ -111,9 +111,14 @@ export function useComments(request, isLoggedIn) {
         payload.replyToUserId = replyData.replyToUserId
         payload.replyToUsername = replyData.replyToName
       }
-      await request.post('/comments', payload)
+      const res = await request.post('/comments', payload)
       await loadComments()
-      ElMessage.success(replyData ? '回复成功，等待审核' : '评论提交成功，等待审核')
+      const status = res?.data
+      if (status === 'approved') {
+        ElMessage.success(replyData ? '回复发布成功' : '评论发布成功')
+      } else {
+        ElMessage.success(replyData ? '回复提交成功，等待审核' : '评论提交成功，等待审核')
+      }
       onSuccess?.()
     } catch (err) {
       logFetchError('评论', err)

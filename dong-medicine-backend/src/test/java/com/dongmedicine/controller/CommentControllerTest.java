@@ -127,7 +127,11 @@ class CommentControllerTest {
     void testAdd_LoggedIn() {
         securityUtilsMock.when(SecurityUtils::getCurrentUserId).thenReturn(1);
         securityUtilsMock.when(SecurityUtils::getCurrentUsernameOrNull).thenReturn("testUser");
-        doNothing().when(service).addComment(any(Comment.class));
+        doAnswer(invocation -> {
+            Comment c = invocation.getArgument(0);
+            c.setStatus("approved");
+            return null;
+        }).when(service).addComment(any(Comment.class));
 
         CommentAddDTO dto = new CommentAddDTO();
         dto.setTargetType("plant");
@@ -137,7 +141,7 @@ class CommentControllerTest {
         R<String> result = commentController.add(dto);
 
         assertEquals(200, result.getCode());
-        assertEquals("评论发表成功", result.getData());
+        assertEquals("approved", result.getData());
         verify(service).addComment(any(Comment.class));
     }
 
@@ -146,7 +150,11 @@ class CommentControllerTest {
     void testAdd_WithReplyInfo() {
         securityUtilsMock.when(SecurityUtils::getCurrentUserId).thenReturn(1);
         securityUtilsMock.when(SecurityUtils::getCurrentUsernameOrNull).thenReturn("testUser");
-        doNothing().when(service).addComment(any(Comment.class));
+        doAnswer(invocation -> {
+            Comment c = invocation.getArgument(0);
+            c.setStatus("approved");
+            return null;
+        }).when(service).addComment(any(Comment.class));
 
         CommentAddDTO dto = new CommentAddDTO();
         dto.setTargetType("plant");

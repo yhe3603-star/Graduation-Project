@@ -253,6 +253,24 @@
       </div>
     </div>
 
+    <!-- 评论区 -->
+    <div class="comment-section-wrapper">
+      <h3 class="section-title">评论交流</h3>
+      <CommentSection
+        :comments="knowledgeComments"
+        :is-logged-in="userStore.isLoggedIn"
+        :user-name="userStore.userName"
+        :loading="knowledgeCommentLoading"
+        :total="commentTotal"
+        :page="commentPage"
+        :size="commentSize"
+        @post="handleKnowledgeCommentPost"
+        @reply="handleKnowledgeCommentPost"
+        @page-change="handleCommentPageChange"
+        @size-change="handleCommentSizeChange"
+      />
+    </div>
+
     <template #footer>
       <div class="dialog-footer">
         <el-button
@@ -292,6 +310,8 @@ import ImageCarousel from '@/components/business/media/ImageCarousel.vue';
 import KnowledgeGraph from '@/components/business/display/KnowledgeGraph.vue';
 import { parseMediaList, parseDocumentList, downloadDocument } from '@/utils';
 import { useUserStore } from '@/stores/user';
+import CommentSection from '@/components/business/interact/CommentSection.vue';
+import { useEntityComments } from '@/composables/useEntityComments';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -302,6 +322,13 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'toggle-favorite']);
 const router = useRouter();
 const userStore = useUserStore();
+
+const {
+  comments: knowledgeComments, commentLoading: knowledgeCommentLoading,
+  totalItems: commentTotal, currentPage: commentPage, pageSize: commentSize,
+  loadComments: loadKnowledgeComments, handleCommentPost: handleKnowledgeCommentPost,
+  handlePageChange: handleCommentPageChange, handleSizeChange: handleCommentSizeChange
+} = useEntityComments('knowledge', () => props.knowledge?.id);
 
 const activeMediaTab = ref('video');
 const documentList = ref([]);
@@ -385,6 +412,7 @@ watch(() => props.visible, (newVal) => {
     activeMediaTab.value = videoList.value.length > 0 ? 'video' : 'document';
     loadDocuments();
     loadRelatedPlants();
+    loadKnowledgeComments();
     // Record browse history (only when logged in)
     if (props.knowledge?.id && userStore.isLoggedIn) {
       request.post('/browse-history/record', null, {
@@ -742,5 +770,17 @@ const handleDocumentDownload = downloadDocument;
   .usage-box p {
     font-size: 12px;
   }
+}
+
+.comment-section-wrapper {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #ebeef5;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px;
 }
 </style>

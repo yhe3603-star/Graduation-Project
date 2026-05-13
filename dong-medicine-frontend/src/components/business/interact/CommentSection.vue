@@ -8,40 +8,23 @@
         {{ userName?.charAt(0) || '游' }}
       </el-avatar>
       <div class="input-wrap">
-        <el-input 
-          v-model="content" 
-          :placeholder="replyTo ? `回复 @${replyTo.username}...` : '分享你对侗乡医药的看法...'" 
-          type="textarea" 
+        <el-input
+          v-model="content"
+          placeholder="分享你对侗乡医药的看法..."
+          type="textarea"
           :rows="3"
           :disabled="!isLoggedIn"
           resize="none"
         />
         <div class="input-actions">
-          <div
-            v-if="replyTo"
-            class="reply-info"
-          >
-            <span>回复 <b>@{{ replyTo.username }}</b></span>
-            <el-button
-              type="info"
-              size="small"
-              text
-              @click="cancelReply"
-            >
-              取消
-            </el-button>
-          </div>
-          <span
-            v-else
-            class="char-count"
-          >{{ content.length }}/500</span>
-          <el-button 
-            type="primary" 
-            :loading="posting" 
+          <span class="char-count">{{ content.length }}/500</span>
+          <el-button
+            type="primary"
+            :loading="posting"
             :disabled="!isLoggedIn || !content.trim()"
             @click="postComment"
           >
-            {{ replyTo ? '发送回复' : '发布评论' }}
+            发布评论
           </el-button>
         </div>
       </div>
@@ -92,21 +75,21 @@
               type="primary"
               size="small"
               class="reply-btn"
-              @click="setReply(comment)"
+              @click="openReplyDialog(comment)"
             >
               <el-icon><ChatDotRound /></el-icon>
               回复
             </el-button>
           </div>
-          
+
           <!-- 回复列表 -->
           <div
             v-if="getReplies(comment.id).length > 0"
             class="replies-list"
           >
-            <div 
-              v-for="reply in getReplies(comment.id)" 
-              :key="reply.id" 
+            <div
+              v-for="reply in getReplies(comment.id)"
+              :key="reply.id"
               class="comment-item reply-item"
             >
               <el-avatar
@@ -131,7 +114,7 @@
                     type="primary"
                     size="small"
                     class="reply-btn"
-                    @click="setReply(reply)"
+                    @click="openReplyDialog(reply, comment)"
                   >
                     <el-icon><ChatDotRound /></el-icon>
                     回复
@@ -148,14 +131,54 @@
       />
     </div>
 
-    <Pagination 
-      v-if="props.total > 0" 
-      :page="currentPage" 
-      :size="pageSize" 
-      :total="props.total" 
-      @update:page="handlePageChange" 
-      @update:size="handleSizeChange" 
+    <Pagination
+      v-if="props.total > 0"
+      :page="currentPage"
+      :size="pageSize"
+      :total="props.total"
+      @update:page="handlePageChange"
+      @update:size="handleSizeChange"
     />
+
+    <!-- 回复弹窗 -->
+    <el-dialog
+      v-model="replyDialogVisible"
+      title="回复评论"
+      width="480px"
+      :close-on-click-modal="false"
+      destroy-on-close
+    >
+      <div class="reply-dialog-body">
+        <div class="reply-target">
+          <span>回复 <b>@{{ replyTarget?.username }}</b>：</span>
+          <p class="reply-target-content">
+            {{ replyTarget?.content }}
+          </p>
+        </div>
+        <el-input
+          v-model="replyContent"
+          type="textarea"
+          :rows="4"
+          placeholder="写下你的回复..."
+          resize="none"
+          maxlength="500"
+          show-word-limit
+        />
+      </div>
+      <template #footer>
+        <el-button @click="replyDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="replying"
+          :disabled="!replyContent.trim()"
+          @click="submitReply"
+        >
+          发送回复
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -181,8 +204,13 @@ const content = ref("");
 const posting = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(6);
-const replyTo = ref(null);
 const sortBy = ref("latest");
+
+const replyDialogVisible = ref(false);
+const replyTarget = ref(null);
+const replyParentComment = ref(null);
+const replyContent = ref("");
+const replying = ref(false);
 
 watch(() => props.page, (val) => { currentPage.value = val; }, { immediate: true });
 watch(() => props.size, (val) => { pageSize.value = val; }, { immediate: true });
@@ -191,7 +219,6 @@ const mainComments = computed(() => {
   return props.comments.filter(comment => !comment.replyToId);
 });
 
-// 按排序方式排序评论
 const sortedMainComments = computed(() => {
   const sorted = [...mainComments.value];
   if (sortBy.value === "latest") {
@@ -201,13 +228,11 @@ const sortedMainComments = computed(() => {
   }
 });
 
-// 分页处理
 const paginatedMainComments = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
   return sortedMainComments.value.slice(start, start + pageSize.value);
 });
 
-// 获取评论的回复
 const getReplies = (commentId) => {
   return props.comments
     .filter(reply => reply.replyToId === commentId)
@@ -224,17 +249,32 @@ const formatTime = (time) => {
   return date.toLocaleDateString("zh-CN");
 };
 
-const setReply = (comment) => {
+const openReplyDialog = (comment, parentComment) => {
   if (!props.isLoggedIn) {
     ElMessage.warning("请先登录后再回复");
     return;
   }
-  replyTo.value = comment;
+  replyTarget.value = comment;
+  replyParentComment.value = parentComment || comment;
+  replyContent.value = "";
+  replyDialogVisible.value = true;
 };
 
-const cancelReply = () => {
-  replyTo.value = null;
-  content.value = "";
+const submitReply = async () => {
+  if (!replyContent.value.trim()) return;
+  replying.value = true;
+  const replyData = {
+    replyToId: replyTarget.value.id,
+    replyToUserId: replyTarget.value.userId,
+    replyToName: replyTarget.value.username
+  };
+  emit("reply", replyContent.value, replyData, () => {
+    replyContent.value = "";
+    replyDialogVisible.value = false;
+    replying.value = false;
+  }, () => {
+    replying.value = false;
+  });
 };
 
 const postComment = async () => {
@@ -246,17 +286,10 @@ const postComment = async () => {
     ElMessage.warning("请输入评论内容");
     return;
   }
-  
+
   posting.value = true;
-  const replyData = replyTo.value ? { 
-    replyToId: replyTo.value.id, 
-    replyToUserId: replyTo.value.userId,
-    replyToName: replyTo.value.username 
-  } : null;
-  
-  emit("post", content.value, replyData, () => {
+  emit("post", content.value, null, () => {
     content.value = "";
-    replyTo.value = null;
     currentPage.value = 1;
     posting.value = false;
   }, () => {
@@ -279,8 +312,6 @@ const handleSizeChange = (size) => {
 .user-avatar { background: linear-gradient(135deg, var(--dong-blue), var(--dong-indigo-dark)); color: var(--text-inverse); flex-shrink: 0; }
 .input-wrap { flex: 1; display: flex; flex-direction: column; gap: 12px; }
 .input-actions { display: flex; justify-content: space-between; align-items: center; }
-.reply-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #666; }
-.reply-info b { color: var(--dong-blue); }
 .char-count { font-size: 12px; color: #999; }
 
 /* 评论控制栏 */
@@ -319,6 +350,12 @@ const handleSizeChange = (size) => {
 
 /* 回复列表 */
 .replies-list { margin-top: 16px; }
+
+/* 回复弹窗 */
+.reply-dialog-body { display: flex; flex-direction: column; gap: 16px; }
+.reply-target { padding: 12px; background: #f5f7fa; border-radius: 8px; font-size: 13px; color: #666; }
+.reply-target b { color: var(--dong-blue); }
+.reply-target-content { margin: 4px 0 0; font-size: 13px; color: #999; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
