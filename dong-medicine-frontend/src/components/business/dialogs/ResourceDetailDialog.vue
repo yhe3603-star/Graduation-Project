@@ -80,6 +80,23 @@
       </div>
     </div>
 
+    <!-- 评论区 -->
+    <div class="comment-section-wrapper">
+      <h3 class="section-title">评论交流</h3>
+      <CommentSection
+        :comments="resourceComments"
+        :is-logged-in="userStore.isLoggedIn"
+        :user-name="userStore.userName"
+        :loading="resourceCommentLoading"
+        :loading-more="resourceCommentLoading"
+        :has-more="resourceHasMore"
+        @post="handleResourceCommentPost"
+        @reply="handleResourceCommentPost"
+        @like="handleResourceLike"
+        @load-more="loadResourceMore"
+      />
+    </div>
+
     <template #footer>
       <div class="preview-footer">
         <div class="preview-stats">
@@ -123,6 +140,8 @@ import DocumentList from '@/components/business/media/DocumentList.vue';
 import DocumentPreview from '@/components/business/media/DocumentPreview.vue';
 import request from '@/utils/request';
 import { useUserStore } from '@/stores/user';
+import CommentSection from '@/components/business/interact/CommentSection.vue';
+import { useEntityComments } from '@/composables/useEntityComments';
 
 const TYPE_NAMES = { video: '视频', document: '文档', image: '图片' };
 const TAG_TYPES = { video: 'danger', document: 'primary', image: 'success' };
@@ -140,6 +159,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'toggle-favorite', 'download']);
 const userStore = useUserStore();
+
+const {
+  comments: resourceComments, commentLoading: resourceCommentLoading, hasMore: resourceHasMore,
+  loadComments: loadResourceComments, loadMore: loadResourceMore, handleCommentPost: handleResourceCommentPost, handleLike: handleResourceLike
+} = useEntityComments('resource', () => props.resource?.id);
 
 const documentList = ref([]);
 const documentsLoading = ref(false);
@@ -223,6 +247,7 @@ const handleDialogClose = (newVisible) => {
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     loadDocuments();
+    loadResourceComments();
     // Record browse history (only when logged in)
     if (props.resource?.id && userStore.isLoggedIn) {
       request.post('/browse-history/record', null, {
@@ -350,5 +375,17 @@ const handleDocumentDownload = (doc) => {
     gap: 12px;
     font-size: 11px;
   }
+}
+
+.comment-section-wrapper {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #ebeef5;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px;
 }
 </style>
