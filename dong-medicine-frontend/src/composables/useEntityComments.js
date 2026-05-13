@@ -52,6 +52,10 @@ export function useEntityComments(targetType, targetId) {
       await loadComments()
       onSuccess?.()
     } catch (err) {
+      const msg = err?.msg || err?.response?.data?.msg
+      if (msg) {
+        ElMessage.error(msg)
+      }
       logFetchError('评论', err)
       onError?.()
     }

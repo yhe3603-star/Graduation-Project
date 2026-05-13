@@ -121,6 +121,10 @@ export function useComments(request, isLoggedIn) {
       }
       onSuccess?.()
     } catch (err) {
+      const msg = err?.msg || err?.response?.data?.msg
+      if (msg) {
+        ElMessage.error(msg)
+      }
       logFetchError('评论', err)
       ElMessage.error('评论发送失败，请检查是否已登录')
       onError?.()
