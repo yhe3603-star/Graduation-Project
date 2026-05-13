@@ -1,35 +1,5 @@
 <template>
   <div class="comment-section">
-    <div class="comment-input-area">
-      <el-avatar
-        :size="40"
-        class="user-avatar"
-      >
-        {{ userName?.charAt(0) || '游' }}
-      </el-avatar>
-      <div class="input-wrap">
-        <el-input
-          v-model="content"
-          placeholder="分享你对侗乡医药的看法..."
-          type="textarea"
-          :rows="3"
-          :disabled="!isLoggedIn"
-          resize="none"
-        />
-        <div class="input-actions">
-          <span class="char-count">{{ content.length }}/500</span>
-          <el-button
-            type="primary"
-            :loading="posting"
-            :disabled="!isLoggedIn || !content.trim()"
-            @click="postComment"
-          >
-            发布评论
-          </el-button>
-        </div>
-      </div>
-    </div>
-
     <div class="comment-controls">
       <div class="sort-controls">
         <span class="sort-label">排序方式：</span>
@@ -177,6 +147,36 @@
       >
         <span v-if="loadingMore">加载中...</span>
         <span v-else-if="!hasMore">— 没有更多评论了 —</span>
+      </div>
+    </div>
+
+    <div class="comment-input-area">
+      <el-avatar
+        :size="40"
+        class="user-avatar"
+      >
+        {{ userName?.charAt(0) || '游' }}
+      </el-avatar>
+      <div class="input-wrap">
+        <el-input
+          v-model="content"
+          placeholder="分享你对侗乡医药的看法..."
+          type="textarea"
+          :rows="3"
+          :disabled="!isLoggedIn"
+          resize="none"
+        />
+        <div class="input-actions">
+          <span class="char-count">{{ content.length }}/500</span>
+          <el-button
+            type="primary"
+            :loading="posting"
+            :disabled="!isLoggedIn || !content.trim()"
+            @click="postComment"
+          >
+            发布评论
+          </el-button>
+        </div>
       </div>
     </div>
 
