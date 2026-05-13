@@ -13,7 +13,7 @@ import java.util.Map;
 public interface SearchHistoryMapper extends BaseMapper<SearchHistory> {
 
     @Select("SELECT keyword AS name, COUNT(*) AS value FROM search_history " +
-            "WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) " +
+            "WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) " +
             "GROUP BY keyword ORDER BY value DESC LIMIT #{limit}")
     List<Map<String, Object>> topKeywords(@Param("limit") int limit);
 }
