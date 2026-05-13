@@ -184,20 +184,14 @@
         </el-tab-pane>
       </el-tabs>
 
-      <div
-        v-if="total > pageSize"
-        class="pagination-wrap"
-      >
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[12, 24, 48]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="onPageSizeChange"
-          @current-change="onPageChange"
-        />
-      </div>
+      <Pagination
+        v-if="total > 0"
+        :page="currentPage"
+        :size="pageSize"
+        :total="total"
+        @update:page="currentPage = $event; onPageChange()"
+        @update:size="pageSize = $event; onPageSizeChange()"
+      />
     </div>
   </div>
 </template>
@@ -207,6 +201,7 @@ import { onMounted, ref, computed, watch } from "vue";
 import request from '@/utils/request';
 import { useRoute, useRouter } from "vue-router";
 import { ChatDotRound, Clock, Document, FolderOpened, Picture, Search, User } from "@element-plus/icons-vue";
+import Pagination from "@/components/business/display/Pagination.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -680,16 +675,6 @@ onMounted(() => {
   padding: 0 2px;
   border-radius: 2px;
   font-weight: 600;
-}
-
-.pagination-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--space-xl);
-  padding: var(--space-lg);
-  background: var(--text-inverse);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
 .recommend-section {
