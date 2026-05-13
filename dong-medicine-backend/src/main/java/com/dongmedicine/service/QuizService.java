@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface QuizService {
     List<QuizQuestionDTO> getRandomQuestions(int count);
-    Integer submit(Integer userId, List<AnswerDTO> answers, int scorePerQuestion);
+    Integer submit(Integer userId, List<AnswerDTO> answers, int scorePerQuestion, String difficulty);
     Integer calculateScore(List<AnswerDTO> answers, int scorePerQuestion);
     List<QuizRecord> getUserRecords(Integer userId);
     Page<QuizRecord> pageUserRecords(Integer userId, int page, int size);

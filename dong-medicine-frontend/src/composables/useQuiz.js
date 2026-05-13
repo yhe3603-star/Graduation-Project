@@ -96,7 +96,7 @@ export const useQuiz = (request, isLoggedIn) => {
     try {
       const config = difficultyConfig[selectedDifficulty.value]
       const answers = selectedQuestions.value.map((q, i) => ({ questionId: q.id, answer: userAnswers.value[i] || '' }))
-      const res = await request.post('/quiz/submit', { answers }, { 
+      const res = await request.post('/quiz/submit', { answers, difficulty: selectedDifficulty.value }, {
         params: { 
           scorePerQuestion: config.scorePerQuestion
         } 

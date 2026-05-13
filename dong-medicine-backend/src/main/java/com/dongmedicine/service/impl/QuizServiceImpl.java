@@ -51,7 +51,7 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    public Integer submit(Integer userId, List<AnswerDTO> answers, int scorePerQuestion) {
+    public Integer submit(Integer userId, List<AnswerDTO> answers, int scorePerQuestion, String difficulty) {
         if (userId == null || answers == null || answers.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "用户ID和答案不能为空");
         }
@@ -63,6 +63,7 @@ public class QuizServiceImpl implements QuizService {
         record.setScore(score);
         record.setTotalQuestions(answers.size());
         record.setCorrectAnswers(score / scorePerQuestion);
+        record.setDifficulty(difficulty);
         recordMapper.insert(record);
 
         return score;

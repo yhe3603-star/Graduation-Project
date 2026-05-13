@@ -47,7 +47,7 @@ public class QuizController {
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         int score = (userId == null)
                 ? service.calculateScore(dto.getAnswers(), scorePerQuestion)
-                : service.submit(userId, dto.getAnswers(), scorePerQuestion);
+                : service.submit(userId, dto.getAnswers(), scorePerQuestion, dto.getDifficulty());
         int totalQuestions = dto.getAnswers() != null ? dto.getAnswers().size() : 0;
         int correctAnswers = score / (scorePerQuestion > 0 ? scorePerQuestion : 10);
         return R.ok(Map.of("score", score, "correct", correctAnswers, "total", totalQuestions));

@@ -226,14 +226,14 @@ class QuizServiceImplTest {
         @DisplayName("null userId应抛出异常")
         void shouldThrowForNullUserId() {
             List<AnswerDTO> answers = List.of(createAnswer(1, "A"));
-            assertThatThrownBy(() -> quizService.submit(null, answers, 10))
+            assertThatThrownBy(() -> quizService.submit(null, answers, 10, null))
                     .isInstanceOf(BusinessException.class);
         }
 
         @Test
         @DisplayName("null answers应抛出异常")
         void shouldThrowForNullAnswers() {
-            assertThatThrownBy(() -> quizService.submit(1, null, 10))
+            assertThatThrownBy(() -> quizService.submit(1, null, 10, null))
                     .isInstanceOf(BusinessException.class);
         }
 
@@ -253,7 +253,7 @@ class QuizServiceImplTest {
                     createAnswer(2, "活血化瘀")
             );
 
-            int score = quizService.submit(100, answers, 10);
+            int score = quizService.submit(100, answers, 10, "easy");
 
             assertThat(score).isEqualTo(20);
 

@@ -18,6 +18,7 @@ public class QuizRecord {
     private Integer score;
     private Integer totalQuestions;
     private Integer correctAnswers;
+    private String difficulty;
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

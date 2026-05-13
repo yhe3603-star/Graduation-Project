@@ -801,6 +801,7 @@ CREATE TABLE `quiz_record`  (
   `score` int NOT NULL COMMENT '得分',
   `total_questions` int NOT NULL COMMENT '总题数',
   `correct_answers` int NOT NULL COMMENT '正确数',
+  `difficulty` varchar(20) NULL DEFAULT 'easy' COMMENT '难度: easy/medium/hard',
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '答题时间',
   `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
@@ -811,29 +812,29 @@ CREATE TABLE `quiz_record`  (
 -- ----------------------------
 -- Records of quiz_record
 -- ----------------------------
-INSERT INTO `quiz_record` VALUES (1, 2, 85, 10, 8, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (2, 2, 90, 10, 9, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (3, 2, 75, 10, 7, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (4, 3, 80, 10, 8, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (5, 3, 70, 10, 7, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (6, 3, 95, 10, 9, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (7, 4, 65, 10, 6, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (8, 4, 85, 10, 8, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (9, 5, 90, 10, 9, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (10, 5, 80, 10, 8, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (11, 2, 100, 10, 10, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (12, 3, 75, 10, 7, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (13, 4, 90, 10, 9, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (14, 5, 70, 10, 7, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (15, 2, 85, 10, 8, '2026-04-04 04:47:10', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (16, 1, 30, 10, 3, '2026-03-05 01:32:04', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (17, 1, 40, 10, 4, '2026-03-05 01:37:41', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (18, 1, 20, 10, 2, '2026-03-05 16:28:15', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (19, 1, 20, 10, 2, '2026-03-06 20:34:46', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (20, 6, 30, 10, 3, '2026-03-06 21:54:12', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (21, 1, 10, 10, 1, '2026-03-10 17:07:35', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (22, 1, 50, 10, 5, '2026-03-10 17:45:01', '2026-04-29 16:54:31');
-INSERT INTO `quiz_record` VALUES (23, 1, 20, 10, 2, '2026-03-18 02:17:14', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (1, 2, 85, 108, 'easy', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (2, 2, 90, 109, 'medium', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (3, 2, 75, 107, 'hard', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (4, 3, 80, 108, 'easy', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (5, 3, 70, 107, 'medium', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (6, 3, 95, 109, 'hard', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (7, 4, 65, 106, 'easy', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (8, 4, 85, 108, 'medium', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (9, 5, 90, 109, 'hard', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (10, 5, 80, 108, 'easy', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (11, 2, 100, 1010, 'medium', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (12, 3, 75, 107, 'hard', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (13, 4, 90, 109, 'easy', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (14, 5, 70, 107, 'medium', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (15, 2, 85, 108, 'hard', '2026-04-04 04:47:10', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (16, 1, 30, 103, 'easy', '2026-03-05 01:32:04', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (17, 1, 40, 104, 'medium', '2026-03-05 01:37:41', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (18, 1, 20, 102, 'hard', '2026-03-05 16:28:15', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (19, 1, 20, 102, 'easy', '2026-03-06 20:34:46', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (20, 6, 30, 103, 'medium', '2026-03-06 21:54:12', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (21, 1, 10, 101, 'hard', '2026-03-10 17:07:35', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (22, 1, 50, 105, 'easy', '2026-03-10 17:45:01', '2026-04-29 16:54:31');
+INSERT INTO `quiz_record` VALUES (23, 1, 20, 102, 'medium', '2026-03-18 02:17:14', '2026-04-29 16:54:31');
 
 -- ----------------------------
 -- Table structure for resources

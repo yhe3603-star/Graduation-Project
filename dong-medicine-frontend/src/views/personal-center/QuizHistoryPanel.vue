@@ -14,7 +14,7 @@
 </div>
         <div class="record-info">
           <p class="record-title">
-{{ record.type === 'quiz' ? '趣味答题' : '植物识别 · ' + getDifficultyName(record.difficulty) }}
+{{ record.type === 'quiz' ? '趣味答题 · ' + getDifficultyName(record.difficulty) : '植物识别 · ' + getDifficultyName(record.difficulty) }}
 </p>
           <p class="record-time">
 {{ formatTime(record.createTime) }}
