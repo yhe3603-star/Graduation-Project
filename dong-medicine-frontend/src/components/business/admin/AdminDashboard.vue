@@ -120,19 +120,14 @@
               description="暂无反馈"
             />
           </div>
-          <div
-            v-if="feedbackList.length > pageSize"
-            class="pagination-wrapper"
-          >
-            <el-pagination
-              v-model:current-page="currentPage"
-              v-model:page-size="pageSize"
-              :page-sizes="[5, 10, 20]"
-              :total="feedbackList.length"
-              layout="total, sizes, prev, pager, next"
-              small
-            />
-          </div>
+          <Pagination
+            v-if="feedbackList.length > 0"
+            :page="currentPage"
+            :size="pageSize"
+            :total="feedbackList.length"
+            @update:page="currentPage = $event"
+            @update:size="pageSize = $event; currentPage = 1"
+          />
         </el-card>
       </el-col>
       <el-col :span="8">
@@ -183,6 +178,7 @@ echarts.use([
 import { logPermissionWarn } from '@/utils/logger'
 import { DataLine, User, Document, Avatar, Picture, ChatDotRound, Folder, EditPen, Tickets, List, Message, Comment } from "@element-plus/icons-vue";
 import request from "@/utils/request";
+import Pagination from "@/components/business/display/Pagination.vue";
 
 const props = defineProps({
   stats: { type: Object, default: null },
@@ -434,7 +430,6 @@ const quickActions = [
 .feedback-text { font-size: 13px; color: #666; margin: 0; }
 .quick-actions { display: flex; flex-direction: column; gap: 12px; }
 .quick-actions .el-button { justify-content: flex-start; }
-.pagination-wrapper { margin-top: 16px; display: flex; justify-content: flex-end; }
 
 @media (max-width: 1400px) {
   .stats-grid { grid-template-columns: repeat(5, 1fr); gap: 12px; }
