@@ -6,31 +6,20 @@ import { logFetchError } from '@/utils/logger'
 export function useEntityComments(targetType, targetId) {
   const comments = ref([])
   const commentLoading = ref(false)
-  const hasMore = ref(true)
-  const currentPage = ref(1)
-  const pageSize = 20
+  const hasMore = ref(false)
 
-  const loadComments = async (reset = true) => {
+  const loadComments = async () => {
     const id = toValue(targetId)
     if (!id) return
-    if (reset) {
-      currentPage.value = 1
-      hasMore.value = true
-    }
     commentLoading.value = true
     try {
       const res = await request.get(`/comments/list/${toValue(targetType)}/${id}`, {
-        params: { page: currentPage.value, size: pageSize }
+        params: { page: 1, size: 1000 }
       })
       const data = res?.data || {}
       const raw = data.records || data || []
-      const list = Array.isArray(raw) ? raw : []
-      if (reset) {
-        comments.value = list
-      } else {
-        comments.value = [...comments.value, ...list]
-      }
-      hasMore.value = list.length >= pageSize
+      comments.value = Array.isArray(raw) ? raw : []
+      hasMore.value = false
     } catch (err) {
       logFetchError('评论列表', err)
       if (reset) comments.value = []
@@ -39,11 +28,7 @@ export function useEntityComments(targetType, targetId) {
     }
   }
 
-  const loadMore = async () => {
-    if (commentLoading.value || !hasMore.value) return
-    currentPage.value++
-    await loadComments(false)
-  }
+  const loadMore = () => {}
 
   const handleCommentPost = async (content, replyData, onSuccess, onError) => {
     if (!content?.trim()) return
