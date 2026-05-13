@@ -189,6 +189,40 @@ INSERT INTO `comments` VALUES (144, 2, 'test', 'general', 0, '希望平台越来
 INSERT INTO `comments` VALUES (145, 5, 'culture_lover', 'general', 0, '侗族的大歌和医药都是国家级非遗，值得大力推广。', NULL, NULL, NULL, 0, 0, 0, 'pending', '2026-04-11 14:00:00', '2026-04-11 14:00:00');
 INSERT INTO `comments` VALUES (146, 6, 'test001', 'general', 0, '我按照平台上的药浴方试了一下，确实很舒服。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-12 08:00:00', '2026-04-12 08:00:00');
 INSERT INTO `comments` VALUES (147, 3, 'dongyi001', 'general', 0, '侗医药是我们侗族的骄傲，也是全人类的财富。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-12 11:00:00', '2026-04-12 11:00:00');
+INSERT INTO `comments` VALUES (148, 1, 'admin', 'general', 0, '欢迎来到侗乡医药数字化展示平台！这里是侗族医药文化交流的家园。', NULL, NULL, NULL, 8, 3, 3, 'approved', '2026-04-01 07:00:00', '2026-04-01 07:00:00');
+INSERT INTO `comments` VALUES (149, 7, 'tcm_student', 'general', 0, '作为中医药学生，侗医药的辨证论治思路给了我很多启发。', 148, 1, 'admin', 0, 0, 0, 'approved', '2026-04-01 08:30:00', '2026-04-01 08:30:00');
+INSERT INTO `comments` VALUES (150, 8, 'dong_villager', 'general', 0, '我就是三江侗寨的，从小就接触侗药，看到这个平台很亲切！', 148, 1, 'admin', 2, 0, 0, 'approved', '2026-04-01 09:15:00', '2026-04-01 09:15:00');
+INSERT INTO `comments` VALUES (151, 9, 'herb_doctor', 'general', 0, '平台的药材图谱做得很专业，每种药材都有详细的侗文标注。', 148, 1, 'admin', 0, 0, 0, 'approved', '2026-04-01 10:00:00', '2026-04-01 10:00:00');
+INSERT INTO `comments` VALUES (152, 1, 'admin', 'general', 0, '感谢大家的支持！我们会持续完善平台内容，让更多人了解侗医药文化。', NULL, NULL, NULL, 5, 2, 2, 'approved', '2026-04-02 07:00:00', '2026-04-02 07:00:00');
+INSERT INTO `comments` VALUES (153, 10, 'nature_lover', 'general', 0, '侗药大多取自天然植物，这种与自然和谐共生的理念很值得学习。', 152, 1, 'admin', 1, 0, 0, 'approved', '2026-04-02 09:00:00', '2026-04-02 09:00:00');
+INSERT INTO `comments` VALUES (154, 11, 'guiyang_doc', 'general', 0, '我在贵阳做中医，经常向患者推荐侗医药的药浴疗法，反馈都很好。', 152, 1, 'admin', 0, 0, 0, 'approved', '2026-04-02 10:30:00', '2026-04-02 10:30:00');
+INSERT INTO `comments` VALUES (155, 12, 'sanjiang_girl', 'general', 0, '三江的侗药市场是我小时候最喜欢逛的地方，各种草药香气扑鼻。', NULL, NULL, NULL, 3, 1, 1, 'approved', '2026-04-03 08:00:00', '2026-04-03 08:00:00');
+INSERT INTO `comments` VALUES (156, 13, 'tongdao_boy', 'general', 0, '通道侗族自治县也有很多侗医传承人，希望平台能收录更多。', 155, 12, 'sanjiang_girl', 1, 0, 0, 'approved', '2026-04-03 09:30:00', '2026-04-03 09:30:00');
+INSERT INTO `comments` VALUES (157, 14, 'liping_fan', 'general', 0, '黎平的侗族大歌和侗医药都是国家级非遗，文化瑰宝。', NULL, NULL, NULL, 2, 0, 0, 'approved', '2026-04-03 14:00:00', '2026-04-03 14:00:00');
+INSERT INTO `comments` VALUES (158, 15, 'rongshui_doc', 'general', 0, '融水苗侗自治县的侗医药也很有特色，和三江的有所不同。', NULL, NULL, NULL, 1, 0, 0, 'approved', '2026-04-04 08:00:00', '2026-04-04 08:00:00');
+INSERT INTO `comments` VALUES (159, 1, 'admin', 'general', 0, '平台已上线AI智能问答功能，有任何侗医药问题都可以在线咨询！', NULL, NULL, NULL, 6, 2, 2, 'approved', '2026-04-04 07:00:00', '2026-04-04 07:00:00');
+INSERT INTO `comments` VALUES (160, 7, 'tcm_student', 'general', 0, 'AI问答太方便了，问了很多侗药配伍的问题都回答得很好。', 159, 1, 'admin', 2, 0, 0, 'approved', '2026-04-04 09:00:00', '2026-04-04 09:00:00');
+INSERT INTO `comments` VALUES (161, 8, 'dong_villager', 'general', 0, '我们侗寨的老人们都说，侗药是祖先留下来的宝贝，不能丢。', 159, 1, 'admin', 0, 0, 0, 'approved', '2026-04-04 10:30:00', '2026-04-04 10:30:00');
+INSERT INTO `comments` VALUES (162, 9, 'herb_doctor', 'general', 0, '侗医的望闻问切和中医有异曲同工之妙，但用药更加灵活。', NULL, NULL, NULL, 2, 0, 0, 'approved', '2026-04-05 08:00:00', '2026-04-05 08:00:00');
+INSERT INTO `comments` VALUES (163, 10, 'nature_lover', 'general', 0, '侗药讲究道地药材，同一味药产地不同效果差异很大。', NULL, NULL, NULL, 1, 0, 0, 'approved', '2026-04-05 11:00:00', '2026-04-05 11:00:00');
+INSERT INTO `comments` VALUES (164, 1, 'admin', 'general', 0, '本周新增了5位侗族医药传承人的资料，欢迎大家浏览学习。', NULL, NULL, NULL, 4, 1, 1, 'approved', '2026-04-06 07:00:00', '2026-04-06 07:00:00');
+INSERT INTO `comments` VALUES (165, 11, 'guiyang_doc', 'general', 0, '传承人的口述史很珍贵，这些活态的文化遗产需要数字化保存。', 164, 1, 'admin', 0, 0, 0, 'approved', '2026-04-06 09:00:00', '2026-04-06 09:00:00');
+INSERT INTO `comments` VALUES (166, 12, 'sanjiang_girl', 'general', 0, '我奶奶就是侗医，她治好了很多乡亲的风湿病。', NULL, NULL, NULL, 3, 0, 0, 'approved', '2026-04-06 14:00:00', '2026-04-06 14:00:00');
+INSERT INTO `comments` VALUES (167, 13, 'tongdao_boy', 'general', 0, '侗药的采集时间很讲究，什么季节采什么药都有说法。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-07 08:00:00', '2026-04-07 08:00:00');
+INSERT INTO `comments` VALUES (168, 14, 'liping_fan', 'general', 0, '平台的植物识别游戏设计得很好，寓教于乐。', NULL, NULL, NULL, 1, 0, 0, 'approved', '2026-04-07 11:00:00', '2026-04-07 11:00:00');
+INSERT INTO `comments` VALUES (169, 15, 'rongshui_doc', 'general', 0, '侗药的炮制方法多种多样，蒸、煮、泡、晒各有讲究。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-08 08:00:00', '2026-04-08 08:00:00');
+INSERT INTO `comments` VALUES (170, 1, 'admin', 'general', 0, '平台访问量持续增长，感谢每一位关注侗医药文化的朋友！', NULL, NULL, NULL, 3, 0, 0, 'approved', '2026-04-08 07:00:00', '2026-04-08 07:00:00');
+INSERT INTO `comments` VALUES (171, 7, 'tcm_student', 'general', 0, '侗医药的外治法很有特色，药浴、推拿、针灸都有独到之处。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-09 08:00:00', '2026-04-09 08:00:00');
+INSERT INTO `comments` VALUES (172, 8, 'dong_villager', 'general', 0, '希望平台能出一个侗药方言发音的功能，很多药材侗语发音很好听。', NULL, NULL, NULL, 2, 0, 0, 'approved', '2026-04-09 11:00:00', '2026-04-09 11:00:00');
+INSERT INTO `comments` VALUES (173, 9, 'herb_doctor', 'general', 0, '侗医药和苗医药、瑶医药都是民族医药的瑰宝，各有千秋。', NULL, NULL, NULL, 1, 0, 0, 'approved', '2026-04-10 08:00:00', '2026-04-10 08:00:00');
+INSERT INTO `comments` VALUES (174, 10, 'nature_lover', 'general', 0, '侗族地区生态环境好，药材品质高，这是侗药疗效好的重要原因。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-10 14:00:00', '2026-04-10 14:00:00');
+INSERT INTO `comments` VALUES (175, 1, 'admin', 'general', 0, '欢迎大家在评论区分享自己与侗医药的故事，我们共同传承这份文化。', NULL, NULL, NULL, 2, 0, 0, 'approved', '2026-04-11 07:00:00', '2026-04-11 07:00:00');
+INSERT INTO `comments` VALUES (176, 12, 'sanjiang_girl', 'general', 0, '侗药的配方讲究君臣佐使，和中医理论相通但又有侗族自己的理解。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-11 14:00:00', '2026-04-11 14:00:00');
+INSERT INTO `comments` VALUES (177, 13, 'tongdao_boy', 'general', 0, '通道的侗寨保留了很多古老的医药习俗，值得记录下来。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-12 08:00:00', '2026-04-12 08:00:00');
+INSERT INTO `comments` VALUES (178, 14, 'liping_fan', 'general', 0, '侗族的药市文化很有意思，每年特定日子大家会集中交易药材。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-12 14:00:00', '2026-04-12 14:00:00');
+INSERT INTO `comments` VALUES (179, 15, 'rongshui_doc', 'general', 0, '建议平台增加侗医药的视频纪录片，让文化更加生动。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-13 08:00:00', '2026-04-13 08:00:00');
+INSERT INTO `comments` VALUES (180, 11, 'guiyang_doc', 'general', 0, '侗医药在治疗慢性病方面有独特优势，值得深入研究。', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-04-13 11:00:00', '2026-04-13 11:00:00');
+INSERT INTO `comments` VALUES (181, 7, 'tcm_student', 'general', 0, '平台的答题功能帮我巩固了很多侗药知识，太赞了！', NULL, NULL, NULL, 0, 0, 0, 'pending', '2026-04-14 08:00:00', '2026-04-14 08:00:00');
 -- 问答评论 (qa: 15条，含回复)
 INSERT INTO `comments` VALUES (119, 3, 'dongyi001', 'qa', 1, '这个问答很有教育意义，侗药常识应该多普及。', NULL, NULL, NULL, 2, 1, 1, 'approved', '2026-04-08 08:00:00', '2026-04-08 08:00:00');
 INSERT INTO `comments` VALUES (120, 4, 'herb_fan', 'qa', 1, '学到了很多，希望多出一些这样的题目。', 119, 3, 'dongyi001', 0, 0, 0, 'approved', '2026-04-08 09:30:00', '2026-04-08 09:30:00');
@@ -958,6 +992,15 @@ INSERT INTO `users` VALUES (3, 'dongyi001', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQ
 INSERT INTO `users` VALUES (4, 'herb_fan', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-04 04:47:10', '2026-04-29 16:54:30');
 INSERT INTO `users` VALUES (5, 'culture_lover', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-04 04:47:10', '2026-04-29 16:54:30');
 INSERT INTO `users` VALUES (6, 'test001', '$2a$10$2D/pyjng1ZQC2Ag4R4udceqRJofGtuiAwIROaE7eIdTeZrb9OSpDC', 'user', 'active', '2026-03-06 21:52:24', '2026-04-29 16:54:30');
+INSERT INTO `users` VALUES (7, 'tcm_student', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-01 08:00:00', '2026-04-01 08:00:00');
+INSERT INTO `users` VALUES (8, 'dong_villager', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-01 09:00:00', '2026-04-01 09:00:00');
+INSERT INTO `users` VALUES (9, 'herb_doctor', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-02 08:00:00', '2026-04-02 08:00:00');
+INSERT INTO `users` VALUES (10, 'nature_lover', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-02 10:00:00', '2026-04-02 10:00:00');
+INSERT INTO `users` VALUES (11, 'guiyang_doc', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-03 08:00:00', '2026-04-03 08:00:00');
+INSERT INTO `users` VALUES (12, 'sanjiang_girl', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-03 09:00:00', '2026-04-03 09:00:00');
+INSERT INTO `users` VALUES (13, 'tongdao_boy', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-04 08:00:00', '2026-04-04 08:00:00');
+INSERT INTO `users` VALUES (14, 'liping_fan', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-04 10:00:00', '2026-04-04 10:00:00');
+INSERT INTO `users` VALUES (15, 'rongshui_doc', '$2a$10$c6iE6rR/mVr13cbkzmG8H.xUCIdQEwyWryohRJURMZwfB5gnPtmlm', 'user', 'active', '2026-04-05 08:00:00', '2026-04-05 08:00:00');
 -- ----------------------------
 -- Table structure for chat_history
 -- ----------------------------
