@@ -16,6 +16,7 @@ public class CommentDTO {
     private String replyToUsername;
     private Integer likes;
     private Integer replyCount;
+    private Integer hot;
     private String status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

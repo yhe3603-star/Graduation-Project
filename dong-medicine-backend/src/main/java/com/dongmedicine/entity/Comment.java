@@ -18,5 +18,6 @@ public class Comment extends BaseEntity {
     private String replyToUsername;
     private Integer likes;
     private Integer replyCount;
+    private Integer hot;
     private String status;
 }

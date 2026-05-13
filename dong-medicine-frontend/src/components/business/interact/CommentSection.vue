@@ -40,8 +40,8 @@
           <el-radio-button label="latest">
             最新
           </el-radio-button>
-          <el-radio-button label="oldest">
-            最早
+          <el-radio-button label="hottest">
+            最热
           </el-radio-button>
         </el-radio-group>
       </div>
@@ -238,11 +238,10 @@ const mainComments = computed(() => {
 
 const sortedMainComments = computed(() => {
   const sorted = [...mainComments.value];
-  if (sortBy.value === "latest") {
-    return sorted.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
-  } else {
-    return sorted.sort((a, b) => new Date(a.createTime) - new Date(b.createTime));
+  if (sortBy.value === "hottest") {
+    return sorted.sort((a, b) => (b.hot || 0) - (a.hot || 0));
   }
+  return sorted.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
 });
 
 // 递归收集某评论下的所有后代回复，平铺到一个列表

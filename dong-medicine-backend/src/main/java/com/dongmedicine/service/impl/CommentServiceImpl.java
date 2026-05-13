@@ -54,12 +54,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setStatus(level == SensitiveWordFilter.SensitiveLevel.NORMAL ? "pending" : "approved");
         comment.setLikes(0);
         comment.setReplyCount(0);
+        comment.setHot(0);
         save(comment);
 
         if (comment.getReplyToId() != null) {
             lambdaUpdate()
                     .eq(Comment::getId, comment.getReplyToId())
-                    .setSql("reply_count = reply_count + 1")
+                    .setSql("reply_count = reply_count + 1, hot = hot + 1")
                     .update(new Comment());
         }
     }
@@ -177,6 +178,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         dto.setReplyToUsername(comment.getReplyToUsername());
         dto.setLikes(comment.getLikes());
         dto.setReplyCount(comment.getReplyCount());
+        dto.setHot(comment.getHot());
         dto.setStatus(comment.getStatus());
         dto.setCreateTime(comment.getCreatedAt());
         dto.setUpdateTime(comment.getUpdatedAt());
