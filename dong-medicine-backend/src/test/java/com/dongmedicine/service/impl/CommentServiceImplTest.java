@@ -5,6 +5,7 @@ import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.dto.CommentDTO;
 import com.dongmedicine.entity.Comment;
 import com.dongmedicine.mapper.CommentMapper;
+import com.dongmedicine.common.util.SensitiveWordFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ class CommentServiceImplTest {
 
     @Mock
     private CommentMapper commentMapper;
+
+    @Mock
+    private SensitiveWordFilter sensitiveWordFilter;
 
     @InjectMocks
     private CommentServiceImpl commentService;
@@ -98,12 +102,35 @@ class CommentServiceImplTest {
     }
 
     @Test
-    @DisplayName("添加评论 - 成功")
-    void testAddComment_Success() {
+    @DisplayName("添加评论 - 无敏感词自动通过")
+    void testAddComment_AutoApprove() {
+        when(sensitiveWordFilter.matchLevel(any(String.class))).thenReturn(SensitiveWordFilter.SensitiveLevel.NONE);
         when(commentMapper.insert(any(Comment.class))).thenReturn(1);
 
         assertDoesNotThrow(() -> commentService.addComment(testComment));
+        assertEquals("approved", testComment.getStatus());
         verify(commentMapper).insert(any(Comment.class));
+    }
+
+    @Test
+    @DisplayName("添加评论 - 普通敏感词进入审核队列")
+    void testAddComment_NormalSensitive_GoesToReview() {
+        when(sensitiveWordFilter.matchLevel(any(String.class))).thenReturn(SensitiveWordFilter.SensitiveLevel.NORMAL);
+        when(commentMapper.insert(any(Comment.class))).thenReturn(1);
+
+        assertDoesNotThrow(() -> commentService.addComment(testComment));
+        assertEquals("pending", testComment.getStatus());
+        verify(commentMapper).insert(any(Comment.class));
+    }
+
+    @Test
+    @DisplayName("添加评论 - 高危敏感词直接拦截")
+    void testAddComment_HighSensitive_Rejected() {
+        when(sensitiveWordFilter.matchLevel(any(String.class))).thenReturn(SensitiveWordFilter.SensitiveLevel.HIGH);
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> commentService.addComment(testComment));
+        assertTrue(ex.getMessage().contains("违规信息"));
+        verify(commentMapper, never()).insert(any(Comment.class));
     }
 
     @Test

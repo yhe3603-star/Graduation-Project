@@ -11,6 +11,7 @@ import com.dongmedicine.mapper.UserMapper;
 import com.dongmedicine.service.CommentService;
 import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.common.util.PageUtils;
+import com.dongmedicine.common.util.SensitiveWordFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
     private final UserMapper userMapper;
+    private final SensitiveWordFilter sensitiveWordFilter;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -44,7 +46,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw BusinessException.badRequest("评论内容不能为空");
         }
 
-        comment.setStatus("pending");
+        SensitiveWordFilter.SensitiveLevel level = sensitiveWordFilter.matchLevel(comment.getContent());
+        if (level == SensitiveWordFilter.SensitiveLevel.HIGH) {
+            throw BusinessException.badRequest("评论内容包含违规信息，无法发布");
+        }
+
+        comment.setStatus(level == SensitiveWordFilter.SensitiveLevel.NORMAL ? "pending" : "approved");
         comment.setLikes(0);
         comment.setReplyCount(0);
         save(comment);
