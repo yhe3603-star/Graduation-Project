@@ -42,6 +42,23 @@
       </div>
     </div>
 
+    <!-- 评论区 -->
+    <div class="comment-section-wrapper">
+      <h3 class="section-title">评论交流</h3>
+      <CommentSection
+        :comments="qaComments"
+        :is-logged-in="userStore.isLoggedIn"
+        :user-name="userStore.userName"
+        :loading="qaCommentLoading"
+        :loading-more="qaCommentLoading"
+        :has-more="qaHasMore"
+        @post="handleQaCommentPost"
+        @reply="handleQaCommentPost"
+        @like="handleQaLike"
+        @load-more="loadQaMore"
+      />
+    </div>
+
     <template #footer>
       <div class="dialog-footer">
         <el-button
@@ -68,6 +85,8 @@ import { watch } from 'vue';
 import { View, Star, QuestionFilled, CircleCheckFilled } from '@element-plus/icons-vue';
 import request from '@/utils/request';
 import { useUserStore } from '@/stores/user';
+import CommentSection from '@/components/business/interact/CommentSection.vue';
+import { useEntityComments } from '@/composables/useEntityComments';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -78,11 +97,17 @@ const props = defineProps({
 defineEmits(['update:visible', 'toggle-favorite']);
 const userStore = useUserStore();
 
+const {
+  comments: qaComments, commentLoading: qaCommentLoading, hasMore: qaHasMore,
+  loadComments: loadQaComments, loadMore: loadQaMore, handleCommentPost: handleQaCommentPost, handleLike: handleQaLike
+} = useEntityComments('qa', () => props.qa?.id);
+
 watch(() => props.visible, (newVal) => {
   if (newVal && props.qa?.id && userStore.isLoggedIn) {
     request.post('/browse-history/record', null, {
       params: { targetType: 'qa', targetId: props.qa.id }
     }).catch(() => {});
+    loadQaComments();
   }
 });
 </script>
@@ -144,5 +169,17 @@ watch(() => props.visible, (newVal) => {
     font-size: 13px;
     padding: 10px;
   }
+}
+
+.comment-section-wrapper {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #ebeef5;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px;
 }
 </style>
