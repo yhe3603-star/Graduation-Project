@@ -19,7 +19,7 @@ public class PageUtils {
      */
     public static <T> Page<T> getPage(Integer page, Integer size) {
         int normalizedPage = Math.max(page != null ? page : 1, 1);
-        int normalizedSize = Math.min(Math.max(size != null ? size : 20, 1), 100);
+        int normalizedSize = Math.min(Math.max(size != null ? size : 20, 1), 1000);
         return new Page<>(normalizedPage, normalizedSize);
     }
 
