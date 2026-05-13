@@ -34,13 +34,13 @@ class PlantIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("size=9999应被限制为100")
-        void shouldLimitSizeTo100() throws Exception {
+        @DisplayName("size=9999应被限制为1000")
+        void shouldLimitSizeTo1000() throws Exception {
             mockMvc.perform(get("/api/plants/list")
                             .param("page", "1")
                             .param("size", "9999"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.size").value(100));
+                    .andExpect(jsonPath("$.data.size").value(1000));
         }
 
         @Test

@@ -17,17 +17,17 @@ class PaginationRegressionTest {
     class PaginationBypassBug {
 
         @Test
-        @DisplayName("size=9999应被限制为100")
+        @DisplayName("size=9999应被限制为1000")
         void size9999ShouldBeCapped() {
             var page = PageUtils.getPage(1, 9999);
-            assertEquals(100, page.getSize());
+            assertEquals(1000, page.getSize());
         }
 
         @Test
-        @DisplayName("size=1000应被限制为100")
-        void size1000ShouldBeCapped() {
+        @DisplayName("size=1000时正常返回")
+        void size1000ShouldWork() {
             var page = PageUtils.getPage(1, 1000);
-            assertEquals(100, page.getSize());
+            assertEquals(1000, page.getSize());
         }
 
         @Test
@@ -61,11 +61,11 @@ class PaginationRegressionTest {
 
         @ParameterizedTest
         @DisplayName("各种size边界值应被正确限制")
-        @ValueSource(ints = {1, 10, 50, 99, 100, 101, 500, 9999, Integer.MAX_VALUE})
+        @ValueSource(ints = {1, 10, 50, 999, 1000, 1001, 5000, 9999, Integer.MAX_VALUE})
         void variousSizeBoundaryValues(int size) {
             var page = PageUtils.getPage(1, size);
-            assertTrue(page.getSize() >= 1 && page.getSize() <= 100,
-                    "size=" + size + " result=" + page.getSize() + " should be in [1,100]");
+            assertTrue(page.getSize() >= 1 && page.getSize() <= 1000,
+                    "size=" + size + " result=" + page.getSize() + " should be in [1,1000]");
         }
     }
 

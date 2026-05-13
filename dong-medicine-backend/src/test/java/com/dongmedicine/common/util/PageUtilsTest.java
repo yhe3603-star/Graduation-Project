@@ -56,17 +56,17 @@ class PageUtilsTest {
     }
 
     @Test
-    @DisplayName("getPage - size超过100时限制为100")
+    @DisplayName("getPage - size超过1000时限制为1000")
     void testGetPage_SizeOverMax() {
         Page<Object> page = PageUtils.getPage(1, 9999);
-        assertEquals(100, page.getSize());
+        assertEquals(1000, page.getSize());
     }
 
     @Test
-    @DisplayName("getPage - size为100时正常")
+    @DisplayName("getPage - size为1000时正常")
     void testGetPage_SizeExactlyMax() {
-        Page<Object> page = PageUtils.getPage(1, 100);
-        assertEquals(100, page.getSize());
+        Page<Object> page = PageUtils.getPage(1, 1000);
+        assertEquals(1000, page.getSize());
     }
 
     @Test

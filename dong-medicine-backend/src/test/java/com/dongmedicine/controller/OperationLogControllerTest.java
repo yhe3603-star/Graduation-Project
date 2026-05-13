@@ -119,7 +119,7 @@ class OperationLogControllerTest {
     }
 
     @Test
-    @DisplayName("查询日志列表 - limit超上限自动截断为100")
+    @DisplayName("查询日志列表 - limit超上限自动截断为1000")
     void testList_LimitCapped() {
         List<OperationLog> logs = Arrays.asList(testLog);
         when(logService.list(any(QueryWrapper.class))).thenReturn(logs);

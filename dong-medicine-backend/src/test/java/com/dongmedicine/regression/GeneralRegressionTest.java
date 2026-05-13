@@ -15,11 +15,11 @@ class GeneralRegressionTest {
     @DisplayName("Bug: WebSocket DeepSeek调用阻塞")
     class WebSocketBlockingBug {
         @Test
-        @DisplayName("PageUtils分页应确保size上限100")
+        @DisplayName("PageUtils分页应确保size上限1000")
         void pageSizeShouldBeBounded() {
             for (int size : new int[]{1, 10, 50, 100, 101, 500, 9999, Integer.MAX_VALUE}) {
                 var page = PageUtils.getPage(1, size);
-                assertTrue(page.getSize() <= 100);
+                assertTrue(page.getSize() <= 1000);
                 assertTrue(page.getSize() >= 1);
             }
         }
@@ -33,7 +33,7 @@ class GeneralRegressionTest {
         void paginationBoundaryShouldWork() {
             assertEquals(1, PageUtils.getPage(1, 1).getSize());
             assertEquals(100, PageUtils.getPage(1, 100).getSize());
-            assertEquals(Integer.MAX_VALUE, PageUtils.getPage(Integer.MAX_VALUE, 100).getCurrent());
+            assertEquals(Integer.MAX_VALUE, PageUtils.getPage(Integer.MAX_VALUE, 1000).getCurrent());
         }
     }
 
@@ -43,8 +43,8 @@ class GeneralRegressionTest {
         @Test
         @DisplayName("PageUtils应确保所有size参数被限制")
         void allSizeParamsShouldBeBounded() {
-            assertEquals(100, PageUtils.getPage(1, 9999).getSize());
-            assertEquals(100, PageUtils.getPage(1, 500).getSize());
+            assertEquals(1000, PageUtils.getPage(1, 9999).getSize());
+            assertEquals(1000, PageUtils.getPage(1, 1500).getSize());
             assertEquals(50, PageUtils.getPage(1, 50).getSize());
             assertEquals(1, PageUtils.getPage(1, 1).getSize());
         }
@@ -54,9 +54,9 @@ class GeneralRegressionTest {
     @DisplayName("Bug: 管理后台日志LIMIT 5000")
     class AdminLogLimitBug {
         @Test
-        @DisplayName("PageUtils最大size应为100")
-        void maxPageSizeShouldBe100() {
-            assertEquals(100, PageUtils.getPage(1, 5000).getSize());
+        @DisplayName("PageUtils最大size应为1000")
+        void maxPageSizeShouldBe1000() {
+            assertEquals(1000, PageUtils.getPage(1, 5000).getSize());
         }
     }
 

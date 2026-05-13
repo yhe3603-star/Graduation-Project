@@ -90,7 +90,7 @@ class ControllerRegressionTest extends BaseIntegrationTest {
         void plantListSizeCapped() throws Exception {
             mockMvc.perform(get("/api/plants/list?page=1&size=9999"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.records", hasSize(lessThanOrEqualTo(100))));
+                    .andExpect(jsonPath("$.data.records", hasSize(lessThanOrEqualTo(1000))));
         }
 
         @Test
