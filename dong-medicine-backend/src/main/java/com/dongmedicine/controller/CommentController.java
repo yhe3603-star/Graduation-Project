@@ -67,6 +67,14 @@ public class CommentController {
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @GetMapping("/list/general")
+    public R<Map<String, Object>> listGeneral(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "1000") Integer size) {
+        Page<CommentDTO> pageResult = service.listApprovedPaged("general", 0, page, size);
+        return R.ok(PageUtils.toMap(pageResult));
+    }
+
     @GetMapping("/my")
     @SaCheckLogin
     public R<Map<String, Object>> myComments(

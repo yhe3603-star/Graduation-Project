@@ -65,7 +65,7 @@ export function useComments(request, isLoggedIn) {
   const loadComments = async () => {
     commentLoading.value = true
     try {
-      const res = await request.get('/comments/list/all', {
+      const res = await request.get('/comments/list/general', {
         params: { page: 1, size: 1000 }
       })
       const data = res?.data || {}
