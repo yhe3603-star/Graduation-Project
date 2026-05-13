@@ -273,7 +273,7 @@ const getAllReplies = (commentId) => {
   const result = [];
   const collect = (parentId) => {
     const directReplies = props.comments
-      .filter(r => r.replyToId === parentId)
+      .filter(r => r.replyToId != null && Number(r.replyToId) === Number(parentId))
       .sort((a, b) => new Date(a.createTime) - new Date(b.createTime));
     for (const reply of directReplies) {
       result.push(reply);
