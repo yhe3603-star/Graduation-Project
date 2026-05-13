@@ -28,7 +28,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { EditPen, Trophy, Cherry, Star, View, TrendCharts } from '@element-plus/icons-vue'
+import { EditPen, Trophy, Cherry, Star, View, ChatDotRound, TrendCharts } from '@element-plus/icons-vue'
 import { useStudyStats } from '@/composables/useStudyStats'
 
 const props = defineProps({
@@ -36,6 +36,7 @@ const props = defineProps({
   gameRecords: { type: Array, default: () => [] },
   favorites: { type: Array, default: () => [] },
   browseHistory: { type: Array, default: () => [] },
+  commentCount: { type: Number, default: 0 },
   loading: { type: Boolean, default: false }
 })
 
@@ -50,12 +51,13 @@ function updateStats() {
     { value: (studyStats.value[1]?.value || 0) + '分', label: '平均得分', icon: Trophy, bg: 'linear-gradient(135deg, var(--dong-indigo), var(--dong-indigo-dark))' },
     { value: studyStats.value[2]?.value || 0, label: '植物游戏次数', icon: Cherry, bg: 'linear-gradient(135deg, var(--dong-jade), var(--dong-jade-dark))' },
     { value: studyStats.value[3]?.value || 0, label: '收藏总数', icon: Star, bg: 'linear-gradient(135deg, var(--dong-gold-light), var(--dong-copper))' },
-    { value: studyStats.value[4]?.value || 0, label: '浏览总数', icon: View, bg: 'linear-gradient(135deg, #9b59b6, #8e44ad)' }
+    { value: studyStats.value[4]?.value || 0, label: '浏览总数', icon: View, bg: 'linear-gradient(135deg, #9b59b6, #8e44ad)' },
+    { value: props.commentCount, label: '评论总数', icon: ChatDotRound, bg: 'linear-gradient(135deg, #e67e22, #d35400)' }
   ]
   nextTick(() => initScoreChart(props.quizRecords, props.gameRecords))
 }
 
-watch(() => [props.quizRecords, props.gameRecords, props.favorites, props.browseHistory], updateStats, { deep: true })
+watch(() => [props.quizRecords, props.gameRecords, props.favorites, props.browseHistory, props.commentCount], updateStats, { deep: true })
 
 onMounted(updateStats)
 onUnmounted(disposeChart)

@@ -25,8 +25,12 @@
         :user-name="userName"
         :is-admin="isAdmin"
         :study-stats="studyStats"
+        :comment-count="comments.length"
+        :recent-browse-history="browseHistory.slice(0, 3)"
+        :recent-comments="comments.slice(0, 3)"
         :actions="actions"
         @tab-change="activeTab = $event"
+        @switch-tab="activeTab = $event"
       />
 
       <!-- Content Section -->
@@ -39,6 +43,7 @@
               :game-records="gameRecords"
               :favorites="favorites"
               :browse-history="browseHistory"
+              :comment-count="comments.length"
             />
           </el-tab-pane>
 
@@ -55,6 +60,11 @@
           <!-- Browse History Tab -->
           <el-tab-pane label="浏览历史" name="history">
             <BrowseHistoryPanel />
+          </el-tab-pane>
+
+          <!-- Comment History Tab -->
+          <el-tab-pane label="评论历史" name="comments">
+            <CommentHistoryPanel />
           </el-tab-pane>
 
           <!-- Password Change Tab -->
@@ -91,13 +101,14 @@ import StatsDashboard from './personal-center/StatsDashboard.vue'
 import FavoritesPanel from './personal-center/FavoritesPanel.vue'
 import QuizHistoryPanel from './personal-center/QuizHistoryPanel.vue'
 import BrowseHistoryPanel from './personal-center/BrowseHistoryPanel.vue'
+import CommentHistoryPanel from './personal-center/CommentHistoryPanel.vue'
 import SettingsPanel from './personal-center/SettingsPanel.vue'
 
 const updateUserState = inject('updateUserState')
 
 const {
   isLoggedIn, userName, isAdmin, activeTab,
-  favorites, quizRecords, gameRecords,
+  favorites, quizRecords, gameRecords, comments,
   passwordFormRef, passwordCaptchaRef, passwordLoading, logoutLoading, passwordForm, passwordRules,
   goToDetail, handleChangePassword, resetPasswordForm, handleLogout
 } = usePersonalCenter(request, updateUserState)

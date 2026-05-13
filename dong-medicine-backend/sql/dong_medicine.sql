@@ -177,6 +177,20 @@ INSERT INTO `comments` VALUES (117, 5, 'culture_lover', 'general', 0, '建议增
 INSERT INTO `comments` VALUES (118, 2, 'test', 'general', 0, '测试评论', NULL, NULL, NULL, 0, 0, 0, 'rejected', '2026-04-06 08:00:00', '2026-04-06 08:00:00');
 
 -- ----------------------------
+-- Table structure for comment_likes
+-- ----------------------------
+DROP TABLE IF EXISTS `comment_likes`;
+CREATE TABLE `comment_likes`  (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` int NOT NULL COMMENT '用户ID',
+  `comment_id` int NOT NULL COMMENT '评论ID',
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_user_comment`(`user_id` ASC, `comment_id` ASC) USING BTREE,
+  INDEX `idx_comment_id`(`comment_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '评论点赞表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
 -- Table structure for favorites
 -- ----------------------------
 DROP TABLE IF EXISTS `favorites`;

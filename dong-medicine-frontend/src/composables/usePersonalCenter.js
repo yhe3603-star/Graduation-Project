@@ -10,6 +10,7 @@ export const actions = [
   { key: 'stats', icon: DataAnalysis, label: '学习统计' },
   { key: 'favorites', icon: Star, label: '我的收藏' },
   { key: 'quiz', icon: EditPen, label: '答题记录' },
+  { key: 'comments', icon: ChatDotRound, label: '评论历史' },
   { key: 'settings', icon: Setting, label: '账号设置' }
 ]
 

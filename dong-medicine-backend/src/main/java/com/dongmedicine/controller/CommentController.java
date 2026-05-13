@@ -54,7 +54,8 @@ public class CommentController {
             @PathVariable @NotNull(message = "目标ID不能为空") Integer targetId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        Page<CommentDTO> pageResult = service.listApprovedPaged(targetType, targetId, page, size);
+        Integer userId = SecurityUtils.getCurrentUserIdOrNull();
+        Page<CommentDTO> pageResult = service.listApprovedPaged(targetType, targetId, page, size, userId);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
@@ -73,5 +74,19 @@ public class CommentController {
             @RequestParam(defaultValue = "20") Integer size) {
         Page<CommentDTO> pageResult = service.listByUserIdPaged(SecurityUtils.getCurrentUserId(), page, size);
         return R.ok(PageUtils.toMap(pageResult));
+    }
+
+    @PostMapping("/{id}/like")
+    @SaCheckLogin
+    public R<Void> like(@PathVariable Integer id) {
+        service.likeComment(SecurityUtils.getCurrentUserId(), id);
+        return R.ok(null);
+    }
+
+    @DeleteMapping("/{id}/like")
+    @SaCheckLogin
+    public R<Void> unlike(@PathVariable Integer id) {
+        service.unlikeComment(SecurityUtils.getCurrentUserId(), id);
+        return R.ok(null);
     }
 }

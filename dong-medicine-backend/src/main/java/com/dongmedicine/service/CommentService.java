@@ -10,6 +10,7 @@ public interface CommentService extends IService<Comment> {
     void addComment(Comment comment);
     List<CommentDTO> listApproved(String targetType, Integer targetId);
     Page<CommentDTO> listApprovedPaged(String targetType, Integer targetId, Integer page, Integer size);
+    Page<CommentDTO> listApprovedPaged(String targetType, Integer targetId, Integer page, Integer size, Integer currentUserId);
     List<CommentDTO> listByUserId(Integer userId);
     Page<CommentDTO> listByUserIdPaged(Integer userId, Integer page, Integer size);
     void approveComment(Integer commentId);
@@ -18,4 +19,6 @@ public interface CommentService extends IService<Comment> {
     Page<CommentDTO> pageAllDTO(String status, Integer page, Integer size);
     List<CommentDTO> listAllApproved();
     Page<CommentDTO> pageAllApproved(Integer page, Integer size);
+    void likeComment(Integer userId, Integer commentId);
+    void unlikeComment(Integer userId, Integer commentId);
 }

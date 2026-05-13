@@ -143,6 +143,7 @@
         :has-more="inheritorHasMore"
         @post="handleInheritorCommentPost"
         @reply="handleInheritorCommentPost"
+        @like="handleInheritorLike"
         @load-more="loadInheritorMore"
       />
     </div>
@@ -198,7 +199,7 @@ const userStore = useUserStore();
 
 const {
   comments: inheritorComments, commentLoading: inheritorCommentLoading, hasMore: inheritorHasMore,
-  loadComments: loadInheritorComments, loadMore: loadInheritorMore, handleCommentPost: handleInheritorCommentPost
+  loadComments: loadInheritorComments, loadMore: loadInheritorMore, handleCommentPost: handleInheritorCommentPost, handleLike: handleInheritorLike
 } = useEntityComments('inheritor', () => props.inheritor?.id);
 
 const activeMediaTab = ref('video');

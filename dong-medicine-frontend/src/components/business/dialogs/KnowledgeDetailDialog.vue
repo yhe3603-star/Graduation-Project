@@ -265,6 +265,7 @@
         :has-more="knowledgeHasMore"
         @post="handleKnowledgeCommentPost"
         @reply="handleKnowledgeCommentPost"
+        @like="handleKnowledgeLike"
         @load-more="loadKnowledgeMore"
       />
     </div>
@@ -323,7 +324,7 @@ const userStore = useUserStore();
 
 const {
   comments: knowledgeComments, commentLoading: knowledgeCommentLoading, hasMore: knowledgeHasMore,
-  loadComments: loadKnowledgeComments, loadMore: loadKnowledgeMore, handleCommentPost: handleKnowledgeCommentPost
+  loadComments: loadKnowledgeComments, loadMore: loadKnowledgeMore, handleCommentPost: handleKnowledgeCommentPost, handleLike: handleKnowledgeLike
 } = useEntityComments('knowledge', () => props.knowledge?.id);
 
 const activeMediaTab = ref('video');

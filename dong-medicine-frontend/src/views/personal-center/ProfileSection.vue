@@ -20,6 +20,37 @@
           <span class="stat-num">{{ s.value }}</span>
           <span class="stat-text">{{ s.label }}</span>
         </div>
+        <div class="stat-block">
+          <span class="stat-num">{{ commentCount }}</span>
+          <span class="stat-text">评论总数</span>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="recentBrowseHistory?.length || recentComments?.length" class="recent-cards">
+      <div v-if="recentBrowseHistory?.length" class="recent-card" @click="$emit('switch-tab', 'history')">
+        <div class="recent-card-header">
+          <span class="recent-card-title">最近浏览</span>
+          <el-icon class="recent-card-arrow">
+<ArrowRight />
+</el-icon>
+        </div>
+        <div v-for="item in recentBrowseHistory" :key="item.id" class="recent-item">
+          <span class="recent-item-title">{{ item.title || item.targetTitle || '未知内容' }}</span>
+          <span class="recent-item-time">{{ formatRelativeTime(item.createdAt || item.createTime) }}</span>
+        </div>
+      </div>
+      <div v-if="recentComments?.length" class="recent-card" @click="$emit('switch-tab', 'comments')">
+        <div class="recent-card-header">
+          <span class="recent-card-title">最近评论</span>
+          <el-icon class="recent-card-arrow">
+<ArrowRight />
+</el-icon>
+        </div>
+        <div v-for="item in recentComments" :key="item.id" class="recent-item">
+          <span class="recent-item-title">{{ truncateText(item.content, 20) }}</span>
+          <span class="recent-item-time">{{ formatRelativeTime(item.createdAt || item.createTime) }}</span>
+        </div>
       </div>
     </div>
 
@@ -33,14 +64,39 @@
 </template>
 
 <script setup>
+import { ArrowRight } from '@element-plus/icons-vue'
+
 defineProps({
   userName: { type: String, default: '侗乡医药用户' },
   isAdmin: { type: Boolean, default: false },
   studyStats: { type: Array, required: true },
+  commentCount: { type: Number, default: 0 },
+  recentBrowseHistory: { type: Array, default: () => [] },
+  recentComments: { type: Array, default: () => [] },
   actions: { type: Array, required: true }
 })
 
-defineEmits(['tab-change'])
+defineEmits(['tab-change', 'switch-tab'])
+
+function truncateText(text, maxLen) {
+  if (!text) return ''
+  return text.length > maxLen ? text.slice(0, maxLen) + '...' : text
+}
+
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return ''
+  const now = Date.now()
+  const date = new Date(dateStr).getTime()
+  const diff = now - date
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}小时前`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}天前`
+  return new Date(dateStr).toLocaleDateString('zh-CN')
+}
 </script>
 
 <style scoped>
@@ -86,6 +142,62 @@ defineEmits(['tab-change'])
   gap: var(--space-md);
   margin-top: var(--space-xl);
 }
+.recent-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+}
+.recent-card {
+  background: var(--text-inverse);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  border: 1px solid var(--border-light, #eee);
+  cursor: pointer;
+  transition: box-shadow var(--transition-fast);
+}
+.recent-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+.recent-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+.recent-card-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--dong-indigo);
+}
+.recent-card-arrow {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.recent-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) 0;
+  font-size: var(--font-size-xs);
+  border-bottom: 1px solid var(--border-light, #f5f5f5);
+}
+.recent-item:last-child {
+  border-bottom: none;
+}
+.recent-item-title {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  margin-right: var(--space-sm);
+}
+.recent-item-time {
+  color: var(--text-muted);
+  font-size: 11px;
+  flex-shrink: 0;
+}
 .action-card {
   cursor: pointer;
   text-align: center;
@@ -105,6 +217,7 @@ defineEmits(['tab-change'])
   .stats-row { flex-wrap: wrap; gap: var(--space-sm); }
   .stat-block { flex: 1 1 30%; min-width: 0; }
   .stat-num { font-size: var(--font-size-lg); }
+  .recent-cards { grid-template-columns: 1fr; gap: var(--space-sm); margin-top: var(--space-md); }
   .quick-actions { grid-template-columns: 1fr; gap: var(--space-sm); margin-top: var(--space-md); }
   .action-card { padding: var(--space-md); }
 }

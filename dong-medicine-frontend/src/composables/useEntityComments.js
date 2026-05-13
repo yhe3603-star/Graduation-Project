@@ -75,12 +75,30 @@ export function useEntityComments(targetType, targetId) {
     }
   }
 
+  const handleLike = async (comment) => {
+    try {
+      if (comment.isLiked) {
+        await request.delete(`/comments/${comment.id}/like`)
+        comment.isLiked = false
+        comment.likes = Math.max((comment.likes || 1) - 1, 0)
+      } else {
+        await request.post(`/comments/${comment.id}/like`)
+        comment.isLiked = true
+        comment.likes = (comment.likes || 0) + 1
+      }
+    } catch (err) {
+      const msg = err?.msg || err?.response?.data?.msg
+      if (msg) ElMessage.error(msg)
+    }
+  }
+
   return {
     comments,
     commentLoading,
     hasMore,
     loadComments,
     loadMore,
-    handleCommentPost
+    handleCommentPost,
+    handleLike
   }
 }

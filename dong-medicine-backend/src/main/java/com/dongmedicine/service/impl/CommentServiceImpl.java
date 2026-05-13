@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.dto.CommentDTO;
 import com.dongmedicine.entity.Comment;
+import com.dongmedicine.entity.CommentLike;
 import com.dongmedicine.entity.User;
+import com.dongmedicine.mapper.CommentLikeMapper;
 import com.dongmedicine.mapper.CommentMapper;
 import com.dongmedicine.mapper.UserMapper;
 import com.dongmedicine.service.CommentService;
@@ -17,7 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
 
     private final UserMapper userMapper;
+    private final CommentLikeMapper commentLikeMapper;
     private final SensitiveWordFilter sensitiveWordFilter;
 
     @Override
@@ -77,14 +80,21 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public Page<CommentDTO> listApprovedPaged(String targetType, Integer targetId, Integer page, Integer size) {
+        return listApprovedPaged(targetType, targetId, page, size, null);
+    }
+
+    @Override
+    public Page<CommentDTO> listApprovedPaged(String targetType, Integer targetId, Integer page, Integer size, Integer currentUserId) {
         Page<Comment> entityPage = page(PageUtils.getPage(page, size),
                 new LambdaQueryWrapper<Comment>()
                         .eq(Comment::getTargetType, targetType)
                         .eq(Comment::getTargetId, targetId)
                         .eq(Comment::getStatus, "approved")
                         .orderByDesc(Comment::getCreatedAt));
+        Set<Integer> likedIds = getLikedCommentIds(currentUserId, entityPage.getRecords());
         Page<CommentDTO> dtoPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-        dtoPage.setRecords(entityPage.getRecords().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        dtoPage.setRecords(entityPage.getRecords().stream()
+                .map(c -> convertToDTO(c, likedIds)).collect(Collectors.toList()));
         return dtoPage;
     }
 
@@ -165,7 +175,60 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return dtoPage;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void likeComment(Integer userId, Integer commentId) {
+        Comment comment = getById(commentId);
+        if (comment == null) {
+            throw BusinessException.notFound("评论不存在");
+        }
+        long count = commentLikeMapper.selectCount(
+                new LambdaQueryWrapper<CommentLike>()
+                        .eq(CommentLike::getUserId, userId)
+                        .eq(CommentLike::getCommentId, commentId));
+        if (count > 0) {
+            throw BusinessException.conflict("已经点赞过了");
+        }
+        CommentLike like = new CommentLike();
+        like.setUserId(userId);
+        like.setCommentId(commentId);
+        commentLikeMapper.insert(like);
+        lambdaUpdate().eq(Comment::getId, commentId)
+                .setSql("likes = likes + 1, hot = hot + 1")
+                .update(new Comment());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void unlikeComment(Integer userId, Integer commentId) {
+        int deleted = commentLikeMapper.delete(
+                new LambdaQueryWrapper<CommentLike>()
+                        .eq(CommentLike::getUserId, userId)
+                        .eq(CommentLike::getCommentId, commentId));
+        if (deleted > 0) {
+            lambdaUpdate().eq(Comment::getId, commentId)
+                    .setSql("likes = GREATEST(likes - 1, 0), hot = GREATEST(hot - 1, 0)")
+                    .update(new Comment());
+        }
+    }
+
+    private Set<Integer> getLikedCommentIds(Integer userId, List<Comment> comments) {
+        if (userId == null || comments.isEmpty()) {
+            return Collections.emptySet();
+        }
+        List<Integer> commentIds = comments.stream().map(Comment::getId).collect(Collectors.toList());
+        List<CommentLike> likes = commentLikeMapper.selectList(
+                new LambdaQueryWrapper<CommentLike>()
+                        .eq(CommentLike::getUserId, userId)
+                        .in(CommentLike::getCommentId, commentIds));
+        return likes.stream().map(CommentLike::getCommentId).collect(Collectors.toSet());
+    }
+
     private CommentDTO convertToDTO(Comment comment) {
+        return convertToDTO(comment, Collections.emptySet());
+    }
+
+    private CommentDTO convertToDTO(Comment comment, Set<Integer> likedCommentIds) {
         CommentDTO dto = new CommentDTO();
         dto.setId(comment.getId());
         dto.setUserId(comment.getUserId());
@@ -179,6 +242,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         dto.setLikes(comment.getLikes());
         dto.setReplyCount(comment.getReplyCount());
         dto.setHot(comment.getHot());
+        dto.setIsLiked(likedCommentIds.contains(comment.getId()));
         dto.setStatus(comment.getStatus());
         dto.setCreateTime(comment.getCreatedAt());
         dto.setUpdateTime(comment.getUpdatedAt());

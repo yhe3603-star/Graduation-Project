@@ -91,6 +91,7 @@
               :has-more="hasMore"
               @post="handleCommentPost"
               @reply="handleCommentPost"
+              @like="handleLike"
               @load-more="loadMore"
             />
           </el-tab-pane>
@@ -132,7 +133,7 @@ const {
   selectDifficulty: setGameDifficulty, startGame: startPlantGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore, gameCount,
 } = usePlantGame(request, isLoggedIn);
 
-const { comments, commentLoading, hasMore, loadComments, loadMore, handleCommentPost } = useComments(request, isLoggedIn);
+const { comments, commentLoading, hasMore, loadComments, loadMore, handleCommentPost, handleLike } = useComments(request, isLoggedIn);
 
 const handleQuizSubmit = async () => {
   await submitQuiz();

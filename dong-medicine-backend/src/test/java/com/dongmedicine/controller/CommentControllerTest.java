@@ -71,13 +71,13 @@ class CommentControllerTest {
     @Test
     @DisplayName("列表查询 - 成功")
     void testList_Success() {
-        when(service.listApprovedPaged(eq("plant"), eq(10), eq(1), eq(20))).thenReturn(testPage);
+        when(service.listApprovedPaged(eq("plant"), eq(10), eq(1), eq(20), eq(null))).thenReturn(testPage);
 
         R<Map<String, Object>> result = commentController.list("plant", 10, 1, 20);
 
         assertEquals(200, result.getCode());
         assertNotNull(result.getData());
-        verify(service).listApprovedPaged("plant", 10, 1, 20);
+        verify(service).listApprovedPaged("plant", 10, 1, 20, null);
     }
 
     @Test
@@ -85,12 +85,12 @@ class CommentControllerTest {
     void testList_CustomPagination() {
         Page<CommentDTO> customPage = new Page<>(2, 5, 10);
         customPage.setRecords(Arrays.asList(testCommentDTO));
-        when(service.listApprovedPaged(eq("knowledge"), eq(5), eq(2), eq(5))).thenReturn(customPage);
+        when(service.listApprovedPaged(eq("knowledge"), eq(5), eq(2), eq(5), eq(null))).thenReturn(customPage);
 
         R<Map<String, Object>> result = commentController.list("knowledge", 5, 2, 5);
 
         assertEquals(200, result.getCode());
-        verify(service).listApprovedPaged("knowledge", 5, 2, 5);
+        verify(service).listApprovedPaged("knowledge", 5, 2, 5, null);
     }
 
     // ==================== 全部评论列表 tests ====================

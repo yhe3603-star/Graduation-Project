@@ -17,6 +17,8 @@ public class CommentDTO {
     private Integer likes;
     private Integer replyCount;
     private Integer hot;
+    private Boolean isLiked;
+    private String targetName;
     private String status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

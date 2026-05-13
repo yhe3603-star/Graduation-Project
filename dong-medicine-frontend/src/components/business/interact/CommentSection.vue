@@ -83,6 +83,15 @@
               回复
             </el-button>
             <el-button
+              size="small"
+              :type="comment.isLiked ? 'warning' : 'default'"
+              class="like-btn"
+              @click="$emit('like', comment)"
+            >
+              <el-icon><StarFilled v-if="comment.isLiked" /><Star v-else /></el-icon>
+              {{ comment.likes || '' }}
+            </el-button>
+            <el-button
               v-if="comment.replyCount > 0"
               size="small"
               type="primary"
@@ -136,6 +145,15 @@
                   >
                     <el-icon><ChatDotRound /></el-icon>
                     回复
+                  </el-button>
+                  <el-button
+                    size="small"
+                    :type="reply.isLiked ? 'warning' : 'default'"
+                    class="like-btn"
+                    @click="$emit('like', reply)"
+                  >
+                    <el-icon><StarFilled v-if="reply.isLiked" /><Star v-else /></el-icon>
+                    {{ reply.likes || '' }}
                   </el-button>
                 </div>
               </div>
@@ -201,7 +219,7 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
 import { ElMessage } from "element-plus";
-import { ChatDotRound, ArrowDown, ArrowUp } from "@element-plus/icons-vue";
+import { ChatDotRound, ArrowDown, ArrowUp, Star, StarFilled } from "@element-plus/icons-vue";
 
 const props = defineProps({
   comments: { type: Array, default: () => [] },
@@ -212,7 +230,7 @@ const props = defineProps({
   hasMore: { type: Boolean, default: true }
 });
 
-const emit = defineEmits(["post", "reply", "load-more"]);
+const emit = defineEmits(["post", "reply", "load-more", "like"]);
 
 const content = ref("");
 const posting = ref(false);
@@ -372,6 +390,7 @@ const postComment = async () => {
 /* 评论操作 */
 .comment-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .reply-btn { padding: 4px 12px; }
+.like-btn { padding: 4px 10px; }
 .toggle-replies-btn { padding: 4px 12px; font-size: 13px; }
 
 /* 回复列表 */

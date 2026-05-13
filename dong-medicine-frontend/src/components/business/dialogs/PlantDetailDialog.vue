@@ -130,6 +130,7 @@
         :has-more="plantHasMore"
         @post="handlePlantCommentPost"
         @reply="handlePlantCommentPost"
+        @like="handlePlantLike"
         @load-more="loadPlantMore"
       />
     </div>
@@ -184,7 +185,7 @@ const userStore = useUserStore();
 
 const {
   comments: plantComments, commentLoading: plantCommentLoading, hasMore: plantHasMore,
-  loadComments: loadPlantComments, loadMore: loadPlantMore, handleCommentPost: handlePlantCommentPost
+  loadComments: loadPlantComments, loadMore: loadPlantMore, handleCommentPost: handlePlantCommentPost, handleLike: handlePlantLike
 } = useEntityComments('plant', () => props.plant?.id);
 
 const activeTab = ref('image');
