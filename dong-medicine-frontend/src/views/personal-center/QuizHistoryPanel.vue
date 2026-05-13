@@ -73,7 +73,7 @@ function getScoreClass(score) {
 </script>
 
 <style scoped>
-.filter-bar { display: flex; justify-content: flex-end; margin-bottom: var(--space-lg); }
+.filter-bar { display: flex; justify-content: flex-start; margin-bottom: var(--space-lg); }
 .record-list { display: flex; flex-direction: column; gap: var(--space-md); }
 .record-item { display: flex; align-items: center; gap: var(--space-xl); padding: var(--space-md); background: var(--bg-rice); border-radius: var(--radius-md); }
 .record-score { width: 60px; height: 60px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-weight: var(--font-weight-bold); color: #ffffff; font-size: 18px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
