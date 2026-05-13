@@ -126,13 +126,11 @@
         :is-logged-in="userStore.isLoggedIn"
         :user-name="userStore.userName"
         :loading="plantCommentLoading"
-        :total="commentTotal"
-        :page="commentPage"
-        :size="commentSize"
+        :loading-more="plantCommentLoading"
+        :has-more="plantHasMore"
         @post="handlePlantCommentPost"
         @reply="handlePlantCommentPost"
-        @page-change="handleCommentPageChange"
-        @size-change="handleCommentSizeChange"
+        @load-more="loadPlantMore"
       />
     </div>
 
@@ -185,10 +183,8 @@ const emit = defineEmits(['update:visible', 'toggle-favorite']);
 const userStore = useUserStore();
 
 const {
-  comments: plantComments, commentLoading: plantCommentLoading,
-  totalItems: commentTotal, currentPage: commentPage, pageSize: commentSize,
-  loadComments: loadPlantComments, handleCommentPost: handlePlantCommentPost,
-  handlePageChange: handleCommentPageChange, handleSizeChange: handleCommentSizeChange
+  comments: plantComments, commentLoading: plantCommentLoading, hasMore: plantHasMore,
+  loadComments: loadPlantComments, loadMore: loadPlantMore, handleCommentPost: handlePlantCommentPost
 } = useEntityComments('plant', () => props.plant?.id);
 
 const activeTab = ref('image');

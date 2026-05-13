@@ -48,11 +48,13 @@
     </div>
 
     <div
+      ref="commentListRef"
       v-loading="loading"
       class="comment-list"
+      @scroll="onScroll"
     >
       <div
-        v-for="comment in paginatedMainComments"
+        v-for="comment in sortedMainComments"
         :key="comment.id"
         class="comment-item main-comment"
       >
@@ -80,15 +82,28 @@
               <el-icon><ChatDotRound /></el-icon>
               回复
             </el-button>
+            <el-button
+              v-if="comment.replyCount > 0"
+              size="small"
+              type="primary"
+              class="toggle-replies-btn"
+              @click="toggleReplies(comment.id)"
+            >
+              {{ expandedComments.has(comment.id) ? '收起回复' : `查看 ${comment.replyCount} 条回复` }}
+              <el-icon>
+                <ArrowUp v-if="expandedComments.has(comment.id)" />
+                <ArrowDown v-else />
+              </el-icon>
+            </el-button>
           </div>
 
-          <!-- 回复列表 -->
+          <!-- 回复列表（展开时显示） -->
           <div
-            v-if="getReplies(comment.id).length > 0"
+            v-if="expandedComments.has(comment.id)"
             class="replies-list"
           >
             <div
-              v-for="reply in getReplies(comment.id)"
+              v-for="reply in getAllReplies(comment.id)"
               :key="reply.id"
               class="comment-item reply-item"
             >
@@ -104,8 +119,11 @@
                   <span class="comment-time">{{ formatTime(reply.createTime) }}</span>
                 </div>
                 <p class="comment-content">
-                  <span class="reply-to">
-                    回复 <b>@{{ reply.replyToUsername || comment.username }}</b>：
+                  <span
+                    v-if="reply.replyToUsername"
+                    class="reply-to"
+                  >
+                    回复 <b>@{{ reply.replyToUsername }}</b>：
                   </span>
                   {{ reply.content }}
                 </p>
@@ -114,7 +132,7 @@
                     type="primary"
                     size="small"
                     class="reply-btn"
-                    @click="openReplyDialog(reply, comment)"
+                    @click="openReplyDialog(reply)"
                   >
                     <el-icon><ChatDotRound /></el-icon>
                     回复
@@ -129,16 +147,14 @@
         v-if="!comments.length && !loading"
         description="暂无评论，快来发表第一条吧！"
       />
+      <div
+        v-if="comments.length > 0"
+        class="load-more-tip"
+      >
+        <span v-if="loadingMore">加载中...</span>
+        <span v-else-if="!hasMore">— 没有更多评论了 —</span>
+      </div>
     </div>
-
-    <Pagination
-      v-if="props.total > 0"
-      :page="currentPage"
-      :size="pageSize"
-      :total="props.total"
-      @update:page="handlePageChange"
-      @update:size="handleSizeChange"
-    />
 
     <!-- 回复弹窗 -->
     <el-dialog
@@ -183,37 +199,38 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { ElMessage } from "element-plus";
-import { ChatDotRound } from "@element-plus/icons-vue";
-import Pagination from "@/components/business/display/Pagination.vue";
+import { ChatDotRound, ArrowDown, ArrowUp } from "@element-plus/icons-vue";
 
 const props = defineProps({
   comments: { type: Array, default: () => [] },
   isLoggedIn: Boolean,
   userName: String,
   loading: Boolean,
-  total: { type: Number, default: 0 },
-  page: { type: Number, default: 1 },
-  size: { type: Number, default: 6 }
+  loadingMore: Boolean,
+  hasMore: { type: Boolean, default: true }
 });
 
-const emit = defineEmits(["post", "reply", "page-change", "size-change"]);
+const emit = defineEmits(["post", "reply", "load-more"]);
 
 const content = ref("");
 const posting = ref(false);
-const currentPage = ref(1);
-const pageSize = ref(6);
 const sortBy = ref("latest");
+const expandedComments = ref(new Set());
+const commentListRef = ref(null);
+
+const onScroll = (e) => {
+  const { scrollTop, scrollHeight, clientHeight } = e.target;
+  if (scrollHeight - scrollTop - clientHeight < 100) {
+    emit("load-more");
+  }
+};
 
 const replyDialogVisible = ref(false);
 const replyTarget = ref(null);
-const replyParentComment = ref(null);
 const replyContent = ref("");
 const replying = ref(false);
-
-watch(() => props.page, (val) => { currentPage.value = val; }, { immediate: true });
-watch(() => props.size, (val) => { pageSize.value = val; }, { immediate: true });
 
 const mainComments = computed(() => {
   return props.comments.filter(comment => !comment.replyToId);
@@ -228,15 +245,30 @@ const sortedMainComments = computed(() => {
   }
 });
 
-const paginatedMainComments = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return sortedMainComments.value.slice(start, start + pageSize.value);
-});
+// 递归收集某评论下的所有后代回复，平铺到一个列表
+const getAllReplies = (commentId) => {
+  const result = [];
+  const collect = (parentId) => {
+    const directReplies = props.comments
+      .filter(r => r.replyToId === parentId)
+      .sort((a, b) => new Date(a.createTime) - new Date(b.createTime));
+    for (const reply of directReplies) {
+      result.push(reply);
+      collect(reply.id);
+    }
+  };
+  collect(commentId);
+  return result;
+};
 
-const getReplies = (commentId) => {
-  return props.comments
-    .filter(reply => reply.replyToId === commentId)
-    .sort((a, b) => new Date(a.createTime) - new Date(b.createTime));
+const toggleReplies = (commentId) => {
+  const s = new Set(expandedComments.value);
+  if (s.has(commentId)) {
+    s.delete(commentId);
+  } else {
+    s.add(commentId);
+  }
+  expandedComments.value = s;
 };
 
 const formatTime = (time) => {
@@ -249,13 +281,12 @@ const formatTime = (time) => {
   return date.toLocaleDateString("zh-CN");
 };
 
-const openReplyDialog = (comment, parentComment) => {
+const openReplyDialog = (comment) => {
   if (!props.isLoggedIn) {
     ElMessage.warning("请先登录后再回复");
     return;
   }
   replyTarget.value = comment;
-  replyParentComment.value = parentComment || comment;
   replyContent.value = "";
   replyDialogVisible.value = true;
 };
@@ -296,14 +327,6 @@ const postComment = async () => {
     posting.value = false;
   });
 };
-
-const handlePageChange = (page) => {
-  emit("page-change", page);
-};
-
-const handleSizeChange = (size) => {
-  emit("size-change", size);
-};
 </script>
 
 <style scoped>
@@ -320,7 +343,10 @@ const handleSizeChange = (size) => {
 .sort-label { font-size: 14px; color: #666; }
 
 /* 评论列表 */
-.comment-list { display: flex; flex-direction: column; gap: 20px; min-height: 200px; }
+.comment-list { display: flex; flex-direction: column; gap: 20px; min-height: 200px; max-height: 600px; overflow-y: auto; padding-right: 4px; }
+.comment-list::-webkit-scrollbar { width: 6px; }
+.comment-list::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
+.comment-list::-webkit-scrollbar-track { background: transparent; }
 
 /* 主评论 */
 .comment-item { display: flex; gap: 12px; padding: 16px; border-radius: 12px; transition: all 0.3s; }
@@ -336,20 +362,24 @@ const handleSizeChange = (size) => {
 .reply-avatar { background: linear-gradient(135deg, #667eea, #764ba2); }
 
 /* 评论内容 */
-.comment-body { flex: 1; }
+.comment-body { flex: 1; min-width: 0; }
 .comment-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .comment-name { font-size: 14px; font-weight: 600; color: #333; }
 .comment-time { font-size: 12px; color: #999; }
-.comment-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 12px 0; }
+.comment-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 12px 0; word-break: break-all; }
 .reply-to { color: var(--dong-blue); font-size: 13px; }
 .reply-to b { font-weight: 500; }
 
 /* 评论操作 */
-.comment-actions { display: flex; gap: 8px; }
+.comment-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .reply-btn { padding: 4px 12px; }
+.toggle-replies-btn { padding: 4px 12px; font-size: 13px; }
 
 /* 回复列表 */
 .replies-list { margin-top: 16px; }
+
+/* 加载更多提示 */
+.load-more-tip { text-align: center; padding: 12px 0; font-size: 13px; color: #999; }
 
 /* 回复弹窗 */
 .reply-dialog-body { display: flex; flex-direction: column; gap: 16px; }

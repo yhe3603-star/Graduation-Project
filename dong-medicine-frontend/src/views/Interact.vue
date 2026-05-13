@@ -82,18 +82,16 @@
             <template #label>
               <span class="tab-label"><el-icon><ChatDotRound /></el-icon>评论交流</span>
             </template>
-            <CommentSection 
+            <CommentSection
               :comments="comments"
               :is-logged-in="isLoggedIn"
               :user-name="userName"
               :loading="commentLoading"
-              :total="totalItems"
-              :page="currentPage"
-              :size="pageSize"
+              :loading-more="commentLoading"
+              :has-more="hasMore"
               @post="handleCommentPost"
               @reply="handleCommentPost"
-              @page-change="handlePageChange"
-              @size-change="handleSizeChange"
+              @load-more="loadMore"
             />
           </el-tab-pane>
         </el-tabs>
@@ -134,7 +132,7 @@ const {
   selectDifficulty: setGameDifficulty, startGame: startPlantGame, checkAnswer, resetGame, submitGameScore, favoriteCurrentPlant, loadGameRecords, loadPlants, totalGameScore, gameCount,
 } = usePlantGame(request, isLoggedIn);
 
-const { comments, commentLoading, loadComments, handleCommentPost, currentPage, pageSize, totalItems, handlePageChange, handleSizeChange } = useComments(request, isLoggedIn);
+const { comments, commentLoading, hasMore, loadComments, loadMore, handleCommentPost } = useComments(request, isLoggedIn);
 
 const handleQuizSubmit = async () => {
   await submitQuiz();

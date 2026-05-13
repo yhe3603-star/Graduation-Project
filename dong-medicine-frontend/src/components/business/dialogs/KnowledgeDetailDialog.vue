@@ -261,13 +261,11 @@
         :is-logged-in="userStore.isLoggedIn"
         :user-name="userStore.userName"
         :loading="knowledgeCommentLoading"
-        :total="commentTotal"
-        :page="commentPage"
-        :size="commentSize"
+        :loading-more="knowledgeCommentLoading"
+        :has-more="knowledgeHasMore"
         @post="handleKnowledgeCommentPost"
         @reply="handleKnowledgeCommentPost"
-        @page-change="handleCommentPageChange"
-        @size-change="handleCommentSizeChange"
+        @load-more="loadKnowledgeMore"
       />
     </div>
 
@@ -324,10 +322,8 @@ const router = useRouter();
 const userStore = useUserStore();
 
 const {
-  comments: knowledgeComments, commentLoading: knowledgeCommentLoading,
-  totalItems: commentTotal, currentPage: commentPage, pageSize: commentSize,
-  loadComments: loadKnowledgeComments, handleCommentPost: handleKnowledgeCommentPost,
-  handlePageChange: handleCommentPageChange, handleSizeChange: handleCommentSizeChange
+  comments: knowledgeComments, commentLoading: knowledgeCommentLoading, hasMore: knowledgeHasMore,
+  loadComments: loadKnowledgeComments, loadMore: loadKnowledgeMore, handleCommentPost: handleKnowledgeCommentPost
 } = useEntityComments('knowledge', () => props.knowledge?.id);
 
 const activeMediaTab = ref('video');

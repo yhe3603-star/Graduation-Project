@@ -139,13 +139,11 @@
         :is-logged-in="userStore.isLoggedIn"
         :user-name="userStore.userName"
         :loading="inheritorCommentLoading"
-        :total="commentTotal"
-        :page="commentPage"
-        :size="commentSize"
+        :loading-more="inheritorCommentLoading"
+        :has-more="inheritorHasMore"
         @post="handleInheritorCommentPost"
         @reply="handleInheritorCommentPost"
-        @page-change="handleCommentPageChange"
-        @size-change="handleCommentSizeChange"
+        @load-more="loadInheritorMore"
       />
     </div>
 
@@ -199,10 +197,8 @@ const emit = defineEmits(['update:visible', 'toggle-favorite']);
 const userStore = useUserStore();
 
 const {
-  comments: inheritorComments, commentLoading: inheritorCommentLoading,
-  totalItems: commentTotal, currentPage: commentPage, pageSize: commentSize,
-  loadComments: loadInheritorComments, handleCommentPost: handleInheritorCommentPost,
-  handlePageChange: handleCommentPageChange, handleSizeChange: handleCommentSizeChange
+  comments: inheritorComments, commentLoading: inheritorCommentLoading, hasMore: inheritorHasMore,
+  loadComments: loadInheritorComments, loadMore: loadInheritorMore, handleCommentPost: handleInheritorCommentPost
 } = useEntityComments('inheritor', () => props.inheritor?.id);
 
 const activeMediaTab = ref('video');

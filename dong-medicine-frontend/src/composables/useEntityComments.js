@@ -6,29 +6,43 @@ import { logFetchError } from '@/utils/logger'
 export function useEntityComments(targetType, targetId) {
   const comments = ref([])
   const commentLoading = ref(false)
+  const hasMore = ref(true)
   const currentPage = ref(1)
-  const pageSize = ref(6)
-  const totalItems = ref(0)
+  const pageSize = 20
 
-  const loadComments = async () => {
+  const loadComments = async (reset = true) => {
     const id = toValue(targetId)
     if (!id) return
+    if (reset) {
+      currentPage.value = 1
+      hasMore.value = true
+    }
     commentLoading.value = true
     try {
       const res = await request.get(`/comments/list/${toValue(targetType)}/${id}`, {
-        params: { page: currentPage.value, size: pageSize.value }
+        params: { page: currentPage.value, size: pageSize }
       })
       const data = res?.data || {}
       const raw = data.records || data || []
-      comments.value = Array.isArray(raw) ? raw : []
-      totalItems.value = data.total || comments.value.length
+      const list = Array.isArray(raw) ? raw : []
+      if (reset) {
+        comments.value = list
+      } else {
+        comments.value = [...comments.value, ...list]
+      }
+      hasMore.value = list.length >= pageSize
     } catch (err) {
       logFetchError('评论列表', err)
-      comments.value = []
-      totalItems.value = 0
+      if (reset) comments.value = []
     } finally {
       commentLoading.value = false
     }
+  }
+
+  const loadMore = async () => {
+    if (commentLoading.value || !hasMore.value) return
+    currentPage.value++
+    await loadComments(false)
   }
 
   const handleCommentPost = async (content, replyData, onSuccess, onError) => {
@@ -61,26 +75,12 @@ export function useEntityComments(targetType, targetId) {
     }
   }
 
-  const handlePageChange = (page) => {
-    currentPage.value = page
-    loadComments()
-  }
-
-  const handleSizeChange = (size) => {
-    pageSize.value = size
-    currentPage.value = 1
-    loadComments()
-  }
-
   return {
     comments,
     commentLoading,
-    totalItems,
-    currentPage,
-    pageSize,
+    hasMore,
     loadComments,
-    handleCommentPost,
-    handlePageChange,
-    handleSizeChange
+    loadMore,
+    handleCommentPost
   }
 }

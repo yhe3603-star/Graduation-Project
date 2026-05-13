@@ -55,6 +55,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setLikes(0);
         comment.setReplyCount(0);
         save(comment);
+
+        if (comment.getReplyToId() != null) {
+            lambdaUpdate()
+                    .eq(Comment::getId, comment.getReplyToId())
+                    .setSql("reply_count = reply_count + 1")
+                    .update(new Comment());
+        }
     }
 
     @Override
