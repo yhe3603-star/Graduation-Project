@@ -84,11 +84,14 @@
             </el-button>
             <el-button
               size="small"
-              :type="comment.isLiked ? 'warning' : 'default'"
+              :type="comment.isLiked ? 'primary' : 'default'"
               class="like-btn"
               @click="$emit('like', comment)"
             >
-              <el-icon><StarFilled v-if="comment.isLiked" /><Star v-else /></el-icon>
+              <svg class="thumbs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" :fill="comment.isLiked ? 'currentColor' : 'none'" />
+                <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+              </svg>
               {{ comment.likes || '' }}
             </el-button>
             <el-button
@@ -148,11 +151,14 @@
                   </el-button>
                   <el-button
                     size="small"
-                    :type="reply.isLiked ? 'warning' : 'default'"
+                    :type="reply.isLiked ? 'primary' : 'default'"
                     class="like-btn"
                     @click="$emit('like', reply)"
                   >
-                    <el-icon><StarFilled v-if="reply.isLiked" /><Star v-else /></el-icon>
+                    <svg class="thumbs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" :fill="reply.isLiked ? 'currentColor' : 'none'" />
+                      <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                    </svg>
                     {{ reply.likes || '' }}
                   </el-button>
                 </div>
@@ -219,7 +225,7 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
 import { ElMessage } from "element-plus";
-import { ChatDotRound, ArrowDown, ArrowUp, Star, StarFilled } from "@element-plus/icons-vue";
+import { ChatDotRound, ArrowDown, ArrowUp } from "@element-plus/icons-vue";
 
 const props = defineProps({
   comments: { type: Array, default: () => [] },
@@ -391,6 +397,7 @@ const postComment = async () => {
 .comment-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .reply-btn { padding: 4px 12px; }
 .like-btn { padding: 4px 10px; }
+.thumbs-icon { width: 14px; height: 14px; vertical-align: middle; margin-right: 2px; }
 .toggle-replies-btn { padding: 4px 12px; font-size: 13px; }
 
 /* 回复列表 */

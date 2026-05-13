@@ -57,11 +57,6 @@
             <QuizHistoryPanel :quiz-records="quizRecords" :game-records="gameRecords" />
           </el-tab-pane>
 
-          <!-- Browse History Tab -->
-          <el-tab-pane label="浏览历史" name="history">
-            <BrowseHistoryPanel />
-          </el-tab-pane>
-
           <!-- Comment History Tab -->
           <el-tab-pane label="评论历史" name="comments">
             <CommentHistoryPanel />
@@ -100,7 +95,6 @@ import ProfileSection from './personal-center/ProfileSection.vue'
 import StatsDashboard from './personal-center/StatsDashboard.vue'
 import FavoritesPanel from './personal-center/FavoritesPanel.vue'
 import QuizHistoryPanel from './personal-center/QuizHistoryPanel.vue'
-import BrowseHistoryPanel from './personal-center/BrowseHistoryPanel.vue'
 import CommentHistoryPanel from './personal-center/CommentHistoryPanel.vue'
 import SettingsPanel from './personal-center/SettingsPanel.vue'
 
