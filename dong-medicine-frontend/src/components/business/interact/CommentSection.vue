@@ -101,9 +101,9 @@
               class="toggle-replies-btn"
               @click="toggleReplies(comment.id)"
             >
-              {{ expandedComments[comment.id] ? '收起回复' : `查看 ${comment.replyCount} 条回复` }}
+              {{ expandedComments.has(comment.id) ? '收起回复' : `查看 ${comment.replyCount} 条回复` }}
               <el-icon>
-                <ArrowUp v-if="expandedComments[comment.id]" />
+                <ArrowUp v-if="expandedComments.has(comment.id)" />
                 <ArrowDown v-else />
               </el-icon>
             </el-button>
@@ -111,7 +111,7 @@
 
           <!-- 回复列表（展开时显示） -->
           <div
-            v-if="expandedComments[comment.id]"
+            v-if="expandedComments.has(comment.id)"
             class="replies-list"
           >
             <div
@@ -241,7 +241,7 @@ const emit = defineEmits(["post", "reply", "load-more", "like"]);
 const content = ref("");
 const posting = ref(false);
 const sortBy = ref("latest");
-const expandedComments = ref({});
+const expandedComments = ref(new Set());
 const commentListRef = ref(null);
 
 const onScroll = (e) => {
@@ -285,7 +285,13 @@ const getAllReplies = (commentId) => {
 };
 
 const toggleReplies = (commentId) => {
-  expandedComments.value = { ...expandedComments.value, [commentId]: !expandedComments.value[commentId] };
+  const s = new Set(expandedComments.value);
+  if (s.has(commentId)) {
+    s.delete(commentId);
+  } else {
+    s.add(commentId);
+  }
+  expandedComments.value = s;
 };
 
 const formatTime = (time) => {
