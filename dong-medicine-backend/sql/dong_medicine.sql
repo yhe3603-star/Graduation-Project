@@ -68,9 +68,9 @@ INSERT INTO `comments` VALUES (13, 1, 'admin', 'quiz', 1, '1', NULL, NULL, NULL,
 INSERT INTO `comments` VALUES (14, 1, 'admin', 'quiz', 1, '2', NULL, NULL, NULL, 0, 0, 0, 'approved', '2026-03-05 01:19:15', '2026-03-05 01:19:15');
 INSERT INTO `comments` VALUES (15, 1, 'admin', 'quiz', 1, '3', NULL, NULL, NULL, 0, 0, 0, 'rejected', '2026-03-05 02:07:25', '2026-03-05 02:07:25');
 INSERT INTO `comments` VALUES (16, 6, 'test001', 'quiz', 1, '1111', NULL, NULL, NULL, 0, 0, 0, 'pending', '2026-03-06 21:53:20', '2026-03-06 21:53:20');
-INSERT INTO `comments` VALUES (17, 3, 'herb_fan', 'plant', 1, '是的，钩藤的效果确实很好，我们家也经常用。', 1, 2, 'dongyi001', 0, 1, 1, 'approved', '2026-03-05 10:00:00', '2026-03-05 10:00:00');
-INSERT INTO `comments` VALUES (18, 4, 'culture_lover', 'plant', 1, '钩藤在我们侗寨也很常见，是一种很重要的药材。', 1, 2, 'dongyi001', 0, 0, 0, 'approved', '2026-03-05 11:00:00', '2026-03-12 20:05:58');
-INSERT INTO `comments` VALUES (19, 2, 'dongyi001', 'plant', 1, '谢谢大家的认可，希望更多人了解侗药的价值。', 17, 3, 'herb_fan', 0, 0, 0, 'approved', '2026-03-05 12:00:00', '2026-03-05 12:00:00');
+INSERT INTO `comments` VALUES (17, 3, 'herb_fan', 'plant', 1, '是的，钩藤的效果确实很好，我们家也经常用。', 1, 2, 'dongyi001', 0, 1, 1, 'approved', '2026-04-04 06:51:10', '2026-04-04 06:51:10');
+INSERT INTO `comments` VALUES (18, 4, 'culture_lover', 'plant', 1, '钩藤在我们侗寨也很常见，是一种很重要的药材。', 1, 2, 'dongyi001', 0, 0, 0, 'approved', '2026-04-04 06:58:10', '2026-04-04 06:58:10');
+INSERT INTO `comments` VALUES (19, 2, 'dongyi001', 'plant', 1, '谢谢大家的认可，希望更多人了解侗药的价值。', 17, 3, 'herb_fan', 0, 0, 0, 'approved', '2026-04-04 09:09:10', '2026-04-04 09:09:10');
 -- 植物评论 (plant: 40条，含回复)
 INSERT INTO `comments` VALUES (20, 3, 'dongyi001', 'plant', 2, '透骨草泡酒外敷，对跌打损伤效果特别好，我们侗寨家家户户都备着。', NULL, NULL, NULL, 3, 1, 1, 'approved', '2026-04-01 09:15:00', '2026-04-01 09:15:00');
 INSERT INTO `comments` VALUES (21, 4, 'herb_fan', 'plant', 2, '透骨草还能治风湿，我奶奶每年春天都用它泡脚。', NULL, NULL, NULL, 1, 0, 0, 'approved', '2026-04-01 10:30:00', '2026-04-01 10:30:00');
