@@ -56,7 +56,7 @@
               size="small"
               :type="comment.isLiked ? 'warning' : 'default'"
               class="like-btn"
-              @click="$emit('like', comment)"
+              @click="handleLikeClick(comment)"
             >
               <svg class="thumbs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" :fill="comment.isLiked ? 'currentColor' : 'none'" />
@@ -123,7 +123,7 @@
                     size="small"
                     :type="reply.isLiked ? 'warning' : 'default'"
                     class="like-btn"
-                    @click="$emit('like', reply)"
+                    @click="handleLikeClick(reply)"
                   >
                     <svg class="thumbs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" :fill="reply.isLiked ? 'currentColor' : 'none'" />
@@ -226,6 +226,7 @@
 import { ref, reactive, computed, nextTick } from "vue";
 import { ElMessage } from "element-plus";
 import { ChatDotRound, ArrowDown, ArrowUp } from "@element-plus/icons-vue";
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
 
 const props = defineProps({
   comments: { type: Array, default: () => [] },
@@ -237,6 +238,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["post", "reply", "load-more", "like"]);
+
+const { requireLogin } = useLoginPrompt()
 
 const content = ref("");
 const posting = ref(false);
@@ -318,8 +321,7 @@ const formatTime = (time) => {
 
 const openReplyDialog = (comment) => {
   if (!props.isLoggedIn) {
-    ElMessage.warning("请先登录后再回复");
-    return;
+    return requireLogin("请先登录后再回复");
   }
   replyTarget.value = comment;
   replyContent.value = "";
@@ -343,10 +345,16 @@ const submitReply = async () => {
   });
 };
 
+const handleLikeClick = (comment) => {
+  if (!props.isLoggedIn) {
+    return requireLogin("请先登录后再点赞");
+  }
+  emit("like", comment);
+};
+
 const postComment = async () => {
   if (!props.isLoggedIn) {
-    ElMessage.warning("请先登录后再发表评论");
-    return;
+    return requireLogin("请先登录后再发表评论");
   }
   if (!content.value.trim()) {
     ElMessage.warning("请输入评论内容");

@@ -1,6 +1,7 @@
 import { ref, computed, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { logFetchError } from '@/utils/logger'
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
 
 export function useCountdown(durationMinutes = 3) {
   const totalSeconds = ref(durationMinutes * 60)
@@ -58,6 +59,7 @@ export function useCountdown(durationMinutes = 3) {
 }
 
 export function useComments(request, isLoggedIn) {
+  const { requireLogin } = useLoginPrompt()
   const comments = ref([])
   const commentLoading = ref(false)
   const hasMore = ref(false)
@@ -83,7 +85,7 @@ export function useComments(request, isLoggedIn) {
 
   const handleCommentPost = async (content, replyData, onSuccess, onError) => {
     if (!isLoggedIn?.value) {
-      ElMessage.warning('请先登录后再发表评论')
+      requireLogin('请先登录后再发表评论')
       onError?.()
       return
     }
@@ -116,6 +118,9 @@ export function useComments(request, isLoggedIn) {
   }
 
   const handleLike = async (comment) => {
+    if (!isLoggedIn?.value) {
+      return requireLogin('请先登录后再点赞')
+    }
     try {
       if (comment.isLiked) {
         await request.delete(`/comments/${comment.id}/like`)

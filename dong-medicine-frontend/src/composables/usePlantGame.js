@@ -2,6 +2,7 @@ import { ref, computed, watch, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCountdown } from './useInteraction'
 import { logOperationWarn, extractData } from '@/utils'
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
 
 function fisherYatesShuffle(arr) {
   const a = [...arr]
@@ -13,6 +14,7 @@ function fisherYatesShuffle(arr) {
 }
 
 export const usePlantGame = (request, isLoggedIn) => {
+  const { requireLogin } = useLoginPrompt()
   const difficulty = ref('easy')
   const plantsForGame = ref([])
   const currentPlant = ref(null)
@@ -72,6 +74,9 @@ export const usePlantGame = (request, isLoggedIn) => {
   }
 
   const startGame = () => {
+    if (!isLoggedIn.value) {
+      return requireLogin('请先登录后再开始游戏')
+    }
     if (plantsForGame.value.length === 0) {
       ElMessage.warning('暂无植物数据，请稍后再试')
       return

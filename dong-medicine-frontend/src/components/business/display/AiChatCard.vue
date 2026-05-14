@@ -34,8 +34,13 @@
               <el-icon><ChatLineSquare /></el-icon>
               历史会话
             </el-button>
-            <el-tag :type="wsConnected ? 'success' : 'danger'" size="small">
-              {{ wsConnected ? 'AI在线' : 'AI离线' }}
+            <el-tag
+              :type="!isLoggedIn ? 'info' : (wsConnected ? 'success' : 'danger')"
+              size="small"
+              :class="{ 'clickable-tag': !isLoggedIn }"
+              @click="!isLoggedIn && requireLogin('请先登录后再使用AI助手')"
+            >
+              {{ !isLoggedIn ? '请先登录' : (wsConnected ? 'AI在线' : 'AI离线') }}
             </el-tag>
           </div>
         </div>
@@ -74,6 +79,7 @@ import { ChatDotRound, ChatLineSquare } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useChatWebSocket } from '@/composables/useChatWebSocket'
 import { useChatSessions } from '@/composables/useChatSessions'
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
 import SessionDrawer from './ai-chat/SessionDrawer.vue'
 import WelcomePanel from './ai-chat/WelcomePanel.vue'
 import ChatMessageList from './ai-chat/ChatMessageList.vue'
@@ -84,6 +90,7 @@ const userStore = useUserStore()
 const isLoggedIn = ref(false)
 const chatContainer = ref(null)
 const messageListRef = ref(null)
+const { requireLogin } = useLoginPrompt()
 
 const {
   messages, inputMessage, streaming, wsConnected, currentSessionId, forceWelcome,
@@ -110,14 +117,14 @@ const scrollToBottom = () => {
 
 function onSendMessage() {
   if (!isLoggedIn.value) {
-    ElMessage.warning('请先登录后再使用AI助手')
-    return
+    return requireLogin('请先登录后再使用AI助手')
   }
   sendMessage()
   scrollToBottom()
 }
 
 function onQuickQuestion(question) {
+  if (!isLoggedIn.value) return requireLogin('请先登录后再使用AI助手')
   sendQuickQuestion(question)
   scrollToBottom()
 }
@@ -224,6 +231,10 @@ onUnmounted(() => closeWebSocket())
 
 .history-toggle-btn {
   font-size: var(--font-size-xs);
+}
+
+.clickable-tag {
+  cursor: pointer;
 }
 
 .chat-container {

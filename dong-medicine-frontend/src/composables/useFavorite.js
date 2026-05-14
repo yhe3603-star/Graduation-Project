@@ -3,6 +3,7 @@ import request from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import { extractData, logFetchError, logOperationWarn } from '@/utils'
 import { useUserStore } from '@/stores/user'
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
 
 /**
  * @typedef {Object} UseFavoriteReturn
@@ -25,6 +26,7 @@ import { useUserStore } from '@/stores/user'
 export const useFavorite = (type) => {
   const userStore = useUserStore()
   const isLoggedIn = computed(() => userStore.isLoggedIn)
+  const { requireLogin } = useLoginPrompt()
   const favorites = ref([])
   const items = ref([])
 
@@ -43,8 +45,7 @@ export const useFavorite = (type) => {
 
   const toggleFavorite = async (id, isFav) => {
     if (!isLoggedIn.value) {
-      ElMessage.warning('请先登录')
-      return false
+      return requireLogin('请先登录')
     }
     try {
       if (isFav) {

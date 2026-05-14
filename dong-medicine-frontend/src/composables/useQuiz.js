@@ -2,8 +2,10 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useCountdown } from './useInteraction'
 import { logFetchError, extractData } from '@/utils'
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
 
 export const useQuiz = (request, isLoggedIn) => {
+  const { requireLogin } = useLoginPrompt()
   const isQuizStarted = ref(false)
   const selectedQuestions = ref([])
   const userAnswers = ref([])
@@ -40,6 +42,9 @@ export const useQuiz = (request, isLoggedIn) => {
   }
 
   const startNewQuiz = async () => {
+    if (!isLoggedIn.value) {
+      return requireLogin('请先登录后再开始答题')
+    }
     quizLoading.value = true
     try {
       const config = difficultyConfig[selectedDifficulty.value]

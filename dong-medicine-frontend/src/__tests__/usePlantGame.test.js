@@ -47,7 +47,7 @@ describe('usePlantGame', () => {
       get: vi.fn(),
       post: vi.fn()
     }
-    isLoggedIn = ref(false)
+    isLoggedIn = ref(true)
     mockCountdown.formattedTime.value = '03:00'
     mockCountdown.isRunning.value = false
     mockCountdown.isExpired.value = false
@@ -375,12 +375,15 @@ describe('usePlantGame', () => {
     })
 
     it('should not submit when not logged in', async () => {
-      isLoggedIn.value = false
       mockRequest.get.mockResolvedValue({ data: { data: SAMPLE_PLANTS } })
 
       const game = usePlantGame(mockRequest, isLoggedIn)
       await game.loadPlants()
       game.startGame()
+      game.checkAnswer(game.currentPlant.value.nameCn)
+
+      // Simulate logging out after game starts
+      isLoggedIn.value = false
 
       await game.submitGameScore()
 

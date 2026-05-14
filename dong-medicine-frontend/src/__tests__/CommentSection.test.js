@@ -147,7 +147,7 @@ describe('CommentSection组件', () => {
 
   it('点赞按钮点击应触发like事件', async () => {
     const comment = { id: 1, username: '用户A', content: '测试', createTime: makeTime(3600000), likes: 5 }
-    const wrapper = mountComponent({ comments: [comment] })
+    const wrapper = mountComponent({ comments: [comment], isLoggedIn: true })
     const likeBtn = wrapper.find('.like-btn')
     await likeBtn.trigger('click')
     expect(wrapper.emitted('like')).toBeTruthy()

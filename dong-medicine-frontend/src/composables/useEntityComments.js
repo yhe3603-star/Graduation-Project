@@ -2,8 +2,11 @@ import { ref, toValue } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
 import { logFetchError } from '@/utils/logger'
+import { useUserStore } from '@/stores/user'
+import { useLoginPrompt } from '@/composables/useLoginPrompt'
 
 export function useEntityComments(targetType, targetId) {
+  const { requireLogin } = useLoginPrompt()
   const comments = ref([])
   const commentLoading = ref(false)
   const hasMore = ref(false)
@@ -61,6 +64,10 @@ export function useEntityComments(targetType, targetId) {
   }
 
   const handleLike = async (comment) => {
+    const userStore = useUserStore()
+    if (!userStore.isLoggedIn) {
+      return requireLogin('请先登录后再点赞')
+    }
     try {
       if (comment.isLiked) {
         await request.delete(`/comments/${comment.id}/like`)
