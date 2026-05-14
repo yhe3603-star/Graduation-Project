@@ -62,6 +62,11 @@
             <CommentHistoryPanel />
           </el-tab-pane>
 
+          <!-- Browse History Tab -->
+          <el-tab-pane label="浏览历史" name="history">
+            <BrowseHistoryPanel />
+          </el-tab-pane>
+
           <!-- Password Change Tab -->
           <el-tab-pane label="修改密码" name="settings">
             <SettingsPanel
@@ -96,6 +101,7 @@ import StatsDashboard from './personal-center/StatsDashboard.vue'
 import FavoritesPanel from './personal-center/FavoritesPanel.vue'
 import QuizHistoryPanel from './personal-center/QuizHistoryPanel.vue'
 import CommentHistoryPanel from './personal-center/CommentHistoryPanel.vue'
+import BrowseHistoryPanel from './personal-center/BrowseHistoryPanel.vue'
 import SettingsPanel from './personal-center/SettingsPanel.vue'
 
 const updateUserState = inject('updateUserState')
