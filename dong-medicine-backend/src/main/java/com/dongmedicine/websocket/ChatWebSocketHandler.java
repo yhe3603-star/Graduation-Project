@@ -42,6 +42,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final AiChatService aiChatService;
     private final ChatHistoryService chatHistoryService;
     private final ObjectMapper objectMapper;
+    private final ChatController chatController;
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final Map<String, Disposable> activeSubscriptions = new ConcurrentHashMap<>();
@@ -59,10 +60,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             });
 
     public ChatWebSocketHandler(AiChatService aiChatService, ChatHistoryService chatHistoryService,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper, ChatController chatController) {
         this.aiChatService = aiChatService;
         this.chatHistoryService = chatHistoryService;
         this.objectMapper = objectMapper;
+        this.chatController = chatController;
     }
 
     @PreDestroy
@@ -172,7 +174,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     public void onComplete(String fullReply) {
                         activeSubscriptions.remove(wsSessionId);
                         sendJson(session, Map.of("type", "done", "content", fullReply, "sessionId", chatSessionId));
-                        ChatController.recordRequest(true);
+                        chatController.recordRequest(true);
 
                         // Save assistant response to Redis
                         if (userId != null) {
@@ -191,7 +193,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     public void onError(String error) {
                         activeSubscriptions.remove(wsSessionId);
                         sendError(session, error);
-                        ChatController.recordRequest(false);
+                        chatController.recordRequest(false);
                     }
                 });
                 activeSubscriptions.put(wsSessionId, subscription);

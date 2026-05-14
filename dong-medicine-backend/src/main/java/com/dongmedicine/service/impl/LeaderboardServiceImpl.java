@@ -158,7 +158,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
 
     private List<Map<String, Object>> buildRankList(Map<Integer, Integer> scores, Map<Integer, String> userNames, int limit) {
         List<Map.Entry<Integer, Integer>> sorted = new ArrayList<>(scores.entrySet());
-        sorted.sort((a, b) -> b.getValue() - a.getValue());
+        sorted.sort((a, b) -> Integer.compare(b.getValue(), a.getValue()));
 
         List<Map<String, Object>> result = new ArrayList<>();
         int rank = 1;

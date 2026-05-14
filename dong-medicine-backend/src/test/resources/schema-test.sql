@@ -117,6 +117,8 @@ CREATE TABLE IF NOT EXISTS comments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_target_status_created ON comments (target_type, target_id, status, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS favorites (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,

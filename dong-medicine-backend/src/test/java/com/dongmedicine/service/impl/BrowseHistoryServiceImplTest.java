@@ -154,7 +154,7 @@ class BrowseHistoryServiceImplTest {
     @Test
     @DisplayName("getMyHistory - should return proper fields")
     void getMyHistoryFields() {
-        BrowseHistory h = createHistory(1L, 1, "inheritor", 5);
+        BrowseHistory h = createHistory(1L, 1, "inheritor", 10);
         h.setCreatedAt(LocalDateTime.of(2025, 1, 15, 10, 30));
 
         when(browseHistoryMapper.selectList(any())).thenReturn(List.of(h));
@@ -166,7 +166,7 @@ class BrowseHistoryServiceImplTest {
         assertEquals(1L, entry.get("id"));
         assertEquals(1, entry.get("userId"));
         assertEquals("inheritor", entry.get("targetType"));
-        assertEquals(5, entry.get("targetId"));
+        assertEquals(10, entry.get("targetId"));
         assertEquals(h.getCreatedAt(), entry.get("browseTime"));
         assertNotNull(entry.get("title"));
         assertNotNull(entry.get("description"));
@@ -273,7 +273,7 @@ class BrowseHistoryServiceImplTest {
     void getMyHistoryNullEntity() {
         BrowseHistory h = createHistory(1L, 1, "plant", 999);
         when(browseHistoryMapper.selectList(any())).thenReturn(List.of(h));
-        when(plantMapper.selectById(999)).thenReturn(null);
+        when(plantMapper.selectBatchIds(any())).thenReturn(Collections.emptyList());
 
         List<Map<String, Object>> result = browseHistoryService.getMyHistory(1, 10);
 
@@ -314,7 +314,10 @@ class BrowseHistoryServiceImplTest {
         h3.setCreatedAt(LocalDateTime.now().minusHours(3));
 
         when(browseHistoryMapper.selectList(any())).thenReturn(Arrays.asList(h1, h2, h3));
-        mockPlantForTitle();
+        Plant p1 = new Plant(); p1.setId(1); p1.setNameCn("药材1"); p1.setEfficacy("功效1");
+        Plant p2 = new Plant(); p2.setId(2); p2.setNameCn("药材2"); p2.setEfficacy("功效2");
+        Plant p3 = new Plant(); p3.setId(3); p3.setNameCn("药材3"); p3.setEfficacy("功效3");
+        when(plantMapper.selectBatchIds(any())).thenReturn(Arrays.asList(p1, p2, p3));
 
         List<Map<String, Object>> result = browseHistoryService.getMyHistory(1, 10);
 
@@ -336,36 +339,41 @@ class BrowseHistoryServiceImplTest {
 
     private void mockPlantForTitle() {
         Plant plant = new Plant();
+        plant.setId(10);
         plant.setNameCn("测试药材");
         plant.setEfficacy("测试功效");
-        when(plantMapper.selectById(anyInt())).thenReturn(plant);
+        when(plantMapper.selectBatchIds(any())).thenReturn(List.of(plant));
     }
 
     private void mockKnowledgeForTitle() {
         Knowledge knowledge = new Knowledge();
+        knowledge.setId(10);
         knowledge.setTitle("测试知识标题");
         knowledge.setContent("测试知识内容");
-        when(knowledgeMapper.selectById(anyInt())).thenReturn(knowledge);
+        when(knowledgeMapper.selectBatchIds(any())).thenReturn(List.of(knowledge));
     }
 
     private void mockInheritorForTitle() {
         Inheritor inheritor = new Inheritor();
+        inheritor.setId(10);
         inheritor.setName("测试传承人");
         inheritor.setBio("测试简介");
-        when(inheritorMapper.selectById(anyInt())).thenReturn(inheritor);
+        when(inheritorMapper.selectBatchIds(any())).thenReturn(List.of(inheritor));
     }
 
     private void mockResourceForTitle() {
         Resource resource = new Resource();
+        resource.setId(10);
         resource.setTitle("测试资源标题");
         resource.setDescription("测试资源描述");
-        when(resourceMapper.selectById(anyInt())).thenReturn(resource);
+        when(resourceMapper.selectBatchIds(any())).thenReturn(List.of(resource));
     }
 
     private void mockQaForTitle() {
         Qa qa = new Qa();
+        qa.setId(10);
         qa.setQuestion("测试问题?");
         qa.setAnswer("测试答案");
-        when(qaMapper.selectById(anyInt())).thenReturn(qa);
+        when(qaMapper.selectBatchIds(any())).thenReturn(List.of(qa));
     }
 }

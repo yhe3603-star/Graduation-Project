@@ -6,22 +6,19 @@ import com.dongmedicine.common.constant.TargetType;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.entity.Knowledge;
 import com.dongmedicine.entity.Plant;
-import com.dongmedicine.entity.SearchHistory;
-import com.dongmedicine.mapper.SearchHistoryMapper;
 import com.dongmedicine.service.InheritorService;
 import com.dongmedicine.service.KnowledgeService;
 import com.dongmedicine.service.PlantService;
+import com.dongmedicine.service.SearchHistoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "搜索建议", description = "搜索自动补全与建议")
-@Slf4j
 @RestController
 @RequestMapping("/api/search")
 @RequiredArgsConstructor
@@ -30,7 +27,7 @@ public class SearchController {
     private final PlantService plantService;
     private final KnowledgeService knowledgeService;
     private final InheritorService inheritorService;
-    private final SearchHistoryMapper searchHistoryMapper;
+    private final SearchHistoryService searchHistoryService;
 
     @Operation(summary = "获取搜索建议")
     @GetMapping("/suggest")
@@ -39,18 +36,10 @@ public class SearchController {
             return R.ok(List.of());
         }
 
-        try {
-            SearchHistory sh = new SearchHistory();
-            sh.setUserId(SecurityUtils.getCurrentUserIdOrNull());
-            sh.setKeyword(keyword.trim());
-            searchHistoryMapper.insert(sh);
-        } catch (Exception e) {
-            log.debug("记录搜索历史失败: {}", e.getMessage());
-        }
+        searchHistoryService.recordSearch(SecurityUtils.getCurrentUserIdOrNull(), keyword.trim());
 
         List<Map<String, Object>> results = new ArrayList<>();
 
-        // Plant name suggestions (top 5)
         List<Plant> plants = plantService.searchPaged(keyword, 1, 5).getRecords();
         for (Plant p : plants) {
             Map<String, Object> item = new LinkedHashMap<>();
@@ -61,7 +50,6 @@ public class SearchController {
             results.add(item);
         }
 
-        // Knowledge title suggestions (top 5)
         List<Knowledge> knowledgeList = knowledgeService.advancedSearchPaged(keyword, null, null, null, "popularity", 1, 5).getRecords();
         for (Knowledge k : knowledgeList) {
             Map<String, Object> item = new LinkedHashMap<>();
@@ -72,7 +60,6 @@ public class SearchController {
             results.add(item);
         }
 
-        // Inheritor name suggestions (top 5)
         List<Inheritor> inheritors = inheritorService.searchPaged(keyword, 1, 5).getRecords();
         for (Inheritor i : inheritors) {
             Map<String, Object> item = new LinkedHashMap<>();
@@ -83,7 +70,6 @@ public class SearchController {
             results.add(item);
         }
 
-        // Sort by relevance (simple: exact match > starts with > contains)
         String kw = keyword.toLowerCase();
         results.sort((a, b) -> {
             String nameA = ((String) a.get("name")).toLowerCase();
@@ -93,13 +79,12 @@ public class SearchController {
             return Integer.compare(scoreB, scoreA);
         });
 
-        // Limit to 15 total
         return R.ok(results.size() > 15 ? results.subList(0, 15) : results);
     }
 
     @Operation(summary = "获取热门搜索词")
     @GetMapping("/hot")
     public R<List<Map<String, Object>>> hotKeywords(@Parameter(name = "limit", description = "返回数量", example = "20") @RequestParam(defaultValue = "20") Integer limit) {
-        return R.ok(searchHistoryMapper.topKeywords(Math.min(limit, 50)));
+        return R.ok(searchHistoryService.topKeywords(Math.min(limit, 50)));
     }
 }

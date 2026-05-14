@@ -40,23 +40,20 @@ public class PlantGameServiceImpl extends ServiceImpl<PlantGameRecordMapper, Pla
         int totalCount;
         int correctCount;
 
-        // 优先使用 answers 列表进行服务端验证
-        if (dto.getAnswers() != null && !dto.getAnswers().isEmpty()) {
-            totalCount = dto.getAnswers().size();
-            correctCount = 0;
-            for (PlantGameAnswerDTO answer : dto.getAnswers()) {
-                if (answer.getPlantId() != null && StringUtils.hasText(answer.getUserAnswer())) {
-                    Plant plant = plantMapper.selectById(answer.getPlantId());
-                    if (plant != null && plant.getNameCn() != null
-                            && plant.getNameCn().trim().equalsIgnoreCase(answer.getUserAnswer().trim())) {
-                        correctCount++;
-                    }
+        if (dto.getAnswers() == null || dto.getAnswers().isEmpty()) {
+            throw new IllegalArgumentException("答案列表不能为空");
+        }
+
+        totalCount = dto.getAnswers().size();
+        correctCount = 0;
+        for (PlantGameAnswerDTO answer : dto.getAnswers()) {
+            if (answer.getPlantId() != null && StringUtils.hasText(answer.getUserAnswer())) {
+                Plant plant = plantMapper.selectById(answer.getPlantId());
+                if (plant != null && plant.getNameCn() != null
+                        && plant.getNameCn().trim().equalsIgnoreCase(answer.getUserAnswer().trim())) {
+                    correctCount++;
                 }
             }
-        } else {
-            // 兼容旧版前端：直接使用客户端提交的计数，做合理性校验
-            totalCount = Math.max(dto.getTotalCount() != null ? dto.getTotalCount() : 0, 1);
-            correctCount = dto.getCorrectCount() != null ? Math.min(dto.getCorrectCount(), totalCount) : 0;
         }
 
         int score = totalCount > 0 ? (int) Math.round((double) correctCount / totalCount * 100) : 0;
@@ -76,24 +73,20 @@ public class PlantGameServiceImpl extends ServiceImpl<PlantGameRecordMapper, Pla
 
     @Override
     public Integer calculateScore(PlantGameSubmitDTO dto) {
-        int totalCount;
-        int correctCount;
+        if (dto.getAnswers() == null || dto.getAnswers().isEmpty()) {
+            return 0;
+        }
 
-        if (dto.getAnswers() != null && !dto.getAnswers().isEmpty()) {
-            totalCount = dto.getAnswers().size();
-            correctCount = 0;
-            for (PlantGameAnswerDTO answer : dto.getAnswers()) {
-                if (answer.getPlantId() != null && StringUtils.hasText(answer.getUserAnswer())) {
-                    Plant plant = plantMapper.selectById(answer.getPlantId());
-                    if (plant != null && plant.getNameCn() != null
-                            && plant.getNameCn().trim().equalsIgnoreCase(answer.getUserAnswer().trim())) {
-                        correctCount++;
-                    }
+        int totalCount = dto.getAnswers().size();
+        int correctCount = 0;
+        for (PlantGameAnswerDTO answer : dto.getAnswers()) {
+            if (answer.getPlantId() != null && StringUtils.hasText(answer.getUserAnswer())) {
+                Plant plant = plantMapper.selectById(answer.getPlantId());
+                if (plant != null && plant.getNameCn() != null
+                        && plant.getNameCn().trim().equalsIgnoreCase(answer.getUserAnswer().trim())) {
+                    correctCount++;
                 }
             }
-        } else {
-            totalCount = Math.max(dto.getTotalCount() != null ? dto.getTotalCount() : 0, 1);
-            correctCount = dto.getCorrectCount() != null ? Math.min(dto.getCorrectCount(), totalCount) : 0;
         }
 
         return totalCount > 0 ? (int) Math.round((double) correctCount / totalCount * 100) : 0;

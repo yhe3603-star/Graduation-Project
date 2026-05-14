@@ -102,6 +102,9 @@ public class ExportController {
         Class<?> current = clazz;
         while (current != null && current != Object.class) {
             fields.addAll(Arrays.asList(current.getDeclaredFields()));
+            if (current.getSimpleName().equals("BaseEntity")) {
+                break;
+            }
             current = current.getSuperclass();
         }
         return fields;

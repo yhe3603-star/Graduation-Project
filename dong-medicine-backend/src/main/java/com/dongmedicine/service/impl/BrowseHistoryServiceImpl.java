@@ -78,7 +78,7 @@ public class BrowseHistoryServiceImpl extends ServiceImpl<BrowseHistoryMapper, B
     public List<Map<String, Object>> getMyHistory(Integer userId, int limit) {
         try {
             deleteExpiredHistory(userId);
-            
+
             List<BrowseHistory> all = list(new LambdaQueryWrapper<BrowseHistory>()
                     .eq(BrowseHistory::getUserId, userId)
                     .orderByDesc(BrowseHistory::getCreatedAt));
@@ -90,9 +90,11 @@ public class BrowseHistoryServiceImpl extends ServiceImpl<BrowseHistoryMapper, B
             }
 
             int effectiveLimit = Math.min(limit, MAX_HISTORY_COUNT);
-            
-            return deduped.values().stream()
-                    .limit(effectiveLimit)
+            List<BrowseHistory> limited = new ArrayList<>(deduped.values()).subList(0, Math.min(effectiveLimit, deduped.size()));
+
+            Map<String, Map<Integer, Map<String, String>>> dataCache = batchFetchTitleAndDescription(limited);
+
+            return limited.stream()
                     .map(h -> {
                         Map<String, Object> m = new LinkedHashMap<>();
                         m.put("id", h.getId());
@@ -100,11 +102,12 @@ public class BrowseHistoryServiceImpl extends ServiceImpl<BrowseHistoryMapper, B
                         m.put("targetType", h.getTargetType());
                         m.put("targetId", h.getTargetId());
                         m.put("browseTime", h.getCreatedAt());
-                        
-                        Map<String, String> titleDesc = getTitleAndDescription(h.getTargetType(), h.getTargetId());
-                        m.put("title", titleDesc.get("title"));
-                        m.put("description", titleDesc.get("description"));
-                        
+
+                        Map<Integer, Map<String, String>> idMap = dataCache.getOrDefault(h.getTargetType(), Collections.emptyMap());
+                        Map<String, String> titleDesc = idMap.get(h.getTargetId());
+                        m.put("title", titleDesc != null ? titleDesc.get("title") : null);
+                        m.put("description", titleDesc != null ? titleDesc.get("description") : null);
+
                         return m;
                     })
                     .collect(Collectors.toList());
@@ -114,57 +117,64 @@ public class BrowseHistoryServiceImpl extends ServiceImpl<BrowseHistoryMapper, B
         }
     }
 
-    private Map<String, String> getTitleAndDescription(String targetType, Integer targetId) {
-        Map<String, String> result = new HashMap<>();
-        result.put("title", null);
-        result.put("description", null);
-        
-        if (targetType == null || targetId == null) {
-            return result;
-        }
-        
-        try {
-            switch (targetType) {
-                case TargetType.Constants.PLANT:
-                    Plant plant = plantMapper.selectById(targetId);
-                    if (plant != null) {
-                        result.put("title", plant.getNameCn());
-                        result.put("description", plant.getEfficacy());
+    private Map<String, Map<Integer, Map<String, String>>> batchFetchTitleAndDescription(List<BrowseHistory> items) {
+        Map<String, List<Integer>> groupedIds = items.stream()
+                .filter(h -> h.getTargetType() != null && h.getTargetId() != null)
+                .collect(Collectors.groupingBy(
+                        BrowseHistory::getTargetType,
+                        Collectors.mapping(BrowseHistory::getTargetId, Collectors.toList())
+                ));
+
+        Map<String, Map<Integer, Map<String, String>>> result = new HashMap<>();
+
+        groupedIds.forEach((type, ids) -> {
+            Map<Integer, Map<String, String>> typeMap = new HashMap<>();
+            try {
+                switch (type) {
+                    case TargetType.Constants.PLANT -> {
+                        List<Plant> plants = plantMapper.selectBatchIds(ids);
+                        for (Plant p : plants) {
+                            typeMap.put(p.getId(), createTitleDesc(p.getNameCn(), p.getEfficacy()));
+                        }
                     }
-                    break;
-                case TargetType.Constants.KNOWLEDGE:
-                    Knowledge knowledge = knowledgeMapper.selectById(targetId);
-                    if (knowledge != null) {
-                        result.put("title", knowledge.getTitle());
-                        result.put("description", knowledge.getContent());
+                    case TargetType.Constants.KNOWLEDGE -> {
+                        List<Knowledge> list = knowledgeMapper.selectBatchIds(ids);
+                        for (Knowledge k : list) {
+                            typeMap.put(k.getId(), createTitleDesc(k.getTitle(), k.getContent()));
+                        }
                     }
-                    break;
-                case TargetType.Constants.INHERITOR:
-                    Inheritor inheritor = inheritorMapper.selectById(targetId);
-                    if (inheritor != null) {
-                        result.put("title", inheritor.getName());
-                        result.put("description", inheritor.getBio());
+                    case TargetType.Constants.INHERITOR -> {
+                        List<Inheritor> list = inheritorMapper.selectBatchIds(ids);
+                        for (Inheritor i : list) {
+                            typeMap.put(i.getId(), createTitleDesc(i.getName(), i.getBio()));
+                        }
                     }
-                    break;
-                case TargetType.Constants.RESOURCE:
-                    Resource resource = resourceMapper.selectById(targetId);
-                    if (resource != null) {
-                        result.put("title", resource.getTitle());
-                        result.put("description", resource.getDescription());
+                    case TargetType.Constants.RESOURCE -> {
+                        List<Resource> list = resourceMapper.selectBatchIds(ids);
+                        for (Resource r : list) {
+                            typeMap.put(r.getId(), createTitleDesc(r.getTitle(), r.getDescription()));
+                        }
                     }
-                    break;
-                case TargetType.Constants.QA:
-                    Qa qa = qaMapper.selectById(targetId);
-                    if (qa != null) {
-                        result.put("title", qa.getQuestion());
-                        result.put("description", qa.getAnswer());
+                    case TargetType.Constants.QA -> {
+                        List<Qa> list = qaMapper.selectBatchIds(ids);
+                        for (Qa q : list) {
+                            typeMap.put(q.getId(), createTitleDesc(q.getQuestion(), q.getAnswer()));
+                        }
                     }
-                    break;
+                }
+            } catch (Exception e) {
+                log.warn("批量获取{}详情失败: ids={}, error={}", type, ids, e.getMessage());
             }
-        } catch (Exception e) {
-            log.warn("获取{}详情失败: targetId={}, error={}", targetType, targetId, e.getMessage());
-        }
-        
+            result.put(type, typeMap);
+        });
+
         return result;
+    }
+
+    private Map<String, String> createTitleDesc(String title, String description) {
+        Map<String, String> m = new HashMap<>();
+        m.put("title", title);
+        m.put("description", description);
+        return m;
     }
 }

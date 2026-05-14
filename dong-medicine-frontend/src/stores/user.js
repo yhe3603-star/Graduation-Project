@@ -147,9 +147,16 @@ export const useUserStore = defineStore('user', () => {
   
   function checkTokenExpiry() {
     if (token.value) {
-      const payload = decodeJwtPayload(token.value)
-      if (payload && isTokenExpired(token.value)) {
-        clearAuth()
+      if (!token.value.includes('.')) {
+        const loginTime = parseInt(safeGetItem('loginTime') || '0', 10)
+        if (loginTime > 0 && Date.now() - loginTime > 24 * 60 * 60 * 1000) {
+          clearAuth()
+        }
+      } else {
+        const payload = decodeJwtPayload(token.value)
+        if (payload && isTokenExpired(token.value)) {
+          clearAuth()
+        }
       }
     }
   }
@@ -164,11 +171,12 @@ export const useUserStore = defineStore('user', () => {
     userId.value = data.id || ''
     username.value = data.username || ''
     role.value = data.role || 'user'
-    
+
     safeSetItem('token', token.value)
     safeSetItem('userId', userId.value)
     safeSetItem('userName', username.value)
     safeSetItem('role', role.value)
+    safeSetItem('loginTime', String(Date.now()))
   }
   
   /**
@@ -181,11 +189,12 @@ export const useUserStore = defineStore('user', () => {
     username.value = ''
     role.value = ''
     userInfo.value = null
-    
+
     safeRemoveItem('token')
     safeRemoveItem('userId')
     safeRemoveItem('userName')
     safeRemoveItem('role')
+    safeRemoveItem('loginTime')
   }
   
   /**

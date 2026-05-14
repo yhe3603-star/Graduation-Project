@@ -94,17 +94,14 @@ class PlantGameServiceImplTest {
     }
 
     @Test
-    @DisplayName("提交游戏 - 兼容旧版前端")
-    void testSubmit_LegacyFrontend() {
+    @DisplayName("提交游戏 - 无答案列表抛异常")
+    void testSubmit_NoAnswers() {
         PlantGameSubmitDTO dto = new PlantGameSubmitDTO();
         dto.setTotalCount(10);
         dto.setCorrectCount(8);
         dto.setDifficulty("hard");
-        when(gameRecordMapper.insert(any(PlantGameRecord.class))).thenReturn(1);
 
-        Integer score = gameService.submit(1, dto);
-
-        assertEquals(80, score);
+        assertThrows(IllegalArgumentException.class, () -> gameService.submit(1, dto));
     }
 
     @Test
