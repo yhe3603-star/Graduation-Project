@@ -1,16 +1,14 @@
 test.describe('用户认证流程', () => {
   test('登录页面应可访问', async ({ page }) => {
     await page.goto('/login')
-    await page.waitForTimeout(2000)
+    await page.waitForLoadState('networkidle')
     const loginForm = page.locator('.login-page, .el-form, .auth-form')
-    if (await loginForm.isVisible()) {
-      expect(await loginForm.isVisible()).toBeTruthy()
-    }
+    await expect(loginForm).toBeVisible({ timeout: 10000 })
   })
 
   test('注册页面应可访问', async ({ page }) => {
     await page.goto('/register')
-    await page.waitForTimeout(2000)
+    await page.waitForLoadState('networkidle')
   })
 
   test('登录API缺少验证码应返回400', async ({ request }) => {

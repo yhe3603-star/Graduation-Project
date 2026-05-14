@@ -23,6 +23,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Slf4j
 @Tag(name = "药用资源图鉴", description = "侗乡药用植物信息查询与图文展示")
@@ -36,28 +38,31 @@ public class PlantController {
     private final BrowseHistoryService browseHistoryService;
     private final PopularityAsyncService popularityAsyncService;
 
+    @Operation(summary = "获取植物列表")
     @GetMapping("/list")
     public R<Map<String, Object>> list(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String usageWay,
-            @RequestParam(required = false) String keyword) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size,
+            @Parameter(name = "category", description = "植物分类") @RequestParam(required = false) String category,
+            @Parameter(name = "usageWay", description = "用途方式") @RequestParam(required = false) String usageWay,
+            @Parameter(name = "keyword", description = "搜索关键词") @RequestParam(required = false) String keyword) {
         Page<Plant> pageResult = service.advancedSearchPaged(keyword, category, usageWay, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "搜索植物")
     @GetMapping("/search")
     public R<Map<String, Object>> search(
-            @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size) {
+            @Parameter(name = "keyword", description = "搜索关键词") @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size) {
         Page<Plant> pageResult = service.searchPaged(keyword, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取植物详情")
     @GetMapping("/{id}")
-    public R<Plant> detail(@PathVariable @NotNull Integer id) {
+    public R<Plant> detail(@Parameter(name = "id", description = "植物ID") @PathVariable @NotNull Integer id) {
         try { popularityAsyncService.incrementPlantViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Plant plant = service.getDetailWithStory(id);
         if (plant == null) throw BusinessException.notFound("植物不存在");
@@ -72,11 +77,13 @@ public class PlantController {
         return R.ok(plant);
     }
 
+    @Operation(summary = "获取相似植物")
     @GetMapping("/{id}/similar")
-    public R<List<Plant>> similar(@PathVariable @NotNull Integer id) {
+    public R<List<Plant>> similar(@Parameter(name = "id", description = "植物ID") @PathVariable @NotNull Integer id) {
         return R.ok(service.getSimilarPlants(id));
     }
 
+    @Operation(summary = "获取随机植物")
     @GetMapping("/random")
     public R<List<Plant>> random(
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "数量不能小于1")
@@ -84,6 +91,7 @@ public class PlantController {
         return R.ok(service.getRandomPlants(limit));
     }
 
+    @Operation(summary = "批量获取植物")
     @PostMapping("/batch")
     public R<List<Plant>> batch(@RequestBody List<Integer> ids) {
         if (ids == null || ids.isEmpty()) return R.ok(List.of());
@@ -91,9 +99,10 @@ public class PlantController {
         return R.ok(service.listByIds(ids));
     }
 
+    @Operation(summary = "增加植物浏览量")
     @PostMapping("/{id}/view")
     @RateLimit(value = 10, key = "plant_view")
-    public R<String> incrementView(@PathVariable Integer id) {
+    public R<String> incrementView(@Parameter(name = "id", description = "植物ID") @PathVariable Integer id) {
         service.incrementViewCount(id);
         return R.ok("ok");
     }

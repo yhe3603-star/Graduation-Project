@@ -1,8 +1,8 @@
 <template>
-  <el-dialog 
-    :model-value="visible" 
-    :title="isEdit ? '编辑学习资源' : '新增学习资源'" 
-    width="800px" 
+  <el-dialog
+    :model-value="visible"
+    :title="isEdit ? '编辑学习资源' : '新增学习资源'"
+    width="800px"
     :close-on-click-modal="false"
     @update:model-value="$emit('update:visible', $event)"
   >
@@ -36,7 +36,7 @@
           </el-form-item>
         </el-col>
       </el-row>
-      
+
       <el-form-item label="资源文件">
         <div class="upload-section">
           <el-radio-group
@@ -53,7 +53,7 @@
               文档
             </el-radio-button>
           </el-radio-group>
-          
+
           <div
             v-if="hasOtherTypeFiles"
             class="other-type-warning"
@@ -68,7 +68,7 @@
               </template>
             </el-alert>
           </div>
-          
+
           <div class="upload-area">
             <ImageUploader
               v-show="uploadType === 'image'"
@@ -109,7 +109,7 @@
           </div>
         </div>
       </el-form-item>
-      
+
       <el-form-item label="描述">
         <el-input
           v-model="form.description"
@@ -122,11 +122,11 @@
       <el-divider content-position="left">
         更新日志
       </el-divider>
-      
+
       <el-form-item label="">
-        <UpdateLogCard 
-          :logs="updateLogs" 
-          :editable="true" 
+        <UpdateLogCard
+          :logs="updateLogs"
+          :editable="true"
           title="操作记录"
           @add="handleAddLog"
           @edit="handleEditLog"
@@ -134,7 +134,7 @@
         />
       </el-form-item>
     </el-form>
-    
+
     <template #footer>
       <el-button @click="$emit('update:visible', false)">
         取消
@@ -142,13 +142,13 @@
       <el-button
         type="primary"
         :loading="saving"
-        @click="handleSave"
+        @click="onSave"
       >
         保存
       </el-button>
     </template>
 
-    <UpdateLogDialog 
+    <UpdateLogDialog
       v-model:visible="logDialogVisible"
       :editing-log="editingLog"
       @save="handleSaveLog"
@@ -158,14 +158,14 @@
 
 <script setup>
 import { ref, watch, computed, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import ImageUploader from '@/components/business/upload/ImageUploader.vue'
 import VideoUploader from '@/components/business/upload/VideoUploader.vue'
 import DocumentUploader from '@/components/business/upload/DocumentUploader.vue'
 import UpdateLogCard from '@/components/business/display/UpdateLogCard.vue'
 import UpdateLogDialog from '@/components/business/display/UpdateLogDialog.vue'
-import { useUpdateLog } from '@/composables/useUpdateLog'
-import { parseMediaList, stringifyMediaList, getMediaType } from '@/utils/media'
+import { useFormDialog } from '@/composables/useFormDialog'
+import { parseMediaList, stringifyMediaList } from '@/utils/media'
 import { getFileName } from '@/utils'
 
 const props = defineProps({
@@ -175,18 +175,25 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'save'])
 
-const { 
-  parseUpdateLog, stringifyUpdateLog, addLog, updateLog, deleteLog, 
-  logDialogVisible, editingLog, openLogDialog, closeLogDialog
-} = useUpdateLog()
-
-const getDefaultForm = () => ({ 
-  id: null, title: "", category: "", fileType: "image", fileUrl: null, 
-  fileName: "", fileSize: 0, files: "[]", description: "", updateLog: "" 
+const getDefaultForm = () => ({
+  id: null, title: "", category: "", fileType: "image", fileUrl: null,
+  fileName: "", fileSize: 0, files: "[]", description: "", updateLog: ""
 })
 
-const form = ref(getDefaultForm())
-const saving = ref(false)
+const {
+  form, saving, isEdit, updateLogs,
+  logDialogVisible, editingLog,
+  initForm, handleAddLog, handleEditLog, handleDeleteLog, handleSaveLog,
+  getFormData, setSaving
+} = useFormDialog(getDefaultForm, {
+  validate: (form) => {
+    if (!form.title) return '请输入资源标题'
+    if (!form.category) return '请选择分类'
+    return true
+  },
+  autoLogMessages: { create: '新增学习资源', update: '更新学习资源' }
+})
+
 const uploadType = ref('image')
 const isInitializing = ref(false)
 
@@ -197,10 +204,6 @@ const documentFiles = ref([])
 const imageUploaderRef = ref(null)
 const videoUploaderRef = ref(null)
 const documentUploaderRef = ref(null)
-
-const isEdit = computed(() => !!form.value.id)
-
-const updateLogs = computed(() => parseUpdateLog(form.value.updateLog))
 
 const TYPE_NAMES = {
   image: '图片',
@@ -244,11 +247,11 @@ const parseFilesToTypeArrays = (filesData) => {
   const images = []
   const videos = []
   const documents = []
-  
+
   if (!filesData) return { images, videos, documents }
-  
+
   const files = parseMediaList(filesData)
-  
+
   files.forEach(file => {
     const fileType = file.type || detectFileTypeFromUrl(file.path || file.url || '')
     const fileObj = {
@@ -258,7 +261,7 @@ const parseFilesToTypeArrays = (filesData) => {
       size: file.size || 0,
       type: fileType
     }
-    
+
     if (fileType === 'image') {
       images.push(fileObj)
     } else if (fileType === 'video') {
@@ -267,24 +270,21 @@ const parseFilesToTypeArrays = (filesData) => {
       documents.push(fileObj)
     }
   })
-  
+
   return { images, videos, documents }
 }
 
 watch(() => props.visible, async (val) => {
   if (val) {
     isInitializing.value = true
+    initForm(props.data)
+
     if (props.data) {
-      form.value = { 
-        ...props.data, 
-        updateLog: props.data.updateLog || ''
-      }
-      
       const { images, videos, documents } = parseFilesToTypeArrays(props.data.files)
       imageFiles.value = images
       videoFiles.value = videos
       documentFiles.value = documents
-      
+
       if (images.length > 0) {
         uploadType.value = 'image'
       } else if (videos.length > 0) {
@@ -295,7 +295,6 @@ watch(() => props.visible, async (val) => {
         uploadType.value = 'image'
       }
     } else {
-      form.value = getDefaultForm()
       imageFiles.value = []
       videoFiles.value = []
       documentFiles.value = []
@@ -310,60 +309,36 @@ const handleFileUploadSuccess = (type, fileData) => {
   form.value.fileType = type
 }
 
-const handleAddLog = () => openLogDialog()
-
-const handleEditLog = (log) => openLogDialog(log)
-
-const handleDeleteLog = (log) => {
-  form.value.updateLog = stringifyUpdateLog(deleteLog(form.value.updateLog, log.id))
-}
-
-const handleSaveLog = (logData) => {
-  if (editingLog.value) {
-    form.value.updateLog = stringifyUpdateLog(updateLog(form.value.updateLog, editingLog.value.id, logData.content))
-  } else {
-    form.value.updateLog = stringifyUpdateLog(addLog(form.value.updateLog, logData.content, logData.operator))
-  }
-  closeLogDialog()
-}
-
-const handleSave = () => {
+const onSave = () => {
   if (!form.value.title) { ElMessage.warning('请输入资源标题'); return }
   if (!form.value.category) { ElMessage.warning('请选择分类'); return }
-  
+
   const allFiles = [
     ...imageFiles.value.map(f => ({ ...f, type: 'image' })),
     ...videoFiles.value.map(f => ({ ...f, type: 'video' })),
     ...documentFiles.value.map(f => ({ ...f, type: 'document' }))
   ]
-  
+
   if (allFiles.length === 0) { ElMessage.warning('请上传资源文件'); return }
-  
+
   const files = stringifyMediaList(allFiles)
   const firstFile = allFiles[0]
   const fileType = firstFile.type || 'document'
   const totalSize = allFiles.reduce((sum, f) => sum + (f.size || 0), 0)
-  
-  const autoLog = isEdit.value ? '更新学习资源' : '新增学习资源'
-  const currentLogs = parseUpdateLog(form.value.updateLog)
-  const hasRecentLog = currentLogs.length > 0 && currentLogs[0].time === new Date().toISOString().split('T')[0]
-  
-  const finalUpdateLog = hasRecentLog 
-    ? form.value.updateLog 
-    : stringifyUpdateLog(addLog(form.value.updateLog, autoLog, '管理员'))
-  
-  emit('save', { 
-    ...form.value, 
-    fileUrl: firstFile.path || firstFile.url || '', 
+
+  // Use getFormData() to handle auto-log computation, then merge file fields
+  const base = getFormData()
+  emit('save', {
+    ...base,
+    fileUrl: firstFile.path || firstFile.url || '',
     fileName: firstFile.name || form.value.title,
     fileSize: totalSize,
     fileType: fileType,
-    files: files,
-    updateLog: finalUpdateLog 
+    files: files
   })
 }
 
-defineExpose({ setSaving: (val) => { saving.value = val } })
+defineExpose({ setSaving })
 </script>
 
 <style scoped>

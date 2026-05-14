@@ -24,10 +24,9 @@ test.describe('药用植物', () => {
     await page.goto('/plants')
     await page.waitForSelector('.search-filter, .el-input', { timeout: 10000 })
     const searchInput = page.locator('input[type="text"], .el-input__inner').first()
-    if (await searchInput.isVisible()) {
-      await searchInput.fill('钩藤')
-      await page.waitForTimeout(1000)
-    }
+    await expect(searchInput).toBeVisible({ timeout: 10000 })
+    await searchInput.fill('钩藤')
+    await page.waitForLoadState('networkidle')
   })
 })
 

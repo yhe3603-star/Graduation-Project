@@ -132,31 +132,28 @@ test.describe('数据完整性测试', () => {
     const response = await request.get('/api/plants/list?page=1&size=5')
     expect(response.ok()).toBeTruthy()
     const body = await response.json()
-    if (body.data.records.length > 0) {
-      const record = body.data.records[0]
-      expect(record.id).toBeDefined()
-      expect(record.nameCn).toBeDefined()
-    }
+    expect(body.data.records.length).toBeGreaterThan(0)
+    const record = body.data.records[0]
+    expect(record.id).toBeDefined()
+    expect(record.nameCn).toBeDefined()
   })
 
   test('知识列表每条记录应包含必要字段', async ({ request }) => {
     const response = await request.get('/api/knowledge/list?page=1&size=5')
     expect(response.ok()).toBeTruthy()
     const body = await response.json()
-    if (body.data.records.length > 0) {
-      const record = body.data.records[0]
-      expect(record.id).toBeDefined()
-    }
+    expect(body.data.records.length).toBeGreaterThan(0)
+    const record = body.data.records[0]
+    expect(record.id).toBeDefined()
   })
 
   test('传承人列表每条记录应包含必要字段', async ({ request }) => {
     const response = await request.get('/api/inheritors/list?page=1&size=5')
     expect(response.ok()).toBeTruthy()
     const body = await response.json()
-    if (body.data.records.length > 0) {
-      const record = body.data.records[0]
-      expect(record.id).toBeDefined()
-    }
+    expect(body.data.records.length).toBeGreaterThan(0)
+    const record = body.data.records[0]
+    expect(record.id).toBeDefined()
   })
 
   test('分页元数据应完整', async ({ request }) => {

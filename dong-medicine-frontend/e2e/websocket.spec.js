@@ -1,18 +1,14 @@
 test.describe('WebSocket聊天测试', () => {
   test('WebSocket连接应能建立', async ({ page }) => {
-    let wsConnected = false
-
-    page.on('websocket', ws => {
-      wsConnected = true
-    })
-
+    const wsPromise = page.waitForEvent('websocket', { timeout: 15000 })
     await page.goto('/')
-    await page.waitForTimeout(2000)
+    await page.waitForLoadState('networkidle')
 
     const chatButton = page.locator('.ai-chat-trigger, .chat-fab, [aria-label="AI助手"]').first()
-    if (await chatButton.isVisible()) {
-      await chatButton.click()
-      await page.waitForTimeout(1000)
-    }
+    await expect(chatButton).toBeVisible({ timeout: 10000 })
+    await chatButton.click()
+
+    const ws = await wsPromise
+    expect(ws.url()).toBeTruthy()
   })
 })

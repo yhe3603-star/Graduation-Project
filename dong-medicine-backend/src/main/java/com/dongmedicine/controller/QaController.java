@@ -16,6 +16,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "非遗问答", description = "侗乡医药知识问答与用户反馈")
 @Slf4j
@@ -28,36 +30,40 @@ public class QaController {
     private final QaService service;
     private final PopularityAsyncService popularityAsyncService;
 
+    @Operation(summary = "获取问答列表")
     @GetMapping("/list")
     public R<Map<String, Object>> list(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String keyword) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size,
+            @Parameter(name = "category", description = "问答分类") @RequestParam(required = false) String category,
+            @Parameter(name = "keyword", description = "搜索关键词") @RequestParam(required = false) String keyword) {
         Page<Qa> pageResult = service.advancedSearchPaged(keyword, category, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "搜索问答")
     @GetMapping("/search")
     public R<Map<String, Object>> search(
-            @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size) {
+            @Parameter(name = "keyword", description = "搜索关键词") @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size) {
         Page<Qa> pageResult = service.searchPaged(keyword, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取问答详情")
     @GetMapping("/{id}")
-    public R<Qa> detail(@PathVariable Integer id) {
+    public R<Qa> detail(@Parameter(name = "id", description = "问答ID") @PathVariable Integer id) {
         try { popularityAsyncService.incrementQaViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Qa qa = service.getDetail(id);
         if (qa == null) throw BusinessException.notFound("问答不存在");
         return R.ok(qa);
     }
 
+    @Operation(summary = "增加问答浏览量")
     @PostMapping("/{id}/view")
     @RateLimit(value = 10, key = "qa_view")
-    public R<String> incrementView(@PathVariable Integer id) {
+    public R<String> incrementView(@Parameter(name = "id", description = "问答ID") @PathVariable Integer id) {
         service.incrementViewCount(id);
         return R.ok("ok");
     }

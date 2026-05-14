@@ -2,10 +2,7 @@ package com.dongmedicine.controller;
 
 import com.dongmedicine.common.R;
 import com.dongmedicine.common.SecurityUtils;
-import com.dongmedicine.entity.User;
-import com.dongmedicine.mapper.PlantGameRecordMapper;
-import com.dongmedicine.mapper.QuizRecordMapper;
-import com.dongmedicine.mapper.UserMapper;
+import com.dongmedicine.service.LeaderboardService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,13 +23,7 @@ import static org.mockito.Mockito.*;
 class LeaderboardControllerTest {
 
     @Mock
-    private QuizRecordMapper quizRecordMapper;
-
-    @Mock
-    private PlantGameRecordMapper plantGameRecordMapper;
-
-    @Mock
-    private UserMapper userMapper;
+    private LeaderboardService leaderboardService;
 
     @InjectMocks
     private LeaderboardController leaderboardController;
@@ -54,20 +44,14 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("综合排行榜 - 默认排序")
     void testCombinedLeaderboard_DefaultSort() {
-        Map<String, Object> quizRow = new LinkedHashMap<>();
-        quizRow.put("user_id", 1);
-        quizRow.put("max_score", 90);
-        when(quizRecordMapper.selectMaps(any())).thenReturn(List.of(quizRow));
-
-        Map<String, Object> gameRow = new LinkedHashMap<>();
-        gameRow.put("user_id", 1);
-        gameRow.put("max_score", 80);
-        when(plantGameRecordMapper.selectMaps(any())).thenReturn(List.of(gameRow));
-
-        User user = new User();
-        user.setId(1);
-        user.setUsername("测试用户");
-        when(userMapper.selectBatchIds(anyCollection())).thenReturn(List.of(user));
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("rank", 1);
+        entry.put("userId", 1);
+        entry.put("username", "测试用户");
+        entry.put("quizScore", 90);
+        entry.put("gameScore", 80);
+        entry.put("totalScore", 170);
+        when(leaderboardService.getCombinedLeaderboard("total", 100)).thenReturn(List.of(entry));
 
         R<List<Map<String, Object>>> result = leaderboardController.getCombinedLeaderboard("total", 100);
 
@@ -81,28 +65,18 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("综合排行榜 - 按答题排序")
     void testCombinedLeaderboard_SortByQuiz() {
-        Map<String, Object> quizRow = new LinkedHashMap<>();
-        quizRow.put("user_id", 1);
-        quizRow.put("max_score", 100);
-        when(quizRecordMapper.selectMaps(any())).thenReturn(List.of(quizRow));
-        when(plantGameRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
-
-        User user = new User();
-        user.setId(1);
-        user.setUsername("用户A");
-        when(userMapper.selectBatchIds(anyCollection())).thenReturn(List.of(user));
+        when(leaderboardService.getCombinedLeaderboard("quiz", 10)).thenReturn(Collections.emptyList());
 
         R<List<Map<String, Object>>> result = leaderboardController.getCombinedLeaderboard("quiz", 10);
 
         assertEquals(200, result.getCode());
-        assertEquals(1, result.getData().size());
+        assertTrue(result.getData().isEmpty());
     }
 
     @Test
     @DisplayName("综合排行榜 - 空数据")
     void testCombinedLeaderboard_Empty() {
-        when(quizRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
-        when(plantGameRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
+        when(leaderboardService.getCombinedLeaderboard("total", 100)).thenReturn(Collections.emptyList());
 
         R<List<Map<String, Object>>> result = leaderboardController.getCombinedLeaderboard("total", 100);
 
@@ -114,8 +88,7 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("综合排行榜 - limit边界值")
     void testCombinedLeaderboard_LimitBoundary() {
-        when(quizRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
-        when(plantGameRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
+        when(leaderboardService.getCombinedLeaderboard("total", 0)).thenReturn(Collections.emptyList());
 
         R<List<Map<String, Object>>> result = leaderboardController.getCombinedLeaderboard("total", 0);
 
@@ -125,15 +98,12 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("答题排行榜 - 成功")
     void testQuizLeaderboard_Success() {
-        Map<String, Object> row = new LinkedHashMap<>();
-        row.put("user_id", 1);
-        row.put("max_score", 95);
-        when(quizRecordMapper.selectMaps(any())).thenReturn(List.of(row));
-
-        User user = new User();
-        user.setId(1);
-        user.setUsername("答题高手");
-        when(userMapper.selectBatchIds(anyCollection())).thenReturn(List.of(user));
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("rank", 1);
+        entry.put("userId", 1);
+        entry.put("username", "答题高手");
+        entry.put("score", 95);
+        when(leaderboardService.getQuizLeaderboard(100)).thenReturn(List.of(entry));
 
         R<List<Map<String, Object>>> result = leaderboardController.getQuizLeaderboard(100);
 
@@ -148,7 +118,7 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("答题排行榜 - 空数据")
     void testQuizLeaderboard_Empty() {
-        when(quizRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
+        when(leaderboardService.getQuizLeaderboard(100)).thenReturn(Collections.emptyList());
 
         R<List<Map<String, Object>>> result = leaderboardController.getQuizLeaderboard(100);
 
@@ -160,7 +130,7 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("答题排行榜 - null limit使用默认值")
     void testQuizLeaderboard_NullLimit() {
-        when(quizRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
+        when(leaderboardService.getQuizLeaderboard(null)).thenReturn(Collections.emptyList());
 
         R<List<Map<String, Object>>> result = leaderboardController.getQuizLeaderboard(null);
 
@@ -170,15 +140,12 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("游戏排行榜 - 成功")
     void testGameLeaderboard_Success() {
-        Map<String, Object> row = new LinkedHashMap<>();
-        row.put("user_id", 2);
-        row.put("max_score", 88);
-        when(plantGameRecordMapper.selectMaps(any())).thenReturn(List.of(row));
-
-        User user = new User();
-        user.setId(2);
-        user.setUsername("游戏玩家");
-        when(userMapper.selectBatchIds(anyCollection())).thenReturn(List.of(user));
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("rank", 1);
+        entry.put("userId", 2);
+        entry.put("username", "游戏玩家");
+        entry.put("score", 88);
+        when(leaderboardService.getGameLeaderboard(100)).thenReturn(List.of(entry));
 
         R<List<Map<String, Object>>> result = leaderboardController.getGameLeaderboard(100);
 
@@ -191,7 +158,7 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("游戏排行榜 - 空数据")
     void testGameLeaderboard_Empty() {
-        when(plantGameRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
+        when(leaderboardService.getGameLeaderboard(100)).thenReturn(Collections.emptyList());
 
         R<List<Map<String, Object>>> result = leaderboardController.getGameLeaderboard(100);
 
@@ -203,7 +170,7 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("游戏排行榜 - null limit使用默认值")
     void testGameLeaderboard_NullLimit() {
-        when(plantGameRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
+        when(leaderboardService.getGameLeaderboard(null)).thenReturn(Collections.emptyList());
 
         R<List<Map<String, Object>>> result = leaderboardController.getGameLeaderboard(null);
 
@@ -213,8 +180,7 @@ class LeaderboardControllerTest {
     @Test
     @DisplayName("综合排行榜 - limit上限为200")
     void testCombinedLeaderboard_LimitExceeded() {
-        when(quizRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
-        when(plantGameRecordMapper.selectMaps(any())).thenReturn(Collections.emptyList());
+        when(leaderboardService.getCombinedLeaderboard("total", 999)).thenReturn(Collections.emptyList());
 
         R<List<Map<String, Object>>> result = leaderboardController.getCombinedLeaderboard("total", 999);
 

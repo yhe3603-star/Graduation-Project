@@ -150,9 +150,9 @@ test.describe('API回归测试 - 分页限制', () => {
       const response = await request.get(url)
       expect(response.ok()).toBeTruthy()
       const body = await response.json()
-      if (body.data && body.data.records) {
-        expect(body.data.records.length).toBeLessThanOrEqual(100)
-      }
+      expect(body.data).toBeDefined()
+      expect(body.data.records).toBeDefined()
+      expect(body.data.records.length).toBeLessThanOrEqual(100)
     }
   })
 
@@ -200,13 +200,12 @@ test.describe('API回归测试 - 数据一致性', () => {
   test('植物详情应与列表数据一致', async ({ request }) => {
     const listRes = await request.get('/api/plants/list?page=1&size=5')
     const listBody = await listRes.json()
-    if (listBody.data.records.length > 0) {
-      const record = listBody.data.records[0]
-      const detailRes = await request.get(`/api/plants/${record.id}`)
-      expect(detailRes.ok()).toBeTruthy()
-      const detailBody = await detailRes.json()
-      expect(detailBody.data.id).toBe(record.id)
-    }
+    expect(listBody.data.records.length).toBeGreaterThan(0)
+    const record = listBody.data.records[0]
+    const detailRes = await request.get(`/api/plants/${record.id}`)
+    expect(detailRes.ok()).toBeTruthy()
+    const detailBody = await detailRes.json()
+    expect(detailBody.data.id).toBe(record.id)
   })
 
   test('反馈统计应一致', async ({ request }) => {

@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Slf4j
 @RestController
@@ -46,9 +48,10 @@ public class ExportController {
             "passwordHash", "password", "passwordhash", "salt", "token", "secret"
     );
 
+    @Operation(summary = "导出数据为CSV")
     @GetMapping("/{entity}")
-    public void export(@PathVariable String entity,
-                       @RequestParam(defaultValue = "csv") String format,
+    public void export(@Parameter(name = "entity", description = "实体名称") @PathVariable String entity,
+                       @Parameter(name = "format", description = "导出格式", example = "csv") @RequestParam(defaultValue = "csv") String format,
                        HttpServletResponse response) throws IOException {
         if (!"csv".equalsIgnoreCase(format)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "仅支持CSV格式");

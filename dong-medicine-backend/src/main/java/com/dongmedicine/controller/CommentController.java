@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "用户评论", description = "用户评论发布、查询与管理")
 @RestController
@@ -30,6 +32,7 @@ public class CommentController {
 
     private final CommentService service;
 
+    @Operation(summary = "发布评论")
     @PostMapping
     @SaCheckLogin
     public R<String> add(@Valid @RequestBody CommentAddDTO dto) {
@@ -48,52 +51,58 @@ public class CommentController {
         return R.ok(comment.getStatus());
     }
 
+    @Operation(summary = "获取评论列表")
     @GetMapping("/list/{targetType}/{targetId}")
     public R<Map<String, Object>> list(
-            @PathVariable @NotBlank(message = "目标类型不能为空") String targetType,
-            @PathVariable @NotNull(message = "目标ID不能为空") Integer targetId,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
+            @Parameter(name = "targetType", description = "目标类型") @PathVariable @NotBlank(message = "目标类型不能为空") String targetType,
+            @Parameter(name = "targetId", description = "目标ID") @PathVariable @NotNull(message = "目标ID不能为空") Integer targetId,
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "20") @RequestParam(defaultValue = "20") Integer size) {
         Integer userId = SecurityUtils.getCurrentUserIdOrNull();
         Page<CommentDTO> pageResult = service.listApprovedPaged(targetType, targetId, page, size, userId);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取全部评论")
     @GetMapping("/list/all")
     public R<Map<String, Object>> listAll(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size) {
         Page<CommentDTO> pageResult = service.pageAllApproved(page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取通用评论")
     @GetMapping("/list/general")
     public R<Map<String, Object>> listGeneral(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "1000") Integer size) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "1000") @RequestParam(defaultValue = "1000") Integer size) {
         Page<CommentDTO> pageResult = service.listApprovedPaged("general", 0, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取我的评论")
     @GetMapping("/my")
     @SaCheckLogin
     public R<Map<String, Object>> myComments(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "20") @RequestParam(defaultValue = "20") Integer size) {
         Page<CommentDTO> pageResult = service.listByUserIdPaged(SecurityUtils.getCurrentUserId(), page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "点赞评论")
     @PostMapping("/{id}/like")
     @SaCheckLogin
-    public R<Void> like(@PathVariable Integer id) {
+    public R<Void> like(@Parameter(name = "id", description = "评论ID") @PathVariable Integer id) {
         service.likeComment(SecurityUtils.getCurrentUserId(), id);
         return R.ok(null);
     }
 
+    @Operation(summary = "取消点赞评论")
     @DeleteMapping("/{id}/like")
     @SaCheckLogin
-    public R<Void> unlike(@PathVariable Integer id) {
+    public R<Void> unlike(@Parameter(name = "id", description = "评论ID") @PathVariable Integer id) {
         service.unlikeComment(SecurityUtils.getCurrentUserId(), id);
         return R.ok(null);
     }

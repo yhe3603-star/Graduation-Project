@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "传承人风采", description = "侗乡医药非遗传承人信息查询与展示")
 @Slf4j
@@ -33,28 +35,31 @@ public class InheritorController {
     private final BrowseHistoryService browseHistoryService;
     private final PopularityAsyncService popularityAsyncService;
 
+    @Operation(summary = "获取传承人列表")
     @GetMapping("/list")
     public R<Map<String, Object>> list(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size,
-            @RequestParam(required = false) String level,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "name") String sortBy) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size,
+            @Parameter(name = "level", description = "传承人级别") @RequestParam(required = false) String level,
+            @Parameter(name = "keyword", description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(name = "sortBy", description = "排序方式", example = "name") @RequestParam(defaultValue = "name") String sortBy) {
         Page<Inheritor> pageResult = service.advancedSearchPaged(keyword, level, sortBy, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "搜索传承人")
     @GetMapping("/search")
     public R<Map<String, Object>> search(
-            @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size) {
+            @Parameter(name = "keyword", description = "搜索关键词") @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size) {
         Page<Inheritor> pageResult = service.searchPaged(keyword, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取传承人详情")
     @GetMapping("/{id}")
-    public R<Inheritor> detail(@PathVariable Integer id) {
+    public R<Inheritor> detail(@Parameter(name = "id", description = "传承人ID") @PathVariable Integer id) {
         try { popularityAsyncService.incrementInheritorViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Inheritor in = service.getDetailWithExtras(id);
         if (in == null) throw BusinessException.notFound("传承人不存在");
@@ -69,9 +74,10 @@ public class InheritorController {
         return R.ok(in);
     }
 
+    @Operation(summary = "增加传承人浏览量")
     @PostMapping("/{id}/view")
     @RateLimit(value = 10, key = "inheritor_view")
-    public R<String> incrementView(@PathVariable Integer id) {
+    public R<String> incrementView(@Parameter(name = "id", description = "传承人ID") @PathVariable Integer id) {
         service.incrementViewCount(id);
         return R.ok("ok");
     }

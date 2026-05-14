@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.atomic.AtomicLong;
+import io.swagger.v3.oas.annotations.Operation;
 
 @Tag(name = "智能问答", description = "AI智能对话服务")
 @Slf4j
@@ -26,6 +27,7 @@ public class ChatController {
         }
     }
 
+    @Operation(summary = "获取聊天统计")
     @GetMapping("/stats")
     public R<ChatStats> stats() {
         return R.ok(new ChatStats(

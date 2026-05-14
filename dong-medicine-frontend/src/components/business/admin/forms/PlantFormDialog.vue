@@ -1,8 +1,8 @@
 <template>
-  <el-dialog 
-    :model-value="visible" 
-    :title="isEdit ? '编辑药用植物' : '新增药用植物'" 
-    width="900px" 
+  <el-dialog
+    :model-value="visible"
+    :title="isEdit ? '编辑药用植物' : '新增药用植物'"
+    width="900px"
     :close-on-click-modal="false"
     @update:model-value="$emit('update:visible', $event)"
   >
@@ -28,7 +28,7 @@
           </el-form-item>
         </el-col>
       </el-row>
-      
+
       <el-row :gutter="20">
         <el-col :span="12">
           <el-form-item label="学名">
@@ -61,7 +61,7 @@
           </el-form-item>
         </el-col>
       </el-row>
-      
+
       <el-row :gutter="20">
         <el-col :span="12">
           <el-form-item label="用法">
@@ -94,7 +94,7 @@
           </el-form-item>
         </el-col>
       </el-row>
-      
+
       <el-form-item label="功效">
         <el-input
           v-model="form.efficacy"
@@ -103,7 +103,7 @@
           placeholder="请输入主要功效"
         />
       </el-form-item>
-      
+
       <el-form-item label="故事">
         <el-input
           v-model="form.story"
@@ -112,14 +112,14 @@
           placeholder="请输入相关故事或传说"
         />
       </el-form-item>
-      
+
       <el-form-item label="分布地区">
         <el-input
           v-model="form.distribution"
           placeholder="请输入分布地区"
         />
       </el-form-item>
-      
+
       <el-form-item label="植物图片">
         <ImageUploader
           v-model="form.images"
@@ -128,7 +128,7 @@
           :max-size="10"
         />
       </el-form-item>
-      
+
       <el-form-item label="相关视频">
         <VideoUploader
           v-model="form.videos"
@@ -137,7 +137,7 @@
           :max-size="100"
         />
       </el-form-item>
-      
+
       <el-form-item label="相关文档">
         <DocumentUploader
           v-model="form.documents"
@@ -152,11 +152,11 @@
       <el-divider content-position="left">
         更新日志
       </el-divider>
-      
+
       <el-form-item label="">
-        <UpdateLogCard 
-          :logs="updateLogs" 
-          :editable="true" 
+        <UpdateLogCard
+          :logs="updateLogs"
+          :editable="true"
           title="操作记录"
           @add="handleAddLog"
           @edit="handleEditLog"
@@ -164,7 +164,7 @@
         />
       </el-form-item>
     </el-form>
-    
+
     <template #footer>
       <el-button @click="$emit('update:visible', false)">
         取消
@@ -172,13 +172,13 @@
       <el-button
         type="primary"
         :loading="saving"
-        @click="handleSave"
+        @click="onSave"
       >
         保存
       </el-button>
     </template>
 
-    <UpdateLogDialog 
+    <UpdateLogDialog
       v-model:visible="logDialogVisible"
       :editing-log="editingLog"
       @save="handleSaveLog"
@@ -187,14 +187,13 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { watch } from 'vue'
 import ImageUploader from '@/components/business/upload/ImageUploader.vue'
 import VideoUploader from '@/components/business/upload/VideoUploader.vue'
 import DocumentUploader from '@/components/business/upload/DocumentUploader.vue'
 import UpdateLogCard from '@/components/business/display/UpdateLogCard.vue'
 import UpdateLogDialog from '@/components/business/display/UpdateLogDialog.vue'
-import { useUpdateLog } from '@/composables/useUpdateLog'
+import { useFormDialog } from '@/composables/useFormDialog'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -203,97 +202,39 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'save'])
 
-const { 
-  parseUpdateLog, stringifyUpdateLog, addLog, updateLog, deleteLog, 
-  logDialogVisible, editingLog, openLogDialog, closeLogDialog, saveLog 
-} = useUpdateLog()
-
-const getDefaultForm = () => ({ 
-  id: null, nameCn: "", nameDong: "", scientificName: "", category: "", usageWay: "内服", 
-  habitat: "", efficacy: "", story: "", images: [], 
-  videos: [], documents: [], distribution: "", updateLog: "" 
+const getDefaultForm = () => ({
+  id: null, nameCn: "", nameDong: "", scientificName: "", category: "", usageWay: "内服",
+  habitat: "", efficacy: "", story: "", images: [],
+  videos: [], documents: [], distribution: "", updateLog: ""
 })
 
-const form = ref(getDefaultForm())
-const saving = ref(false)
-
-const isEdit = computed(() => !!form.value.id)
-
-const updateLogs = computed(() => parseUpdateLog(form.value.updateLog))
-
-const parseToArray = (value) => {
-  if (!value) return []
-  if (Array.isArray(value)) return value
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (trimmed.startsWith('[')) {
-      try { const parsed = JSON.parse(trimmed); return Array.isArray(parsed) ? parsed.filter(Boolean) : [] } catch { return [] }
-    }
-    return trimmed.split(',').filter(Boolean)
-  }
-  return []
-}
-
-const parseToString = (value) => {
-  if (!value) return ''
-  if (typeof value === 'string') return value
-  if (Array.isArray(value)) {
-    const filtered = value.filter(Boolean)
-    return JSON.stringify(filtered)
-  }
-  return ''
-}
+const {
+  form, saving, isEdit, updateLogs,
+  logDialogVisible, editingLog,
+  initForm, handleAddLog, handleEditLog, handleDeleteLog, handleSaveLog,
+  getFormData, handleSave, setSaving
+} = useFormDialog(getDefaultForm, {
+  validate: (form) => {
+    if (!form.nameCn) return '请输入中文名称'
+    return true
+  },
+  autoLogMessages: { create: '新增药用植物', update: '更新药用植物信息' },
+  arrayFields: ['images', 'videos', 'documents']
+})
 
 watch(() => props.visible, (val) => {
   if (val) {
-    form.value = props.data ? { 
-      ...props.data,
-      images: parseToArray(props.data.images),
-      videos: parseToArray(props.data.videos),
-      documents: parseToArray(props.data.documents),
-      updateLog: props.data.updateLog || ''
-    } : getDefaultForm()
+    initForm(props.data)
   }
 })
 
-const handleAddLog = () => openLogDialog()
-
-const handleEditLog = (log) => openLogDialog(log)
-
-const handleDeleteLog = (log) => {
-  form.value.updateLog = stringifyUpdateLog(deleteLog(form.value.updateLog, log.id))
-}
-
-const handleSaveLog = (logData) => {
-  if (editingLog.value) {
-    form.value.updateLog = stringifyUpdateLog(updateLog(form.value.updateLog, editingLog.value.id, logData.content))
-  } else {
-    form.value.updateLog = stringifyUpdateLog(addLog(form.value.updateLog, logData.content, logData.operator))
+const onSave = () => {
+  if (handleSave()) {
+    emit('save', getFormData())
   }
-  closeLogDialog()
 }
 
-const handleSave = () => {
-  if (!form.value.nameCn) { ElMessage.warning('请输入中文名称'); return }
-  
-  const autoLog = isEdit.value ? '更新药用植物信息' : '新增药用植物'
-  const currentLogs = parseUpdateLog(form.value.updateLog)
-  const hasRecentLog = currentLogs.length > 0 && currentLogs[0].time === new Date().toISOString().split('T')[0]
-  
-  const finalUpdateLog = hasRecentLog 
-    ? form.value.updateLog 
-    : stringifyUpdateLog(addLog(form.value.updateLog, autoLog, '管理员'))
-  
-  emit('save', {
-    ...form.value,
-    images: parseToString(form.value.images),
-    videos: parseToString(form.value.videos),
-    documents: parseToString(form.value.documents),
-    updateLog: finalUpdateLog
-  })
-}
-
-defineExpose({ setSaving: (val) => { saving.value = val } })
+defineExpose({ setSaving })
 </script>
 
 <style scoped>

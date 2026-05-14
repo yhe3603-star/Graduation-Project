@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "操作日志", description = "后台操作日志查询")
 @RestController
@@ -22,12 +24,13 @@ public class OperationLogController {
 
     private final OperationLogService logService;
 
+    @Operation(summary = "获取操作日志列表")
     @GetMapping("/list")
     public R<List<OperationLog>> list(
-            @RequestParam(required = false) String module,
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) String username,
-            @RequestParam(defaultValue = "100") Integer limit) {
+            @Parameter(name = "module", description = "模块名称") @RequestParam(required = false) String module,
+            @Parameter(name = "type", description = "操作类型") @RequestParam(required = false) String type,
+            @Parameter(name = "username", description = "用户名") @RequestParam(required = false) String username,
+            @Parameter(name = "limit", description = "返回数量", example = "100") @RequestParam(defaultValue = "100") Integer limit) {
         QueryWrapper<OperationLog> wrapper = new QueryWrapper<>();
         if (module != null && !module.isEmpty()) wrapper.eq("module", module);
         if (type != null && !type.isEmpty()) wrapper.eq("type", type);
@@ -38,29 +41,34 @@ public class OperationLogController {
         return R.ok(logService.list(wrapper));
     }
 
+    @Operation(summary = "获取操作日志详情")
     @GetMapping("/{id}")
-    public R<OperationLog> getById(@PathVariable Integer id) {
+    public R<OperationLog> getById(@Parameter(name = "id", description = "日志ID") @PathVariable Integer id) {
         return R.ok(logService.getById(id));
     }
 
+    @Operation(summary = "删除操作日志")
     @DeleteMapping("/{id}")
-    public R<String> delete(@PathVariable Integer id) {
+    public R<String> delete(@Parameter(name = "id", description = "日志ID") @PathVariable Integer id) {
         logService.removeById(id);
         return R.ok("删除成功");
     }
 
+    @Operation(summary = "批量删除操作日志")
     @DeleteMapping("/batch")
     public R<String> batchDelete(@RequestBody Integer[] ids) {
         Arrays.stream(ids).forEach(logService::removeById);
         return R.ok("批量删除成功");
     }
 
+    @Operation(summary = "清空操作日志")
     @DeleteMapping("/clear")
     public R<String> clearAll() {
         logService.clearAll();
         return R.ok("清空成功");
     }
 
+    @Operation(summary = "获取操作日志统计")
     @GetMapping("/stats")
     public R<Map<String, Object>> stats() {
         QueryWrapper<OperationLog> groupedWrapper = new QueryWrapper<>();

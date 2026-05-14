@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="用户管理模块" id="mod-user-mgmt">
-    <mxGraphModel dx="1783" dy="587" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="650" math="0" shadow="0">
+    <mxGraphModel dx="1584" dy="322" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="650" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -40,23 +40,23 @@
         <mxCell id="d1" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="BCrypt密码加密&lt;br&gt;&lt;small&gt;注册时hash/登录时matches&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="150" x="10" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="d2" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="JWT Token&lt;br&gt;&lt;small&gt;Bearer {token}&lt;/small&gt;" vertex="1">
+        <mxCell id="d2" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="HttpOnly Cookie&lt;br&gt;&lt;small&gt;sa-token (httpOnly/secure)&lt;/small&gt;" vertex="1">
           <mxGeometry height="36" width="150" x="170" y="30" as="geometry" />
         </mxCell>
         <mxCell id="d3" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="角色: user/admin&lt;br&gt;&lt;small&gt;@SaCheckRole(&#39;admin&#39;)&lt;/small&gt;" vertex="1">
-          <mxGeometry height="36" width="150" x="10" y="130" as="geometry" />
+          <mxGeometry height="36" width="150" x="10" y="140" as="geometry" />
         </mxCell>
         <mxCell id="d4" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="拦截器: SaTokenConfig&lt;br&gt;&lt;small&gt;POST/PUT/DELETE需登录&lt;/small&gt;" vertex="1">
-          <mxGeometry height="36" width="150" x="10" y="80" as="geometry" />
+          <mxGeometry height="50" width="150" x="10" y="80" as="geometry" />
         </mxCell>
-        <mxCell id="d5" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="用户状态检查&lt;br&gt;&lt;small&gt;status != banned&lt;/small&gt;" vertex="1">
-          <mxGeometry height="36" width="150" x="170" y="80" as="geometry" />
+        <mxCell id="d5" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="用户状态检查&lt;br&gt;&lt;small&gt;status != banned&lt;/small&gt; 账户锁定&lt;br&gt;&lt;small&gt;LoginAttemptService&lt;/small&gt;&lt;br&gt;&lt;small&gt;5次失败→锁定15分钟&lt;/small&gt;" vertex="1">
+          <mxGeometry height="50" width="150" x="170" y="80" as="geometry" />
         </mxCell>
-        <mxCell id="d6" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="前端Token存储&lt;br&gt;&lt;small&gt;localStorage + Axios拦截器&lt;/small&gt;" vertex="1">
-          <mxGeometry height="36" width="150" x="170" y="130" as="geometry" />
+        <mxCell id="d6" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" value="Cookie认证&lt;br&gt;&lt;small&gt;withCredentials + Axios拦截器&lt;/small&gt;" vertex="1">
+          <mxGeometry height="36" width="150" x="170" y="140" as="geometry" />
         </mxCell>
         <mxCell id="d7" parent="auth_detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" value="用户缓存&lt;br&gt;&lt;small&gt;TTL=30分钟&lt;/small&gt;" vertex="1">
-          <mxGeometry height="36" width="140" x="100" y="180" as="geometry" />
+          <mxGeometry height="36" width="140" x="100" y="190" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

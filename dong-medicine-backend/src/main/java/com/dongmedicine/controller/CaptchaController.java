@@ -11,6 +11,7 @@ import com.dongmedicine.service.CaptchaService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
 
 @Tag(name = "验证码", description = "用户验证码获取")
 @RestController
@@ -26,6 +27,7 @@ public class CaptchaController {
      * 
      * @return CaptchaDTO 包含captchaKey和captchaImage
      */
+    @Operation(summary = "获取验证码")
     @GetMapping
     @RateLimit(value = 30, key = "captcha")
     public R<CaptchaDTO> getCaptcha() {

@@ -56,7 +56,7 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai \
     JAVA_OPTS="-Xms256m -Xmx384m -XX:+UseSerialGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -Djava.security.egd=file:/dev/./urandom"
 
-RUN apk add --no-cache curl mysql-client netcat-openbsd tzdata && \
+RUN apk add --no-cache curl mariadb-client busybox-extras tzdata && \
     cp /usr/share/zoneinfo/$TZ /etc/localtime && \
     apk del tzdata && \
     addgroup -S appgroup && adduser -S appuser -G appgroup

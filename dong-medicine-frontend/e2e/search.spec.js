@@ -48,13 +48,11 @@ test.describe('全局搜索页面', () => {
     await page.goto('/search')
     await page.waitForSelector('.search-box-large input, .el-input__inner', { timeout: 10000 })
     const searchInput = page.locator('input[type="text"], .el-input__inner').first()
-    if (await searchInput.isVisible()) {
-      await searchInput.fill('侗医药')
-      const searchButton = page.locator('.search-box-large .el-button').first()
-      if (await searchButton.isVisible()) {
-        await searchButton.click()
-        await page.waitForTimeout(2000)
-      }
-    }
+    await expect(searchInput).toBeVisible({ timeout: 10000 })
+    await searchInput.fill('侗医药')
+    const searchButton = page.locator('.search-box-large .el-button').first()
+    await expect(searchButton).toBeVisible({ timeout: 10000 })
+    await searchButton.click()
+    await page.waitForLoadState('networkidle')
   })
 })

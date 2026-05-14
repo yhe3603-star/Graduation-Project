@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
+import io.swagger.v3.oas.annotations.Operation;
 
 @Tag(name = "元数据", description = "平台元数据分类信息")
 @RestController
@@ -41,6 +42,7 @@ public class MetadataController {
     @Lazy
     private final MetadataController self;
 
+    @Operation(summary = "获取全部筛选条件")
     @GetMapping("/filters")
     public R<Map<String, Object>> getAllFilters() {
         return R.ok(self.getAllFiltersData());
@@ -57,6 +59,7 @@ public class MetadataController {
         return filters;
     }
 
+    @Operation(summary = "获取精选推荐")
     @GetMapping("/featured")
     public R<Map<String, Object>> getFeatured() {
         return R.ok(self.getFeaturedData());

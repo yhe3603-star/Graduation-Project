@@ -35,6 +35,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "学习资源", description = "侗乡医药学习资源下载与管理")
 @Slf4j
@@ -52,48 +54,54 @@ public class ResourceController {
 
     private static final int STREAM_BUFFER_SIZE = 8192;
 
+    @Operation(summary = "获取资源列表")
     @GetMapping("/list")
     public R<Map<String, Object>> list(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String fileType) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size,
+            @Parameter(name = "category", description = "资源分类") @RequestParam(required = false) String category,
+            @Parameter(name = "keyword", description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(name = "fileType", description = "文件类型") @RequestParam(required = false) String fileType) {
         Page<Resource> pageResult = service.pageByCategoryAndKeywordAndType(category, keyword, fileType, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取热门资源")
     @GetMapping("/hot")
     public R<List<Resource>> hot() {
         return R.ok(service.getHotResources());
     }
 
+    @Operation(summary = "搜索资源")
     @GetMapping("/search")
     public R<Map<String, Object>> search(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "12") Integer size) {
+            @Parameter(name = "keyword", description = "搜索关键词") @RequestParam String keyword,
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "12") @RequestParam(defaultValue = "12") Integer size) {
         Page<Resource> pageResult = service.pageByCategoryAndKeywordAndType(null, keyword, null, page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取资源详情")
     @GetMapping("/{id}")
-    public R<Resource> getById(@PathVariable Integer id) {
+    public R<Resource> getById(@Parameter(name = "id", description = "资源ID") @PathVariable Integer id) {
         try { popularityAsyncService.incrementResourceViewAndPopularity(id); } catch (Exception e) { log.debug("更新浏览量失败", e); }
         Resource resource = service.getDetail(id);
         if (resource == null) throw BusinessException.notFound("资源不存在");
         return R.ok(resource);
     }
 
+    @Operation(summary = "增加资源浏览量")
     @PostMapping("/{id}/view")
     @RateLimit(value = 10, key = "resource_view")
-    public R<String> incrementView(@PathVariable Integer id) {
+    public R<String> incrementView(@Parameter(name = "id", description = "资源ID") @PathVariable Integer id) {
         service.incrementViewCount(id);
         return R.ok("ok");
     }
 
+    @Operation(summary = "下载资源文件")
     @GetMapping("/download/{id}")
-    public void download(@PathVariable Integer id, HttpServletResponse response) throws IOException {
+    public void download(@Parameter(name = "id", description = "资源ID") @PathVariable Integer id, HttpServletResponse response) throws IOException {
         Resource resource = service.getById(id);
         if (resource == null || resource.getFiles() == null || resource.getFiles().isEmpty()) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "资源不存在");
@@ -169,6 +177,7 @@ public class ResourceController {
         }
     }
 
+    @Operation(summary = "批量下载资源")
     @PostMapping("/batch-download")
     public void batchDownload(@RequestBody Map<String, List<Integer>> body, HttpServletResponse response) throws IOException {
         List<Integer> ids = body.get("ids");
@@ -244,12 +253,14 @@ public class ResourceController {
         }
     }
 
+    @Operation(summary = "增加资源下载量")
     @PostMapping("/{id}/download")
-    public R<String> incrementDownload(@PathVariable Integer id) {
+    public R<String> incrementDownload(@Parameter(name = "id", description = "资源ID") @PathVariable Integer id) {
         service.incrementDownload(id);
         return R.ok("ok");
     }
 
+    @Operation(summary = "获取文件类型列表")
     @GetMapping("/types")
     public R<List<TypeInfo>> getFileTypes() {
         return R.ok(List.of(
@@ -259,6 +270,7 @@ public class ResourceController {
         ));
     }
 
+    @Operation(summary = "获取资源分类列表")
     @GetMapping("/categories")
     public R<List<String>> getCategories() {
         return R.ok(service.getAllCategories());

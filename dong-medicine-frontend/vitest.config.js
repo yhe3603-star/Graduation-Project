@@ -10,8 +10,8 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', 'e2e/**', 'playwright-report/**'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/utils/**/*.js', 'src/composables/**/*.js'],
+      reporter: ['text', 'json', 'html', 'lcov'],
+      include: ['src/utils/**/*.js', 'src/composables/**/*.js', 'src/stores/**/*.js'],
       exclude: ['node_modules/', 'dist/']
     }
   },

@@ -40,6 +40,8 @@ spring:
         prefetch: 10
         retry:
           enabled: true
+  websocket:
+    max-idle-timeout: 300000
 
 jwt:
   expiration: ${JWT_EXPIRATION:86400000}

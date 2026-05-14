@@ -278,13 +278,24 @@ function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 function highlightText(text) {
   if (!text) return '';
+  const safe = escapeHtml(String(text));
   const kw = lastKeyword.value || keyword.value;
-  if (!kw || !kw.trim()) return text;
+  if (!kw || !kw.trim()) return safe;
   const escaped = escapeRegex(kw.trim());
   const regex = new RegExp(`(${escaped})`, 'gi');
-  return String(text).replace(regex, '<em class="highlight">$1</em>');
+  return safe.replace(regex, '<em class="highlight">$1</em>');
 }
 
 const paginatedResults = computed(() => {

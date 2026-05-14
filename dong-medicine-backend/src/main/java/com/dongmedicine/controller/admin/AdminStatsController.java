@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
+import io.swagger.v3.oas.annotations.Operation;
 
 @Tag(name = "后台管理-统计", description = "管理员数据统计")
 @RestController
@@ -34,6 +35,7 @@ public class AdminStatsController {
     private final UserMapper userMapper;
     private final SearchHistoryMapper searchHistoryMapper;
 
+    @Operation(summary = "获取管理后台统计")
     @GetMapping("/stats")
     public R<Map<String, Long>> stats() {
         Map<String, Long> data = new HashMap<>();
@@ -49,6 +51,7 @@ public class AdminStatsController {
         return R.ok(data);
     }
 
+    @Operation(summary = "获取用户增长趋势")
     @GetMapping("/stats/user-growth")
     public R<Map<String, Object>> getUserGrowth() {
         List<Map<String, Object>> rows = userMapper.countByDateLast7Days();
@@ -64,6 +67,7 @@ public class AdminStatsController {
         return R.ok(result);
     }
 
+    @Operation(summary = "获取内容浏览排行")
     @GetMapping("/stats/content-views")
     public R<List<Map<String, Object>>> getContentViews() {
         List<Map<String, Object>> all = new ArrayList<>();
@@ -76,6 +80,7 @@ public class AdminStatsController {
         return R.ok(all.subList(0, Math.min(10, all.size())));
     }
 
+    @Operation(summary = "获取热门搜索词")
     @GetMapping("/stats/search-keywords")
     public R<List<Map<String, Object>>> getSearchKeywords() {
         return R.ok(searchHistoryMapper.topKeywords(10));

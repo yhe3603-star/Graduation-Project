@@ -125,8 +125,8 @@ public class XssFilter implements Filter {
                 JsonNode sanitizedNode = sanitizeJsonNode(rootNode);
                 return OBJECT_MAPPER.writeValueAsString(sanitizedNode);
             } catch (Exception e) {
-                log.debug("JSON解析失败，返回原始内容: {}", e.getMessage());
-                return json;
+                log.warn("JSON解析失败，已丢弃请求体: {}", e.getMessage());
+                return "";
             }
         }
 

@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "收藏管理", description = "用户收藏增删查")
 @RestController
@@ -20,25 +22,28 @@ public class FavoriteController {
 
     private final FavoriteService service;
 
+    @Operation(summary = "添加收藏")
     @PostMapping("/{targetType}/{targetId}")
     @SaCheckLogin
-    public R<String> add(@PathVariable String targetType, @PathVariable Integer targetId) {
+    public R<String> add(@Parameter(name = "targetType", description = "目标类型") @PathVariable String targetType, @Parameter(name = "targetId", description = "目标ID") @PathVariable Integer targetId) {
         service.addFavorite(SecurityUtils.getCurrentUserId(), targetType, targetId);
         return R.ok("收藏成功");
     }
 
+    @Operation(summary = "取消收藏")
     @DeleteMapping("/{targetType}/{targetId}")
     @SaCheckLogin
-    public R<String> remove(@PathVariable String targetType, @PathVariable Integer targetId) {
+    public R<String> remove(@Parameter(name = "targetType", description = "目标类型") @PathVariable String targetType, @Parameter(name = "targetId", description = "目标ID") @PathVariable Integer targetId) {
         service.removeFavorite(SecurityUtils.getCurrentUserId(), targetType, targetId);
         return R.ok("取消收藏成功");
     }
 
+    @Operation(summary = "获取我的收藏列表")
     @GetMapping("/my")
     @SaCheckLogin
     public R<Map<String, Object>> myFavorites(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "20") @RequestParam(defaultValue = "20") Integer size) {
         Page<Map<String, Object>> pageResult = service.getMyFavoritesPaged(SecurityUtils.getCurrentUserId(), page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }

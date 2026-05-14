@@ -15,6 +15,8 @@ import reactor.core.Disposable;
 import jakarta.annotation.PreDestroy;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +32,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private static final int MAX_CHAT_THREADS = 50;
     private static final int MAX_MESSAGE_LENGTH = 2000;
+    private static final int MAX_CONCURRENT_CONNECTIONS = 100;
+    private static final int RATE_LIMIT_MAX_MESSAGES = 10;
+    private static final long RATE_LIMIT_WINDOW_MS = 60_000L;
+
+    private final AtomicInteger connectionCount = new AtomicInteger(0);
+    private final Map<String, Deque<Long>> rateLimitMap = new ConcurrentHashMap<>();
 
     private final AiChatService aiChatService;
     private final ChatHistoryService chatHistoryService;
@@ -75,15 +83,26 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
+    public void afterConnectionEstablished(WebSocketSession session) throws IOException {
+        if (connectionCount.get() >= MAX_CONCURRENT_CONNECTIONS) {
+            log.warn("WebSocket连接数已达上限({}), 拒绝新连接: sessionId={}", MAX_CONCURRENT_CONNECTIONS, session.getId());
+            session.close(new CloseStatus(1013, "服务器繁忙，请稍后重试"));
+            return;
+        }
+        connectionCount.incrementAndGet();
+        // Idle timeout configured via spring.websocket.max-idle-timeout in application.yml
         String sessionId = session.getId();
         sessions.put(sessionId, session);
-        log.info("WebSocket连接建立: sessionId={}, remoteAddr={}", sessionId, session.getRemoteAddress());
+        log.info("WebSocket连接建立: sessionId={}, remoteAddr={}, 当前连接数={}", sessionId, session.getRemoteAddress(), connectionCount.get());
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String sessionId = session.getId();
+        if (!checkRateLimit(sessionId)) {
+            sendError(session, "消息发送过于频繁，请稍后再试");
+            return;
+        }
         try {
             JsonNode json = objectMapper.readTree(message.getPayload());
             String type = json.path("type").asText();
@@ -200,6 +219,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String wsSessionId = session.getId();
         String chatSessionId = chatSessionIds.remove(wsSessionId);
         sessions.remove(wsSessionId);
+        rateLimitMap.remove(wsSessionId);
+        int remaining = connectionCount.decrementAndGet();
         Disposable subscription = activeSubscriptions.remove(wsSessionId);
         if (subscription != null && !subscription.isDisposed()) {
             subscription.dispose();
@@ -218,7 +239,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 }
             }
         }
-        log.info("WebSocket连接关闭: wsSessionId={}, chatSessionId={}, status={}", wsSessionId, chatSessionId, status);
+        log.info("WebSocket连接关闭: wsSessionId={}, chatSessionId={}, status={}, 剩余连接数={}", wsSessionId, chatSessionId, status, remaining);
     }
 
     @Override
@@ -227,10 +248,28 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         log.error("WebSocket传输错误: sessionId={}", sessionId, exception);
         sessions.remove(sessionId);
         chatSessionIds.remove(sessionId);
+        rateLimitMap.remove(sessionId);
+        connectionCount.decrementAndGet();
         Disposable subscription = activeSubscriptions.remove(sessionId);
         if (subscription != null && !subscription.isDisposed()) {
             subscription.dispose();
         }
+    }
+
+    private boolean checkRateLimit(String sessionId) {
+        long now = System.currentTimeMillis();
+        Deque<Long> timestamps = rateLimitMap.computeIfAbsent(sessionId, k -> new ArrayDeque<>());
+        synchronized (timestamps) {
+            while (!timestamps.isEmpty() && now - timestamps.peekFirst() > RATE_LIMIT_WINDOW_MS) {
+                timestamps.pollFirst();
+            }
+            if (timestamps.size() >= RATE_LIMIT_MAX_MESSAGES) {
+                log.warn("WebSocket消息频率超限: sessionId={}, 最近{}秒内{}条消息", sessionId, RATE_LIMIT_WINDOW_MS / 1000, timestamps.size());
+                return false;
+            }
+            timestamps.addLast(now);
+        }
+        return true;
     }
 
     private String getUserId(WebSocketSession session) {

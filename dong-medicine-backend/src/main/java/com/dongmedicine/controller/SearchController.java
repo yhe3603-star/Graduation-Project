@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "搜索建议", description = "搜索自动补全与建议")
 @Slf4j
@@ -30,8 +32,9 @@ public class SearchController {
     private final InheritorService inheritorService;
     private final SearchHistoryMapper searchHistoryMapper;
 
+    @Operation(summary = "获取搜索建议")
     @GetMapping("/suggest")
-    public R<List<Map<String, Object>>> suggest(@RequestParam(defaultValue = "") String keyword) {
+    public R<List<Map<String, Object>>> suggest(@Parameter(name = "keyword", description = "搜索关键词") @RequestParam(defaultValue = "") String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return R.ok(List.of());
         }
@@ -94,8 +97,9 @@ public class SearchController {
         return R.ok(results.size() > 15 ? results.subList(0, 15) : results);
     }
 
+    @Operation(summary = "获取热门搜索词")
     @GetMapping("/hot")
-    public R<List<Map<String, Object>>> hotKeywords(@RequestParam(defaultValue = "20") Integer limit) {
+    public R<List<Map<String, Object>>> hotKeywords(@Parameter(name = "limit", description = "返回数量", example = "20") @RequestParam(defaultValue = "20") Integer limit) {
         return R.ok(searchHistoryMapper.topKeywords(Math.min(limit, 50)));
     }
 }

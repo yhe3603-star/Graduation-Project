@@ -22,17 +22,14 @@ test.describe('AI聊天', () => {
   test('欢迎消息应正确显示', async ({ page }) => {
     await page.goto('/')
     const welcome = page.locator('.welcome-message')
-    if (await welcome.isVisible()) {
-      await expect(welcome).toContainText('侗族医药智能助手')
-    }
+    await expect(welcome).toBeVisible({ timeout: 10000 })
+    await expect(welcome).toContainText('侗族医药智能助手')
   })
 
   test('快捷提问标签应可见且可点击', async ({ page }) => {
     await page.goto('/')
     const quickTag = page.locator('.quick-tag').first()
-    if (await quickTag.isVisible()) {
-      await expect(quickTag).toBeVisible()
-    }
+    await expect(quickTag).toBeVisible({ timeout: 10000 })
   })
 
   test('输入框应存在', async ({ page }) => {
@@ -53,6 +50,6 @@ test.describe('AI聊天', () => {
     const historyBtn = page.locator('.history-toggle-btn')
     const count = await historyBtn.count()
     // Either hidden or requires login — both are acceptable
-    expect(count >= 0).toBeTruthy()
+    expect(typeof count).toBe('number')
   })
 })

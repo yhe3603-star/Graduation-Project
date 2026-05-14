@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
 
 @Tag(name = "用户管理", description = "用户注册、登录、个人信息管理")
 @RestController
@@ -30,6 +31,7 @@ public class UserController {
     private final UserService service;
     private final CaptchaService captchaService;
 
+    @Operation(summary = "用户登录")
     @PostMapping("/login")
     @RateLimit(value = 5, key = "user_login")
     public R<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
@@ -38,6 +40,7 @@ public class UserController {
         return R.ok(service.login(dto.getUsername(), dto.getPassword()));
     }
 
+    @Operation(summary = "用户注册")
     @PostMapping("/register")
     @RateLimit(value = 3, key = "user_register")
     public R<String> register(@Valid @RequestBody RegisterDTO dto) {
@@ -51,12 +54,14 @@ public class UserController {
         return R.ok("注册成功");
     }
 
+    @Operation(summary = "获取当前用户信息")
     @GetMapping("/me")
     @SaCheckLogin
     public R<User> me() {
         return R.ok(service.getUserInfo(SecurityUtils.getCurrentUserId()));
     }
 
+    @Operation(summary = "修改密码")
     @PostMapping("/change-password")
     @SaCheckLogin
     public R<String> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
@@ -67,12 +72,14 @@ public class UserController {
         return R.ok("密码修改成功，请重新登录");
     }
 
+    @Operation(summary = "退出登录")
     @PostMapping("/logout")
     public R<String> logout() {
         StpUtil.logout();
         return R.ok("退出成功");
     }
 
+    @Operation(summary = "验证Token有效性")
     @GetMapping("/validate")
     public R<Map<String, Object>> validate() {
         try {
@@ -85,6 +92,7 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "刷新Token")
     @PostMapping("/refresh-token")
     public R<Map<String, Object>> refreshToken() {
         if (!StpUtil.isLogin()) {

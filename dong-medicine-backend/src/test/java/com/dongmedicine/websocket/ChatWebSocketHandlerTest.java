@@ -14,6 +14,8 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
+
 import java.net.InetSocketAddress;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -45,7 +47,7 @@ class ChatWebSocketHandlerTest {
 
     @Test
     @DisplayName("连接建立 - 应记录会话")
-    void testAfterConnectionEstablished() {
+    void testAfterConnectionEstablished() throws IOException {
         handler.afterConnectionEstablished(session);
         verify(session).getId();
     }
@@ -104,7 +106,7 @@ class ChatWebSocketHandlerTest {
 
     @Test
     @DisplayName("连接关闭时有活跃订阅应取消")
-    void testAfterConnectionClosed_WithActiveSubscription() {
+    void testAfterConnectionClosed_WithActiveSubscription() throws IOException {
         handler.afterConnectionEstablished(session);
         handler.afterConnectionClosed(session, CloseStatus.NORMAL);
 

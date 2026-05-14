@@ -1,4 +1,5 @@
 <template>
+  <el-config-provider :locale="zhCn">
   <div
     class="dong-app"
     :class="{ 'admin-layout': isAdminPage }"
@@ -146,12 +147,14 @@
       </template>
     </el-dialog>
   </div>
+  </el-config-provider>
 </template>
 
 <script setup>
 import { ref, provide, onMounted, computed, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from "element-plus"
+import zhCn from "element-plus/dist/locale/zh-cn.mjs"
 import AppHeader from "@/components/business/layout/AppHeader.vue"
 import AppFooter from "@/components/business/layout/AppFooter.vue"
 import ErrorBoundary from "@/components/base/ErrorBoundary.vue"

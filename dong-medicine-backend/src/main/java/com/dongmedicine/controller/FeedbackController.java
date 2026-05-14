@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Tag(name = "用户反馈", description = "用户意见反馈与回复")
 @Slf4j
@@ -28,6 +30,7 @@ public class FeedbackController {
 
     private final FeedbackService feedbackService;
 
+    @Operation(summary = "提交反馈")
     @PostMapping
     @SaCheckLogin
     public R<String> submit(@Valid @RequestBody FeedbackDTO dto) {
@@ -40,15 +43,17 @@ public class FeedbackController {
         return R.ok("提交成功");
     }
 
+    @Operation(summary = "获取我的反馈列表")
     @GetMapping("/my")
     @SaCheckLogin
     public R<Map<String, Object>> myFeedbacks(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size) {
+            @Parameter(name = "page", description = "页码", example = "1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(name = "size", description = "每页数量", example = "20") @RequestParam(defaultValue = "20") Integer size) {
         Page<Feedback> pageResult = feedbackService.listByUserIdPaged(SecurityUtils.getCurrentUserId(), page, size);
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取反馈统计")
     @GetMapping("/stats")
     public R<Object> stats() {
         long total = feedbackService.count();
