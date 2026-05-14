@@ -5,26 +5,21 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dongmedicine.entity.OperationLog;
 import com.dongmedicine.mapper.OperationLogMapper;
 import com.dongmedicine.service.OperationLogService;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, OperationLog> implements OperationLogService {
-    
+
     private static final int MAX_LOG_COUNT = 500;
-    
-    @Override
-    public boolean save(OperationLog log) {
-        boolean result = super.save(log);
-        if (result) {
-            cleanOldLogs();
-        }
-        return result;
-    }
-    
-    private void cleanOldLogs() {
+
+    @Scheduled(cron = "0 0 3 * * ?")
+    @Transactional
+    public void cleanOldLogs() {
         long count = count();
         if (count > MAX_LOG_COUNT) {
             QueryWrapper<OperationLog> wrapper = new QueryWrapper<>();
@@ -36,12 +31,12 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
             }
         }
     }
-    
+
     @Override
     public void clearAll() {
         remove(new QueryWrapper<>());
     }
-    
+
     @Override
     public List<Map<String, Object>> getTrendLast7Days() {
         return baseMapper.selectTrendLast7Days();

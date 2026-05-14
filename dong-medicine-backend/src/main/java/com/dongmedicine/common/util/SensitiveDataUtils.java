@@ -1,5 +1,6 @@
 package com.dongmedicine.common.util;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -17,6 +18,18 @@ public final class SensitiveDataUtils {
             "realName", "truename",
             "jwt", "authorization"
     );
+
+    private static final Map<String, Pattern[]> JSON_FIELD_PATTERNS;
+    static {
+        Map<String, Pattern[]> map = new java.util.HashMap<>();
+        for (String field : SENSITIVE_FIELDS) {
+            map.put(field, new Pattern[]{
+                Pattern.compile("\"" + field + "\"\\s*:\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE),
+                Pattern.compile("\"" + field + "\"\\s*:\\s*(\\d+)", Pattern.CASE_INSENSITIVE)
+            });
+        }
+        JSON_FIELD_PATTERNS = java.util.Collections.unmodifiableMap(map);
+    }
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("([a-zA-Z0-9_.+-]+)@([a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+)");
     private static final Pattern PHONE_PATTERN = Pattern.compile("(1[3-9]\\d{9})");
@@ -114,18 +127,13 @@ public final class SensitiveDataUtils {
     }
 
     private static String maskJsonField(String json, String fieldName) {
-        Pattern stringPattern = Pattern.compile(
-                "\"" + fieldName + "\"\\s*:\\s*\"([^\"]+)\"", 
-                Pattern.CASE_INSENSITIVE);
-        Pattern numberPattern = Pattern.compile(
-                "\"" + fieldName + "\"\\s*:\\s*(\\d+)", 
-                Pattern.CASE_INSENSITIVE);
-        
-        String result = stringPattern.matcher(json).replaceAll(m -> 
+        Pattern[] patterns = JSON_FIELD_PATTERNS.get(fieldName);
+        if (patterns == null) {
+            return json;
+        }
+        String result = patterns[0].matcher(json).replaceAll(m ->
                 "\"" + fieldName + "\":\"" + maskValue(m.group(1)) + "\"");
-        result = numberPattern.matcher(result).replaceAll(m -> 
+        return patterns[1].matcher(result).replaceAll(m ->
                 "\"" + fieldName + "\":\"****\"");
-        
-        return result;
     }
 }

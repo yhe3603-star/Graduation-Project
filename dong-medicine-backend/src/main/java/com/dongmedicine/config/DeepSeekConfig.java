@@ -35,4 +35,6 @@ public class DeepSeekConfig {
     public String getApiKey() { return apiKey; }
     public String getBaseUrl() { return baseUrl; }
     public String getModel() { return model; }
+    public int getConnectTimeout() { return connectTimeout; }
+    public int getReadTimeout() { return readTimeout; }
 }

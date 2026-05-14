@@ -36,6 +36,9 @@ public class AiChatServiceImpl implements AiChatService {
 
     private WebClient webClient;
 
+    private static final int MAX_RETRIES = 2;
+    private static final long INITIAL_BACKOFF_MS = 500;
+
     private static final String SYSTEM_PROMPT = "你是侗族医药智能助手，专门回答关于侗族医药的问题。" +
         "侗族医药是中国传统医药的重要组成部分，具有悠久的历史和独特的理论体系。" +
         "请用专业、友好的语气回答用户的问题，如果问题超出侗族医药范围，请礼貌说明。" +
@@ -43,9 +46,11 @@ public class AiChatServiceImpl implements AiChatService {
 
     @PostConstruct
     private void initWebClient() {
+        int connectTimeoutMs = deepSeekConfig.getConnectTimeout() * 1000;
+        int responseTimeoutSec = deepSeekConfig.getReadTimeout();
         HttpClient httpClient = HttpClient.create()
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10_000)
-                .responseTimeout(Duration.ofSeconds(120));
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMs)
+                .responseTimeout(Duration.ofSeconds(responseTimeoutSec));
         webClient = WebClient.builder()
                 .baseUrl(deepSeekConfig.getBaseUrl())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -59,54 +64,75 @@ public class AiChatServiceImpl implements AiChatService {
         long startTime = System.currentTimeMillis();
         String requestId = java.util.UUID.randomUUID().toString().substring(0, 8);
 
-        try {
-            if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().isEmpty()) {
-                log.warn("[{}] AI服务未配置", requestId);
-                return ChatResponse.error("AI服务未配置，请联系管理员");
-            }
-
-            String url = deepSeekConfig.getBaseUrl() + "/chat/completions";
-            log.debug("[{}] 调用AI服务开始", requestId);
-
-            List<Map<String, String>> messages = buildMessages(request.getMessage(), request.getHistory());
-
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", deepSeekConfig.getModel());
-            requestBody.put("messages", messages);
-            requestBody.put("temperature", 0.7);
-            requestBody.put("max_tokens", 2000);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(deepSeekConfig.getApiKey());
-
-            org.springframework.http.HttpEntity<Map<String, Object>> entity =
-                    new org.springframework.http.HttpEntity<>(requestBody, headers);
-
-            org.springframework.http.ResponseEntity<String> response =
-                    restTemplate.exchange(url, org.springframework.http.HttpMethod.POST, entity, String.class);
-
-            long elapsed = System.currentTimeMillis() - startTime;
-
-            if (response.getStatusCode() == org.springframework.http.HttpStatus.OK && response.getBody() != null) {
-                JsonNode root = objectMapper.readTree(response.getBody());
-                if (root.has("error")) {
-                    String errorMsg = root.path("error").path("message").asText();
-                    log.error("[{}] AI服务返回错误, 耗时={}ms", requestId, elapsed);
-                    return ChatResponse.error("AI服务暂时不可用");
-                }
-                String reply = root.path("choices").get(0).path("message").path("content").asText();
-                log.debug("[{}] AI服务调用成功, 耗时={}ms, 回复长度={}", requestId, elapsed, reply.length());
-                return ChatResponse.success(reply);
-            } else {
-                log.error("[{}] AI服务响应异常, 状态={}, 耗时={}ms", requestId, response.getStatusCode(), elapsed);
-                return ChatResponse.error("AI服务响应异常");
-            }
-        } catch (Exception e) {
-            long elapsed = System.currentTimeMillis() - startTime;
-            log.error("[{}] AI服务调用异常, 耗时={}ms, 错误类型={}", requestId, elapsed, e.getClass().getSimpleName());
-            return ChatResponse.error("AI服务暂时不可用，请稍后重试");
+        if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().isEmpty()) {
+            log.warn("[{}] AI服务未配置", requestId);
+            return ChatResponse.error("AI服务未配置，请联系管理员");
         }
+
+        String url = deepSeekConfig.getBaseUrl() + "/chat/completions";
+        List<Map<String, String>> messages = buildMessages(request.getMessage(), request.getHistory());
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", deepSeekConfig.getModel());
+        requestBody.put("messages", messages);
+        requestBody.put("temperature", 0.7);
+        requestBody.put("max_tokens", 2000);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(deepSeekConfig.getApiKey());
+
+        org.springframework.http.HttpEntity<Map<String, Object>> entity =
+                new org.springframework.http.HttpEntity<>(requestBody, headers);
+
+        Exception lastException = null;
+        for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                if (attempt > 0) {
+                    long backoff = INITIAL_BACKOFF_MS * (1L << (attempt - 1));
+                    log.info("[{}] 重试AI调用, attempt={}, backoff={}ms", requestId, attempt, backoff);
+                    Thread.sleep(backoff);
+                }
+
+                log.debug("[{}] 调用AI服务开始, attempt={}", requestId, attempt + 1);
+
+                org.springframework.http.ResponseEntity<String> response =
+                        restTemplate.exchange(url, org.springframework.http.HttpMethod.POST, entity, String.class);
+
+                long elapsed = System.currentTimeMillis() - startTime;
+
+                if (response.getStatusCode() == org.springframework.http.HttpStatus.OK && response.getBody() != null) {
+                    JsonNode root = objectMapper.readTree(response.getBody());
+                    if (root.has("error")) {
+                        String errorMsg = root.path("error").path("message").asText();
+                        log.error("[{}] AI服务返回错误, 耗时={}ms", requestId, elapsed);
+                        return ChatResponse.error("AI服务暂时不可用");
+                    }
+                    String reply = root.path("choices").get(0).path("message").path("content").asText();
+                    log.debug("[{}] AI服务调用成功, 耗时={}ms, 回复长度={}", requestId, elapsed, reply.length());
+                    return ChatResponse.success(reply);
+                } else {
+                    log.error("[{}] AI服务响应异常, 状态={}, 耗时={}ms", requestId, response.getStatusCode(), elapsed);
+                    return ChatResponse.error("AI服务响应异常");
+                }
+            } catch (org.springframework.web.client.HttpServerErrorException |
+                     org.springframework.web.client.ResourceAccessException e) {
+                lastException = e;
+                log.warn("[{}] AI服务调用失败(可重试), attempt={}, error={}", requestId, attempt + 1, e.getMessage());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("[{}] 重试被中断", requestId);
+                return ChatResponse.error("AI服务暂时不可用，请稍后重试");
+            } catch (Exception e) {
+                long elapsed = System.currentTimeMillis() - startTime;
+                log.error("[{}] AI服务调用异常(不可重试), 耗时={}ms, 错误类型={}", requestId, elapsed, e.getClass().getSimpleName());
+                return ChatResponse.error("AI服务暂时不可用，请稍后重试");
+            }
+        }
+
+        long elapsed = System.currentTimeMillis() - startTime;
+        log.error("[{}] AI服务重试{}次后仍失败, 耗时={}ms", requestId, MAX_RETRIES, elapsed);
+        return ChatResponse.error("AI服务暂时不可用，请稍后重试");
     }
 
     @Override

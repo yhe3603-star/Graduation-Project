@@ -49,42 +49,48 @@ class OperationLogServiceImplTest {
     }
 
     @Test
-    @DisplayName("保存操作日志 - 成功且无需清理旧日志")
-    void testSaveSuccessWithoutCleanup() {
+    @DisplayName("保存操作日志 - 直接委托给ServiceImpl")
+    void testSaveDelegatesToSuper() {
         OperationLog log = new OperationLog();
         log.setUserId(1);
         log.setType("LOGIN");
         log.setOperation("用户登录");
 
-        lenient().when(operationLogMapper.insert(any(OperationLog.class))).thenReturn(1);
-        when(operationLogMapper.selectCount(any())).thenReturn(100L);
+        when(operationLogMapper.insert(any(OperationLog.class))).thenReturn(1);
 
         boolean result = operationLogService.save(log);
 
         assertTrue(result);
         verify(operationLogMapper, times(1)).insert(log);
+        verify(operationLogMapper, never()).selectCount(any());
     }
 
     @Test
-    @DisplayName("保存操作日志 - 成功且触发清理旧日志")
-    void testSaveSuccessWithCleanup() {
-        OperationLog log = new OperationLog();
-        log.setUserId(1);
-        log.setType("LOGIN");
+    @DisplayName("定时清理旧日志 - 日志数量未超过上限时不清理")
+    void testCleanOldLogs_NoCleanup() {
+        when(operationLogMapper.selectCount(any())).thenReturn(100L);
 
+        operationLogService.cleanOldLogs();
+
+        verify(operationLogMapper, times(1)).selectCount(any());
+        verify(operationLogMapper, never()).selectList(any());
+    }
+
+    @Test
+    @DisplayName("定时清理旧日志 - 日志数量超过上限时清理")
+    void testCleanOldLogs_WithCleanup() {
         OperationLog oldLog = new OperationLog();
         oldLog.setId(1);
 
-        when(operationLogMapper.insert(any(OperationLog.class))).thenReturn(1);
         when(operationLogMapper.selectCount(any())).thenReturn(600L);
         when(operationLogMapper.selectList(any(QueryWrapper.class)))
                 .thenReturn(List.of(oldLog));
+        when(operationLogMapper.deleteByIds(any())).thenReturn(1);
 
-        boolean result = operationLogService.save(log);
+        operationLogService.cleanOldLogs();
 
-        assertTrue(result);
-        verify(operationLogMapper, times(1)).insert(log);
-        verify(operationLogMapper, atLeastOnce()).selectCount(any());
+        verify(operationLogMapper, times(1)).selectCount(any());
+        verify(operationLogMapper, times(1)).selectList(any(QueryWrapper.class));
     }
 
     @Test

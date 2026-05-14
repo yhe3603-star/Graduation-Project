@@ -15,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -45,6 +47,8 @@ class AiChatServiceImplTest {
         lenient().when(deepSeekConfig.getApiKey()).thenReturn("test-api-key");
         lenient().when(deepSeekConfig.getBaseUrl()).thenReturn("https://api.deepseek.com");
         lenient().when(deepSeekConfig.getModel()).thenReturn("deepseek-chat");
+        lenient().when(deepSeekConfig.getConnectTimeout()).thenReturn(5);
+        lenient().when(deepSeekConfig.getReadTimeout()).thenReturn(10);
     }
 
     @Test
@@ -84,6 +88,34 @@ class AiChatServiceImplTest {
 
         assertFalse(response.isSuccess());
         assertTrue(response.getError().contains("不可用"));
+    }
+
+    @Test
+    @DisplayName("同步聊天 - 5xx错误触发重试后返回错误")
+    void testChat_RetryOnServerError() {
+        when(restTemplate.exchange(anyString(), any(), any(), eq(String.class)))
+                .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
+        ChatRequest request = new ChatRequest();
+        request.setMessage("你好");
+        ChatResponse response = aiChatService.chat(request);
+
+        assertFalse(response.isSuccess());
+        verify(restTemplate, times(3)).exchange(anyString(), any(), any(), eq(String.class));
+    }
+
+    @Test
+    @DisplayName("同步聊天 - 4xx错误不重试")
+    void testChat_NoRetryOnClientError() {
+        when(restTemplate.exchange(anyString(), any(), any(), eq(String.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
+
+        ChatRequest request = new ChatRequest();
+        request.setMessage("你好");
+        ChatResponse response = aiChatService.chat(request);
+
+        assertFalse(response.isSuccess());
+        verify(restTemplate, times(1)).exchange(anyString(), any(), any(), eq(String.class));
     }
 
     @Test
