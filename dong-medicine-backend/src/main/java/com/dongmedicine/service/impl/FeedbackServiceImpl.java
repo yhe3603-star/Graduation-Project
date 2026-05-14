@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -54,6 +55,7 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void submitFeedback(Feedback feedback, Integer userId) {
         feedback.setUserId(userId);
         feedback.setStatus("pending");
@@ -81,6 +83,7 @@ public class FeedbackServiceImpl extends ServiceImpl<FeedbackMapper, Feedback> i
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void replyFeedback(Integer id, String reply) {
         Feedback feedback = getById(id);
         if (feedback == null) {

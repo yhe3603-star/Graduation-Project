@@ -10,7 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +18,10 @@ import com.dongmedicine.common.exception.BusinessException;
 import com.dongmedicine.service.CaptchaService;
 
 @Service
+@RequiredArgsConstructor
 public class CaptchaServiceImpl implements CaptchaService {
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     private static final int WIDTH = 120;
     private static final int HEIGHT = 40;

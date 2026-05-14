@@ -111,6 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     @CacheEvict(value = "users", allEntries = true)
+    @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Integer userId) {
         if (userId == null) {
             throw BusinessException.badRequest("用户ID不能为空");

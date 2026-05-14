@@ -10,9 +10,8 @@ import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.mapper.InheritorMapper;
 import com.dongmedicine.service.InheritorService;
 import com.dongmedicine.service.PopularityAsyncService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -23,17 +22,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class InheritorServiceImpl extends ServiceImpl<InheritorMapper, Inheritor> implements InheritorService {
 
-    private static final Logger log = LoggerFactory.getLogger(InheritorServiceImpl.class);
-
-    @Autowired
-    private InheritorMapper inheritorMapper;
-    @Autowired
-    private FileCleanupHelper fileCleanupHelper;
-    @Autowired
-    private PopularityAsyncService popularityAsyncService;
+    private final InheritorMapper inheritorMapper;
+    private final FileCleanupHelper fileCleanupHelper;
+    private final PopularityAsyncService popularityAsyncService;
 
     @Override
     public List<Inheritor> getAllInheritors() {

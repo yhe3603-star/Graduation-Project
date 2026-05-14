@@ -118,11 +118,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void approveComment(Integer commentId) {
         updateCommentStatus(commentId, "approved");
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void rejectComment(Integer commentId) {
         updateCommentStatus(commentId, "rejected");
     }

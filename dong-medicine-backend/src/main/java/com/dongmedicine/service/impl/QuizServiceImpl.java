@@ -12,10 +12,11 @@ import com.dongmedicine.entity.QuizRecord;
 import com.dongmedicine.mapper.QuizQuestionMapper;
 import com.dongmedicine.mapper.QuizRecordMapper;
 import com.dongmedicine.service.QuizService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -24,15 +25,14 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class QuizServiceImpl implements QuizService {
 
     private static final int DEFAULT_QUESTION_COUNT = 10;
     private static final int DEFAULT_SCORE_PER_QUESTION = 10;
 
-    @Autowired
-    private QuizQuestionMapper questionMapper;
-    @Autowired
-    private QuizRecordMapper recordMapper;
+    private final QuizQuestionMapper questionMapper;
+    private final QuizRecordMapper recordMapper;
 
     @Override
     public List<QuizQuestionDTO> getRandomQuestions(int count) {
@@ -51,6 +51,7 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Integer submit(Integer userId, List<AnswerDTO> answers, int scorePerQuestion, String difficulty) {
         if (userId == null || answers == null || answers.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "用户ID和答案不能为空");

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.dongmedicine.entity.Inheritor;
 import com.dongmedicine.mapper.InheritorMapper;
 import com.dongmedicine.common.util.FileCleanupHelper;
+import com.dongmedicine.service.PopularityAsyncService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,14 +33,15 @@ class InheritorServiceImplTest {
     @Mock
     private FileCleanupHelper fileCleanupHelper;
 
+    @Mock
+    private PopularityAsyncService popularityAsyncService;
+
     private InheritorServiceImpl inheritorService;
 
     @BeforeEach
     void setUp() throws Exception {
-        inheritorService = new InheritorServiceImpl();
+        inheritorService = new InheritorServiceImpl(inheritorMapper, fileCleanupHelper, popularityAsyncService);
         setBaseMapper(inheritorService, inheritorMapper);
-        setField(inheritorService, "inheritorMapper", inheritorMapper);
-        setField(inheritorService, "fileCleanupHelper", fileCleanupHelper);
     }
 
     private void setBaseMapper(Object service, Object mapper) throws Exception {

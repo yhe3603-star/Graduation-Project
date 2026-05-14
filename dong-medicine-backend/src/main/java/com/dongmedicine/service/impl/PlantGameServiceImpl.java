@@ -11,8 +11,8 @@ import com.dongmedicine.entity.PlantGameRecord;
 import com.dongmedicine.mapper.PlantGameRecordMapper;
 import com.dongmedicine.mapper.PlantMapper;
 import com.dongmedicine.service.PlantGameService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -22,10 +22,10 @@ import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class PlantGameServiceImpl extends ServiceImpl<PlantGameRecordMapper, PlantGameRecord> implements PlantGameService {
 
-    @Autowired
-    private PlantMapper plantMapper;
+    private final PlantMapper plantMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
