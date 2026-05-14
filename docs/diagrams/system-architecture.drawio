@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="系统架构图" id="arch">
-    <mxGraphModel dx="2044" dy="1128" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1250" math="0" shadow="0">
+    <mxGraphModel dx="1572" dy="868" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1250" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -13,8 +13,8 @@
         <mxCell id="pages" parent="pres_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;align=center;" value="页面组件&lt;br&gt;&lt;hr&gt;首页 Home&lt;br&gt;药用资源图鉴 Plants&lt;br&gt;知识体系 Knowledge&lt;br&gt;传承人 Inheritors&lt;br&gt;资源中心 Resources&lt;br&gt;智能问答 QA&lt;br&gt;个人中心 Personal&lt;br&gt;后台管理 Admin" vertex="1">
           <mxGeometry height="140" width="180" x="240" y="40" as="geometry" />
         </mxCell>
-        <mxCell id="composables" parent="pres_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;align=center;" value="组合式函数 (Composables)&lt;br&gt;&lt;hr&gt;useAdminData · useFavorite&lt;br&gt;useQuiz · useChatWebSocket&lt;br&gt;useChatSessions · useStudyStats&lt;br&gt;useBrowseHistory · useComment" vertex="1">
-          <mxGeometry height="140" width="220" x="440" y="40" as="geometry" />
+        <mxCell id="composables" parent="pres_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;align=center;" value="组合式函数 (Composables)&lt;br&gt;&lt;hr&gt;useAdminData · useFavorite · useQuiz&lt;br&gt;useChatWebSocket · useChatSessions&lt;br&gt;useStudyStats · useBrowseHistory&lt;br&gt;useEntityComments · useErrorHandler&lt;br&gt;useFormDialog · useFileUpload&lt;br&gt;useInteraction · useMedia&lt;br&gt;usePlantGame · useDebounce&lt;br&gt;usePersonalCenter · useUpdateLog&lt;br&gt;useVisualData · useLoginPrompt" vertex="1">
+          <mxGeometry height="150" width="220" x="440" y="40" as="geometry" />
         </mxCell>
         <mxCell id="ws_client" parent="pres_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;align=center;" value="WebSocket 客户端&lt;br&gt;&lt;hr&gt;AI聊天流式响应&lt;br&gt;Marked (Markdown渲染)&lt;br&gt;DOMPurify (XSS防护)" vertex="1">
           <mxGeometry height="140" width="200" x="680" y="40" as="geometry" />
@@ -26,16 +26,16 @@
           <mxGeometry height="320" width="1320" x="40" y="280" as="geometry" />
         </mxCell>
         <mxCell id="controllers" parent="app_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" value="Controller 层 (27个)&lt;br&gt;&lt;hr&gt;PlantController&lt;br&gt;KnowledgeController&lt;br&gt;InheritorController&lt;br&gt;ResourceController&lt;br&gt;QaController&lt;br&gt;UserController&lt;br&gt;AdminController&lt;br&gt;CommentController&lt;br&gt;FavoriteController&lt;br&gt;FeedbackController&lt;br&gt;FileController&lt;br&gt;QuizController&lt;br&gt;StatsController&lt;br&gt;&lt;i&gt;...等共27个Controller&lt;/i&gt;" vertex="1">
-          <mxGeometry height="240" width="170" x="20" y="40" as="geometry" />
+          <mxGeometry height="240" width="170" x="10" y="40" as="geometry" />
         </mxCell>
         <mxCell id="services" parent="app_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" value="Service 层 (22个实现)&lt;br&gt;&lt;hr&gt;PlantService&lt;br&gt;KnowledgeService&lt;br&gt;InheritorService&lt;br&gt;ResourceService&lt;br&gt;QaService&lt;br&gt;UserService&lt;br&gt;AdminService&lt;br&gt;CommentService&lt;br&gt;FavoriteService&lt;br&gt;FeedbackService&lt;br&gt;FileService&lt;br&gt;QuizService&lt;br&gt;StatsService&lt;br&gt;BrowseHistoryService&lt;br&gt;PopularityAsyncService&lt;br&gt;LeaderboardService&lt;br&gt;StatisticsService&lt;br&gt;LoginAttemptService&lt;br&gt;&lt;i&gt;...等共22个Service实现&lt;/i&gt;" vertex="1">
-          <mxGeometry height="240" width="170" x="210" y="40" as="geometry" />
+          <mxGeometry height="260" width="170" x="220" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="mappers" parent="app_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" value="Mapper 层 (MyBatis-Plus)&lt;br&gt;&lt;hr&gt;PlantMapper&lt;br&gt;KnowledgeMapper&lt;br&gt;InheritorMapper&lt;br&gt;ResourceMapper&lt;br&gt;QaMapper&lt;br&gt;UserMapper&lt;br&gt;CommentMapper&lt;br&gt;FavoriteMapper&lt;br&gt;FeedbackMapper&lt;br&gt;QuizMapper&lt;br&gt;BrowseHistoryMapper&lt;br&gt;ChatHistoryMapper&lt;br&gt;SearchHistoryMapper&lt;br&gt;OperationLogMapper" vertex="1">
-          <mxGeometry height="220" width="180" x="400" y="40" as="geometry" />
+        <mxCell id="mappers" parent="app_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" value="Mapper 层 (MyBatis-Plus)&lt;br&gt;&lt;hr&gt;PlantMapper&lt;br&gt;KnowledgeMapper&lt;br&gt;InheritorMapper&lt;br&gt;ResourceMapper&lt;br&gt;QaMapper&lt;br&gt;UserMapper&lt;br&gt;CommentMapper&lt;br&gt;FavoriteMapper&lt;br&gt;FeedbackMapper&lt;br&gt;QuizRecordMapper&lt;br&gt;BrowseHistoryMapper&lt;br&gt;ChatHistoryMapper&lt;br&gt;SearchHistoryMapper&lt;br&gt;OperationLogMapper&lt;br&gt;CommentLikeMapper&lt;br&gt;PlantGameRecordMapper&lt;br&gt;QuizQuestionMapper" vertex="1">
+          <mxGeometry height="240" width="180" x="420" y="40" as="geometry" />
         </mxCell>
         <mxCell id="aop" parent="app_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" value="AOP 切面&lt;br&gt;&lt;hr&gt;OperationLogAspect&lt;br&gt;  (操作日志记录)&lt;br&gt;RateLimitAspect&lt;br&gt;  (接口限流)&lt;br&gt;LoggingAspect&lt;br&gt;  (性能监控)" vertex="1">
-          <mxGeometry height="140" width="170" x="600" y="40" as="geometry" />
+          <mxGeometry height="140" width="170" x="610" y="40" as="geometry" />
         </mxCell>
         <mxCell id="security" parent="app_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;align=center;" value="安全认证&lt;br&gt;&lt;hr&gt;Sa-Token + HttpOnly Cookie&lt;br&gt;SaTokenConfig&lt;br&gt;  (拦截器配置)&lt;br&gt;SecurityUtils&lt;br&gt;  (用户信息获取)&lt;br&gt;@SaCheckLogin&lt;br&gt;@SaCheckRole&lt;br&gt;RateLimit 注解&lt;br&gt;LoginAttemptService&lt;br&gt;  (账户锁定)&lt;br&gt;XssFilter&lt;br&gt;  (XSS过滤/Servlet Filter)&lt;br&gt;CORS白名单&lt;br&gt;CSP/HSTS安全响应头" vertex="1">
           <mxGeometry height="250" width="160" x="790" y="40" as="geometry" />
@@ -53,13 +53,17 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="a1l" connectable="0" parent="a1" style="edgeLabel;fontSize=10;" value="调用" vertex="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="a2" edge="1" parent="app_layer" source="services" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;" target="mappers">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="a2l" connectable="0" parent="a2" style="edgeLabel;fontSize=10;" value="调用" vertex="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="mid_layer" parent="1" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;rounded=1;arcSize=8;" value="中间件层 (Middleware)" vertex="1">
           <mxGeometry height="240" width="1320" x="40" y="620" as="geometry" />
@@ -71,10 +75,10 @@
           <mxGeometry height="90" width="180" x="240" y="40" as="geometry" />
         </mxCell>
         <mxCell id="caffeine" parent="mid_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;align=center;" value="Caffeine (L1缓存)&lt;br&gt;&lt;hr&gt;本地内存缓存&lt;br&gt;每实体独立TTL&lt;br&gt;最大1000条" vertex="1">
-          <mxGeometry height="90" width="170" x="440" y="40" as="geometry" />
+          <mxGeometry height="90" width="170" x="550" y="40" as="geometry" />
         </mxCell>
         <mxCell id="rabbitmq" parent="mid_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;align=center;" value="RabbitMQ 3.12&lt;br&gt;&lt;hr&gt;异步消息队列&lt;br&gt;5种消息类型&lt;br&gt;操作日志/统计/反馈&lt;br&gt;文件处理/通知" vertex="1">
-          <mxGeometry height="90" width="190" x="630" y="40" as="geometry" />
+          <mxGeometry height="90" width="190" x="460" y="140" as="geometry" />
         </mxCell>
         <mxCell id="kkfileview" parent="mid_layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;align=center;" value="KKFileView 4.1&lt;br&gt;&lt;hr&gt;文档在线预览&lt;br&gt;支持多种格式&lt;br&gt;Office/PDF/图片" vertex="1">
           <mxGeometry height="90" width="170" x="840" y="40" as="geometry" />
