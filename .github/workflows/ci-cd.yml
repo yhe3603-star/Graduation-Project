@@ -116,6 +116,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Load database schema and seed data
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot123 < dong-medicine-backend/sql/dong_medicine.sql
+          echo "Database loaded. Verifying table count:"
+          mysql -h 127.0.0.1 -uroot -proot123 -e "SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema = 'dong_medicine';"
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -132,6 +138,7 @@ jobs:
             -DDB_USERNAME=root \
             -DDB_PASSWORD=root123 \
             -DJWT_SECRET=e2e-test-secret-key-that-is-long-enough-for-validation-32c \
+            -Dspring.flyway.enabled=false \
             > /tmp/backend.log 2>&1 &
           echo "Waiting for backend to start..."
           for i in $(seq 1 60); do
@@ -140,8 +147,8 @@ jobs:
               break
             fi
             if [ $i -eq 60 ]; then
-              echo "Backend failed to start. Logs:"
-              cat /tmp/backend.log
+              echo "Backend failed to start. Last 50 lines:"
+              tail -50 /tmp/backend.log
               exit 1
             fi
             sleep 3
