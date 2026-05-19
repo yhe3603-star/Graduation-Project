@@ -20,7 +20,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Use system Chromium when Playwright's bundled version isn't available
+        ...(process.env.PLAYWRIGHT_SYSTEM_CHROMIUM ? { channel: 'chromium' } : {}),
+      },
     },
     {
       name: 'firefox',
