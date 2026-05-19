@@ -56,6 +56,7 @@ test.describe('分页边界测试', () => {
 })
 
 test.describe('回归测试 - 历史Bug', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('浏览量递增不应返回401', async ({ request }) => {
     const response = await request.post('/api/plants/1/view')
     expect(response.status()).not.toBe(401)
@@ -132,6 +133,7 @@ test.describe('回归测试 - 历史Bug', () => {
 })
 
 test.describe('数据完整性测试', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('植物列表每条记录应包含必要字段', async ({ request }) => {
     const response = await request.get('/api/plants/list?page=1&size=5')
     expect(response.ok()).toBeTruthy()
@@ -172,6 +174,7 @@ test.describe('数据完整性测试', () => {
 })
 
 test.describe('错误处理测试', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('访问不存在的植物应返回404', async ({ request }) => {
     const response = await request.get('/api/plants/99999')
     expect(response.status()).toBe(404)

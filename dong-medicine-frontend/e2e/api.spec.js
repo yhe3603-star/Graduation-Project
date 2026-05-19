@@ -102,6 +102,7 @@ test.describe('API接口', () => {
 })
 
 test.describe('API回归测试 - 认证白名单', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('GET请求默认不需要登录', async ({ request }) => {
     const endpoints = [
       '/api/plants/list',
@@ -142,6 +143,7 @@ test.describe('API回归测试 - 认证白名单', () => {
 })
 
 test.describe('API回归测试 - 分页限制', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('所有列表接口size=9999应被限制', async ({ request }) => {
     const endpoints = [
       '/api/plants/list?page=1&size=9999',
@@ -169,6 +171,7 @@ test.describe('API回归测试 - 分页限制', () => {
 })
 
 test.describe('API回归测试 - 安全防护', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('XSS搜索不应导致服务器错误', async ({ request }) => {
     const xssPayloads = [
       '%3Cscript%3Ealert(1)%3C/script%3E',
@@ -201,6 +204,7 @@ test.describe('API回归测试 - 安全防护', () => {
 })
 
 test.describe('API回归测试 - 数据一致性', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('植物详情应与列表数据一致', async ({ request }) => {
     const listRes = await request.get('/api/plants/list?page=1&size=5')
     const listBody = await listRes.json()
@@ -220,6 +224,7 @@ test.describe('API回归测试 - 数据一致性', () => {
 })
 
 test.describe('API回归测试 - 响应格式', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('所有API应返回统一格式', async ({ request }) => {
     const endpoints = [
       '/api/plants/list',

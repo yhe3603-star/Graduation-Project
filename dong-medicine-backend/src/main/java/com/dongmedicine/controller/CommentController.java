@@ -63,6 +63,13 @@ public class CommentController {
         return R.ok(PageUtils.toMap(pageResult));
     }
 
+    @Operation(summary = "获取全量评论（不分页）")
+    @GetMapping("/list/full")
+    public R<List<CommentDTO>> listFull() {
+        List<CommentDTO> list = service.listAllApproved();
+        return R.ok(list);
+    }
+
     @Operation(summary = "获取全部评论")
     @GetMapping("/list/all")
     public R<Map<String, Object>> listAll(

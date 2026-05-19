@@ -33,7 +33,7 @@ export default defineConfig({
   ],
   webServer: process.env.CI ? {
     // CI workflow already builds the frontend; just serve the pre-built dist
-    command: 'npx serve@latest dist -l 3000 --no-clipboard',
+    command: 'npx serve@latest dist -l 3000 --single --no-clipboard',
     port: 3000,
     reuseExistingServer: true,
   } : undefined,
