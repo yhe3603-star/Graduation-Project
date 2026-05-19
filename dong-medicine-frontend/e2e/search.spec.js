@@ -1,3 +1,5 @@
+import { test, expect } from '@playwright/test'
+
 test.describe('搜索功能测试', () => {
   test('植物搜索API应返回结果', async ({ request }) => {
     const response = await request.get('/api/plants/search?keyword=钩藤&page=1&size=10')

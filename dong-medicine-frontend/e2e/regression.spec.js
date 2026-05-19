@@ -1,3 +1,5 @@
+import { test, expect } from '@playwright/test'
+
 test.describe('分页边界测试', () => {
   test('植物列表size=9999应被限制为100', async ({ request }) => {
     const response = await request.get('/api/plants/list?page=1&size=9999')

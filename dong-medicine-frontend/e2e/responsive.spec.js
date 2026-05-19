@@ -1,3 +1,5 @@
+import { test, expect } from '@playwright/test'
+
 test.describe('响应式布局', () => {
   test('移动端首页应正常显示', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 })

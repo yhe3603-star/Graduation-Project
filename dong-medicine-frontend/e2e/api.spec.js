@@ -1,3 +1,5 @@
+import { test, expect } from '@playwright/test'
+
 test.describe('API接口', () => {
   test('植物列表API应返回200', async ({ request }) => {
     const response = await request.get('/api/plants/list')

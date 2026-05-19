@@ -1,3 +1,5 @@
+import { test, expect } from '@playwright/test'
+
 test.describe('用户认证流程', () => {
   test('登录页面应可访问', async ({ page }) => {
     await page.goto('/login')

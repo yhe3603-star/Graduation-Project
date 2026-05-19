@@ -1,3 +1,5 @@
+import { test, expect } from '@playwright/test'
+
 test.describe('WebSocket聊天测试', () => {
   test('WebSocket连接应能建立', async ({ page }) => {
     const wsPromise = page.waitForEvent('websocket', { timeout: 15000 })

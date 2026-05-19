@@ -147,10 +147,24 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      - name: Check SonarQube secrets
+        id: check-sonar
+        env:
+          SONAR_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOK: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -n "$SONAR_URL" ] && [ -n "$SONAR_TOK" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SonarQube secrets (SONAR_HOST_URL, SONAR_TOKEN) not configured. Skipping scan."
+          fi
       - uses: actions/checkout@v4
+        if: steps.check-sonar.outputs.available == 'true'
         with:
           fetch-depth: 0
       - name: SonarQube Scan
+        if: steps.check-sonar.outputs.available == 'true'
         uses: SonarSource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
