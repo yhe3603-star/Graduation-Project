@@ -163,6 +163,17 @@ jobs:
         if: steps.check-sonar.outputs.available == 'true'
         with:
           fetch-depth: 0
+      - name: Set up JDK 17
+        if: steps.check-sonar.outputs.available == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - name: Compile backend
+        if: steps.check-sonar.outputs.available == 'true'
+        working-directory: dong-medicine-backend
+        run: ./mvnw compile -B --no-transfer-progress -DskipTests
       - name: SonarQube Scan
         if: steps.check-sonar.outputs.available == 'true'
         uses: SonarSource/sonarqube-scan-action@master
