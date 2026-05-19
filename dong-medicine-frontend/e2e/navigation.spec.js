@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test'
-import { backendAvailable } from './helpers.js'
 
 test.describe('详情页面导航', () => {
-  test.skip(!backendAvailable, '需要后端服务运行')
   test('植物详情页应可访问', async ({ page }) => {
     await page.goto('/plants')
     await page.waitForSelector('.plant-card, .el-card', { timeout: 10000 })

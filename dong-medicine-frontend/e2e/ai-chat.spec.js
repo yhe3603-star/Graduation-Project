@@ -1,10 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { backendAvailable } from './helpers.js'
 
 // AI 聊天组件位于 /qa 页面的侧边栏中，需要后端支持
 
 test.describe('AI聊天', () => {
-  test.skip(!backendAvailable, '需要后端服务运行')
   test.beforeEach(async ({ page }) => {
     await page.goto('/qa')
     await page.waitForLoadState('networkidle')
