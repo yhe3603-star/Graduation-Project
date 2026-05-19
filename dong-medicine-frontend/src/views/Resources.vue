@@ -121,10 +121,10 @@
 </template>
 
 <script setup>
-import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import request from '@/utils/request';
 import { useRoute } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage } from "element-plus";
 import { Document, Download, Picture, Star, VideoPlay, View } from "@element-plus/icons-vue";
 import PageSidebar from "@/components/business/display/PageSidebar.vue";
 import Pagination from "@/components/business/display/Pagination.vue";
@@ -138,6 +138,7 @@ import { useUpdateLog } from "@/composables/useUpdateLog";
 import { useDebounceFn } from "@/composables/useDebounce";
 import { useFavorite } from "@/composables/useFavorite";
 import { useUserStore } from "@/stores/user";
+import { useLoginPrompt } from "@/composables/useLoginPrompt";
 
 const FILE_TYPE_MAP = {
   video: { extensions: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv'], icon: VideoPlay, name: '视频' },
@@ -151,8 +152,8 @@ const filterConfig = ref([
 ]);
 
 const route = useRoute();
-const showLoginDialog = inject("showLoginDialog");
 const userStore = useUserStore();
+const { requireLogin } = useLoginPrompt();
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 const { items: favItems, isFavorited, loadFavorites, toggleFavorite: doToggleFavorite } = useFavorite('resource');
@@ -263,11 +264,7 @@ const batchDownload = async () => {
   }
 
   if (!isLoggedIn.value) {
-    try {
-      await ElMessageBox.confirm("批量下载资源需要登录，是否前往登录？", "提示", { confirmButtonText: "去登录", cancelButtonText: "取消", type: "info" });
-      showLoginDialog();
-    } catch {}
-    return;
+    return requireLogin('批量下载资源需要登录');
   }
 
   batchDownloading.value = true;
@@ -340,11 +337,7 @@ const toggleFavoriteDetail = () => { if (currentResource.value) toggleFavorite(c
 const downloadResource = async (item) => {
   if (!item) return;
   if (!isLoggedIn.value) {
-    try {
-      await ElMessageBox.confirm("下载资源需要登录，是否前往登录？", "提示", { confirmButtonText: "去登录", cancelButtonText: "取消", type: "info" });
-      showLoginDialog();
-    } catch {}
-    return;
+    return requireLogin('下载资源需要登录');
   }
 
   try {
