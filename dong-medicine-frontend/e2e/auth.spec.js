@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { backendAvailable } from './helpers.js'
 
 test.describe('用户认证流程', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('登录页面应可访问', async ({ page }) => {
     await page.goto('/login')
     await page.waitForLoadState('networkidle')

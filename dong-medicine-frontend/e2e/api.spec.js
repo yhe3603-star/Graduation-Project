@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { backendAvailable } from './helpers.js'
 
 test.describe('API接口', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('植物列表API应返回200', async ({ request }) => {
     const response = await request.get('/api/plants/list')
     expect(response.ok()).toBeTruthy()

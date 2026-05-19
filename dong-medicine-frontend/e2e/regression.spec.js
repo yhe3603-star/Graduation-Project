@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { backendAvailable } from './helpers.js'
 
 test.describe('分页边界测试', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('植物列表size=9999应被限制为100', async ({ request }) => {
     const response = await request.get('/api/plants/list?page=1&size=9999')
     expect(response.ok()).toBeTruthy()

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { backendAvailable } from './helpers.js'
 
 test.describe('首页', () => {
   test('应正确加载首页', async ({ page }) => {
@@ -15,6 +16,7 @@ test.describe('首页', () => {
 })
 
 test.describe('药用植物', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('应加载植物列表', async ({ page }) => {
     await page.goto('/plants')
     await page.waitForSelector('.plant-card, .card-grid, .el-card', { timeout: 10000 })
@@ -33,6 +35,7 @@ test.describe('药用植物', () => {
 })
 
 test.describe('知识库', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('应加载知识列表', async ({ page }) => {
     await page.goto('/knowledge')
     await page.waitForSelector('.knowledge-card, .card-grid, .el-card', { timeout: 10000 })
@@ -42,6 +45,7 @@ test.describe('知识库', () => {
 })
 
 test.describe('传承人', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('应加载传承人列表', async ({ page }) => {
     await page.goto('/inheritors')
     await page.waitForSelector('.inheritor-card, .card-grid, .el-card', { timeout: 10000 })
@@ -51,6 +55,7 @@ test.describe('传承人', () => {
 })
 
 test.describe('问答', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('应加载问答列表', async ({ page }) => {
     await page.goto('/qa')
     await page.waitForSelector('.qa-card, .qa-item, .el-card', { timeout: 10000 })
@@ -58,6 +63,7 @@ test.describe('问答', () => {
 })
 
 test.describe('学习资源', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('应加载资源列表', async ({ page }) => {
     await page.goto('/resources')
     await page.waitForSelector('.resource-card, .card-grid, .el-card', { timeout: 10000 })

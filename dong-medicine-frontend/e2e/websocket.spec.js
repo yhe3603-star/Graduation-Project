@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { backendAvailable } from './helpers.js'
 
 test.describe('WebSocket聊天测试', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('WebSocket连接应能建立', async ({ page }) => {
     const wsPromise = page.waitForEvent('websocket', { timeout: 15000 })
     await page.goto('/')

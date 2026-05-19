@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { backendAvailable } from './helpers.js'
 
 test.describe('搜索功能测试', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('植物搜索API应返回结果', async ({ request }) => {
     const response = await request.get('/api/plants/search?keyword=钩藤&page=1&size=10')
     expect(response.ok()).toBeTruthy()
@@ -41,6 +43,7 @@ test.describe('搜索功能测试', () => {
 })
 
 test.describe('全局搜索页面', () => {
+  test.skip(!backendAvailable, '需要后端服务运行')
   test('应加载搜索页面', async ({ page }) => {
     await page.goto('/search')
     await page.waitForSelector('.search-page, .search-box-large', { timeout: 10000 })
