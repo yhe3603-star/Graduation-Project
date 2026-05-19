@@ -173,7 +173,9 @@ jobs:
       - name: Compile backend
         if: steps.check-sonar.outputs.available == 'true'
         working-directory: dong-medicine-backend
-        run: ./mvnw compile -B --no-transfer-progress -DskipTests
+        run: |
+          chmod +x mvnw
+          ./mvnw compile -B --no-transfer-progress -DskipTests
       - name: SonarQube Scan
         if: steps.check-sonar.outputs.available == 'true'
         uses: SonarSource/sonarqube-scan-action@master
