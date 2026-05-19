@@ -118,7 +118,7 @@ jobs:
 
       - name: Load database schema and seed data
         run: |
-          mysql -h 127.0.0.1 -uroot -proot123 < dong-medicine-backend/sql/dong_medicine.sql
+          mysql -h 127.0.0.1 -uroot -proot123 dong_medicine < dong-medicine-backend/sql/dong_medicine.sql
           echo "Database loaded. Verifying table count:"
           mysql -h 127.0.0.1 -uroot -proot123 -e "SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema = 'dong_medicine';"
 

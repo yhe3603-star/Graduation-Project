@@ -16,8 +16,8 @@
 
 SET NAMES utf8mb4;
 
-CREATE DATABASE IF NOT EXISTS `dong_medicine` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `dong_medicine`;
+-- Database is created by Docker MYSQL_DATABASE env var or manually before import.
+-- Manual import: mysql -u root -p dong_medicine < dong_medicine.sql
 
 -- ----------------------------
 -- Table structure for comments
