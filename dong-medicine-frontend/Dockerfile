@@ -46,7 +46,7 @@ RUN mkdir -p /var/cache/nginx/kkfileview /var/log/nginx && \
 EXPOSE 80 443
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=3s --retries=3 \
-  CMD curl -fk https://localhost/ || exit 1
+  CMD curl -fk http://localhost/ || exit 1
 
 LABEL org.opencontainers.image.title="Dong Medicine Frontend" \
       org.opencontainers.image.description="侗乡医药数字展示平台前端服务"
