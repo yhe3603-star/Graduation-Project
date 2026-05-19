@@ -130,29 +130,33 @@ jobs:
           cache: maven
 
       - name: Start backend
+        id: backend
         working-directory: dong-medicine-backend
         run: |
           chmod +x mvnw
           nohup ./mvnw spring-boot:run -B --no-transfer-progress \
             -Dspring-boot.run.profiles=dev \
-            -DDB_USERNAME=root \
-            -DDB_PASSWORD=root123 \
-            -DJWT_SECRET=e2e-test-secret-key-that-is-long-enough-for-validation-32c \
             -Dspring.flyway.enabled=false \
             > /tmp/backend.log 2>&1 &
-          echo "Waiting for backend to start..."
-          for i in $(seq 1 60); do
+          echo "Waiting for backend to start (up to 3 minutes)..."
+          for i in $(seq 1 36); do
             if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
               echo "Backend ready!"
-              break
+              exit 0
             fi
-            if [ $i -eq 60 ]; then
-              echo "Backend failed to start. Last 50 lines:"
-              tail -50 /tmp/backend.log
-              exit 1
-            fi
-            sleep 3
+            sleep 5
           done
+          echo "::error::Backend failed to start within 3 minutes"
+          exit 1
+        env:
+          DB_USERNAME: root
+          DB_PASSWORD: root123
+          JWT_SECRET: e2e-test-secret-key-that-is-long-enough-for-validation-32c
+          REDIS_PASSWORD: ""
+
+      - name: Backend logs (on failure)
+        if: failure() && steps.backend.outcome == 'failure'
+        run: tail -80 /tmp/backend.log
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
